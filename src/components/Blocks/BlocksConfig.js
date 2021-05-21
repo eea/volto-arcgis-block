@@ -1,5 +1,5 @@
 import world from '@plone/volto/icons/world.svg';
-import DefaultView from './View';
+import View from './View';
 import DefaultEdit from './View';
 
 const BlocksConfig = (config) => ({
@@ -9,7 +9,7 @@ const BlocksConfig = (config) => ({
     title: 'Arcgis Map', // The display name of the block
     icon: world, // The icon used in the block chooser
     group: 'common', // The group (blocks can be grouped, displayed in the chooser)
-    view: DefaultView, // The view mode component
+    view: View, // The view mode component
     edit: DefaultEdit, // The edit mode component
     restricted: false, // If the block is restricted, it won't show in the chooser
     mostUsed: false, // A meta group `most used`, appearing at the top of the chooser
