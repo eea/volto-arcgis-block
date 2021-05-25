@@ -6,7 +6,7 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
-import './ArcgisMap.less';
+import './styles/ArcgisMap.less';
 let view;
 function ArcgisMap() {
   const mapDiv = useRef(null);

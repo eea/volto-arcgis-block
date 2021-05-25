@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './ArcgisMap.less';
+import './styles/ArcgisMap.less';
 import classNames from 'classnames';
 
 function LayerSelector() {
