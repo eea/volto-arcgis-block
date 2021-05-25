@@ -1,12 +1,12 @@
 import React from 'react';
-import ArcgisMap from '../ArcgisMap/ArcgisMap';
-// import ReactDOM from 'react-dom';
-// import loadable from '@loadable/component';
+import loadable from '@loadable/component';
+
 const View = (props) => {
-  // const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
-  //   noSsr: true,
-  // });
-  return <ArcgisMap />;
+  const { data } = props;
+  const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
+    noSsr: true,
+  });
+  return <ArcgisMap darkMode={data.style === 'dark' ? true : false} />;
 };
 
 export default View;
