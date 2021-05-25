@@ -17,11 +17,11 @@ import ReactDOM from 'react-dom';
 // import style from 'assets/esri/themes/light/main.css';
 
 // import '@arcgis/core/assets/esri/themes/light/main.css';
+import './light.less';
 import './ArcgisMap.less';
 let view;
 function ArcgisMap() {
   const mapDiv = useRef(null);
-  let [assetsPath, setAssetsPath] = useState(null);
   useEffect(() => {
     loadMap();
     async function loadMap() {
@@ -140,17 +140,6 @@ function ArcgisMap() {
 
   return (
     <>
-      {assetsPath && (
-        // <Helmet>
-        <>
-          {/* <link
-            rel="stylesheet"
-            href={assetsPath + '/esri/themes/light/main.css'}
-          ></link> */}
-          {/* <link rel="stylesheet" href="./ArcgisMap.less"></link> */}
-        </>
-        // </Helmet>
-      )}
       <div className="map-container">
         <div ref={mapDiv} className="map"></div>
         <div className="loading">

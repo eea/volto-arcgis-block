@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import '@arcgis/core/assets/esri/css/main.css';
+import './light.less';
 import './ArcgisMap.less';
 import classNames from 'classnames';
 
