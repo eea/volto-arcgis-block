@@ -1,35 +1,33 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 import { isServer } from '../utils';
-// import Map from '@arcgis/core/Map';
-// import MapView from '@arcgis/core/views/MapView';
-// import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
-// import Zoom from '@arcgis/core/widgets/Zoom';
-// import ScaleBar from '@arcgis/core/widgets/ScaleBar';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import '@arcgis/core/assets/esri/css/main.css';
-import './ArcgisMap.less';
+
 import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
+// import '@arcgis/core/assets/esri/css/main.css';
+// import '@arcgis/core/assets/esri/themes/light/main.css';
+// import '@arcgis/core/assets/esri/themes/base/icons/style.css';
 
+// import '@arcgis/core/assets/esri/css/main.css';
+// import { Helmet } from '@plone/volto/helpers';
+// import style from 'assets/esri/themes/light/main.css';
+
+// import '@arcgis/core/assets/esri/themes/light/main.css';
+import './ArcgisMap.less';
 let view;
 function ArcgisMap() {
-  // const [Map, MapView, BasemapGallery, Zoom, ScaleBar] = await loadModules([
-  //   'esri/Map',
-  //   'esri/views/MapView',
-  //   'esri/widgets/BasemapGallery',
-  //   'esri/widgets/Zoom',
-  //   'esri/widgets/ScaleBar',
-  // ]);
   const mapDiv = useRef(null);
+  let [assetsPath, setAssetsPath] = useState(null);
   useEffect(() => {
     loadMap();
     async function loadMap() {
-      // console.log("ISSERVER: ", isServer);
-      // if (!isServer) {
+      // setAssetsPath(
+      //   (await (await import('@arcgis/core/config.js')).default).assetsPath,
+      // );
       const Map = await (await import('@arcgis/core/Map')).default;
       const MapView = await (await import('@arcgis/core/views/MapView'))
         .default;
@@ -40,8 +38,7 @@ function ArcgisMap() {
       const ScaleBar = await (await import('@arcgis/core/widgets/ScaleBar'))
         .default;
 
-      console.log('Map: ', Map);
-      // }
+      // await import('@arcgis/core/assets/esri/themes/light/main.css');
       if (mapDiv.current) {
         const map = new Map({
           basemap: 'topo-vector',
@@ -143,6 +140,17 @@ function ArcgisMap() {
 
   return (
     <>
+      {assetsPath && (
+        // <Helmet>
+        <>
+          {/* <link
+            rel="stylesheet"
+            href={assetsPath + '/esri/themes/light/main.css'}
+          ></link> */}
+          {/* <link rel="stylesheet" href="./ArcgisMap.less"></link> */}
+        </>
+        // </Helmet>
+      )}
       <div className="map-container">
         <div ref={mapDiv} className="map"></div>
         <div className="loading">

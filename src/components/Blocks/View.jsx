@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ArcgisMap from '../ArcgisMap/ArcgisMap';
 // import ReactDOM from 'react-dom';
 // import loadable from '@loadable/component';

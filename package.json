@@ -11,15 +11,14 @@
     "react"
   ],
   "scripts": {
-    "i18n": "NODE_ENV=production node src/i18n.js"
+    "i18n": "NODE_ENV=production node src/i18n.js",
+    "load-assets":"cp -R ./node_modules/@arcgis/core/assets ./src/components/ArcgisMap/assets"
   },
   "dependencies": {
     "@arcgis/core": "4.19.3",
-    "@arcgis/webpack-plugin": "4.17.5",
     "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
-    "@fortawesome/react-fontawesome": "0.1.14",
-    "esri-loader": "3.1.0"
+    "@fortawesome/react-fontawesome": "0.1.14"
   },
   "type": "module"
 }
