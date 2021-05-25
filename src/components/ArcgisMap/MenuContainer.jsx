@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './light.less';
 import './ArcgisMap.less';
 import classNames from 'classnames';
 

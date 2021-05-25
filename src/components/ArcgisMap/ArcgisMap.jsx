@@ -1,23 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-import { isServer } from '../utils';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
-// import '@arcgis/core/assets/esri/css/main.css';
-// import '@arcgis/core/assets/esri/themes/light/main.css';
-// import '@arcgis/core/assets/esri/themes/base/icons/style.css';
-
-// import '@arcgis/core/assets/esri/css/main.css';
-// import { Helmet } from '@plone/volto/helpers';
-// import style from 'assets/esri/themes/light/main.css';
-
-// import '@arcgis/core/assets/esri/themes/light/main.css';
-import './light.less';
 import './ArcgisMap.less';
 let view;
 function ArcgisMap() {
@@ -37,8 +25,6 @@ function ArcgisMap() {
       const Zoom = await (await import('@arcgis/core/widgets/Zoom')).default;
       const ScaleBar = await (await import('@arcgis/core/widgets/ScaleBar'))
         .default;
-
-      // await import('@arcgis/core/assets/esri/themes/light/main.css');
       if (mapDiv.current) {
         const map = new Map({
           basemap: 'topo-vector',
