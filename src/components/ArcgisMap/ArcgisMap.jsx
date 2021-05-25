@@ -1,18 +1,19 @@
 import React, { useRef, useEffect, useState } from 'react';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-
 import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
-import './styles/ArcgisMap.less';
+
 let view;
 function ArcgisMap() {
+  let darkMode = true;
   const mapDiv = useRef(null);
   useEffect(() => {
     loadMap();
     async function loadMap() {
+      await import('./styles/' + (darkMode ? 'dark' : 'light') + '.less');
+      await import('./styles/ArcgisMap.less');
       // setAssetsPath(
       //   (await (await import('@arcgis/core/config.js')).default).assetsPath,
       // );
@@ -127,7 +128,7 @@ function ArcgisMap() {
   return (
     <>
       <div className="map-container">
-        <div ref={mapDiv} className="map"></div>
+        <div ref={mapDiv} className="map dark"></div>
         <div className="loading">
           {' '}
           <FontAwesomeIcon icon={faSpinner} pulse />
