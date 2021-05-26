@@ -23,22 +23,7 @@ export default (config) => {
         title: 'Default',
         customClass: null,
       },
-      land: {
-        title: 'Land',
-        customClass: 'land',
-      },
     },
   };
   return config;
 };
-
-// import BlocksConfig from '@eeacms/volto-arcgis-block/components/Blocks/BlocksConfig';
-// const applyConfig = (config) => {
-//   config.blocks = {
-//     ...config.blocks,
-//     blocksConfig: { ...BlocksConfig(config) },
-//   };
-//   return config;
-// };
-
-// export default applyConfig;
