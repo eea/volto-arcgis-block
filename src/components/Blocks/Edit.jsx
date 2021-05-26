@@ -4,18 +4,14 @@ import { SidebarPortal } from '@plone/volto/components';
 import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
 import { Schema } from './Schema';
 import loadable from '@loadable/component';
-import config from '@plone/volto/registry';
+import { getClassName } from '../utils';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
-  console.log('DATA: ', data);
-  const class_style = data.customClass || 'default';
-  console.log('class_style: ', class_style);
-  const customClass = () =>
-    config.blocks.blocksConfig['arcgis_block'].templates?.[class_style]
-      ?.customClass;
-  // // console.log('config.blocks.blocksConfig: ', config.blocks.blocksConfig);
-  console.log('customClass: ', customClass());
+  // const class_style = data.customClass || 'default';
+  // const customClass = () =>
+  //   config.blocks.blocksConfig['arcgis_block'].styles?.[class_style]
+  //     ?.customClass;
 
   const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
     noSsr: true,
@@ -24,8 +20,7 @@ const Edit = (props) => {
     <>
       <ArcgisMap
         darkMode={data.style === 'dark' ? true : false}
-        // classStyle={templateSchema()}
-        customClass={customClass()}
+        customClass={getClassName(data)}
       />
       <SidebarPortal selected={selected}>
         <InlineForm

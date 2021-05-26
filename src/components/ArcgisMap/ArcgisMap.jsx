@@ -18,21 +18,9 @@ function ArcgisMap({ darkMode = false, customClass = null }) {
   });
   useEffect(() => {
     loadMap();
-    console.log('customClass: ', customClass);
     async function loadMap() {
       forceUpdate();
       await import('./styles/' + (darkMode ? 'dark' : 'light') + '.less');
-      // await import('./styles/ArcgisMap.less');
-      // await import('./styles/ArcgisMap.less');
-      // console.log("classStyle: ", classStyle);
-      // if (classStyle) {
-      // await classStyle;
-      //   console.log('classStyle: ', classStyle);
-      //   console.log('direct: ', import('./styles/ArcgisMap.less'));
-      // }
-      // setAssetsPath(
-      //   (await (await import('@arcgis/core/config.js')).default).assetsPath,
-      // );
       const Map = await (await import('@arcgis/core/Map')).default;
       const MapView = await (await import('@arcgis/core/views/MapView'))
         .default;
@@ -143,7 +131,6 @@ function ArcgisMap({ darkMode = false, customClass = null }) {
 
   return (
     <>
-      {/* <div className={customClass ? customClass : ''}> */}
       <div className={mapClass}>
         <div ref={mapDiv} className="map"></div>
         <div className="loading">
@@ -151,7 +138,6 @@ function ArcgisMap({ darkMode = false, customClass = null }) {
           <FontAwesomeIcon icon={faSpinner} pulse />
         </div>
       </div>
-      {/* </div> */}
     </>
   );
 }

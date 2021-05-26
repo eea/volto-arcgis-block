@@ -1,15 +1,7 @@
 import world from '@plone/volto/icons/world.svg';
 import View from './View';
 import Edit from './Edit';
-// import '../ArcgisMap/styles/ArcgisMap.less';
-// const getLand = async () => {
-//   return await import('../ArcgisMap/styles/ArcgisMap.less');
-// };
-// import loadable from '@loadable/component';
 
-// const Land = loadable(() => import('../ArcgisMap/styles/ArcgisMap.less'), {
-//   noSsr: true,
-// });
 const BlocksConfig = (config) => ({
   ...config.blocks.blocksConfig,
   arcgis_block: {
@@ -27,7 +19,7 @@ const BlocksConfig = (config) => ({
       addPermission: [], // Future proof (not implemented yet) add user permission role(s)
       view: [], // Future proof (not implemented yet) view user role(s)
     },
-    templates: {
+    styles: {
       default: {
         title: 'Default',
         customClass: null,

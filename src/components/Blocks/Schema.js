@@ -1,10 +1,9 @@
 import config from '@plone/volto/registry';
 export const Schema = () => {
-  // console.log("config: ", config)
-  const templatesConfig = config.blocks.blocksConfig['arcgis_block'].templates;
-  const templates = Object.keys(templatesConfig).map((template) => [
-    template,
-    templatesConfig[template].title || template,
+  const stylesConfig = config.blocks.blocksConfig['arcgis_block'].styles;
+  const styles = Object.keys(stylesConfig).map((style) => [
+    style,
+    stylesConfig[style].title || style,
   ]);
   return {
     title: 'Button default',
@@ -29,7 +28,7 @@ export const Schema = () => {
       customClass: {
         title: 'Customization class',
         description: 'Select customization design',
-        choices: [...templates],
+        choices: [...styles],
         default: 'default',
       },
     },
