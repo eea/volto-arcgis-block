@@ -4,13 +4,13 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
-import { useForceUpdate } from '../utils';
+// import { useForceUpdate } from '../utils';
 import classNames from 'classnames';
 import './styles/ArcgisMap.less';
 
 let view;
 function ArcgisMap({ darkMode = false, customClass = null }) {
-  const forceUpdate = useForceUpdate();
+  // const forceUpdate = useForceUpdate();
   const mapDiv = useRef(null);
 
   let mapClass = classNames('map-container', {
@@ -19,7 +19,7 @@ function ArcgisMap({ darkMode = false, customClass = null }) {
   useEffect(() => {
     loadMap();
     async function loadMap() {
-      forceUpdate();
+      // forceUpdate();
       await import('./styles/' + (darkMode ? 'dark' : 'light') + '.less');
       const Map = await (await import('@arcgis/core/Map')).default;
       const MapView = await (await import('@arcgis/core/views/MapView'))

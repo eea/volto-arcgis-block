@@ -1,18 +1,9 @@
 import React, { useState } from 'react';
 import classNames from 'classnames';
 
-// import './styles/ArcgisMap.less';
-// const loadStyle = async (classStyle) => {
-//   if (classStyle) {
-//     await classStyle;
-//     console.log('classStyle: ', classStyle);
-//   }
-// };
-
 function LayerSelector() {
   const [showMapMenu, setShowMapMenu] = useState(false);
-  // console.log('LayerSelector classStyle: ', classStyle);
-  // loadStyle(classStyle);
+
   var menuClass = classNames(
     'esri-icon-basemap esri-widget--button esri-widget esri-interactive',
     {

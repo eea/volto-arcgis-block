@@ -1,5 +1,4 @@
 import React from 'react';
-// import ArcgisMap from '../ArcgisMap/ArcgisMap';
 import { SidebarPortal } from '@plone/volto/components';
 import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
 import { Schema } from './Schema';
@@ -8,11 +7,6 @@ import { getClassName } from '../utils';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
-  // const class_style = data.customClass || 'default';
-  // const customClass = () =>
-  //   config.blocks.blocksConfig['arcgis_block'].styles?.[class_style]
-  //     ?.customClass;
-
   const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
     noSsr: true,
   });

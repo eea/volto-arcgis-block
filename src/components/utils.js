@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+// import { useState, useCallback } from 'react';
 import config from '@plone/volto/registry';
 
 export const isServer = !(
@@ -7,13 +7,13 @@ export const isServer = !(
   window.document.createElement
 );
 
-export function useForceUpdate() {
-  const [, setTick] = useState(0);
-  const update = useCallback(() => {
-    setTick((tick) => tick + 1);
-  }, []);
-  return update;
-}
+// export function useForceUpdate() {
+//   const [, setTick] = useState(0);
+//   const update = useCallback(() => {
+//     setTick((tick) => tick + 1);
+//   }, []);
+//   return update;
+// }
 
 export function getClassName(data) {
   const class_style = data.customClass || 'default';

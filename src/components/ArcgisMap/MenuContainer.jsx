@@ -1,19 +1,9 @@
 import React, { useState } from 'react';
 import classNames from 'classnames';
-// import './styles/ArcgisMap.less';
-
-// const loadStyle = async (classStyle) => {
-//   if (classStyle) {
-//     await classStyle;
-//     console.log('classStyle: ', classStyle);
-//   }
-// };
 
 function MenuContainer() {
   const [showMapMenu, setShowMapMenu] = useState(false);
-  // console.log('MenuContainer classStyle: ', classStyle);
 
-  // loadStyle(classStyle);
   var menuClass = classNames(
     'esri-widget--button esri-widget esri-interactive',
     {
