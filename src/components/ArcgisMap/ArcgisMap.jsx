@@ -5,17 +5,31 @@ import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
 import { useForceUpdate } from '../utils';
+import classNames from 'classnames';
+import './styles/ArcgisMap.less';
 
 let view;
-function ArcgisMap({ darkMode = false }) {
+function ArcgisMap({ darkMode = false, customClass = null }) {
   const forceUpdate = useForceUpdate();
   const mapDiv = useRef(null);
+
+  let mapClass = classNames('map-container', {
+    [`${customClass}`]: customClass,
+  });
   useEffect(() => {
     loadMap();
+    console.log('customClass: ', customClass);
     async function loadMap() {
       forceUpdate();
       await import('./styles/' + (darkMode ? 'dark' : 'light') + '.less');
-      await import('./styles/ArcgisMap.less');
+      // await import('./styles/ArcgisMap.less');
+      // await import('./styles/ArcgisMap.less');
+      // console.log("classStyle: ", classStyle);
+      // if (classStyle) {
+      // await classStyle;
+      //   console.log('classStyle: ', classStyle);
+      //   console.log('direct: ', import('./styles/ArcgisMap.less'));
+      // }
       // setAssetsPath(
       //   (await (await import('@arcgis/core/config.js')).default).assetsPath,
       // );
@@ -125,17 +139,19 @@ function ArcgisMap({ darkMode = false }) {
         }
       }
     }
-  }, [darkMode]);
+  }, [darkMode, customClass]);
 
   return (
     <>
-      <div className="map-container">
-        <div ref={mapDiv} className="map dark"></div>
+      {/* <div className={customClass ? customClass : ''}> */}
+      <div className={mapClass}>
+        <div ref={mapDiv} className="map"></div>
         <div className="loading">
           {' '}
           <FontAwesomeIcon icon={faSpinner} pulse />
         </div>
       </div>
+      {/* </div> */}
     </>
   );
 }
