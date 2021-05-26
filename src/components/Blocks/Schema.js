@@ -1,6 +1,8 @@
 import config from '@plone/volto/registry';
+import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
+
 export const Schema = () => {
-  const stylesConfig = config.blocks.blocksConfig['arcgis_block'].styles;
+  const stylesConfig = config.blocks.blocksConfig[ARCGIS_BLOCK].styles;
   const styles = Object.keys(stylesConfig).map((style) => [
     style,
     stylesConfig[style].title || style,

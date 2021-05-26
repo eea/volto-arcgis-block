@@ -1,11 +1,12 @@
 import world from '@plone/volto/icons/world.svg';
 import View from './View';
 import Edit from './Edit';
+import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
 
 const BlocksConfig = (config) => ({
   ...config.blocks.blocksConfig,
-  arcgis_block: {
-    id: 'arcgis_block', // The name (id) of the block
+  [ARCGIS_BLOCK]: {
+    id: ARCGIS_BLOCK, // The name (id) of the block
     title: 'Arcgis Map', // The display name of the block
     icon: world, // The icon used in the block chooser
     group: 'common', // The group (blocks can be grouped, displayed in the chooser)
