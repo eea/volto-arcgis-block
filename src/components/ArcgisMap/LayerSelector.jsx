@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import classNames from 'classnames';
 
-function LayerSelector() {
+function LayerSelector({ id }) {
   const [showMapMenu, setShowMapMenu] = useState(false);
 
-  var menuClass = classNames(
+  const menuClass = classNames(
     'esri-icon-basemap esri-widget--button esri-widget esri-interactive',
     {
       'esri-icon-right-arrow': showMapMenu,
@@ -14,14 +14,19 @@ function LayerSelector() {
 
   function openMenu() {
     if (showMapMenu) {
-      document.getElementsByClassName('esri-basemap-gallery')[0].style.display =
+      document
+        .getElementById(id)
+        .getElementsByClassName('esri-basemap-gallery')[0].style.display =
         'none';
       setShowMapMenu(false);
     } else {
       document
+        .getElementById(id)
         .getElementsByClassName('esri-basemap-gallery')[0]
         .classList.add('basemap-gallery-container');
-      document.getElementsByClassName('esri-basemap-gallery')[0].style.display =
+      document
+        .getElementById(id)
+        .getElementsByClassName('esri-basemap-gallery')[0].style.display =
         'block';
       setShowMapMenu(true);
     }
@@ -29,12 +34,11 @@ function LayerSelector() {
   return (
     <div
       className={menuClass}
-      id="map_basemap_button"
       role="button"
       title="Basemap gallery"
       onClick={() => openMenu()}
       onKeyDown={() => openMenu()}
-      tabIndex={0}
+      tabIndex={id}
     ></div>
   );
 }

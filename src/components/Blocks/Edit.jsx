@@ -7,12 +7,17 @@ import { getClassName } from '../utils';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
+
   const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
     noSsr: true,
   });
   return (
     <>
-      <ArcgisMap theme={data.style} customClass={getClassName(data)} />
+      <ArcgisMap
+        theme={data.style}
+        customClass={getClassName(data)}
+        id={block}
+      />
       <SidebarPortal selected={selected}>
         <InlineForm
           schema={Schema()}
