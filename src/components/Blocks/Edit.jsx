@@ -12,10 +12,7 @@ const Edit = (props) => {
   });
   return (
     <>
-      <ArcgisMap
-        darkMode={data.style === 'dark' ? true : false}
-        customClass={getClassName(data)}
-      />
+      <ArcgisMap theme={data.style} customClass={getClassName(data)} />
       <SidebarPortal selected={selected}>
         <InlineForm
           schema={Schema()}

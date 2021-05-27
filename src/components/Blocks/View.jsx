@@ -7,12 +7,7 @@ const View = (props) => {
   const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
     noSsr: true,
   });
-  return (
-    <ArcgisMap
-      darkMode={data.style === 'dark' ? true : false}
-      customClass={getClassName(data)}
-    />
-  );
+  return <ArcgisMap theme={data.style} customClass={getClassName(data)} />;
 };
 
 export default View;

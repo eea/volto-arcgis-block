@@ -22,10 +22,18 @@ export const Schema = () => {
         description:
           'To see the results it is necessary to refresh the browser',
         choices: [
-          ['light', 'Light'],
+          ['default-light', 'Default Light'],
+          ['light-blue', 'Light blue'],
+          ['light-green', 'Light green'],
+          ['light-purple', 'Light purple'],
+          ['light-red', 'Light red'],
           ['dark', 'Dark'],
+          ['dark-blue', 'Dark Blue'],
+          ['dark-green', 'Dark Green'],
+          ['dark-purple', 'Dark Purple'],
+          ['dark-red', 'Dark Red'],
         ],
-        default: 'light',
+        default: 'default-light',
       },
       customClass: {
         title: 'Customization class',
