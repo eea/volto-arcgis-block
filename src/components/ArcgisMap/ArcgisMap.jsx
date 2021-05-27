@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import LayerSelector from './LayerSelector';
+import MenuContainer from './MenuContainer';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import './ArcgisMap.less';
@@ -110,7 +111,10 @@ function ArcgisMap({
               const menuContainerNode = document.createElement('div');
               menuContainerNode.className = 'map-left-menu-container';
               // Parse React Component to DOM
-              ReactDOM.render(extraMenu, menuContainerNode);
+              ReactDOM.render(
+                <MenuContainer>{extraMenu}</MenuContainer>,
+                menuContainerNode,
+              );
               view.ui.add(menuContainerNode, 'top-left');
             }
 
@@ -141,7 +145,7 @@ function ArcgisMap({
         }
       });
     }
-  }, [theme, customClass, id]);
+  }, [theme, customClass, id, extraMenu]);
 
   return (
     <>
