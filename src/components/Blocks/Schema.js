@@ -7,13 +7,20 @@ export const Schema = () => {
     style,
     stylesConfig[style].title || style,
   ]);
+
+  const extraMenuConfig = config.blocks.blocksConfig[ARCGIS_BLOCK].extraMenu;
+  const extraMenu = Object.keys(extraMenuConfig).map((extraMenu) => [
+    extraMenu,
+    extraMenuConfig[extraMenu].title || extraMenu,
+  ]);
+
   return {
     title: 'Button default',
     fieldsets: [
       {
         id: 'default',
         title: 'Default',
-        fields: ['style', 'customClass'],
+        fields: ['style', 'customClass', 'extraMenu'],
       },
     ],
     properties: {
@@ -36,9 +43,15 @@ export const Schema = () => {
         default: 'default-light',
       },
       customClass: {
-        title: 'Customization class',
+        title: 'Custom Style',
         description: 'Select customization design',
         choices: [...styles],
+        default: 'default',
+      },
+      extraMenu: {
+        title: 'Extra menu',
+        description: 'Add extra menu component',
+        choices: [...extraMenu],
         default: 'default',
       },
     },

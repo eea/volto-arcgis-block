@@ -20,3 +20,9 @@ export function getClassName(data) {
   return config.blocks.blocksConfig['arcgis_block'].styles?.[class_style]
     ?.customClass;
 }
+
+export function getExtraMenu(data) {
+  const extra_menu = data.extraMenu || 'default';
+  return config.blocks.blocksConfig['arcgis_block'].extraMenu?.[extra_menu]
+    ?.component;
+}

@@ -7,9 +7,14 @@ import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import './ArcgisMap.less';
 import { loadModules, loadCss } from 'esri-loader';
-
+import { getExtraMenu } from '../utils';
 let view;
-function ArcgisMap({ id, theme = 'default-light', customClass = null }) {
+function ArcgisMap({
+  id,
+  theme = 'default-light',
+  customClass = null,
+  extraMenu = null,
+}) {
   const mapDiv = useRef(null);
 
   let mapClass = classNames('map-container', {
@@ -106,11 +111,13 @@ function ArcgisMap({ id, theme = 'default-light', customClass = null }) {
             view.ui.add(legend_button, 'top-right');
 
             // Menu
-            const menuContainerNode = document.createElement('div');
-            menuContainerNode.className = 'map-left-menu-container';
-            // Parse React Component to DOM
-            ReactDOM.render(<MenuContainer />, menuContainerNode);
-            view.ui.add(menuContainerNode, 'top-left');
+            if (extraMenu) {
+              const menuContainerNode = document.createElement('div');
+              menuContainerNode.className = 'map-left-menu-container';
+              // Parse React Component to DOM
+              ReactDOM.render(extraMenu, menuContainerNode);
+              view.ui.add(menuContainerNode, 'top-left');
+            }
 
             // loadTestProducts();
 
