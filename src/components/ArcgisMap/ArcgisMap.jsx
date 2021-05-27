@@ -21,8 +21,8 @@ function ArcgisMap({ id, theme = 'default-light', customClass = null }) {
     } else {
       loadCss(
         'https://js.arcgis.com/4.19/@arcgis/core/assets/esri/themes/' +
-          theme +
-          '/main.css',
+        theme +
+        '/main.css',
       );
     }
     loadMap();
@@ -123,14 +123,16 @@ function ArcgisMap({ id, theme = 'default-light', customClass = null }) {
 
             // Loading icon
             view.watch('updating', function (evt) {
-              if (evt === true) {
-                document
-                  .getElementById(id)
-                  .querySelector('.loading').style.display = 'flex';
-              } else {
-                document
-                  .getElementById(id)
-                  .querySelector('.loading').style.display = 'none';
+              if (document.getElementById(id)) {
+                if (evt === true) {
+                  document
+                    .getElementById(id)
+                    .querySelector('.loading').style.display = 'flex';
+                } else {
+                  document
+                    .getElementById(id)
+                    .querySelector('.loading').style.display = 'none';
+                }
               }
             });
           }
