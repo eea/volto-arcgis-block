@@ -1,12 +1,6 @@
 // import { useState, useCallback } from 'react';
 import config from '@plone/volto/registry';
 
-export const isServer = !(
-  typeof window !== 'undefined' &&
-  window.document &&
-  window.document.createElement
-);
-
 // export function useForceUpdate() {
 //   const [, setTick] = useState(0);
 //   const update = useCallback(() => {
@@ -25,4 +19,8 @@ export function getExtraMenu(data) {
   const extra_menu = data.extraMenu || 'default';
   return config.blocks.blocksConfig['arcgis_block'].extraMenu?.[extra_menu]
     ?.component;
+}
+
+export function getTheme(theme) {
+  return `https://js.arcgis.com/4.19/@arcgis/core/assets/esri/themes/${theme}/main.css`;
 }

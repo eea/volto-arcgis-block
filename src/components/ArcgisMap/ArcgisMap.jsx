@@ -1,13 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import MenuContainer from './MenuContainer';
 import LayerSelector from './LayerSelector';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import './ArcgisMap.less';
 import { loadModules, loadCss } from 'esri-loader';
-import { getExtraMenu } from '../utils';
+import { getTheme } from '../utils';
 let view;
 function ArcgisMap({
   id,
@@ -24,11 +23,7 @@ function ArcgisMap({
     if (theme === 'default-light') {
       loadCss();
     } else {
-      loadCss(
-        'https://js.arcgis.com/4.19/@arcgis/core/assets/esri/themes/' +
-        theme +
-        '/main.css',
-      );
+      loadCss(getTheme(theme));
     }
     loadMap();
 
