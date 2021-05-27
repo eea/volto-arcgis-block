@@ -25,9 +25,9 @@ export const Schema = () => {
     ],
     properties: {
       style: {
-        title: 'Map style',
+        title: 'Map style (Beta)',
         description:
-          'To see the results it is necessary to refresh the browser',
+          'Note 1: To see the results it is necessary to refresh the browser. Note 2: Only the last import of the style will take effect, only one style can be used for all maps.',
         choices: [
           ['default-light', 'Default Light'],
           ['light-blue', 'Light blue'],
