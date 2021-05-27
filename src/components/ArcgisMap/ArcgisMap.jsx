@@ -9,7 +9,7 @@ import './ArcgisMap.less';
 import { loadModules, loadCss } from 'esri-loader';
 
 let view;
-function ArcgisMap({ theme = 'default-light', customClass = null }) {
+function ArcgisMap({ id, theme = 'default-light', customClass = null }) {
   const mapDiv = useRef(null);
 
   let mapClass = classNames('map-container', {
@@ -64,7 +64,7 @@ function ArcgisMap({ theme = 'default-light', customClass = null }) {
             const baseMapNode = document.createElement('div');
             baseMapNode.className = 'basemap-gallery-container';
             // Parse React Component to DOM
-            ReactDOM.render(<LayerSelector />, baseMapNode);
+            ReactDOM.render(<LayerSelector id={id} />, baseMapNode);
             view.ui.add(baseMapNode, 'top-right');
 
             const basemapGallery = new BasemapGallery({
@@ -124,20 +124,24 @@ function ArcgisMap({ theme = 'default-light', customClass = null }) {
             // Loading icon
             view.watch('updating', function (evt) {
               if (evt === true) {
-                document.querySelector('.loading').style.display = 'flex';
+                document
+                  .getElementById(id)
+                  .querySelector('.loading').style.display = 'flex';
               } else {
-                document.querySelector('.loading').style.display = 'none';
+                document
+                  .getElementById(id)
+                  .querySelector('.loading').style.display = 'none';
               }
             });
           }
         }
       });
     }
-  }, [theme, customClass]);
+  }, [theme, customClass, id]);
 
   return (
     <>
-      <div className={mapClass}>
+      <div className={mapClass} id={id}>
         <div ref={mapDiv} className="map"></div>
         <div className="loading">
           {' '}
