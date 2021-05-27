@@ -1,7 +1,6 @@
 import world from '@plone/volto/icons/world.svg';
 import { View, Edit } from '@eeacms/volto-arcgis-block/components';
 import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
-import MenuContainer from '@eeacms/volto-arcgis-block/components/ArcgisMap/MenuContainer';
 
 export default (config) => {
   config.blocks.blocksConfig[ARCGIS_BLOCK] = {
@@ -29,10 +28,6 @@ export default (config) => {
       default: {
         title: 'Default (None)',
         component: null,
-      },
-      land: {
-        title: 'Land products',
-        component: MenuContainer,
       },
     },
   };
