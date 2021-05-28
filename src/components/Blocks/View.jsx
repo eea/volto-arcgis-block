@@ -1,16 +1,19 @@
 import React from 'react';
 import loadable from '@loadable/component';
-import { getClassName } from '../utils';
+import { getClassName, getExtraMenu } from '../utils';
 
 const View = (props) => {
-  const { data } = props;
+  const { data, id } = props;
   const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
     noSsr: true,
   });
+  const ExtraComponent = getExtraMenu(data);
   return (
     <ArcgisMap
-      darkMode={data.style === 'dark' ? true : false}
+      theme={data.style}
       customClass={getClassName(data)}
+      id={id}
+      extraMenu={ExtraComponent ? <ExtraComponent /> : null}
     />
   );
 };

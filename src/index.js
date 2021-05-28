@@ -24,6 +24,12 @@ export default (config) => {
         customClass: null,
       },
     },
+    extraMenu: {
+      default: {
+        title: 'Default (None)',
+        component: null,
+      },
+    },
   };
   return config;
 };
