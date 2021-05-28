@@ -61,3 +61,31 @@ const customBlocks = (config) => ({
   ],
 ````
 ![Style example volto-arcgis-block](docs/styles_example.gif)
+
+
+<br>
+
+## Extra menu
+This addon has the option to add an additional component on the map. In this case, it will be displayed when you click on the menu button.
+
+1. Create React JS component.
+2. Add the new component in the [custom Blocks configuration](https://docs.voltocms.com/blocks/settings/#configuring-a-new-block):
+
+````JS
+import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
+import CustomMapMenu from './<your-component-url>/CustomMapMenu';
+
+const customBlocks = (config) => ({
+  ...config.blocks.blocksConfig,
+  [ARCGIS_BLOCK]: {
+    ...config.blocks.blocksConfig[ARCGIS_BLOCK],
+    extraMenu: {
+      ...config.blocks.blocksConfig[ARCGIS_BLOCK]?.extraMenu,
+      land: {
+        title: 'Land Products',
+        component: CustomMapMenu,
+      },
+    },
+  },
+````
+![Extra Menu example volto-arcgis-block](docs/extra_menu_example.gif)
