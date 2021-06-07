@@ -5,21 +5,32 @@ import { Schema } from './Schema';
 import loadable from '@loadable/component';
 import { getClassName, getExtraMenu } from '../utils';
 
+// var cfg = require('./config.json');
+import config from '../MapViewer/config';
+
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
 
-  const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
+  // const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
+  //   noSsr: true,
+  // });
+  const MapViewer = loadable(() => import('../MapViewer/MapViewer'), {
     noSsr: true,
   });
-  const ExtraComponent = getExtraMenu(data);
+  // const ExtraComponent = getExtraMenu(data);
   return (
     <>
-      <ArcgisMap
+      {/* <ArcgisMap
         theme={data.style}
         customClass={getClassName(data)}
         extraMenu={ExtraComponent ? <ExtraComponent /> : null}
         id={block}
-      />
+      /> */}
+      <MapViewer
+        cfg={config}
+        customClass={getClassName(data)}
+        id={block}
+      ></MapViewer>
       <SidebarPortal selected={selected}>
         <InlineForm
           schema={Schema()}
