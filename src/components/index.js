@@ -1,5 +1,5 @@
-import ArcgisMap from './ArcgisMap/ArcgisMap';
+import MapViewer from './MapViewer/MapViewer';
 import Edit from './Blocks/Edit';
 import View from './Blocks/View';
 
-export { ArcgisMap, Edit, View };
+export { MapViewer, Edit, View };
