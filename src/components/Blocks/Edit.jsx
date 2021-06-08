@@ -26,7 +26,7 @@ const Edit = (props) => {
       <SidebarPortal selected={selected}>
         <InlineForm
           schema={Schema()}
-          title="Button component block"
+          title="Arcgis map component block"
           onChangeField={(id, value) => {
             onChangeBlock(block, {
               ...data,

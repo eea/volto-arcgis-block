@@ -15,7 +15,7 @@ export const Schema = () => {
   ]);
 
   return {
-    title: 'Button default',
+    title: 'Map default',
     fieldsets: [
       {
         id: 'default',

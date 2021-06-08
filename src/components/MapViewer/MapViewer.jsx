@@ -1,5 +1,5 @@
 import React, { createRef } from 'react';
-// import './ArcgisMap.css';
+import './ArcgisMap.css';
 import classNames from 'classnames';
 import BasemapWidget from './BasemapWidget';
 import { loadModules, loadCss } from 'esri-loader';
