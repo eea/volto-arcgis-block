@@ -1,6 +1,7 @@
 import React, { createRef } from 'react';
 // import './ArcgisMap.css';
 import { loadModules } from 'esri-loader';
+const [BasemapGallery] = await loadModules(['esri/widgets/BasemapGallery']);
 
 class BasemapWidget extends React.Component {
   /**
@@ -48,13 +49,8 @@ class BasemapWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   componentDidMount() {
-    loadModules(['esri/widgets/BasemapGallery']).then(([BasemapGallery]) => {
-      this.basemapGallery = new BasemapGallery({
-        view: this.props.view,
-      });
-      this.props.view.ui.add(this.basemaps.current, 'top-right');
-      this.props.view.ui.add(this.basemapGallery, 'top-right');
-    });
+    this.props.view.ui.add(this.basemaps.current, 'top-right');
+    this.props.view.ui.add(this.basemapGallery, 'top-right');
   }
   /**
    * This method renders the component

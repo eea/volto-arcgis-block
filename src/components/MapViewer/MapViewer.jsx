@@ -3,6 +3,11 @@ import './ArcgisMap.css';
 import classNames from 'classnames';
 import BasemapWidget from './BasemapWidget';
 import { loadModules, loadCss } from 'esri-loader';
+const [Map, MapView, Zoom] = await loadModules([
+  'esri/WebMap',
+  'esri/views/MapView',
+  'esri/widgets/Zoom'
+]);
 
 class MapViewer extends React.Component {
   /**
@@ -32,39 +37,34 @@ class MapViewer extends React.Component {
    */
   componentDidMount() {
     loadCss();
-    loadModules([
-      'esri/WebMap',
-      'esri/views/MapView',
-      'esri/widgets/Zoom',
-    ]).then(([Map, MapView, Zoom]) => {
-      // this.mapdiv.current is the reference to the current DOM element of
-      // this.mapdiv after it was mounted by the render() method
-      this.map = new Map({
-        basemap: 'topo-vector',
-      });
-      this.view = new MapView({
-        container: this.mapdiv.current,
-        map: this.map,
-        center: this.mapCfg.center,
-        zoom: this.mapCfg.zoom,
-        ui: {
-          components: ['attribution'],
-        },
-      });
-      this.zoom = new Zoom({
-        view: this.view,
-      });
-      this.view.ui.add(this.zoom, {
-        position: 'top-right',
-      });
 
-      //Once we have created the MapView, we need to ensure that the map div
-      //is refreshed in order to show the map on it. To do so, we need to
-      //trigger the renderization again, and to trigger the renderization
-      //we invoke the setState method, that changes the state and forces a
-      //react component to render itself again
-      this.setState({});
+    // this.mapdiv.current is the reference to the current DOM element of
+    // this.mapdiv after it was mounted by the render() method
+    this.map = new Map({
+      basemap: 'topo-vector',
     });
+    this.view = new MapView({
+      container: this.mapdiv.current,
+      map: this.map,
+      center: this.mapCfg.center,
+      zoom: this.mapCfg.zoom,
+      ui: {
+        components: ['attribution'],
+      },
+    });
+    this.zoom = new Zoom({
+      view: this.view,
+    });
+    this.view.ui.add(this.zoom, {
+      position: 'top-right',
+    });
+
+    //Once we have created the MapView, we need to ensure that the map div
+    //is refreshed in order to show the map on it. To do so, we need to
+    //trigger the renderization again, and to trigger the renderization
+    //we invoke the setState method, that changes the state and forces a
+    //react component to render itself again
+    this.setState({});
   }
 
   /**
