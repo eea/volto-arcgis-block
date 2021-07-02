@@ -1,91 +1,86 @@
-# [WIP] Volto Arcgis Block
-## ArcGIS Map integration for Volto blocks
-***Disclaimer:** This product is in development, at this time it is not recommended to use it.*
+# volto-addon-template
+[![Releases](https://img.shields.io/github/v/release/eea/volto-addon-template)](https://github.com/eea/volto-addon-template/releases)
+[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-addon-template%2Fmaster&subject=master)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-addon-template/job/master/display/redirect)
+[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-addon-template%2Fdevelop&subject=develop)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-addon-template/job/develop/display/redirect)
 
-![Demo example volto-arcgis-block](docs/demo.gif)
+[Volto](https://github.com/plone/volto) add-on
 
-## Styling
-To create custom styles, we need to add it in the block configuration and import the Less file into our project.
+## Features
 
-1. Add the new styles in the [custom Blocks configuration](https://docs.voltocms.com/blocks/settings/#configuring-a-new-block):
+Demo GIF
 
-````JS
-import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
+## Getting started
 
-const customBlocks = (config) => ({
-  ...config.blocks.blocksConfig,
-  [ARCGIS_BLOCK]: {
-    ...config.blocks.blocksConfig[ARCGIS_BLOCK],
-    styles: {
-      ...config.blocks.blocksConfig[ARCGIS_BLOCK]?.styles,
-      land: {
-        title: 'Land style',
-        customClass: 'land',
-      },
-    },
-  },
-````
+### Try volto-addon-template with Docker
 
-2. Import the CSS in your project:
+1. Get the latest Docker images
 
-````CSS
-@import url('maps.less');
-````
-3. CSS structure:
-````LESS
-.land { // <-- Wrap your design inside a class with the name you used in customClass
-    .map {
-        width: 100%;
-        height: 600px;
-        padding: 0;
-        margin: 0;
-    }
+   ```
+   docker pull plone
+   docker pull plone/volto
+   ```
 
-    .esri-view .esri-view-surface--inset-outline:focus::after {
-        outline: none !important;
-    }
+1. Start Plone backend
+   ```
+   docker run -d --name plone -p 8080:8080 -e SITE=Plone -e PROFILES="profile-plone.restapi:blocks" plone
+   ```
 
-    .esri-component.esri-zoom.esri-widget {
-        margin-bottom: 0;
-        box-shadow: none;
-    }
-}
-````
+1. Start Volto frontend
 
+   ```
+   docker run -it --rm -p 3000:3000 --link plone -e ADDONS="@eeacms/volto-addon-template" plone/volto
+   ```
 
-***Note: If the style selector does not show your new style, try to change the order of the declaration of the addons in package.json, giving preference to volto-arcgis-block***
-````
-"addons": [
-    "@eeacms/volto-arcgis-block",
-    "@eeacms/volto-clms-theme"
-  ],
-````
-![Style example volto-arcgis-block](docs/styles_example.gif)
+1. Go to http://localhost:3000
 
+### Add volto-addon-template to your Volto project
 
-<br>
+1. Make sure you have a [Plone backend](https://plone.org/download) up-and-running at http://localhost:8080/Plone
 
-## Extra menu
-This addon has the option to add an additional component on the map. In this case, it will be displayed when you click on the menu button.
+1. Start Volto frontend
 
-1. Create React JS component.
-2. Add the new component in the [custom Blocks configuration](https://docs.voltocms.com/blocks/settings/#configuring-a-new-block):
+* If you already have a volto project, just update `package.json`:
 
-````JS
-import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
-import CustomMapMenu from './<your-component-url>/CustomMapMenu';
+   ```JSON
+   "addons": [
+       "@eeacms/volto-addon-template"
+   ],
 
-const customBlocks = (config) => ({
-  ...config.blocks.blocksConfig,
-  [ARCGIS_BLOCK]: {
-    ...config.blocks.blocksConfig[ARCGIS_BLOCK],
-    extraMenu: {
-      ...config.blocks.blocksConfig[ARCGIS_BLOCK]?.extraMenu,
-      land: {
-        title: 'Land Products',
-        component: CustomMapMenu,
-      },
-    },
-  },
-````
-![Extra Menu example volto-arcgis-block](docs/extra_menu_example.gif)
+   "dependencies": {
+       "@eeacms/volto-addon-template": "^1.0.0"
+   }
+   ```
+
+* If not, create one:
+
+   ```
+   npm install -g yo @plone/generator-volto
+   yo @plone/volto my-volto-project --addon @eeacms/volto-addon-template
+   cd my-volto-project
+   ```
+
+1. Install new add-ons and restart Volto:
+
+   ```
+   yarn
+   yarn start
+   ```
+
+1. Go to http://localhost:3000
+
+1. Happy editing!
+
+## How to contribute
+
+See [DEVELOP.md](https://github.com/eea/volto-addon-template/blob/master/DEVELOP.md).
+
+## Copyright and license
+
+The Initial Owner of the Original Code is European Environment Agency (EEA).
+All Rights Reserved.
+
+See [LICENSE.md](https://github.com/eea/volto-addon-template/blob/master/LICENSE.md) for details.
+
+## Funding
+
+[European Environment Agency (EU)](http://eea.europa.eu)
