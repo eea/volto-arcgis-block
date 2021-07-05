@@ -1,4 +1,8 @@
 # [WIP] Volto Arcgis Block
+[![Releases](https://img.shields.io/github/v/release/eea/volto-arcgis-block)](https://github.com/eea/volto-arcgis-block/releases)
+[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-arcgis-block%2Fmaster&subject=master)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-arcgis-block/job/master/display/redirect)
+[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-arcgis-block%2Fdevelop&subject=develop)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-arcgis-block/job/develop/display/redirect)
+
 ## ArcGIS Map integration for Volto blocks
 ****This product is in development, at this time it is not recommended to use it.***
 
