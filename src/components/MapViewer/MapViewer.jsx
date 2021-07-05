@@ -1,7 +1,6 @@
 import React, { createRef } from 'react';
 import './ArcgisMap.css';
 import classNames from 'classnames';
-import BasemapWidget from './BasemapWidget';
 import { loadModules, loadCss } from 'esri-loader';
 import BasemapWidget from './BasemapWidget';
 import MeasurementWidget from './MeasurementWidget';
