@@ -1,86 +1,63 @@
-# volto-arcgis-block
-[![Releases](https://img.shields.io/github/v/release/eea/volto-arcgis-block)](https://github.com/eea/volto-arcgis-block/releases)
-[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-arcgis-block%2Fmaster&subject=master)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-arcgis-block/job/master/display/redirect)
-[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-arcgis-block%2Fdevelop&subject=develop)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-arcgis-block/job/develop/display/redirect)
+# [WIP] Volto Arcgis Block
+## ArcGIS Map integration for Volto blocks
+****This product is in development, at this time it is not recommended to use it.***
 
-[Volto](https://github.com/plone/volto) add-on
+![Demo example volto-arcgis-block](docs/demo.gif)
 
-## Features
+## Styling
+To create custom styles, we need to add it in the block configuration and import the Less file into our project.
 
-Demo GIF
+1. Add the new styles in the [custom Blocks configuration](https://docs.voltocms.com/blocks/settings/#configuring-a-new-block):
 
-## Getting started
+````JS
+import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
 
-### Try volto-arcgis-block with Docker
+const customBlocks = (config) => ({
+  ...config.blocks.blocksConfig,
+  [ARCGIS_BLOCK]: {
+    ...config.blocks.blocksConfig[ARCGIS_BLOCK],
+    styles: {
+      ...config.blocks.blocksConfig[ARCGIS_BLOCK]?.styles,
+      land: {
+        title: 'Land style',
+        customClass: 'land',
+      },
+    },
+  },
+````
 
-1. Get the latest Docker images
+2. Import the CSS in your project:
 
-   ```
-   docker pull plone
-   docker pull plone/volto
-   ```
+````CSS
+@import url('maps.less');
+````
+3. CSS structure:
+````LESS
+.land { // <-- Wrap your design inside a class with the name you used in customClass
+    .map {
+        width: 100%;
+        height: 600px;
+        padding: 0;
+        margin: 0;
+    }
 
-1. Start Plone backend
-   ```
-   docker run -d --name plone -p 8080:8080 -e SITE=Plone -e PROFILES="profile-plone.restapi:blocks" plone
-   ```
+    .esri-view .esri-view-surface--inset-outline:focus::after {
+        outline: none !important;
+    }
 
-1. Start Volto frontend
+    .esri-component.esri-zoom.esri-widget {
+        margin-bottom: 0;
+        box-shadow: none;
+    }
+}
+````
 
-   ```
-   docker run -it --rm -p 3000:3000 --link plone -e ADDONS="@eeacms/volto-arcgis-block" plone/volto
-   ```
 
-1. Go to http://localhost:3000
-
-### Add volto-arcgis-block to your Volto project
-
-1. Make sure you have a [Plone backend](https://plone.org/download) up-and-running at http://localhost:8080/Plone
-
-1. Start Volto frontend
-
-* If you already have a volto project, just update `package.json`:
-
-   ```JSON
-   "addons": [
-       "@eeacms/volto-arcgis-block"
-   ],
-
-   "dependencies": {
-       "@eeacms/volto-arcgis-block": "^1.0.0"
-   }
-   ```
-
-* If not, create one:
-
-   ```
-   npm install -g yo @plone/generator-volto
-   yo @plone/volto my-volto-project --addon @eeacms/volto-arcgis-block
-   cd my-volto-project
-   ```
-
-1. Install new add-ons and restart Volto:
-
-   ```
-   yarn
-   yarn start
-   ```
-
-1. Go to http://localhost:3000
-
-1. Happy editing!
-
-## How to contribute
-
-See [DEVELOP.md](https://github.com/eea/volto-arcgis-block/blob/master/DEVELOP.md).
-
-## Copyright and license
-
-The Initial Owner of the Original Code is European Environment Agency (EEA).
-All Rights Reserved.
-
-See [LICENSE.md](https://github.com/eea/volto-arcgis-block/blob/master/LICENSE.md) for details.
-
-## Funding
-
-[European Environment Agency (EU)](http://eea.europa.eu)
+***Note: If the style selector does not show your new style, try to change the order of the declaration of the addons in package.json, giving preference to volto-arcgis-block***
+````
+"addons": [
+    "@eeacms/volto-arcgis-block",
+    "@eeacms/volto-clms-theme"
+  ],
+````
+![Style example volto-arcgis-block](docs/styles_example.gif)
