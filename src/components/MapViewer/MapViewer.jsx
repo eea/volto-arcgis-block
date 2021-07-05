@@ -1,6 +1,6 @@
 import React, { createRef } from "react";
 //import intl from "@arcgis/intl";
-import {setLocale} from "@arcgis/core/intl";
+//import {setLocale} from "@arcgis/core/intl";
 import "@arcgis/core/assets/esri/css/main.css";
 import "./ArcgisMap.css";
 import BasemapWidget from './BasemapWidget';
@@ -26,7 +26,7 @@ class MapViewer extends React.Component {
         //create here to reference the DOM element from javascript
         //code, for example, to create later a MapView component 
         //that will use the map div to show the map
-        setLocale("en");
+        //setLocale("en");
         this.mapdiv = createRef();
         this.mapCfg = props.cfg.Map;
         this.compCfg = props.cfg.Components;
@@ -55,7 +55,7 @@ class MapViewer extends React.Component {
         await this.loader();
         // this.mapdiv.current is the reference to the current DOM element of 
         // this.mapdiv after it was mounted by the render() method
-        setLocale("en-GB");
+        //setLocale("en-GB");
         this.view = new MapView({
             container: this.mapdiv.current,
             map: this.map,
