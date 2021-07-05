@@ -1,8 +1,8 @@
-import React, { createRef } from "react";
-//import intl from "@arcgis/intl";
-//import {setLocale} from "@arcgis/core/intl";
-import "@arcgis/core/assets/esri/css/main.css";
-import "./ArcgisMap.css";
+import React, { createRef } from 'react';
+import './ArcgisMap.css';
+import classNames from 'classnames';
+import BasemapWidget from './BasemapWidget';
+import { loadModules, loadCss } from 'esri-loader';
 import BasemapWidget from './BasemapWidget';
 import MeasurementWidget from './MeasurementWidget';
 import PrintWidget from './PrintWidget';
@@ -10,7 +10,6 @@ import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import MenuWidget from './MenuWidget';
-import { loadModules, loadCss } from 'esri-loader';
 var Map, MapView, Zoom;
 
 class MapViewer extends React.Component {
@@ -18,23 +17,22 @@ class MapViewer extends React.Component {
      * This method does the creation of the main component 
      * @param {*} props 
      */
-    constructor(props) {
+     constructor(props) {
         super(props);
         loadCss();
         //we create a reference to the DOM element that will
         //be later mounted. We will use the reference that we
         //create here to reference the DOM element from javascript
-        //code, for example, to create later a MapView component 
+        //code, for example, to create later a MapView component
         //that will use the map div to show the map
-        //setLocale("en");
         this.mapdiv = createRef();
         this.mapCfg = props.cfg.Map;
-        this.compCfg = props.cfg.Components;
-        this.map = new Map({
-            basemap: "topo"
+        this.map = null;
+        this.id = props.id;
+        this.mapClass = classNames('map-container', {
+          [`${props.customClass}`]: props.customClass || null,
         });
-        this.activeWidget = null;
-    }
+      }
     
     loader() {
       return loadModules([
@@ -55,7 +53,6 @@ class MapViewer extends React.Component {
         await this.loader();
         // this.mapdiv.current is the reference to the current DOM element of 
         // this.mapdiv after it was mounted by the render() method
-        //setLocale("en-GB");
         this.view = new MapView({
             container: this.mapdiv.current,
             map: this.map,
