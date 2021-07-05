@@ -11,9 +11,8 @@ class MapViewer extends React.Component {
    * @param {*} props
    */
   constructor(props) {
-    loadCss();
-    this.loader();
     super(props);
+    loadCss();
     //we create a reference to the DOM element that will
     //be later mounted. We will use the reference that we
     //create here to reference the DOM element from javascript
@@ -28,13 +27,13 @@ class MapViewer extends React.Component {
     });
   }
 
-  async loader() {
-    await loadModules([
+  loader() {
+    return loadModules([
       'esri/WebMap',
       'esri/views/MapView',
       'esri/widgets/Zoom',
     ]).then(([_Map, _MapView, _Zoom]) => {
-      [Map,MapView,Zoom] = [_Map, _MapView, _Zoom];
+      [Map, MapView, Zoom] = [_Map, _MapView, _Zoom];
     });
   }
 
@@ -43,7 +42,8 @@ class MapViewer extends React.Component {
    * will be executed, so we can access to the DOM elements, since
    * they are already mounted
    */
-  componentDidMount() {
+  async componentDidMount() {
+    await this.loader();
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
