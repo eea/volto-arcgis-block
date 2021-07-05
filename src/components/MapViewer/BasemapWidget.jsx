@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 // import './ArcgisMap.css';
 import { loadModules } from 'esri-loader';
-const [BasemapGallery] = await loadModules(['esri/widgets/BasemapGallery']);
+var BasemapGallery;
 
 class BasemapWidget extends React.Component {
   /**
@@ -9,14 +9,17 @@ class BasemapWidget extends React.Component {
    * @param {*} props
    */
   constructor(props) {
-    super(props);
-    //We create a reference to a DOM element to be mounted
-    this.basemaps = createRef();
-    //Initially, we set the state of the component to
-    //not be showing the basemap panel
-    this.state = { showMapMenu: false };
-    this.menuClass =
-      'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
+    return loadModules(['esri/widgets/BasemapGallery']).then(([_BasemapGallery]) => {
+      super(props);
+      BasemapGallery = _BasemapGallery;
+      //We create a reference to a DOM element to be mounted
+      this.basemaps = createRef();
+      //Initially, we set the state of the component to
+      //not be showing the basemap panel
+      this.state = { showMapMenu: false };
+      this.menuClass =
+        'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
+    });
   }
   /**
    * Method that will be invoked when the
@@ -49,6 +52,9 @@ class BasemapWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   componentDidMount() {
+    this.basemapGallery = new BasemapGallery({
+      view: this.props.view,
+    });
     this.props.view.ui.add(this.basemaps.current, 'top-right');
     this.props.view.ui.add(this.basemapGallery, 'top-right');
   }

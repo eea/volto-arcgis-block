@@ -3,11 +3,7 @@ import './ArcgisMap.css';
 import classNames from 'classnames';
 import BasemapWidget from './BasemapWidget';
 import { loadModules, loadCss } from 'esri-loader';
-const [Map, MapView, Zoom] = await loadModules([
-  'esri/WebMap',
-  'esri/views/MapView',
-  'esri/widgets/Zoom'
-]);
+var Map, MapView, Zoom;
 
 class MapViewer extends React.Component {
   /**
@@ -15,19 +11,31 @@ class MapViewer extends React.Component {
    * @param {*} props
    */
   constructor(props) {
-    super(props);
-    //we create a reference to the DOM element that will
-    //be later mounted. We will use the reference that we
-    //create here to reference the DOM element from javascript
-    //code, for example, to create later a MapView component
-    //that will use the map div to show the map
-    this.mapdiv = createRef();
-    this.mapCfg = props.cfg.Map;
-    this.map = null;
-    this.id = props.id;
-    this.mapClass = classNames('map-container', {
-      [`${props.customClass}`]: props.customClass || null,
+    loadCss();
+    return loadModules([
+      'esri/WebMap',
+      'esri/views/MapView',
+      'esri/widgets/Zoom',
+    ]).then(([_Map, _MapView, _Zoom]) => {
+      super(props);
+      Map = _Map;
+      MapView = _MapView;
+      Zoom = _Zoom;
+      //we create a reference to the DOM element that will
+      //be later mounted. We will use the reference that we
+      //create here to reference the DOM element from javascript
+      //code, for example, to create later a MapView component
+      //that will use the map div to show the map
+      this.mapdiv = createRef();
+      this.mapCfg = props.cfg.Map;
+      this.map = null;
+      this.id = props.id;
+      this.mapClass = classNames('map-container', {
+        [`${props.customClass}`]: props.customClass || null,
+      });
     });
+
+
   }
 
   /**
