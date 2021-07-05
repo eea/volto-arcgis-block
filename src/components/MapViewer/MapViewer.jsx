@@ -17,10 +17,8 @@ class MapViewer extends React.Component {
       'esri/views/MapView',
       'esri/widgets/Zoom',
     ]).then(([_Map, _MapView, _Zoom]) => {
+      [Map,MapView,Zoom] = [_Map, _MapView, _Zoom];
       super(props);
-      Map = _Map;
-      MapView = _MapView;
-      Zoom = _Zoom;
       //we create a reference to the DOM element that will
       //be later mounted. We will use the reference that we
       //create here to reference the DOM element from javascript
