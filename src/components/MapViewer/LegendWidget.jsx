@@ -1,5 +1,5 @@
 import React, {createRef } from "react";
-import "@arcgis/core/assets/esri/css/main.css";
+//import "@arcgis/core/assets/esri/css/main.css";
 import "./ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 var Legend;
