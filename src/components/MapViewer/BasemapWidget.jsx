@@ -9,18 +9,23 @@ class BasemapWidget extends React.Component {
    * @param {*} props
    */
   constructor(props) {
-    return loadModules(['esri/widgets/BasemapGallery']).then(([_BasemapGallery]) => {
-      super(props);
-      BasemapGallery = _BasemapGallery;
-      //We create a reference to a DOM element to be mounted
-      this.basemaps = createRef();
-      //Initially, we set the state of the component to
-      //not be showing the basemap panel
-      this.state = { showMapMenu: false };
-      this.menuClass =
-        'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
-    });
+    super(props);
+    this.loader();
+    //We create a reference to a DOM element to be mounted
+    this.basemaps = createRef();
+    //Initially, we set the state of the component to
+    //not be showing the basemap panel
+    this.state = { showMapMenu: false };
+    this.menuClass =
+    'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
   }
+
+  async loader(){
+    await loadModules(['esri/widgets/BasemapGallery']).then(([_BasemapGallery]) => {
+        BasemapGallery = _BasemapGallery;
+      });
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
