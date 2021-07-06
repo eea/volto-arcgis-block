@@ -52,6 +52,10 @@ class MapViewer extends React.Component {
         await this.loader();
         // this.mapdiv.current is the reference to the current DOM element of 
         // this.mapdiv after it was mounted by the render() method
+        this.map = new Map({
+            basemap: "topo"
+        });
+        
         this.view = new MapView({
             container: this.mapdiv.current,
             map: this.map,

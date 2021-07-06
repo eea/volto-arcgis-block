@@ -21,7 +21,7 @@ class MeasurementWidget extends React.Component {
 
     loader() {
         return loadModules(['esri/widgets/Measurement']).then(
-          ([_BMeasurement]) => {
+          ([_Measurement]) => {
             Measurement = _Measurement
           }
         );
