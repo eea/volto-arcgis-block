@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
-import './ArcgisMap.css';
+import "./css/styles.css";
+import "./css/ArcgisMap.css";
 import classNames from 'classnames';
 import { loadModules, loadCss } from 'esri-loader';
 import BasemapWidget from './BasemapWidget';
@@ -18,7 +19,6 @@ class MapViewer extends React.Component {
      */
      constructor(props) {
         super(props);
-        loadCss();
         //we create a reference to the DOM element that will
         //be later mounted. We will use the reference that we
         //create here to reference the DOM element from javascript
@@ -26,6 +26,7 @@ class MapViewer extends React.Component {
         //that will use the map div to show the map
         this.mapdiv = createRef();
         this.mapCfg = props.cfg.Map;
+        this.compCfg = this.props.cfg.Components;
         this.map = null;
         this.id = props.id;
         this.mapClass = classNames('map-container', {
@@ -49,6 +50,7 @@ class MapViewer extends React.Component {
      * they are already mounted
      */
      async componentDidMount() {
+        loadCss();
         await this.loader();
         // this.mapdiv.current is the reference to the current DOM element of 
         // this.mapdiv after it was mounted by the render() method

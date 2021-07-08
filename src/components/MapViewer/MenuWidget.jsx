@@ -1,8 +1,8 @@
 import React, { createRef } from "react";
 //import "@arcgis/core/assets/esri/css/main.css";
 //import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import "./ArcgisMap.css";
-import { loadModules } from 'esri-loader';
+//import "./css/ArcgisMap.css";
+import { loadModules, loadCss } from 'esri-loader';
 var WMSLayer;
 
 class MenuWidget extends React.Component {
@@ -67,6 +67,7 @@ class MenuWidget extends React.Component {
      * This method is executed after the rener method is executed
      */
      async componentDidMount() {
+        loadCss();
         await this.loader();
         this.props.view.ui.add(this.container.current, "top-left");
 
@@ -81,6 +82,7 @@ class MenuWidget extends React.Component {
      * @returns 
      */
     metodprocessJSON() {
+        if(!WMSLayer) return;
         var components = [];
         var index = 0;
         for (var i in this.compCfg) {

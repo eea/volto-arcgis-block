@@ -1,0 +1,113 @@
+#page-login .ui.segment.form {
+  margin: 1rem;
+}
+#page-login .ui.form .field .wrapper>label {
+  font-weight: bold;
+  font-size: 1.125rem;
+  display: block;
+  margin-bottom: 0;
+  padding: 0;
+  text-align: left;
+}
+#page-login .ui.segment.primary {
+  display: none;
+}
+#page-login .ui.segment.secondary {
+  background: #a0b1280f;
+  color: #a0b128;
+  padding: 1rem;
+}
+#page-login .inline.field.help:first-of-type {
+  margin-bottom: 1.66rem;
+}
+#login, #password {
+  background-color: #fff;
+  border: 1px solid #dadada;
+  color: #212529;
+  min-height: 2.5rem;
+  display: block;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+@media (min-width: 768px) {
+  #login, #password {
+    width: 75%;
+  }
+}
+@media (min-width: 1200px) {
+  #login, #password {
+    width: 50%;
+  }
+}
+.help {
+  margin-bottom: 0;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  line-height: normal;
+}
+#page-login .ui.clearing.segment.actions {
+  display: flex;
+  justify-content: space-between;
+  margin: 2rem 1rem 0;
+}
+#login-form-cancel {
+  border: 1px solid transparent;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.5;
+  margin: 0;
+  padding: .6rem 3rem;
+  text-decoration: none;
+  -webkit-transition: all .3s ease-out;
+  transition: all .3s ease-out;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-color: #a0b128;
+  color: #a0b128;
+  background: none;
+  font-size: 1rem;
+}
+#login-form-cancel:hover {
+  color: white;
+  background-color: #a0b128;
+  border-color: #a0b128;
+}
+#login-form-submit {
+  border: 1px solid transparent;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.5;
+  margin: 0;
+  padding: .6rem 3rem;
+  text-decoration: none;
+  -webkit-transition: all .3s ease-out;
+  transition: all .3s ease-out;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-color: #A0B128;
+  color: white;
+  background-color: #a0b128;
+  font-size: 1rem;
+  margin-right: 2rem;
+}
+#login-form-submit:hover {
+  background-color: white;
+  color: #a0b128;
+  border-color: #a0b128;
+}
+@media (min-width: 768px) {
+  #page-login .ui.clearing.segment.actions {
+    display: flex;
+    justify-content:normal;
+    margin: 2rem 1rem 0;
+  }
+}
