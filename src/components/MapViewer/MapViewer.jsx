@@ -150,7 +150,7 @@ class MapViewer extends React.Component {
         // we use a reference (ref={this.mapdiv}) in order to reference a
         // DOM element to be mounted (but not yet mounted)
         return(
-            <div className="map-container">
+            <div className={this.mapClass}>
                 <div ref={this.mapdiv} className="map">
                     {this.renderBasemap()}
                     {this.renderLegend()}
