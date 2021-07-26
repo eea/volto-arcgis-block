@@ -1,20 +1,20 @@
 import React from 'react';
 import loadable from '@loadable/component';
-import { getClassName, getExtraMenu } from '../utils';
-
+import { getClassName } from '../utils';
+import config from '../MapViewer/config';
 const View = (props) => {
   const { data, id } = props;
-  const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
+
+  const MapViewer = loadable(() => import('../MapViewer/MapViewer'), {
     noSsr: true,
   });
-  const ExtraComponent = getExtraMenu(data);
+
   return (
-    <ArcgisMap
-      theme={data.style}
+    <MapViewer
+      cfg={config}
       customClass={getClassName(data)}
       id={id}
-      extraMenu={ExtraComponent ? <ExtraComponent /> : null}
-    />
+    ></MapViewer>
   );
 };
 

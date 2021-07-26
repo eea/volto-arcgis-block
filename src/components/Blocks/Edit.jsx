@@ -3,27 +3,30 @@ import { SidebarPortal } from '@plone/volto/components';
 import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
 import { Schema } from './Schema';
 import loadable from '@loadable/component';
-import { getClassName, getExtraMenu } from '../utils';
+import { getClassName } from '../utils';
+
+// var cfg = require('./config.json');
+import config from '../MapViewer/config';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
 
-  const ArcgisMap = loadable(() => import('../ArcgisMap/ArcgisMap'), {
+  const MapViewer = loadable(() => import('../MapViewer/MapViewer'), {
     noSsr: true,
   });
-  const ExtraComponent = getExtraMenu(data);
+  // const ExtraComponent = getExtraMenu(data);
   return (
     <>
-      <ArcgisMap
-        theme={data.style}
+      <MapViewer
+        cfg={config}
         customClass={getClassName(data)}
-        extraMenu={ExtraComponent ? <ExtraComponent /> : null}
         id={block}
-      />
+        // extraComponent={ExtraComponent ? <ExtraComponent /> : null}
+      ></MapViewer>
       <SidebarPortal selected={selected}>
         <InlineForm
           schema={Schema()}
-          title="Button component block"
+          title="Arcgis map component block"
           onChangeField={(id, value) => {
             onChangeBlock(block, {
               ...data,
