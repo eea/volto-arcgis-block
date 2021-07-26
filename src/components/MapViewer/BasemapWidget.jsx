@@ -1,6 +1,6 @@
 import React, { createRef } from 'react';
-// import './ArcgisMap.css';
 import { loadModules } from 'esri-loader';
+var BasemapGallery;
 
 class BasemapWidget extends React.Component {
   /**
@@ -17,6 +17,15 @@ class BasemapWidget extends React.Component {
     this.menuClass =
       'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
   }
+
+  loader() {
+    return loadModules(['esri/widgets/BasemapGallery']).then(
+      ([_BasemapGallery]) => {
+        BasemapGallery = _BasemapGallery;
+      },
+    );
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
@@ -47,14 +56,13 @@ class BasemapWidget extends React.Component {
   /**
    * This method is executed after the rener method is executed
    */
-  componentDidMount() {
-    loadModules(['esri/widgets/BasemapGallery']).then(([BasemapGallery]) => {
-      this.basemapGallery = new BasemapGallery({
-        view: this.props.view,
-      });
-      this.props.view.ui.add(this.basemaps.current, 'top-right');
-      this.props.view.ui.add(this.basemapGallery, 'top-right');
+  async componentDidMount() {
+    await this.loader();
+    this.basemapGallery = new BasemapGallery({
+      view: this.props.view,
     });
+    this.props.view.ui.add(this.basemaps.current, 'top-right');
+    this.props.view.ui.add(this.basemapGallery, 'top-right');
   }
   /**
    * This method renders the component
