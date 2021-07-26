@@ -3,7 +3,7 @@ import { SidebarPortal } from '@plone/volto/components';
 import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
 import { Schema } from './Schema';
 import loadable from '@loadable/component';
-import { getClassName, getExtraMenu } from '../utils';
+import { getClassName } from '../utils';
 
 // var cfg = require('./config.json');
 import config from '../MapViewer/config';

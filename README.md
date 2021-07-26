@@ -1,6 +1,10 @@
 # [WIP] Volto Arcgis Block
+[![Releases](https://img.shields.io/github/v/release/eea/volto-arcgis-block)](https://github.com/eea/volto-arcgis-block/releases)
+[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-arcgis-block%2Fmaster&subject=master)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-arcgis-block/job/master/display/redirect)
+[![Pipeline](https://ci.eionet.europa.eu/buildStatus/icon?job=volto-addons%2Fvolto-arcgis-block%2Fdevelop&subject=develop)](https://ci.eionet.europa.eu/view/Github/job/volto-addons/job/volto-arcgis-block/job/develop/display/redirect)
+
 ## ArcGIS Map integration for Volto blocks
-***Disclaimer:** This product is in development, at this time it is not recommended to use it.*
+****This product is in development, at this time it is not recommended to use it.***
 
 ![Demo example volto-arcgis-block](docs/demo.gif)
 
@@ -61,31 +65,3 @@ const customBlocks = (config) => ({
   ],
 ````
 ![Style example volto-arcgis-block](docs/styles_example.gif)
-
-
-<br>
-
-## Extra menu
-This addon has the option to add an additional component on the map. In this case, it will be displayed when you click on the menu button.
-
-1. Create React JS component.
-2. Add the new component in the [custom Blocks configuration](https://docs.voltocms.com/blocks/settings/#configuring-a-new-block):
-
-````JS
-import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
-import CustomMapMenu from './<your-component-url>/CustomMapMenu';
-
-const customBlocks = (config) => ({
-  ...config.blocks.blocksConfig,
-  [ARCGIS_BLOCK]: {
-    ...config.blocks.blocksConfig[ARCGIS_BLOCK],
-    extraMenu: {
-      ...config.blocks.blocksConfig[ARCGIS_BLOCK]?.extraMenu,
-      land: {
-        title: 'Land Products',
-        component: CustomMapMenu,
-      },
-    },
-  },
-````
-![Extra Menu example volto-arcgis-block](docs/extra_menu_example.gif)

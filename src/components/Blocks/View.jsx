@@ -1,6 +1,6 @@
 import React from 'react';
 import loadable from '@loadable/component';
-import { getClassName, getExtraMenu } from '../utils';
+import { getClassName } from '../utils';
 import config from '../MapViewer/config';
 const View = (props) => {
   const { data, id } = props;
