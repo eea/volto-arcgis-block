@@ -99,17 +99,21 @@ class MenuWidget extends React.Component {
   metodProcessComponent(component, compIndex) {
     var products = [];
     var index = 0;
-    var inheritedIndex = compIndex;
+    var inheritedIndexComponent = compIndex;
     for (var i in component.Products) {
       products.push(
-        this.metodProcessProduct(component.Products[i], index, inheritedIndex),
+        this.metodProcessProduct(
+          component.Products[i],
+          index,
+          inheritedIndexComponent,
+        ),
       );
       index++;
     }
     return (
       <div
         className="map-menu-dropdown"
-        id={'component_' + inheritedIndex}
+        id={'component_' + inheritedIndexComponent}
         key={'a' + compIndex}
       >
         <div
@@ -117,6 +121,9 @@ class MenuWidget extends React.Component {
           aria-expanded="false"
           key={'b' + compIndex}
           onClick={this.toggleDropdownContent.bind(this)}
+          onKeyDown={this.toggleDropdownContent.bind(this)}
+          tabIndex="0"
+          role="button"
         >
           {component.ComponentTitle}
         </div>
@@ -135,14 +142,14 @@ class MenuWidget extends React.Component {
   metodProcessProduct(product, prodIndex, inheritedIndex) {
     var datasets = [];
     var index = 0;
-    var inheritedIndex = inheritedIndex + '_' + prodIndex;
+    var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndex;
     for (var i in product.Datasets) {
       datasets.push(
         this.metodProcessDataset(
           product.Datasets[i],
           index,
-          inheritedIndex,
+          inheritedIndexProduct,
           checkProduct,
         ),
       );
@@ -152,7 +159,7 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="map-menu-product-dropdown"
-        id={'product_' + inheritedIndex}
+        id={'product_' + inheritedIndexProduct}
         key={'a' + prodIndex}
       >
         <fieldset className="ccl-fieldset" key={'b' + prodIndex}>
@@ -161,6 +168,9 @@ class MenuWidget extends React.Component {
             aria-expanded="false"
             key={'c' + prodIndex}
             onClick={this.toggleDropdownContent.bind(this)}
+            onKeyDown={this.toggleDropdownContent.bind(this)}
+            tabIndex="0"
+            role="button"
           >
             <div
               className="ccl-form map-product-checkbox"
@@ -180,7 +190,7 @@ class MenuWidget extends React.Component {
                 ></input>
                 <label
                   className="ccl-form-check-label"
-                  htmlFor={'map_product_' + inheritedIndex}
+                  htmlFor={'map_product_' + inheritedIndexProduct}
                   key={'f' + prodIndex}
                 >
                   <legend className="ccl-form-legend">
@@ -225,7 +235,7 @@ class MenuWidget extends React.Component {
   metodProcessDataset(dataset, datIndex, inheritedIndex, checkProduct) {
     var layers = [];
     var index = 0;
-    var inheritedIndex = inheritedIndex + '_' + datIndex;
+    var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndex;
 
     for (var i in dataset.Layer) {
@@ -233,7 +243,7 @@ class MenuWidget extends React.Component {
         this.metodProcessLayer(
           dataset.Layer[i],
           index,
-          inheritedIndex,
+          inheritedIndexDataset,
           dataset.ViewService,
           checkIndex,
         ),
@@ -247,7 +257,7 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="ccl-form-group map-menu-dataset"
-        id={'dataset_ ' + inheritedIndex}
+        id={'dataset_ ' + inheritedIndexDataset}
         key={'a' + datIndex}
       >
         <div className="map-dataset-checkbox" key={'b' + datIndex}>
@@ -265,7 +275,7 @@ class MenuWidget extends React.Component {
           ></input>
           <label
             className="ccl-form-check-label"
-            htmlFor={'map_dataset_' + inheritedIndex}
+            htmlFor={'map_dataset_' + inheritedIndexDataset}
             key={'d' + datIndex}
           >
             <span>{dataset.DatasetTitle}</span>
@@ -324,7 +334,7 @@ class MenuWidget extends React.Component {
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     //For each layer
-    var inheritedIndex = inheritedIndex + '_' + layerIndex;
+    var inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
 
     //Add sublayers and popup enabled for layers
     if (!this.layers.hasOwnProperty(layer.LayerId)) {
@@ -352,7 +362,7 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="ccl-form-group map-menu-layer"
-        id={'layer_' + inheritedIndex}
+        id={'layer_' + inheritedIndexLayer}
         key={'a' + layerIndex}
       >
         <input
@@ -384,12 +394,12 @@ class MenuWidget extends React.Component {
    * @param {*} elem Is the checkbox
    */
   toggleLayer(elem) {
-    if (!this.visibleLayers) this.visibleLayers={};
+    if (!this.visibleLayers) this.visibleLayers = {};
     var parentId = elem.getAttribute('parentid');
 
     if (elem.checked) {
       this.map.add(this.layers[elem.id]);
-      this.visibleLayers[elem.id] = ['fas','eye'];
+      this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.activeLayersJSON[elem.id] = this.addActiveLayer(
         elem,
         Object.keys(this.activeLayersJSON).length,
@@ -474,12 +484,8 @@ class MenuWidget extends React.Component {
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
           <span className="active-layer-position" key={'d_' + elem.id}>
-            <FontAwesomeIcon
-              icon={['fas', 'arrow-up']}
-            />
-            <FontAwesomeIcon
-              icon={['fas', 'arrow-down']}
-            />
+            <FontAwesomeIcon icon={['fas', 'arrow-up']} />
+            <FontAwesomeIcon icon={['fas', 'arrow-down']} />
           </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
@@ -575,18 +581,15 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    if(this.visibleLayers[elem.id][1]==='eye'){
+    if (this.visibleLayers[elem.id][1] === 'eye') {
       this.layers[elem.id].visible = false;
-      this.visibleLayers[elem.id] = ['fas','eye-slash'];
+      this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
     } else {
       this.map.add(this.layers[elem.id]);
       this.layers[elem.id].visible = true;
-      this.visibleLayers[elem.id] = ['fas','eye'];
+      this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
-    this.activeLayersJSON[elem.id] = this.addActiveLayer(
-      elem,
-      0
-    );
+    this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
     this.setState({});
 
@@ -655,6 +658,8 @@ class MenuWidget extends React.Component {
                 aria-controls="products_panel"
                 aria-selected="true"
                 onClick={() => this.toggleTab()}
+                onKeyDown={() => this.toggleTab()}
+                tabIndex="0"
               >
                 Products and datasets
               </span>
@@ -665,6 +670,8 @@ class MenuWidget extends React.Component {
                 aria-controls="active_panel"
                 aria-selected="false"
                 onClick={() => this.toggleTab()}
+                onKeyDown={() => this.toggleTab()}
+                tabIndex="0"
               >
                 Active on map
               </span>
@@ -696,6 +703,8 @@ class MenuWidget extends React.Component {
             role="button"
             title="Menu of products"
             onClick={this.openMenu.bind(this)}
+            onKeyDown={this.openMenu.bind(this)}
+            tabIndex="0"
           ></div>
         </div>
       </>

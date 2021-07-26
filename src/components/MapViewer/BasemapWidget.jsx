@@ -22,7 +22,7 @@ class BasemapWidget extends React.Component {
     return loadModules(['esri/widgets/BasemapGallery']).then(
       ([_BasemapGallery]) => {
         BasemapGallery = _BasemapGallery;
-      }
+      },
     );
   }
 
