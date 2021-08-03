@@ -143,7 +143,7 @@ class MenuWidget extends React.Component {
     var datasets = [];
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
-    var checkProduct = 'map_product_' + inheritedIndex;
+    var checkProduct = 'map_product_' + inheritedIndexProduct;
     for (var i in product.Datasets) {
       datasets.push(
         this.metodProcessDataset(
@@ -190,7 +190,7 @@ class MenuWidget extends React.Component {
                 ></input>
                 <label
                   className="ccl-form-check-label"
-                  htmlFor={'map_product_' + inheritedIndexProduct}
+                  htmlFor={checkProduct}
                   key={'f' + prodIndex}
                 >
                   <legend className="ccl-form-legend">
@@ -202,7 +202,7 @@ class MenuWidget extends React.Component {
           </div>
           <div
             className="ccl-form map-menu-products-container"
-            id={'datasets_container' + prodIndex}
+            id={'datasets_container_' + inheritedIndexProduct}
           >
             {datasets}
           </div>
@@ -236,7 +236,7 @@ class MenuWidget extends React.Component {
     var layers = [];
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
-    var checkIndex = 'map_dataset_' + inheritedIndex;
+    var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
     for (var i in dataset.Layer) {
       layers.push(
@@ -257,7 +257,7 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="ccl-form-group map-menu-dataset"
-        id={'dataset_ ' + inheritedIndexDataset}
+        id={'dataset_' + inheritedIndexDataset}
         key={'a' + datIndex}
       >
         <div className="map-dataset-checkbox" key={'b' + datIndex}>
@@ -275,7 +275,7 @@ class MenuWidget extends React.Component {
           ></input>
           <label
             className="ccl-form-check-label"
-            htmlFor={'map_dataset_' + inheritedIndexDataset}
+            htmlFor={checkIndex}
             key={'d' + datIndex}
           >
             <span>{dataset.DatasetTitle}</span>
