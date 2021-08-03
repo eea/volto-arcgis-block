@@ -19,6 +19,7 @@ const Edit = (props) => {
     <>
       <MapViewer
         cfg={config}
+        url={props.properties.parent['@id'] + '/@mapviewer'}
         customClass={getClassName(data)}
         id={block}
         // extraComponent={ExtraComponent ? <ExtraComponent /> : null}
