@@ -1,5 +1,14 @@
 import MapViewer from './MapViewer/MapViewer';
-import Edit from './Blocks/Edit';
-import View from './Blocks/View';
+import MapViewerEdit from './Blocks/MapViewer/Edit';
+import MapViewerView from './Blocks/MapViewer/View';
 
-export { MapViewer, Edit, View };
+import UseCasesMapViewerEdit from './Blocks/UseCasesMapViewer/Edit';
+import UseCasesMapViewerView from './Blocks/UseCasesMapViewer/View';
+
+export {
+  MapViewer,
+  MapViewerEdit,
+  MapViewerView,
+  UseCasesMapViewerEdit,
+  UseCasesMapViewerView,
+};

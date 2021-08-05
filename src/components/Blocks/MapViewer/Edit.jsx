@@ -3,17 +3,20 @@ import { SidebarPortal } from '@plone/volto/components';
 import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
 import { Schema } from './Schema';
 import loadable from '@loadable/component';
-import { getClassName } from '../utils';
+import { getClassName } from '@eeacms/volto-arcgis-block/components/utils';
 
 // var cfg = require('./config.json');
-import config from '../MapViewer/config';
+import config from '@eeacms/volto-arcgis-block/components/MapViewer/config';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
 
-  const MapViewer = loadable(() => import('../MapViewer/MapViewer'), {
-    noSsr: true,
-  });
+  const MapViewer = loadable(
+    () => import('@eeacms/volto-arcgis-block/components/MapViewer/MapViewer'),
+    {
+      noSsr: true,
+    },
+  );
   // const ExtraComponent = getExtraMenu(data);
   return (
     <>

@@ -1,13 +1,16 @@
 import React from 'react';
 import loadable from '@loadable/component';
-import { getClassName } from '../utils';
-import config from '../MapViewer/config';
+import { getClassName } from '@eeacms/volto-arcgis-block/components/utils';
+import config from '@eeacms/volto-arcgis-block/components/MapViewer/config';
 const View = (props) => {
   const { data, id } = props;
 
-  const MapViewer = loadable(() => import('../MapViewer/MapViewer'), {
-    noSsr: true,
-  });
+  const MapViewer = loadable(
+    () => import('@eeacms/volto-arcgis-block/components/MapViewer/MapViewer'),
+    {
+      noSsr: true,
+    },
+  );
 
   return (
     <MapViewer
