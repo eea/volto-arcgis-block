@@ -484,8 +484,18 @@ class MenuWidget extends React.Component {
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
           <span className="active-layer-position" key={'d_' + elem.id}>
-            <FontAwesomeIcon icon={['fas', 'arrow-up']} />
-            <FontAwesomeIcon icon={['fas', 'arrow-down']} />
+            <span class="active-layer-position-down">
+              <FontAwesomeIcon 
+                className="map-menu-icon"
+                icon={['fas', 'long-arrow-alt-up']} 
+              />
+            </span>
+            <span class="active-layer-position-up">
+              <FontAwesomeIcon 
+                className="map-menu-icon"
+                icon={['fas', 'long-arrow-alt-down']} 
+              />
+            </span>
           </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
@@ -497,7 +507,7 @@ class MenuWidget extends React.Component {
           <span className="active-layer-delete">
             <FontAwesomeIcon
               className="map-menu-icon"
-              icon={['far', 'times-circle']}
+              icon={['fas', 'times']}
               onClick={() => this.deleteCrossEvent(elem)}
             />
           </span>
