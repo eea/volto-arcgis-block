@@ -34,7 +34,7 @@ class BasemapWidget extends React.Component {
   openMenu() {
     if (this.state.showMapMenu) {
       this.basemapGallery.domNode.style.display = 'none';
-      this.container.current.querySelector(".esri-widget--button").classList.replace(
+      this.container.current.querySelector('.esri-widget--button').classList.replace(
         'esri-icon-right-arrow',
         'esri-icon-basemap',
       );
@@ -44,7 +44,7 @@ class BasemapWidget extends React.Component {
     } else {
       this.basemapGallery.domNode.classList.add('basemap-gallery-container');
       this.basemapGallery.domNode.style.display = 'block';
-      this.container.current.querySelector(".esri-widget--button").classList.replace(
+      this.container.current.querySelector('.esri-widget--button').classList.replace(
         'esri-icon-basemap',
         'esri-icon-right-arrow',
       );
@@ -60,7 +60,7 @@ class BasemapWidget extends React.Component {
     await this.loader();
     this.basemapGallery = new BasemapGallery({
       view: this.props.view,
-      container: this.container.current.querySelector(".basemap-panel"),
+      container: this.container.current.querySelector('.basemap-panel'),
     });
     this.props.view.ui.add(this.container.current, 'top-right');
     //this.props.view.ui.add(this.basemapGallery, 'top-right');
