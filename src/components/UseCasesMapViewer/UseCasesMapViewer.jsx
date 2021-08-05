@@ -20,7 +20,6 @@ const UseCasesMapViewer = (props) => {
   const intl = useIntl();
   const dispatch = useDispatch();
   const searchSubrequests = useSelector((state) => state.search.subrequests);
-  console.log('PROPS: ', props);
   const path = metadata ? metadata['@id'] : properties['@id'];
   let useCases = searchSubrequests?.[props.id]?.items || [];
 
