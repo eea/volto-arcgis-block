@@ -185,7 +185,6 @@
   line-height: inherit;
 }
 
-
 .map-menu .ccl-expandable__button::after {
   font-family: 'ccl-icons';
 }
@@ -415,7 +414,6 @@
   margin-bottom: 1.5rem;
   font-size: 1.25rem;
 }
-
 
 .map-download-area,
 .map-download-resource {
