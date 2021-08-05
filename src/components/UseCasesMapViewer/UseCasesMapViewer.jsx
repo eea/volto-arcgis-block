@@ -1,149 +1,107 @@
-import React, { useState } from 'react';
-import getProductGroups from './utils';
-import { useSelector, useDispatch } from 'react-redux';
-import { searchContent } from '@plone/volto/actions';
-import { defineMessages, useIntl } from 'react-intl';
-// import { MapViewer } from '@eeacms/volto-arcgis-block/components';
-import config from '@eeacms/volto-arcgis-block/components/MapViewer/config';
-import loadable from '@loadable/component';
-import './map.css';
+import React, { createRef } from 'react';
+import './css/ArcgisMap.css';
+import classNames from 'classnames';
+import { loadModules, loadCss } from 'esri-loader';
 
-const messages = defineMessages({
-  xUseCases: {
-    id: ' use cases',
-    defaultMessage: ' use cases',
-  },
-});
+var Map, MapView, Zoom;
 
-const UseCasesMapViewer = (props) => {
-  const { data, id, properties, metadata } = props;
-  const intl = useIntl();
-  const dispatch = useDispatch();
-  const searchSubrequests = useSelector((state) => state.search.subrequests);
-  const path = metadata ? metadata['@id'] : properties['@id'];
-  let useCases = searchSubrequests?.[props.id]?.items || [];
+class MapViewer extends React.Component {
+  /**
+   * This method does the creation of the main component
+   * @param {*} props
+   */
+  constructor(props) {
+    super(props);
+    //we create a reference to the DOM element that will
+    //be later mounted. We will use the reference that we
+    //create here to reference the DOM element from javascript
+    //code, for example, to create later a MapView component
+    //that will use the map div to show the map
+    this.mapdiv = createRef();
+    this.mapCfg = props.cfg.Map;
+    this.compCfg = this.props.cfg.Components;
+    this.url = this.props.cfg.url;
+    this.map = null;
+    this.id = props.id;
+    this.mapClass = classNames('map-container', {
+      [`${props.customClass}`]: props.customClass || null,
+    });
+  }
 
-  const MapViewer = loadable(
-    () => import('@eeacms/volto-arcgis-block/components/MapViewer/MapViewer'),
-    {
-      noSsr: true,
-    },
-  );
+  loader() {
+    return loadModules([
+      'esri/WebMap',
+      'esri/views/MapView',
+      'esri/widgets/Zoom',
+    ]).then(([_Map, _MapView, _Zoom]) => {
+      [Map, MapView, Zoom] = [_Map, _MapView, _Zoom];
+    });
+  }
 
-  React.useEffect(() => {
-    dispatch(
-      searchContent(
-        path,
-        {
-          fullobjects: 1,
-          portal_type: 'UseCase',
-        },
-        id,
-      ),
+  /**
+   * Once the component has been mounted in the screen, this method
+   * will be executed, so we can access to the DOM elements, since
+   * they are already mounted
+   */
+  async componentDidMount() {
+    loadCss();
+    await this.loader();
+    // this.mapdiv.current is the reference to the current DOM element of
+    // this.mapdiv after it was mounted by the render() method
+    this.map = new Map({
+      basemap: 'topo',
+    });
+
+    this.view = new MapView({
+      container: this.mapdiv.current,
+      map: this.map,
+      center: this.mapCfg.center,
+      zoom: this.mapCfg.zoom,
+      ui: {
+        components: ['attribution'],
+      },
+    });
+    this.zoom = new Zoom({
+      view: this.view,
+    });
+    this.view.ui.add(this.zoom, {
+      position: 'top-right',
+    });
+
+    //Once we have created the MapView, we need to ensure that the map div
+    //is refreshed in order to show the map on it. To do so, we need to
+    //trigger the renderization again, and to trigger the renderization
+    //we invoke the setState method, that changes the state and forces a
+    //react component to render itself again
+    this.setState({});
+  }
+
+  setActiveWidget() {
+  }
+  closeActiveWidget() {
+  }
+
+  /**
+   * This method evaluates the ability to render the basemaps widget and
+   * returns the jsx allowing such a render (if conditions are ok)
+   * @returns jsx
+   */
+  
+  /**
+   * This method renders the map viewer, invoking if necessary the methods
+   * to render the other widgets to display
+   * @returns jsx
+   */
+  render() {
+    // we use a reference (ref={this.mapdiv}) in order to reference a
+    // DOM element to be mounted (but not yet mounted)
+    return (
+      <div className={this.mapClass}>
+        <div ref={this.mapdiv} className="map">
+        </div>
+      </div>
     );
-  }, [path, data, id, dispatch]);
-  let productGroups = getProductGroups(useCases);
-  const [expanded, setExpanded] = useState([]);
-  return (
-    <>
-      {path ? (
-        <>
-          <div className="ccl-container">
-            <div className="use-cases-block">
-              <h2>{data.title || 'Custom block title'}</h2>
-            </div>
-          </div>
-          <div className="ccl-container ccl-container-flex">
-            <div className="use-cases-products-block cont-w-50">
-              <div className="use-cases-products-title">
-                <span>{useCases.length}</span>
-                {intl.formatMessage(messages.xUseCases)}
-              </div>
-              <div className="use-cases-products-list">
-                {Object.keys(productGroups).map((productToken, index) => (
-                  <div key={index} className="use-cases-dropdown">
-                    <div
-                      className="ccl-expandable__button"
-                      aria-expanded={expanded.includes(productToken)}
-                      onClick={() => {
-                        if (expanded.includes(productToken)) {
-                          let newExpanded = expanded.slice();
-                          newExpanded.splice(
-                            newExpanded.indexOf(productToken),
-                            1,
-                          );
-                          setExpanded(newExpanded);
-                        } else {
-                          setExpanded([...expanded, productToken]);
-                        }
-                      }}
-                      onKeyDown={() => {
-                        if (expanded.includes(productToken)) {
-                          let newExpanded = expanded.slice();
-                          newExpanded.splice(
-                            newExpanded.indexOf(productToken),
-                            1,
-                          );
-                          setExpanded(newExpanded);
-                        } else {
-                          setExpanded([...expanded, productToken]);
-                        }
-                      }}
-                      role="button"
-                      tabIndex="0"
-                    >
-                      {productGroups[productToken].title}
-                    </div>
-                    <div className="use-cases-element-container">
-                      {productGroups[productToken].useCases.map(
-                        (useCase, index) => (
-                          <div key={index} className="use-cases-element">
-                            <div className="use-case-element-title">
-                              {useCase.title}
-                            </div>
-                            <div className="use-case-element-description">
-                              <span>
-                                {useCase.topics.map((topic) => topic.title)}
-                              </span>
-                              <span>
-                                {new Date(
-                                  useCase?.effective,
-                                ).toLocaleDateString()}
-                              </span>
-                              <span>{useCase.responsibleOrganization}</span>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="use-cases-products-block cont-w-50">
-              <div className="use-cases-products-title">
-                Organisation locations
-              </div>
-              <div className="use-cases-products-map">
-                <div className="use-cases-map-container">
-                  <MapViewer
-                    cfg={config}
-                    url={props.properties.parent['@id'] + '/@mapviewer'}
-                    customClass="land map-mini"
-                    id={id}
-                  ></MapViewer>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <h3 style={{ fontStyle: 'italic', color: '#C5D0D2' }}>
-          * First save your page to get UseCases API url
-        </h3>
-      )}
-    </>
-  );
-};
+  }
+}
 
-export default UseCasesMapViewer;
+export default MapViewer;
