@@ -5,13 +5,15 @@ import { loadModules, loadCss } from 'esri-loader';
 
 var Map, MapView, Zoom;
 
-class MapViewer extends React.Component {
+class UseCasesMapViewer extends React.Component {
   /**
    * This method does the creation of the main component
    * @param {*} props
    */
   constructor(props) {
     super(props);
+    console.log(props);
+    console.log(this.props);
     //we create a reference to the DOM element that will
     //be later mounted. We will use the reference that we
     //create here to reference the DOM element from javascript
@@ -76,17 +78,9 @@ class MapViewer extends React.Component {
     this.setState({});
   }
 
-  setActiveWidget() {
-  }
-  closeActiveWidget() {
-  }
 
-  /**
-   * This method evaluates the ability to render the basemaps widget and
-   * returns the jsx allowing such a render (if conditions are ok)
-   * @returns jsx
-   */
-  
+
+
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -98,10 +92,11 @@ class MapViewer extends React.Component {
     return (
       <div className={this.mapClass}>
         <div ref={this.mapdiv} className="map">
+
         </div>
       </div>
     );
   }
 }
 
-export default MapViewer;
+export default UseCasesMapViewer;
