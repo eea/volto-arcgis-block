@@ -15,6 +15,19 @@ const Edit = (props) => {
   return (
     <>
       <UseCasesMapViewer cfg={config} />{' '}
+      <SidebarPortal selected={selected}>
+        <InlineForm
+          schema={UseCaseListSchema()}
+          title="UseCase List block"
+          onChangeField={(id, value) => {
+            onChangeBlock(block, {
+              ...data,
+              [id]: value,
+            });
+          }}
+          formData={data}
+        />
+      </SidebarPortal>
     </>
   );
 };

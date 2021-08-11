@@ -78,9 +78,6 @@ class UseCasesMapViewer extends React.Component {
     this.setState({});
   }
 
-
-
-
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -90,9 +87,65 @@ class UseCasesMapViewer extends React.Component {
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
     return (
-      <div className={this.mapClass}>
-        <div ref={this.mapdiv} className="map">
+      <div>
+        <div className="ccl-container">
+          <div className="use-cases-block">
+            <h1>See use cases by product</h1>
+          </div>
+        </div>
+        <br/>
+        <div className="ccl-container ccl-container-flex">
+          <div className="use-cases-products-block cont-w-50">
+            <div className="use-cases-products-title">
+              <span>x </span>
+              use cases
+            </div>
+            <div className="use-cases-products-list">
 
+                <div key="{index}" className="use-cases-dropdown">
+                  <div
+                    className="ccl-expandable__button"
+                    aria-expanded="expanded.includes(productToken)"
+                    onClick=""
+                    onKeyDown=""
+                    role="button"
+                    tabIndex="0"
+                  >
+                    productGroups[productToken].title
+                  </div>
+                  <div className="use-cases-element-container">
+
+                        <div key="{index}" className="use-cases-element">
+                          <div className="use-case-element-title">
+                            useCase.title
+                          </div>
+                          <div className="use-case-element-description">
+                            <span>
+                            useCase.topics.map((topic)  topic.title)
+                            </span>
+                            <span>
+                              new Date
+                                useCase?.effective,
+                               .toLocaleDateString
+                            </span>
+                            <span>useCase.responsibleOrganization</span>
+                          </div>
+                        </div>
+
+                  </div>
+                </div>
+
+            </div>
+          </div>
+
+          <div className="use-cases-products-block cont-w-50">
+            <div className="use-cases-products-title">
+              Organisation locations
+            </div>
+            <div className={this.mapClass}>
+              <div ref={this.mapdiv} className="map"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
