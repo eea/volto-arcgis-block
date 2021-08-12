@@ -1,7 +1,9 @@
 import React, { createRef } from 'react';
 import './css/ArcgisMap.css';
 import classNames from 'classnames';
+
 import { loadModules, loadCss } from 'esri-loader';
+import InfoWidget from './InfoWidget';
 
 var Map, MapView, Zoom;
 
@@ -78,12 +80,21 @@ class UseCasesMapViewer extends React.Component {
     this.setState({});
   }
 
+  renderInfo() {
+    if (this.view) {
+      console.log(this.view);
+
+      return <InfoWidget view={this.view} mapViewer={this} />;
+    }
+  }
+
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
    * @returns jsx
    */
   render() {
+    console.log("I'm here");
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
     return (
@@ -93,51 +104,9 @@ class UseCasesMapViewer extends React.Component {
             <h1>See use cases by product</h1>
           </div>
         </div>
-        <br/>
+        <br />
         <div className="ccl-container ccl-container-flex">
-          <div className="use-cases-products-block cont-w-50">
-            <div className="use-cases-products-title">
-              <span>x </span>
-              use cases
-            </div>
-            <div className="use-cases-products-list">
-
-                <div key="{index}" className="use-cases-dropdown">
-                  <div
-                    className="ccl-expandable__button"
-                    aria-expanded="expanded.includes(productToken)"
-                    onClick=""
-                    onKeyDown=""
-                    role="button"
-                    tabIndex="0"
-                  >
-                    productGroups[productToken].title
-                  </div>
-                  <div className="use-cases-element-container">
-
-                        <div key="{index}" className="use-cases-element">
-                          <div className="use-case-element-title">
-                            useCase.title
-                          </div>
-                          <div className="use-case-element-description">
-                            <span>
-                            useCase.topics.map((topic)  topic.title)
-                            </span>
-                            <span>
-                              new Date
-                                useCase?.effective,
-                               .toLocaleDateString
-                            </span>
-                            <span>useCase.responsibleOrganization</span>
-                          </div>
-                        </div>
-
-                  </div>
-                </div>
-
-            </div>
-          </div>
-
+          {this.renderInfo()}
           <div className="use-cases-products-block cont-w-50">
             <div className="use-cases-products-title">
               Organisation locations
