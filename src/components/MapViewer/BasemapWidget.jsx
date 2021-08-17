@@ -56,6 +56,7 @@ class BasemapWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
+    if (!this.container.current) return;
     this.basemapGallery = new BasemapGallery({
       view: this.props.view,
       container: this.container.current.querySelector('.basemap-panel'),

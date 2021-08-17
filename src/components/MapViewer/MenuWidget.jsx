@@ -418,12 +418,20 @@ class MenuWidget extends React.Component {
    * just in the order they were added to map
    */
   activeLayersAsArray() {
-    let activeLayersArray = [];
+    var messageLayers = document.querySelector("#nolayers_message")
+    let activeLayersArray = []
+
     for (var i in this.activeLayersJSON) {
-      activeLayersArray.push(this.activeLayersJSON[i]);
+        activeLayersArray.push(this.activeLayersJSON[i])
     }
 
-    return activeLayersArray.reverse();
+    if (!activeLayersArray.length) {
+        messageLayers && (messageLayers.style.display = "block")
+    } else (
+        messageLayers && (messageLayers.style.display = "none")
+    )
+
+    return activeLayersArray.reverse()
   }
 
   /**
@@ -483,20 +491,6 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
-          <span className="active-layer-position" key={'d_' + elem.id}>
-            <span class="active-layer-position-down">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fas', 'long-arrow-alt-up']}
-              />
-            </span>
-            <span class="active-layer-position-up">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fas', 'long-arrow-alt-down']}
-              />
-            </span>
-          </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
               className="map-menu-icon"
@@ -510,6 +504,18 @@ class MenuWidget extends React.Component {
               icon={['fas', 'times']}
               onClick={() => this.deleteCrossEvent(elem)}
             />
+          </span>
+          <span className="active-layer-position" key={'d_' + elem.id}>
+            <span class="active-layer-position-down">
+              <FontAwesomeIcon
+                icon={['fas', 'long-arrow-alt-up']}
+              />
+            </span>
+            <span class="active-layer-position-up">
+              <FontAwesomeIcon
+                icon={['fas', 'long-arrow-alt-down']}
+              />
+            </span>
           </span>
         </div>
       </div>
@@ -703,6 +709,7 @@ class MenuWidget extends React.Component {
               >
                 <div id="active_layers" className="map-active-layers">
                   {this.activeLayersAsArray()}
+                  <span className="message" id="nolayers_message"> No layers selected </span>
                 </div>
               </div>
             </div>
