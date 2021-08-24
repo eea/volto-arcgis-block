@@ -6,7 +6,6 @@ class InfoWidget extends React.Component {
   constructor(props) {
     super(props);
     //We create a reference to a DOM element to be mounted
-    console.log('Constructed');
     this.container = createRef();
   }
 
