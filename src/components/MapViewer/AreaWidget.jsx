@@ -3,7 +3,7 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 
-var Graphic, Extent, FeatureLayer, GroupLayer, Popup;
+var Graphic, Extent, FeatureLayer, GroupLayer;
 
 class AreaWidget extends React.Component {
   /**
@@ -21,7 +21,6 @@ class AreaWidget extends React.Component {
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
     // Enable defaultPopup option to charge popup and highlifght feature
     this.props.mapViewer.view.popup.defaultPopupTemplateEnabled = true;
-  
   }
 
   loader() {
@@ -30,14 +29,12 @@ class AreaWidget extends React.Component {
       'esri/geometry/Extent',
       'esri/layers/FeatureLayer',
       'esri/layers/GroupLayer',
-      'esri/widgets/Popup'
-    ]).then(([_Graphic, _Extent, _FeatureLayer, _GroupLayer, _Popup]) => {
-      [Graphic, Extent, FeatureLayer, GroupLayer, Popup]  = [
+    ]).then(([_Graphic, _Extent, _FeatureLayer, _GroupLayer]) => {
+      [Graphic, Extent, FeatureLayer, GroupLayer] = [
         _Graphic,
         _Extent,
         _FeatureLayer,
         _GroupLayer,
-        _Popup
       ];
     });
   }
@@ -87,13 +84,14 @@ class AreaWidget extends React.Component {
   loadNutsService(id, level) {
     this.clearWidget();
 
-    var url = "https://bm-eugis.tk/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0"
+    var url =
+      'https://bm-eugis.tk/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0';
     var layer = new FeatureLayer({
       url: url,
       id: id,
-      outFields: ["*"],
+      outFields: ['*'],
       popupEnabled: true,
-      definitionExpression: "LEVL_CODE=" + level
+      definitionExpression: 'LEVL_CODE=' + level,
     });
     this.nutsGroupLayer.add(layer);
   }
@@ -134,7 +132,7 @@ class AreaWidget extends React.Component {
     this.setState({ ShowGraphics: drawGraphics });
   }
   clearWidget() {
-    this.props.mapViewer.view.popup.close()
+    this.props.mapViewer.view.popup.close();
     if (this.state.ShowGraphics) {
       this.state.ShowGraphics.remove();
       this.setState({ ShowGraphics: null });

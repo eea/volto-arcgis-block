@@ -16,7 +16,7 @@ class BasemapWidget extends React.Component {
     this.state = { showMapMenu: false };
     this.menuClass =
       'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
-      this.loadFirst = true;
+    this.loadFirst = true;
   }
 
   loader() {
@@ -33,17 +33,31 @@ class BasemapWidget extends React.Component {
    * and close actions of the component
    */
   openMenu() {
-    if (this.loadFirst){
-      document.querySelectorAll(".esri-basemap-gallery__item")[3].setAttribute("aria-selected",true);
-      document.querySelectorAll(".esri-basemap-gallery__item")[3].classList.add("esri-basemap-gallery__item--selected");
+    if (this.loadFirst) {
+      document
+        .querySelectorAll('.esri-basemap-gallery__item')[3]
+        .setAttribute('aria-selected',true);
+      document
+        .querySelectorAll('.esri-basemap-gallery__item')[3]
+        .classList.add('esri-basemap-gallery__item--selected');
       this.loadFirst = false;
 
-      document.querySelector(".esri-basemap-gallery__item-container").addEventListener('click',(e)=>{
-        document.querySelectorAll(".esri-basemap-gallery__item")[3].setAttribute("aria-selected",false);
-        document.querySelectorAll(".esri-basemap-gallery__item")[3].classList.remove("esri-basemap-gallery__item--selected");
-      },{
-        once: true
-      })
+      document
+        .querySelector('.esri-basemap-gallery__item-container')
+        .addEventListener(
+          'click',
+          (e) => {
+            document
+              .querySelectorAll('.esri-basemap-gallery__item')[3]
+              .setAttribute('aria-selected',false);
+            document
+              .querySelectorAll('.esri-basemap-gallery__item')[3]
+              .classList.remove('esri-basemap-gallery__item--selected');
+          },
+          {
+            once: true,
+          },
+        );
     }
 
     if (this.state.showMapMenu) {
