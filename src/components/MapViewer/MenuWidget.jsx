@@ -38,7 +38,6 @@ class MenuWidget extends React.Component {
    */
   openMenu() {
     if (this.state.showMapMenu) {
-      this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('#tabcontainer').style.display =
         'none';
       this.container.current.querySelector('#paneles').style.display = 'none';
@@ -50,7 +49,6 @@ class MenuWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
-      this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('#tabcontainer').style.display =
         'block';
       this.container.current.querySelector('#paneles').style.display = 'block';
@@ -419,19 +417,19 @@ class MenuWidget extends React.Component {
    */
   activeLayersAsArray() {
     var messageLayers = document.querySelector("#nolayers_message")
-    let activeLayersArray = []
-
+    let activeLayersArray = [];
     for (var i in this.activeLayersJSON) {
-        activeLayersArray.push(this.activeLayersJSON[i])
+      activeLayersArray.push(this.activeLayersJSON[i]);
     }
 
     if (!activeLayersArray.length) {
-        messageLayers && (messageLayers.style.display = "block")
-    } else (
-        messageLayers && (messageLayers.style.display = "none")
-    )
+      messageLayers && (messageLayers.style.display = "block")
+  } else (
+      messageLayers && (messageLayers.style.display = "none")
+  )
 
-    return activeLayersArray.reverse()
+
+    return activeLayersArray.reverse();
   }
 
   /**
@@ -491,6 +489,20 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
+          <span className="active-layer-position" key={'d_' + elem.id}>
+            <span class="active-layer-position-down">
+              <FontAwesomeIcon
+                className="map-menu-icon"
+                icon={['fas', 'long-arrow-alt-up']}
+              />
+            </span>
+            <span class="active-layer-position-up">
+              <FontAwesomeIcon
+                className="map-menu-icon"
+                icon={['fas', 'long-arrow-alt-down']}
+              />
+            </span>
+          </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
               className="map-menu-icon"
@@ -504,18 +516,6 @@ class MenuWidget extends React.Component {
               icon={['fas', 'times']}
               onClick={() => this.deleteCrossEvent(elem)}
             />
-          </span>
-          <span className="active-layer-position" key={'d_' + elem.id}>
-            <span class="active-layer-position-down">
-              <FontAwesomeIcon
-                icon={['fas', 'long-arrow-alt-up']}
-              />
-            </span>
-            <span class="active-layer-position-up">
-              <FontAwesomeIcon
-                icon={['fas', 'long-arrow-alt-down']}
-              />
-            </span>
           </span>
         </div>
       </div>

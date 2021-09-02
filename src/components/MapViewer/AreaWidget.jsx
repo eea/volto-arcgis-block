@@ -3,7 +3,7 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 
-var Graphic, Extent, WMSLayer, GroupLayer;
+var Graphic, Extent, FeatureLayer, GroupLayer, Popup;
 
 class AreaWidget extends React.Component {
   /**
@@ -19,20 +19,25 @@ class AreaWidget extends React.Component {
     this.state = { showMapMenu: false };
     this.menuClass =
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
+    // Enable defaultPopup option to charge popup and highlifght feature
+    this.props.mapViewer.view.popup.defaultPopupTemplateEnabled = true;
+  
   }
 
   loader() {
     return loadModules([
       'esri/Graphic',
       'esri/geometry/Extent',
-      'esri/layers/WMSLayer',
+      'esri/layers/FeatureLayer',
       'esri/layers/GroupLayer',
-    ]).then(([_Graphic, _Extent, _WMSLayer, _GroupLayer]) => {
-      [Graphic, Extent, WMSLayer, GroupLayer] = [
+      'esri/widgets/Popup'
+    ]).then(([_Graphic, _Extent, _FeatureLayer, _GroupLayer, _Popup]) => {
+      [Graphic, Extent, FeatureLayer, GroupLayer, Popup]  = [
         _Graphic,
         _Extent,
-        _WMSLayer,
+        _FeatureLayer,
         _GroupLayer,
+        _Popup
       ];
     });
   }
@@ -81,23 +86,14 @@ class AreaWidget extends React.Component {
   }
   loadNutsService(id, level) {
     this.clearWidget();
-    var url =
-      'https://bm-eugis.tk/arcgis/services/CLMS/NUTS_2021/MapServer/WmsServer?';
-    var layer = new WMSLayer({
+
+    var url = "https://bm-eugis.tk/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0"
+    var layer = new FeatureLayer({
       url: url,
       id: id,
-      featureInfoFormat: 'text/html',
-      featureInfoUrl: url,
-      sublayers: [
-        {
-          name: 0,
-          popupEnabled: true,
-          queryable: true,
-        },
-      ],
-      customParameters: {
-        layerDefs: "{'0':'LEVL_CODE=" + level + "'}",
-      },
+      outFields: ["*"],
+      popupEnabled: true,
+      definitionExpression: "LEVL_CODE=" + level
     });
     this.nutsGroupLayer.add(layer);
   }
@@ -138,6 +134,7 @@ class AreaWidget extends React.Component {
     this.setState({ ShowGraphics: drawGraphics });
   }
   clearWidget() {
+    this.props.mapViewer.view.popup.close()
     if (this.state.ShowGraphics) {
       this.state.ShowGraphics.remove();
       this.setState({ ShowGraphics: null });
