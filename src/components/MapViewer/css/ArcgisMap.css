@@ -87,8 +87,8 @@
 .measurement-buttons {
   display: flex;
   justify-content: space-evenly;
-  background: white;
   border-bottom: solid 1px #adb0b8;
+  background: white;
   white-space: nowrap;
 }
 
