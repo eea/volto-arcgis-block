@@ -416,14 +416,14 @@ class MenuWidget extends React.Component {
    * just in the order they were added to map
    */
   activeLayersAsArray() {
-    var messageLayers = document.querySelector('#nolayers_message')
+    var messageLayers = document.querySelector('#nolayers_message');
     let activeLayersArray = [];
     for (var i in this.activeLayersJSON) {
       activeLayersArray.push(this.activeLayersJSON[i]);
     }
 
     if (!activeLayersArray.length) {
-      messageLayers && (messageLayers.style.display = 'block')
+      messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
     return activeLayersArray.reverse();
   }
@@ -705,7 +705,9 @@ class MenuWidget extends React.Component {
               >
                 <div id="active_layers" className="map-active-layers">
                   {this.activeLayersAsArray()}
-                  <span className="message" id="nolayers_message"> No layers selected </span>
+                  <span className="message" id="nolayers_message">
+                    No layers selected
+                  </span>
                 </div>
               </div>
             </div>

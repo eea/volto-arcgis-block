@@ -36,7 +36,7 @@ class BasemapWidget extends React.Component {
     if (this.loadFirst) {
       document
         .querySelectorAll('.esri-basemap-gallery__item')[3]
-        .setAttribute('aria-selected',true);
+        .setAttribute('aria-selected', true);
       document
         .querySelectorAll('.esri-basemap-gallery__item')[3]
         .classList.add('esri-basemap-gallery__item--selected');
@@ -49,7 +49,7 @@ class BasemapWidget extends React.Component {
           (e) => {
             document
               .querySelectorAll('.esri-basemap-gallery__item')[3]
-              .setAttribute('aria-selected',false);
+              .setAttribute('aria-selected', false);
             document
               .querySelectorAll('.esri-basemap-gallery__item')[3]
               .classList.remove('esri-basemap-gallery__item--selected');
