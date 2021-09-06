@@ -9,6 +9,7 @@ import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import MenuWidget from './MenuWidget';
+//import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom;
 
 class MapViewer extends React.Component {
@@ -17,6 +18,12 @@ class MapViewer extends React.Component {
    * @param {*} props
    */
   constructor(props) {
+    /* --> this is a code to fetch for the URL
+    console.log(props);
+    fetch(props.url)
+    .then(response =>{console.log(response); response.json()})
+    .then(data => console.log(data)); <-- */
+
     super(props);
     //we create a reference to the DOM element that will
     //be later mounted. We will use the reference that we
