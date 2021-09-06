@@ -26,7 +26,7 @@ class MapViewer extends React.Component {
     this.mapdiv = createRef();
     this.mapCfg = props.cfg.Map;
     this.compCfg = this.props.cfg.Components;
-    this.url = this.props.cfg.url;
+    this.url = this.props.cfg.url || ''; // Get url or default
     this.map = null;
     this.id = props.id;
     this.mapClass = classNames('map-container', {
