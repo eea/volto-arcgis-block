@@ -49,6 +49,30 @@
   outline: none;
 }
 
+.esri-zoom {
+  order: 0;
+}
+
+.legend-container {
+  order: 1;
+}
+
+.area-container {
+  order: 2;
+}
+
+.measurement-container {
+  order: 3;
+}
+
+.print-container {
+  order: 4;
+}
+
+.basemap-container {
+  order: 5;
+}
+
 /* Basemap */
 .basemap-container {
   display: flex;
