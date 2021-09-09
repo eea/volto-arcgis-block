@@ -485,20 +485,6 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
-          <span className="active-layer-position" key={'d_' + elem.id}>
-            <span class="active-layer-position-down">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fas', 'long-arrow-alt-up']}
-              />
-            </span>
-            <span class="active-layer-position-up">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fas', 'long-arrow-alt-down']}
-              />
-            </span>
-          </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
               className="map-menu-icon"
