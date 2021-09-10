@@ -38,7 +38,6 @@ class MenuWidget extends React.Component {
    */
   openMenu() {
     if (this.state.showMapMenu) {
-      this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('#tabcontainer').style.display =
         'none';
       this.container.current.querySelector('#paneles').style.display = 'none';
@@ -50,7 +49,6 @@ class MenuWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
-      this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('#tabcontainer').style.display =
         'block';
       this.container.current.querySelector('#paneles').style.display = 'block';
@@ -143,7 +141,7 @@ class MenuWidget extends React.Component {
     var datasets = [];
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
-    var checkProduct = 'map_product_' + inheritedIndex;
+    var checkProduct = 'map_product_' + inheritedIndexProduct;
     for (var i in product.Datasets) {
       datasets.push(
         this.metodProcessDataset(
@@ -190,7 +188,7 @@ class MenuWidget extends React.Component {
                 ></input>
                 <label
                   className="ccl-form-check-label"
-                  htmlFor={'map_product_' + inheritedIndexProduct}
+                  htmlFor={checkProduct}
                   key={'f' + prodIndex}
                 >
                   <legend className="ccl-form-legend">
@@ -202,7 +200,7 @@ class MenuWidget extends React.Component {
           </div>
           <div
             className="ccl-form map-menu-products-container"
-            id={'datasets_container' + prodIndex}
+            id={'datasets_container_' + inheritedIndexProduct}
           >
             {datasets}
           </div>
@@ -236,7 +234,7 @@ class MenuWidget extends React.Component {
     var layers = [];
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
-    var checkIndex = 'map_dataset_' + inheritedIndex;
+    var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
     for (var i in dataset.Layer) {
       layers.push(
@@ -257,7 +255,7 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="ccl-form-group map-menu-dataset"
-        id={'dataset_ ' + inheritedIndexDataset}
+        id={'dataset_' + inheritedIndexDataset}
         key={'a' + datIndex}
       >
         <div className="map-dataset-checkbox" key={'b' + datIndex}>
@@ -275,7 +273,7 @@ class MenuWidget extends React.Component {
           ></input>
           <label
             className="ccl-form-check-label"
-            htmlFor={'map_dataset_' + inheritedIndexDataset}
+            htmlFor={checkIndex}
             key={'d' + datIndex}
           >
             <span>{dataset.DatasetTitle}</span>
@@ -418,11 +416,15 @@ class MenuWidget extends React.Component {
    * just in the order they were added to map
    */
   activeLayersAsArray() {
+    var messageLayers = document.querySelector('#nolayers_message');
     let activeLayersArray = [];
     for (var i in this.activeLayersJSON) {
       activeLayersArray.push(this.activeLayersJSON[i]);
     }
 
+    if (!activeLayersArray.length) {
+      messageLayers && (messageLayers.style.display = 'block');
+    } else messageLayers && (messageLayers.style.display = 'none');
     return activeLayersArray.reverse();
   }
 
@@ -484,8 +486,18 @@ class MenuWidget extends React.Component {
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
           <span className="active-layer-position" key={'d_' + elem.id}>
-            <FontAwesomeIcon icon={['fas', 'arrow-up']} />
-            <FontAwesomeIcon icon={['fas', 'arrow-down']} />
+            <span class="active-layer-position-down">
+              <FontAwesomeIcon
+                className="map-menu-icon"
+                icon={['fas', 'long-arrow-alt-up']}
+              />
+            </span>
+            <span class="active-layer-position-up">
+              <FontAwesomeIcon
+                className="map-menu-icon"
+                icon={['fas', 'long-arrow-alt-down']}
+              />
+            </span>
           </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
@@ -497,7 +509,7 @@ class MenuWidget extends React.Component {
           <span className="active-layer-delete">
             <FontAwesomeIcon
               className="map-menu-icon"
-              icon={['far', 'times-circle']}
+              icon={['fas', 'times']}
               onClick={() => this.deleteCrossEvent(elem)}
             />
           </span>
@@ -693,6 +705,9 @@ class MenuWidget extends React.Component {
               >
                 <div id="active_layers" className="map-active-layers">
                   {this.activeLayersAsArray()}
+                  <span className="message" id="nolayers_message">
+                    No layers selected
+                  </span>
                 </div>
               </div>
             </div>
