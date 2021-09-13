@@ -620,17 +620,17 @@ class MenuWidget extends React.Component {
    * Method to change between tabs
    */
   toggleTab(e) {
-    if (!e.currentTarget.classList.contains('tab-selected')){
+    if (!e.currentTarget.classList.contains('tab-selected')) {
       var tabsel = document.querySelector('.tab-selected');
       var tab = document.querySelector('span.tab:not(.tab-selected)');
       var panelsel = document.querySelector('.panel-selected');
       var panel = document.querySelector('div.panel:not(.panel-selected)');
-  
+
       tabsel.className = 'tab';
       tabsel.setAttribute('aria-selected', 'false');
       panelsel.className = 'panel';
       panelsel.setAttribute('aria-hidden', 'false');
-  
+
       tab.className = 'tab tab-selected';
       tab.setAttribute('aria-selected', 'true');
       panel.className = 'panel panel-selected';
