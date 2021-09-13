@@ -117,25 +117,25 @@
 }
 
 .measurement-buttons {
-	display: flex;
-	justify-content: space-evenly;
-	background: white;
+  display: flex;
+  justify-content: space-evenly;
+  background: white;
 }
 
 .measurement-buttons .esri-widget--button {
-	width: 100%;
-	border-bottom: solid 4px transparent !important;
-	background-color: white;
-	color: black;
+  width: 100%;
+  border-bottom: solid 4px transparent !important;
+  background-color: white;
+  color: black;
 }
 
 .measurement-buttons .esri-widget--button:hover {
-	background-color: white;
-	color: black;
+  background-color: white;
+  color: black;
 }
 
 .measurement-buttons .esri-widget--button.active {
-	border-color: black !important;
+  border-color: black !important;
 }
 
 .esri-measurement p {
