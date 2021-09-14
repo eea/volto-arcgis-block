@@ -485,20 +485,6 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
-          <span className="active-layer-position" key={'d_' + elem.id}>
-            <span class="active-layer-position-down">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fas', 'long-arrow-alt-up']}
-              />
-            </span>
-            <span class="active-layer-position-up">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fas', 'long-arrow-alt-down']}
-              />
-            </span>
-          </span>
           <span className="active-layer-hide">
             <FontAwesomeIcon
               className="map-menu-icon"
@@ -633,23 +619,25 @@ class MenuWidget extends React.Component {
   /**
    * Method to change between tabs
    */
-  toggleTab() {
-    var tabsel = document.querySelector('.tab-selected');
-    var tab = document.querySelector('span.tab:not(.tab-selected)');
-    var panelsel = document.querySelector('.panel-selected');
-    var panel = document.querySelector('div.panel:not(.panel-selected)');
+  toggleTab(e) {
+    if (!e.currentTarget.classList.contains('tab-selected')) {
+      var tabsel = document.querySelector('.tab-selected');
+      var tab = document.querySelector('span.tab:not(.tab-selected)');
+      var panelsel = document.querySelector('.panel-selected');
+      var panel = document.querySelector('div.panel:not(.panel-selected)');
 
-    tabsel.className = 'tab';
-    tabsel.setAttribute('aria-selected', 'false');
-    panelsel.className = 'panel';
-    panelsel.setAttribute('aria-hidden', 'false');
+      tabsel.className = 'tab';
+      tabsel.setAttribute('aria-selected', 'false');
+      panelsel.className = 'panel';
+      panelsel.setAttribute('aria-hidden', 'false');
 
-    tab.className = 'tab tab-selected';
-    tab.setAttribute('aria-selected', 'true');
-    panel.className = 'panel panel-selected';
-    panel.setAttribute('aria-hidden', 'true');
-    if (tab.id === 'active_label') {
-      this.layersReorder();
+      tab.className = 'tab tab-selected';
+      tab.setAttribute('aria-selected', 'true');
+      panel.className = 'panel panel-selected';
+      panel.setAttribute('aria-hidden', 'true');
+      if (tab.id === 'active_label') {
+        this.layersReorder();
+      }
     }
   }
 
@@ -669,8 +657,8 @@ class MenuWidget extends React.Component {
                 role="tab"
                 aria-controls="products_panel"
                 aria-selected="true"
-                onClick={() => this.toggleTab()}
-                onKeyDown={() => this.toggleTab()}
+                onClick={(e) => this.toggleTab(e)}
+                onKeyDown={(e) => this.toggleTab(e)}
                 tabIndex="0"
               >
                 Products and datasets
@@ -681,8 +669,8 @@ class MenuWidget extends React.Component {
                 role="tab"
                 aria-controls="active_panel"
                 aria-selected="false"
-                onClick={() => this.toggleTab()}
-                onKeyDown={() => this.toggleTab()}
+                onClick={(e) => this.toggleTab(e)}
+                onKeyDown={(e) => this.toggleTab(e)}
                 tabIndex="0"
               >
                 Active on map
