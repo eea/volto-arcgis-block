@@ -62,51 +62,141 @@ class UseCasesMapViewer extends React.Component {
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
-      basemap: 'topo',
+      basemap: 'gray-vector',
     });
 
     this.view = new MapView({
       container: this.mapdiv.current,
       map: this.map,
       center: this.mapCfg.center,
-      zoom: this.mapCfg.zoom,
+      zoom: 1,
       ui: {
         components: ['attribution'],
       },
     });
-    this.zoom = new Zoom({
-      view: this.view,
-    });
+
     this.view.ui.add(this.zoom, {
       position: 'top-right',
     });
 
-    var control = new LayerControl({
+    var layerControl = new LayerControl({
       map: this.map,
-      FeatureLayer: FeatureLayer,
       view: this.view,
+      FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
-    control.addLayer(
-      'aaaa',
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0',
-    );
 
-    control.getPointInfo({ lat: 'aaaa', lng: 'bbbb' });
-    // setTimeout(() => {
-    //   var bbox = { minX: -0.489, minY: 51.28, maxX: 0.236, maxY: 51.686 };
-    //   control.zoomToExtent(bbox);
-    // }, 3000);
+    var navigation = new NavigationControl({
+      map: this.map,
+      view: this.view,
+      center: this.mapCfg.center,
+      layerControl: layerControl,
+    });
+
+    var infoWidget = new InfoWidget({
+      map: this.map,
+      view: this.view,
+      layerControl: layerControl,
+      navigation: navigation,
+      FeatureLayer: FeatureLayer,
+    });
+
+    var layerSpatial = layerControl.createLayer({
+      id: 'layerSpatial',
+      url:
+        'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
+    });
+
+    var layerRegion = layerControl.createLayer({
+      id: 'layerRegion',
+      url:
+        'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0',
+    });
+
+    layerControl.addLayer(layerRegion);
+    layerControl.addLayer(layerSpatial);
+    layerControl.hideLayer(layerSpatial.id);
+    this.view.on('click', (e) => {
+      var screenPoint = { x: e.x, y: e.y };
+
+      (async () => {
+        var selectedPoint = await layerControl.getPointInfo(screenPoint);
+        var boundingBox = this.clearBBOX(selectedPoint.BBOX);
+
+        layerControl.zoomToExtent(boundingBox);
+        layerControl.hideLayer(layerRegion.id);
+        layerControl.showLayer(layerSpatial.id);
+        // infoWidget.setLateralMenu(2)
+        this.setState({ lateralOption: 2 });
+      })();
+    });
 
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
     //trigger the renderization again, and to trigger the renderization
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
-    this.setState({});
+    this.disableMapFunctions(this.view);
+
+    this.setState({ lateralOption: 1 });
   }
 
-  renderInfo() {}
+  disableMapFunctions(view) {
+    view.on('mouse-wheel', function (event) {
+      event.stopPropagation();
+    });
+    view.on('double-click', function (event) {
+      event.stopPropagation();
+    });
+    view.on('double-click', ['Control'], function (event) {
+      event.stopPropagation();
+    });
+
+    view.on('click', ['Shift'], function (event) {
+      event.stopPropagation();
+    });
+    view.on('drag', function (event) {
+      event.stopPropagation();
+    });
+    view.on('drag', ['Shift'], function (event) {
+      event.stopPropagation();
+    });
+
+    view.on('drag', ['Shift', 'Control'], function (event) {
+      event.stopPropagation();
+    });
+
+    view.on('key-down', function (event) {
+      var prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+      var keyPressed = event.key;
+      if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+        event.stopPropagation();
+      }
+    });
+    view.on('key-down', ['Shift'], function (event) {
+      var prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+      var keyPressed = event.key;
+      if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+        event.stopPropagation();
+      }
+    });
+  }
+
+  clearBBOX(stringBbox) {
+    var floatBbox = [];
+
+    stringBbox = stringBbox.replace('[', '');
+    stringBbox = stringBbox.replace(']', '');
+    stringBbox = stringBbox.split(',');
+
+    for (var number in stringBbox)
+      floatBbox.push(parseFloat(stringBbox[number]));
+
+    return floatBbox;
+  }
+  renderInfo() {
+    return <InfoWidget view={this.view} mapViewer={this} />;
+  }
 
   /**
    * This method renders the map viewer, invoking if necessary the methods
@@ -125,6 +215,7 @@ class UseCasesMapViewer extends React.Component {
         </div>
         <br />
         <div className="ccl-container ccl-container-flex">
+          {this.renderInfo()}
           <div className="use-cases-products-block cont-w-50">
             <div className="use-cases-products-title">
               Organisation locations

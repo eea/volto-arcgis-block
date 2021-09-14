@@ -8,102 +8,92 @@ class LayerControl {
     Extent = props.Extent;
   }
 
-  createLayer(info) {
+  /**
+   * This method will receive the information required to create a new layer .
+   * @param {Object} layerInfo 
+   * @returns FeatureLayer
+   */
+  createLayer(layerInfo) {
     var newLayer = new FeatureLayer({
-      url: info.url,
-      id: info.id,
+      url: layerInfo.url,
+      id: layerInfo.id,
       outFields: ['*'],
-      popupEnabled: info.popup != undefined ? info.popup : true,
+      popupEnabled: layerInfo.popup != undefined ? layerInfo.popup : true,
     });
 
     return newLayer;
   }
 
-  getPointInfo(data) {
-    var lat = "data.lat";
-    var lng = "data.lng";
-
-    var geometry = [lng, lat];
-    var url =
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0/query';
-
-    var parameters = [
-      'where',
-      'text',
-      'objectIds',
-      'time',
-      'geometry',
-      'geometryType',
-      'inSR',
-      'spatialRel',
-      'relationParam',
-      'outFields',
-      'returnGeometry',
-      'returnTrueCurves',
-      'maxAllowableOffset',
-      'geometryPrecision',
-      'outSR',
-      'having',
-      'returnIdsOnly',
-      'returnCountOnly',
-      'orderByFields',
-      'groupByFieldsForStatistics',
-      'outStatistics',
-      'returnZ',
-      'returnM',
-      'gdbVersion',
-      'historicMoment',
-      'returnDistinctValues',
-      'resultOffset',
-      'resultRecordCount',
-      'queryByDistance',
-      'returnExtentOnly',
-      'datumTransformation',
-      'parameterValues',
-      'rangeValues',
-      'quantizationParameters',
-      'featureEncoding',
-      'f',
-    ];
-
-    var urlQuery = new URL(url);
-
-    for (var param in parameters) {
-      urlQuery.searchParams.set(parameters[param], (data.parameters[param] != undefined ? data.parameters[param] : ''));
-    }
-
-    console.log(urlQuery);
+  /**
+   * This method adds a layer to the map.
+   * @param {FeatureLayer} layer 
+   */
+  addLayer(layer) {
+    this.map.add(layer);
   }
 
+  /**
+   * This method will show the layer on the map.
+   * @param {string} id 
+   */
   showLayer(id) {
     var items = this.map.layers.items;
     for (var layer in items) {
       items[layer].id == id ? (items[layer].visible = true) : '';
     }
   }
-
+ 
+  /**
+   * This method will hide a layer from the map, without removing it.
+   * @param {string} id 
+   */
   hideLayer(id) {
     var items = this.map.layers.items;
     for (var layer in items) {
       items[layer].id == id ? (items[layer].visible = false) : '';
     }
   }
-
+  
+  /**
+   * This method removes the layer from the map.
+   * @param {string} id 
+   */
   removeLayer(id) {
     var items = this.map.layers.items;
     for (var layer in items) {
       items[layer].id == id ? this.map.remove(items[layer]) : '';
     }
   }
-
-  addLayer(layer) {
-    this.map.add(layer);
-  }
-
-  zoomToExtent(bbox) {
-    var newExtent = new Extent(bbox.maxX, bbox.minX, bbox.maxY, bbox.minY);
+  
+  /**
+   * This method zooms the map to a certain extent specified by a bounding box
+   * @param {Array} boundingBox 
+   */ 
+  zoomToExtent(boundingBox) {
+    var newExtent = new Extent(boundingBox[0], boundingBox[1], boundingBox[2], boundingBox[3]);
     this.view.extent = newExtent;
   }
+  
+  /**
+   * This method retrieves the information of a certain point, allowing filters or queries.
+   * @param {EsriService} screenPoint 
+   * @returns 
+   */
+  async getPointInfo(screenPoint) {
+    const pointInformation = await this.view
+      .hitTest(screenPoint)
+      .then(function (response) {
+        if (response.results.length) {
+          var graphic = response.results.filter(function (result) {
+            return result.graphic;
+          });
+          return graphic[0].graphic.attributes;
+        }
+      });
+    return pointInformation;
+  }
+
+
 }
 
 export default LayerControl;
