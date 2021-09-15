@@ -120,14 +120,20 @@ class UseCasesMapViewer extends React.Component {
       var screenPoint = { x: e.x, y: e.y };
 
       (async () => {
+        // const geometryOptions = {
+        //   geometryType: 'esriGeometryEnvelope',
+        //   outField: [
+        //     'Copernicus_Land_Monitoring_Service_products_used, Use_case_title, Use_case_topics, Use_case_submitting_production_year, Spatial_coverage',
+        //   ],
+        //   format: 'JSON',
+        //   orderByFields: 'Copernicus_Land_Monitoring_Service_products_used',
+        // };
+
         var selectedPoint = await layerControl.getPointInfo(screenPoint);
         var boundingBox = this.clearBBOX(selectedPoint.BBOX);
+        navigation.navigateToRegion(boundingBox, infoWidget);
 
-        layerControl.zoomToExtent(boundingBox);
-        layerControl.hideLayer(layerRegion.id);
-        layerControl.showLayer(layerSpatial.id);
-        // infoWidget.setLateralMenu(2)
-        this.setState({ lateralOption: 2 });
+        this.setState({ useCaseLevel: 2 });
       })();
     });
 
@@ -138,7 +144,7 @@ class UseCasesMapViewer extends React.Component {
     //react component to render itself again
     this.disableMapFunctions(this.view);
 
-    this.setState({ lateralOption: 1 });
+    this.setState({ useCaseLevel: 1 });
   }
 
   disableMapFunctions(view) {

@@ -18,17 +18,23 @@ class NavigationControl extends React.Component {
     this.layerControl.showLayer('layerRegion');
     this.view.center = this.center;
     this.view.zoom = 1;
-    infoWidget.setState({ lateralOption: 1 });
+    infoWidget.setState({ useCaseLevel: 1 });
   }
 
   /**
    * When the user clicks on a region point, the map zooms to region.
    * The layer changes to use cases level.
    * InfoWidget shows the summary of use cases for the region
+   * @param {*} boundingBox
+   * @param {*} layerRegion
+   * @param {*} layerSpatial
    * @param {*} infoWidget
    */
-  navigateToRegion(bbox) {
-    this.layerControl.zoomToExtent(bbox);
+  navigateToRegion(boundingBox, infoWidget) {
+    this.layerControl.zoomToExtent(boundingBox);
+    this.layerControl.hideLayer('layerRegion');
+    this.layerControl.showLayer('layerSpatial');
+    infoWidget.state.useCaseLevel = 2;
   }
 
   /**
@@ -40,7 +46,21 @@ class NavigationControl extends React.Component {
   /**
    * Returns to the previous status.
    */
-  returnToPrevious() {}
+  returnToPrevious(infoWidget) {
+    switch (infoWidget.state.useCaseLevel - 1) {
+      case 1:
+        this.showWorld(infoWidget);
+        break;
+        
+      case 2:
+        this.navigateToLocation();
+        break;
+        
+      default:
+        this.showWorld(infoWidget);
+        break;
+    }
+  }
 }
 
 export default NavigationControl;
