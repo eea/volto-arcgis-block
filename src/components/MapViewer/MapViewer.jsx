@@ -17,12 +17,18 @@ class MapViewer extends React.Component {
    * This method does the creation of the main component
    * @param {*} props
    */
-  constructor(props) {
-    /* --> this is a code to fetch for the URL
+   constructor(props) {
+    /* --> this is a code to fetch for the URL*/
+    console.log("props:");
     console.log(props);
-    fetch(props.url)
-    .then(response =>{console.log(response); response.json()})
-    .then(data => console.log(data)); <-- */
+    if(props.url){
+      fetch(props.url)
+      .then(response =>{
+        console.log(response); 
+        response.json()
+      });
+      //.then(data => console.log(data)); /*<-- */
+    }
 
     super(props);
     //we create a reference to the DOM element that will
