@@ -88,16 +88,35 @@ class LayerControl {
    */
   async getPointInfo(screenPoint, options) {
     const pointInformation = await this.view
-      .hitTest(screenPoint, options ? options : '')
-      .then(function (response) {
-        if (response.results.length) {
-          var graphic = response.results.filter(function (result) {
-            return result.graphic;
-          });
-          return graphic[0].graphic.attributes;
-        }
-      });
+    .hitTest(screenPoint, options ? options : '')
+    .then(function (response) {
+      if (response.results.length) {
+        var graphic = response.results.filter(function (result) {
+          return result.graphic;
+        });
+        return graphic[0].graphic.attributes;
+      }
+    });
     return pointInformation;
+  }
+
+  orderFeatures(features) {
+    features.sort(function (a, b) {
+      if (
+        a.attributes.Copernicus_Land_Monitoring_Service_products_used <
+        b.attributes.Copernicus_Land_Monitoring_Service_products_used
+      ) {
+        return -1;
+      }
+      if (
+        a.attributes.Copernicus_Land_Monitoring_Service_products_used >
+        b.attributes.Copernicus_Land_Monitoring_Service_products_used
+      ) {
+        return 1;
+      }
+      return 0;
+    });
+    return features;
   }
 
   // getData() {

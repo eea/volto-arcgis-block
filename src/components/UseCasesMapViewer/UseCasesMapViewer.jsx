@@ -6,6 +6,7 @@ import { loadModules, loadCss } from 'esri-loader';
 import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
+import config from '@eeacms/volto-arcgis-block/components/MapViewer/config';
 
 var Map, MapView, Zoom, FeatureLayer, Extent;
 
@@ -69,7 +70,7 @@ class UseCasesMapViewer extends React.Component {
       container: this.mapdiv.current,
       map: this.map,
       center: this.mapCfg.center,
-      zoom: 1,
+      zoom: this.mapCfg.zoom,
       ui: {
         components: ['attribution'],
       },
@@ -84,21 +85,6 @@ class UseCasesMapViewer extends React.Component {
       view: this.view,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
-    });
-
-    var navigation = new NavigationControl({
-      map: this.map,
-      view: this.view,
-      center: this.mapCfg.center,
-      layerControl: layerControl,
-    });
-
-    var infoWidget = new InfoWidget({
-      map: this.map,
-      view: this.view,
-      layerControl: layerControl,
-      navigation: navigation,
-      FeatureLayer: FeatureLayer,
     });
 
     var layerSpatial = layerControl.createLayer({
@@ -116,6 +102,25 @@ class UseCasesMapViewer extends React.Component {
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
     layerControl.hideLayer(layerSpatial.id);
+
+    var navigation = new NavigationControl({
+      map: this.map,
+      view: this.view,
+      center: this.mapCfg.center,
+      layerControl: layerControl,
+    });
+
+    var infoWidget = new InfoWidget({
+      map: this.map,
+      view: this.view,
+      layerControl: layerControl,
+      navigation: navigation,
+      FeatureLayer: FeatureLayer,
+      layerRegion: layerRegion,
+      layerSpatial: layerSpatial,
+    });
+
+
     this.view.on('click', (e) => {
       var screenPoint = { x: e.x, y: e.y };
 
@@ -132,7 +137,6 @@ class UseCasesMapViewer extends React.Component {
         var selectedPoint = await layerControl.getPointInfo(screenPoint);
         var boundingBox = this.clearBBOX(selectedPoint.BBOX);
         navigation.navigateToRegion(boundingBox, infoWidget);
-
         this.setState({ useCaseLevel: 2 });
       })();
     });
