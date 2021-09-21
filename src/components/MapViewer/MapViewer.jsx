@@ -9,10 +9,6 @@ import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import MenuWidget from './MenuWidget';
-import { MapViewerConfig } from '../../actions';
-import { compose } from 'redux';
-import { connect } from 'react-redux';
-
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom;
 
@@ -22,6 +18,12 @@ class MapViewer extends React.Component {
    * @param {*} props
    */
   constructor(props) {
+    /* --> this is a code to fetch for the URL
+    console.log(props);
+    fetch(props.url)
+    .then(response =>{console.log(response); response.json()})
+    .then(data => console.log(data)); <-- */
+
     super(props);
     //we create a reference to the DOM element that will
     //be later mounted. We will use the reference that we
@@ -79,17 +81,12 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
-    // After launching the MapViewerConfig action
-    // we will have stored the json response here:
-    // this.props.mapviewer_config
-    this.props.MapViewerConfig(this.props.url);
-
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
     //trigger the renderization again, and to trigger the renderization
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
-    // this.setState({});
+    this.setState({});
   }
 
   setActiveWidget(widget) {
@@ -175,11 +172,4 @@ class MapViewer extends React.Component {
   }
 }
 
-export default compose(
-  connect(
-    (state, props) => ({
-      mapviewer_config: state.mapviewer_config.mapviewer_config,
-    }),
-    { MapViewerConfig },
-  ),
-)(MapViewer);
+export default MapViewer;
