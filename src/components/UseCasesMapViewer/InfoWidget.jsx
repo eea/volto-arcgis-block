@@ -125,7 +125,7 @@ class InfoWidget extends React.Component {
 
     return (
       <>
-        {this.getDataSummary(processedData[data], data)}
+        {DOMElements}
       </>
     )
   }
