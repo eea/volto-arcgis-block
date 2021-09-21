@@ -6,7 +6,6 @@ import { loadModules, loadCss } from 'esri-loader';
 import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
-import config from '@eeacms/volto-arcgis-block/components/MapViewer/config';
 
 var Map, MapView, Zoom, FeatureLayer, Extent;
 
@@ -125,19 +124,11 @@ class UseCasesMapViewer extends React.Component {
       var screenPoint = { x: e.x, y: e.y };
 
       (async () => {
-        // const geometryOptions = {
-        //   geometryType: 'esriGeometryEnvelope',
-        //   outField: [
-        //     'Copernicus_Land_Monitoring_Service_products_used, Use_case_title, Use_case_topics, Use_case_submitting_production_year, Spatial_coverage',
-        //   ],
-        //   format: 'JSON',
-        //   orderByFields: 'Copernicus_Land_Monitoring_Service_products_used',
-        // };
-
         var selectedPoint = await layerControl.getPointInfo(screenPoint);
+        var selectedRegion = selectedPoint.Region;
         var boundingBox = this.clearBBOX(selectedPoint.BBOX);
         navigation.navigateToRegion(boundingBox, infoWidget);
-        this.setState({ useCaseLevel: 2 });
+        this.setState({ useCaseLevel: 2, region: selectedRegion });
       })();
     });
 
@@ -148,7 +139,7 @@ class UseCasesMapViewer extends React.Component {
     //react component to render itself again
     this.disableMapFunctions(this.view);
 
-    this.setState({ useCaseLevel: 1 });
+    this.setState({ useCaseLevel: 1, region: '' });
   }
 
   disableMapFunctions(view) {

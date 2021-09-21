@@ -38,9 +38,9 @@ class LayerControl {
    */
   showLayer(id) {
     var items = this.map.layers.items;
-    for (var layer in items) {
+    for (var layer in items)
       items[layer].id == id ? (items[layer].visible = true) : '';
-    }
+
   }
 
   /**
@@ -49,9 +49,9 @@ class LayerControl {
    */
   hideLayer(id) {
     var items = this.map.layers.items;
-    for (var layer in items) {
+    for (var layer in items)
       items[layer].id == id ? (items[layer].visible = false) : '';
-    }
+
   }
 
   /**
@@ -60,9 +60,9 @@ class LayerControl {
    */
   removeLayer(id) {
     var items = this.map.layers.items;
-    for (var layer in items) {
+    for (var layer in items)
       items[layer].id == id ? this.map.remove(items[layer]) : '';
-    }
+
   }
 
   /**
@@ -88,54 +88,30 @@ class LayerControl {
    */
   async getPointInfo(screenPoint, options) {
     const pointInformation = await this.view
-    .hitTest(screenPoint, options ? options : '')
-    .then(function (response) {
-      if (response.results.length) {
-        var graphic = response.results.filter(function (result) {
-          return result.graphic;
-        });
-        return graphic[0].graphic.attributes;
-      }
-    });
+      .hitTest(screenPoint, options ? options : '')
+      .then(function (response) {
+        if (response.results.length) {
+          var graphic = response.results.filter(function (result) {
+            return result.graphic;
+          });
+          return graphic[0].graphic.attributes;
+        }
+      });
     return pointInformation;
   }
 
   orderFeatures(features) {
     features.sort(function (a, b) {
-      if (
-        a.attributes.Copernicus_Land_Monitoring_Service_products_used <
-        b.attributes.Copernicus_Land_Monitoring_Service_products_used
-      ) {
+      if (a.attributes.Copernicus_Land_Monitoring_Service_products_used < b.attributes.Copernicus_Land_Monitoring_Service_products_used)
         return -1;
-      }
-      if (
-        a.attributes.Copernicus_Land_Monitoring_Service_products_used >
-        b.attributes.Copernicus_Land_Monitoring_Service_products_used
-      ) {
+
+      if (a.attributes.Copernicus_Land_Monitoring_Service_products_used > b.attributes.Copernicus_Land_Monitoring_Service_products_used)
         return 1;
-      }
+
       return 0;
     });
     return features;
   }
-
-  // getData() {
-  //   var layer = new FeatureLayer({
-  //     url:
-  //       'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0/query',
-  //     geometryType: 'esriGeometryEnvelope',
-  //     geometry: '0, 0',
-  //     outField: [
-  //       'Copernicus_Land_Monitoring_Service_products_used, Use_case_title, Use_case_topics, Use_case_submitting_production_year, Spatial_coverage',
-  //     ],
-  //     format: 'JSON',
-  //     orderByFields: 'Copernicus_Land_Monitoring_Service_products_used',
-  //   });
-
-  //   this.map.add(layer);
-
-  //   return 1;
-  // }
 }
 
 export default LayerControl;
