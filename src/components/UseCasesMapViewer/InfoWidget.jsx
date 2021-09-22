@@ -9,7 +9,7 @@ class InfoWidget extends React.Component {
     super(props);
     map = props.map;
     view = props.view;
-    this.state = { useCaseLevel: 1, region: '' };
+    this.state = { useCaseLevel: 1, region: '', selectedUseCase: '' };
     FeatureLayer = props.FeatureLayer;
     navigation = props.navigation;
     layerControl = props.layerControl;
@@ -22,16 +22,15 @@ class InfoWidget extends React.Component {
    * Shows detailed information of a given use case.
    * @param {*} UseCase
    */
-   showUseCase(UseCase) {
+  showUseCase(UseCase) {
     return (
       <>
         <div className="use-cases-products-title">
-          <span>x </span>
-          use cases
+          use case info
         </div>
         <div className="use-case-detail">
           <div className="use-case-detail-close">
-            <span className="ccl-icon-close" aria-label="Close" role="button"></span>
+            <span className="ccl-icon-close" aria-label="Close" role="button" onClick={() => navigation.returnToPrevious(this)}></span>
           </div>
           <div className="use-case-detail-image">
             <img
@@ -42,19 +41,19 @@ class InfoWidget extends React.Component {
             />
           </div>
           <div className="use-case-detail-content">
-            <div className="use-case-detail-product">Product 1</div>
-            <div className="use-case-detail-title">Use case 1</div>
+            <div className="use-case-detail-product">{UseCase.Copernicus_Land_Monitoring_Service_products_used}</div>
+            <div className="use-case-detail-title"><h3>{UseCase.Use_case_title}</h3></div>
             <div className="use-case-detail-info">
-              <span>Topic</span>
-              <span>Year</span>
-              <span>Organisation</span>
+              <span>{UseCase.Use_case_topics}</span>
+              <span>{UseCase.Use_case_submitting_production_year}</span>
+              <span>{UseCase.Spatial_coverage}</span>
             </div>
             <div className="use-case-detail-description">
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                {UseCase.Use_case_summary}
               </p>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                For further information <a href={UseCase.Links_to_web_sites}>here</a>.
               </p>
             </div>
           </div>
@@ -70,9 +69,10 @@ class InfoWidget extends React.Component {
 
   getDataBrief(data) {
     const children = data.map((val) => {
+      debugger;
       return (
         <>
-          <div key={val.Use_case_title} className="use-case-element" id={'use_case_'+val.OBJECTID}>
+          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val })} id={'use_case_' + val.OBJECTID}>
             <div className="use-case-element-title">{val.Use_case_title}</div>
             <div className="use-case-element-description">
               <span>{val.Use_case_topics}</span>
@@ -111,7 +111,7 @@ class InfoWidget extends React.Component {
               className="use-case-button-back"
               role="button"
               tabIndex="0"
-              onClick={navigation.returnToPrevious.bind(navigation, this)}
+              onClick={() => navigation.returnToPrevious(this)}
             >
               <span className="esri-icon-left-arrow"></span>
               Back
@@ -142,19 +142,8 @@ class InfoWidget extends React.Component {
   }
 
   getDataSummary(data, Copernicus_Land_Monitoring_Service_products_used) {
-    const children = data.map((val) => {
-      return (
-        <>
-          <div key={val.Use_case_title} className="use-case-element">
-            <div className="use-case-element-title">{val.Use_case_title}</div>
-            <div className="use-case-element-description">
-              <span>{val.Use_case_topics}</span>
-              <span>{val.Use_case_submitting_production_year}</span>
-              <span>{val.Spatial_coverage}</span>
-            </div>
-          </div>
-        </>);
-    });
+    const children = this.getDataBrief(data)
+
     return (
       <>
         <div key={Copernicus_Land_Monitoring_Service_products_used} className="use-cases-dropdown">
@@ -176,14 +165,14 @@ class InfoWidget extends React.Component {
     )
   }
 
-    /**
-   * Method to toggle dropdown content
-   * @param {*} e
-   */
-     toggleDropdownContent(e) {
-      var aria = e.target.getAttribute('aria-expanded');
-      e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
-    }
+  /**
+  * Method to toggle dropdown content
+  * @param {*} e
+  */
+  toggleDropdownContent(e) {
+    var aria = e.target.getAttribute('aria-expanded');
+    e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+  }
 
   setDOMSummary() {
     this.proccessDataSummary();
@@ -235,7 +224,7 @@ class InfoWidget extends React.Component {
 
         this.features = features;
 
-        this.setState({ useCaseLevel: 1, region: '' });
+        this.setState({ useCaseLevel: 1, region: '', selectedUseCase: '' });
       })();
 
     } else if (this.features !== undefined) {
@@ -275,7 +264,7 @@ class InfoWidget extends React.Component {
   * @param {*} nextProps
   */
   componentWillReceiveProps(nextProps) {
-    this.setState({ useCaseLevel: nextProps.mapViewer.state.useCaseLevel, region: nextProps.mapViewer.state.region });
+    this.setState({ useCaseLevel: nextProps.mapViewer.state.useCaseLevel, region: nextProps.mapViewer.state.region, selectedUseCase: nextProps.mapViewer.state.selectedUseCase });
   }
 
   /**
@@ -289,6 +278,9 @@ class InfoWidget extends React.Component {
 
     else if (this.state.useCaseLevel == 2)
       return this.showBrief(this.state.region);
+
+    else if (this.state.useCaseLevel == 3)
+      return this.showUseCase(this.state.selectedUseCase);
 
 
     else return true;

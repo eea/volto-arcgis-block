@@ -41,7 +41,7 @@ class NavigationControl extends React.Component {
    * When the user clicks on a use case location, the layers are deactivated, only a point at the location is shown and the contour of the country/organization.
    * The information about use cases is displayed on infoWidget.
    */
-  navigateToLocation() {}
+  navigateToLocation() { }
 
   /**
    * Returns to the previous status.
@@ -49,13 +49,13 @@ class NavigationControl extends React.Component {
   returnToPrevious(infoWidget) {
     switch (infoWidget.state.useCaseLevel - 1) {
       case 1:
+        debugger;
         this.showWorld(infoWidget);
         break;
-        
+
       case 2:
-        this.navigateToLocation();
+        infoWidget.setState({ useCaseLevel: 2, region: infoWidget.state.selectedUseCase.Region })
         break;
-        
       default:
         this.showWorld(infoWidget);
         break;

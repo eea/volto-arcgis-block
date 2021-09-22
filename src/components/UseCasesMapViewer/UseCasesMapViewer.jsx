@@ -204,7 +204,7 @@ class UseCasesMapViewer extends React.Component {
     //react component to render itself again
     this.disableMapFunctions(this.view);
 
-    this.setState({ useCaseLevel: 1, region: '' });
+    this.setState({ useCaseLevel: 1});
   }
 
   getRegionInfo(region, callback) {
