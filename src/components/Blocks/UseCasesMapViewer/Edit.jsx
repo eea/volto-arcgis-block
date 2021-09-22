@@ -1,6 +1,6 @@
 import React from 'react';
 import loadable from '@loadable/component';
-import config from '@eeacms/volto-arcgis-block/components/USeCasesMapViewer/config';
+import config from '@eeacms/volto-arcgis-block/components/UseCasesMapViewer/config';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;

@@ -30,6 +30,7 @@ class UseCasesMapViewer extends React.Component {
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
+    this.popupOnce = false;
   }
 
   loader() {
@@ -129,7 +130,71 @@ class UseCasesMapViewer extends React.Component {
         var boundingBox = this.clearBBOX(selectedPoint.BBOX);
         navigation.navigateToRegion(boundingBox, infoWidget);
         this.setState({ useCaseLevel: 2, region: selectedRegion });
+        this.view.popup.close();
+        this.popupOnce = true;
       })();
+    });
+
+    this.view.on("pointer-move", (e) => {
+      var screenPoint = {
+        x: e.x,
+        y: e.y,
+      };
+
+      if (this.state.useCaseLevel == 1) {
+        this.view.hitTest(screenPoint)
+        .then((response) => {
+          if (response.results.length > 1) {
+            if (response.results[0].graphic.geometry != null && this.popupOnce) {
+              this.popupOnce = false;
+              let region = response.results[0].graphic.attributes.Region;
+  
+              this.getRegionInfo(region, (data) => {
+                let data_eu = data.features.filter(a=>a.attributes.Spatial_coverage=='EU' || a.attributes.Spatial_coverage=='UK').length;
+                let data_eea = data.features.filter(a=>a.attributes.Spatial_coverage=='EEA').length;
+                let data_global = data.features.filter(a=>a.attributes.Spatial_coverage=='GLOBAL').length;
+                let data_country = data.features.filter(a=>a.attributes.Spatial_coverage!='EU' && a.attributes.Spatial_coverage!='UK' && a.attributes.Spatial_coverage!='EEA' && a.attributes.Spatial_coverage!='GLOBAL').length;
+  
+                let string = '';
+                if (data_eu > 0) {
+                  string = string + '<div>EU-27 + UK use cases: ' + data_eu + '</div>';
+                }
+                if (data_eea > 0) {
+                  string = string + '<div>EEA use cases: ' + data_eea + '</div>';
+                }
+                if (data_global > 0) {
+                  string = string + '<div>Global use cases: ' + data_global + '</div>';
+                }
+                if (data_country > 0) {
+                  string = string + '<div>Other countries use cases: ' + data_country + '</div>';
+                }
+  
+                this.view.popup.open({
+                  location: {latitude:response.results[0].graphic.geometry.latitude,longitude:response.results[0].graphic.geometry.longitude},
+                  content: string,
+                });
+              });
+            }
+          } else {
+            this.view.popup.close();
+            this.popupOnce = true;
+          }
+        });
+      } else if (this.state.useCaseLevel == 2) {
+        this.view.hitTest(screenPoint)
+        .then((response) => {
+          if (response.results.length > 1) {
+            if (response.results[0].graphic.geometry != null && this.popupOnce) {
+              this.popupOnce = false;
+              //document.querySelector('#use_case_'+response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
+
+            }
+          } else {
+            this.popupOnce = true;
+            //if(document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
+          }
+        });
+      }
     });
 
     //Once we have created the MapView, we need to ensure that the map div
@@ -140,6 +205,20 @@ class UseCasesMapViewer extends React.Component {
     this.disableMapFunctions(this.view);
 
     this.setState({ useCaseLevel: 1, region: '' });
+  }
+
+  getRegionInfo(region, callback) {
+    var xmlhttp;
+    let url = 'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0/query?where=Region+%3D+%27'+region+'%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson';
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
+          let data = JSON.parse(this.responseText);
+          callback(data);
+        }
+    }
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
   }
 
   disableMapFunctions(view) {
@@ -211,13 +290,12 @@ class UseCasesMapViewer extends React.Component {
       <div>
         <div className="ccl-container">
           <div className="use-cases-block">
-            <h1>See use cases by product</h1>
+            <h2>See use cases by product</h2>
           </div>
         </div>
-        <br />
         <div className="ccl-container ccl-container-flex">
           {this.renderInfo()}
-          <div className="use-cases-products-block cont-w-50">
+          <div className="use-cases-products-map cont-w-50">
             <div className="use-cases-products-title">
               Organisation locations
             </div>

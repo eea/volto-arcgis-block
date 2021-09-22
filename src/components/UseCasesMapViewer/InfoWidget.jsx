@@ -22,7 +22,46 @@ class InfoWidget extends React.Component {
    * Shows detailed information of a given use case.
    * @param {*} UseCase
    */
-  showUseCase(UseCase) { }
+   showUseCase(UseCase) {
+    return (
+      <>
+        <div className="use-cases-products-title">
+          <span>x </span>
+          use cases
+        </div>
+        <div className="use-case-detail">
+          <div className="use-case-detail-close">
+            <span className="ccl-icon-close" aria-label="Close" role="button"></span>
+          </div>
+          <div className="use-case-detail-image">
+            <img
+              src={
+                'https://eu-copernicus.github.io/copernicus-component-library/assets/images/image_placeholder.jpg'
+              }
+              alt="Placeholder"
+            />
+          </div>
+          <div className="use-case-detail-content">
+            <div className="use-case-detail-product">Product 1</div>
+            <div className="use-case-detail-title">Use case 1</div>
+            <div className="use-case-detail-info">
+              <span>Topic</span>
+              <span>Year</span>
+              <span>Organisation</span>
+            </div>
+            <div className="use-case-detail-description">
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+              </p>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   /**
    * Shows summarized information of a given use case.
@@ -33,14 +72,12 @@ class InfoWidget extends React.Component {
     const children = data.map((val) => {
       return (
         <>
-          <div className="use-cases-element-container">
-            <div key={val.Use_case_title} className="use-cases-element">
-              <div className="use-case-element-title">{val.Use_case_title}</div>
-              <div className="use-case-element-description">
-                <span>{val.Use_case_topics}</span>
-                <span>{val.Use_case_submitting_production_year}</span>
-                <span>{val.Spatial_coverage}</span>
-              </div>
+          <div key={val.Use_case_title} className="use-case-element" id={'use_case_'+val.OBJECTID}>
+            <div className="use-case-element-title">{val.Use_case_title}</div>
+            <div className="use-case-element-description">
+              <span>{val.Use_case_topics}</span>
+              <span>{val.Use_case_submitting_production_year}</span>
+              <span>{val.Spatial_coverage}</span>
             </div>
           </div>
         </>);
@@ -70,13 +107,15 @@ class InfoWidget extends React.Component {
         </div>
         <div className="use-cases-products-list">
           <div key="{index}" className="use-cases-dropdown">
-            <div
+            <a
+              className="use-case-button-back"
               role="button"
               tabIndex="0"
               onClick={navigation.returnToPrevious.bind(navigation, this)}
             >
+              <span className="esri-icon-left-arrow"></span>
               Back
-            </div>
+            </a>
             {this.getDataBrief(regionFeatures)}
           </div>
         </div>
@@ -106,14 +145,12 @@ class InfoWidget extends React.Component {
     const children = data.map((val) => {
       return (
         <>
-          <div className="use-cases-element-container">
-            <div key={val.Use_case_title} className="use-cases-element">
-              <div className="use-case-element-title">{val.Use_case_title}</div>
-              <div className="use-case-element-description">
-                <span>{val.Use_case_topics}</span>
-                <span>{val.Use_case_submitting_production_year}</span>
-                <span>{val.Spatial_coverage}</span>
-              </div>
+          <div key={val.Use_case_title} className="use-case-element">
+            <div className="use-case-element-title">{val.Use_case_title}</div>
+            <div className="use-case-element-description">
+              <span>{val.Use_case_topics}</span>
+              <span>{val.Use_case_submitting_production_year}</span>
+              <span>{val.Spatial_coverage}</span>
             </div>
           </div>
         </>);
@@ -121,14 +158,32 @@ class InfoWidget extends React.Component {
     return (
       <>
         <div key={Copernicus_Land_Monitoring_Service_products_used} className="use-cases-dropdown">
-          <div className="ccl-expandable__button" role="button" tabIndex="0">
+          <div
+            className="ccl-expandable__button"
+            aria-expanded="false"
+            onClick={this.toggleDropdownContent.bind(this)}
+            onKeyDown={this.toggleDropdownContent.bind(this)}
+            tabIndex="0"
+            role="button"
+          >
             {Copernicus_Land_Monitoring_Service_products_used}
           </div>
-          {children}
+          <div className="use-cases-element-container">
+            {children}
+          </div>
         </div>
       </>
     )
   }
+
+    /**
+   * Method to toggle dropdown content
+   * @param {*} e
+   */
+     toggleDropdownContent(e) {
+      var aria = e.target.getAttribute('aria-expanded');
+      e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+    }
 
   setDOMSummary() {
     this.proccessDataSummary();
