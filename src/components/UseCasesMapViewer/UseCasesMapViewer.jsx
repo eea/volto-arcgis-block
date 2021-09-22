@@ -7,7 +7,7 @@ import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
 
-var Map, MapView, Zoom, FeatureLayer, Extent;
+let Map, MapView, Zoom, FeatureLayer, Extent;
 
 class UseCasesMapViewer extends React.Component {
   /**
@@ -80,20 +80,20 @@ class UseCasesMapViewer extends React.Component {
       position: 'top-right',
     });
 
-    var layerControl = new LayerControl({
+    let layerControl = new LayerControl({
       map: this.map,
       view: this.view,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
 
-    var layerSpatial = layerControl.createLayer({
+    let layerSpatial = layerControl.createLayer({
       id: 'layerSpatial',
       url:
         'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
     });
 
-    var layerRegion = layerControl.createLayer({
+    let layerRegion = layerControl.createLayer({
       id: 'layerRegion',
       url:
         'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0',
@@ -103,18 +103,18 @@ class UseCasesMapViewer extends React.Component {
     layerControl.addLayer(layerSpatial);
     layerControl.hideLayer(layerSpatial.id);
 
-    var navigation = new NavigationControl({
+    let navigationControl = new NavigationControl({
       map: this.map,
       view: this.view,
       center: this.mapCfg.center,
       layerControl: layerControl,
     });
 
-    var infoWidget = new InfoWidget({
+    let infoWidget = new InfoWidget({
       map: this.map,
       view: this.view,
       layerControl: layerControl,
-      navigation: navigation,
+      navigationControl: navigationControl,
       FeatureLayer: FeatureLayer,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
@@ -122,13 +122,13 @@ class UseCasesMapViewer extends React.Component {
 
 
     this.view.on('click', (e) => {
-      var screenPoint = { x: e.x, y: e.y };
+      let screenPoint = { x: e.x, y: e.y };
 
       (async () => {
-        var selectedPoint = await layerControl.getPointInfo(screenPoint);
-        var selectedRegion = selectedPoint.Region;
-        var boundingBox = this.clearBBOX(selectedPoint.BBOX);
-        navigation.navigateToRegion(boundingBox, infoWidget);
+        let selectedPoint = await layerControl.getPointInfo(screenPoint);
+        let selectedRegion = selectedPoint.Region;
+        let boundingBox = navigationControl.clearBBOX(selectedPoint.BBOX);
+        navigationControl.navigateToRegion(boundingBox, infoWidget);
         this.setState({ useCaseLevel: 2, region: selectedRegion });
         this.view.popup.close();
         this.popupOnce = true;
@@ -136,64 +136,64 @@ class UseCasesMapViewer extends React.Component {
     });
 
     this.view.on("pointer-move", (e) => {
-      var screenPoint = {
+      let screenPoint = {
         x: e.x,
         y: e.y,
       };
 
       if (this.state.useCaseLevel == 1) {
         this.view.hitTest(screenPoint)
-        .then((response) => {
-          if (response.results.length > 1) {
-            if (response.results[0].graphic.geometry != null && this.popupOnce) {
-              this.popupOnce = false;
-              let region = response.results[0].graphic.attributes.Region;
-  
-              this.getRegionInfo(region, (data) => {
-                let data_eu = data.features.filter(a=>a.attributes.Spatial_coverage=='EU' || a.attributes.Spatial_coverage=='UK').length;
-                let data_eea = data.features.filter(a=>a.attributes.Spatial_coverage=='EEA').length;
-                let data_global = data.features.filter(a=>a.attributes.Spatial_coverage=='GLOBAL').length;
-                let data_country = data.features.filter(a=>a.attributes.Spatial_coverage!='EU' && a.attributes.Spatial_coverage!='UK' && a.attributes.Spatial_coverage!='EEA' && a.attributes.Spatial_coverage!='GLOBAL').length;
-  
-                let string = '';
-                if (data_eu > 0) {
-                  string = string + '<div>EU-27 + UK use cases: ' + data_eu + '</div>';
-                }
-                if (data_eea > 0) {
-                  string = string + '<div>EEA use cases: ' + data_eea + '</div>';
-                }
-                if (data_global > 0) {
-                  string = string + '<div>Global use cases: ' + data_global + '</div>';
-                }
-                if (data_country > 0) {
-                  string = string + '<div>Other countries use cases: ' + data_country + '</div>';
-                }
-  
-                this.view.popup.open({
-                  location: {latitude:response.results[0].graphic.geometry.latitude,longitude:response.results[0].graphic.geometry.longitude},
-                  content: string,
+          .then((response) => {
+            if (response.results.length > 1) {
+              if (response.results[0].graphic.geometry != null && this.popupOnce) {
+                this.popupOnce = false;
+                let region = response.results[0].graphic.attributes.Region;
+
+                this.getRegionInfo(region, (data) => {
+                  let data_eu = data.features.filter(a => a.attributes.Spatial_coverage == 'EU' || a.attributes.Spatial_coverage == 'UK').length;
+                  let data_eea = data.features.filter(a => a.attributes.Spatial_coverage == 'EEA').length;
+                  let data_global = data.features.filter(a => a.attributes.Spatial_coverage == 'GLOBAL').length;
+                  let data_country = data.features.filter(a => a.attributes.Spatial_coverage != 'EU' && a.attributes.Spatial_coverage != 'UK' && a.attributes.Spatial_coverage != 'EEA' && a.attributes.Spatial_coverage != 'GLOBAL').length;
+
+                  let string = '';
+                  if (data_eu > 0) {
+                    string = string + '<div>EU-27 + UK use cases: ' + data_eu + '</div>';
+                  }
+                  if (data_eea > 0) {
+                    string = string + '<div>EEA use cases: ' + data_eea + '</div>';
+                  }
+                  if (data_global > 0) {
+                    string = string + '<div>Global use cases: ' + data_global + '</div>';
+                  }
+                  if (data_country > 0) {
+                    string = string + '<div>Other countries use cases: ' + data_country + '</div>';
+                  }
+
+                  this.view.popup.open({
+                    location: { latitude: response.results[0].graphic.geometry.latitude, longitude: response.results[0].graphic.geometry.longitude },
+                    content: string,
+                  });
                 });
-              });
+              }
+            } else {
+              this.view.popup.close();
+              this.popupOnce = true;
             }
-          } else {
-            this.view.popup.close();
-            this.popupOnce = true;
-          }
-        });
+          });
       } else if (this.state.useCaseLevel == 2) {
         this.view.hitTest(screenPoint)
-        .then((response) => {
-          if (response.results.length > 1) {
-            if (response.results[0].graphic.geometry != null && this.popupOnce) {
-              this.popupOnce = false;
-              //document.querySelector('#use_case_'+response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
+          .then((response) => {
+            if (response.results.length > 1) {
+              if (response.results[0].graphic.geometry != null && this.popupOnce) {
+                this.popupOnce = false;
+                //document.querySelector('#use_case_'+response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
 
+              }
+            } else {
+              this.popupOnce = true;
+              //if(document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
             }
-          } else {
-            this.popupOnce = true;
-            //if(document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
-          }
-        });
+          });
       }
     });
 
@@ -204,18 +204,18 @@ class UseCasesMapViewer extends React.Component {
     //react component to render itself again
     this.disableMapFunctions(this.view);
 
-    this.setState({ useCaseLevel: 1});
+    this.setState({ useCaseLevel: 1 });
   }
 
   getRegionInfo(region, callback) {
-    var xmlhttp;
-    let url = 'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0/query?where=Region+%3D+%27'+region+'%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson';
+    let xmlhttp;
+    let url = 'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0/query?where=Region+%3D+%27' + region + '%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson';
     xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
-          let data = JSON.parse(this.responseText);
-          callback(data);
-        }
+    xmlhttp.onreadystatechange = function () {
+      if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        let data = JSON.parse(this.responseText);
+        callback(data);
+      }
     }
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
@@ -247,33 +247,22 @@ class UseCasesMapViewer extends React.Component {
     });
 
     view.on('key-down', function (event) {
-      var prohibitedKeys = ['+', '-', 'Shift', '_', '='];
-      var keyPressed = event.key;
+      let prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+      let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
     view.on('key-down', ['Shift'], function (event) {
-      var prohibitedKeys = ['+', '-', 'Shift', '_', '='];
-      var keyPressed = event.key;
+      let prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+      let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
   }
 
-  clearBBOX(stringBbox) {
-    var floatBbox = [];
 
-    stringBbox = stringBbox.replace('[', '');
-    stringBbox = stringBbox.replace(']', '');
-    stringBbox = stringBbox.split(',');
-
-    for (var number in stringBbox)
-      floatBbox.push(parseFloat(stringBbox[number]));
-
-    return floatBbox;
-  }
   renderInfo() {
     return <InfoWidget view={this.view} mapViewer={this} />;
   }

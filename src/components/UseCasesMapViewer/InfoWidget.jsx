@@ -2,16 +2,16 @@ import React, { createRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 
-var FeatureLayer, layerControl, navigation, map, view, layerRegion, layerSpatial, processedData = [];
+let FeatureLayer, layerControl, navigationControl, map, view, layerRegion, layerSpatial, processedData = [];
 
 class InfoWidget extends React.Component {
   constructor(props) {
     super(props);
     map = props.map;
     view = props.view;
-    this.state = { useCaseLevel: 1, region: '', selectedUseCase: '' };
+    this.state = { useCaseLevel: 1, region: '', selectedUseCase: '', previousState: 1 };
     FeatureLayer = props.FeatureLayer;
-    navigation = props.navigation;
+    navigationControl = props.navigationControl;
     layerControl = props.layerControl;
     layerRegion = props.layerRegion;
     layerSpatial = props.layerSpatial;
@@ -30,7 +30,7 @@ class InfoWidget extends React.Component {
         </div>
         <div className="use-case-detail">
           <div className="use-case-detail-close">
-            <span className="ccl-icon-close" aria-label="Close" role="button" onClick={() => navigation.returnToPrevious(this)}></span>
+            <span className="ccl-icon-close" aria-label="Close" role="button" onClick={() => navigationControl.returnToPrevious(this)}></span>
           </div>
           <div className="use-case-detail-image">
             <img
@@ -69,10 +69,9 @@ class InfoWidget extends React.Component {
 
   getDataBrief(data) {
     const children = data.map((val) => {
-      debugger;
       return (
         <>
-          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val })} id={'use_case_' + val.OBJECTID}>
+          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val, previousState: this.state.useCaseLevel })} id={'use_case_' + val.OBJECTID}>
             <div className="use-case-element-title">{val.Use_case_title}</div>
             <div className="use-case-element-description">
               <span>{val.Use_case_topics}</span>
@@ -92,9 +91,9 @@ class InfoWidget extends React.Component {
 
 
   showBrief(selectedRegion) {
-    var regionFeatures = []
+    let regionFeatures = []
 
-    for (var feature in this.features) {
+    for (let feature in this.features) {
       if (this.features[feature].attributes.Region == selectedRegion) {
         regionFeatures.push(this.features[feature].attributes)
       }
@@ -111,7 +110,7 @@ class InfoWidget extends React.Component {
               className="use-case-button-back"
               role="button"
               tabIndex="0"
-              onClick={() => navigation.returnToPrevious(this)}
+              onClick={() => navigationControl.returnToPrevious(this)}
             >
               <span className="esri-icon-left-arrow"></span>
               Back
@@ -124,18 +123,18 @@ class InfoWidget extends React.Component {
   }
 
   proccessDataSummary() {
-    var serviceProducts = this.getDifferentproductUsed(this.features);
-    var elements = [];
+    let serviceProducts = this.getDifferentproductUsed(this.features);
+    let elements = [];
 
-    for (var serviceProduct in serviceProducts) {
+    for (let serviceProduct in serviceProducts) {
       processedData[serviceProducts[serviceProduct]] = [];
     }
 
-    for (var feature in this.features) {
+    for (let feature in this.features) {
       elements.push(this.features[feature].attributes);
     }
 
-    for (var element in elements) {
+    for (let element in elements) {
       processedData[elements[element].Copernicus_Land_Monitoring_Service_products_used].push(elements[element]);
     }
 
@@ -170,14 +169,15 @@ class InfoWidget extends React.Component {
   * @param {*} e
   */
   toggleDropdownContent(e) {
-    var aria = e.target.getAttribute('aria-expanded');
+    debugger;
+    let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
   }
 
   setDOMSummary() {
     this.proccessDataSummary();
-    var DOMElements = []
-    for (var product_use_name in processedData)
+    let DOMElements = []
+    for (let product_use_name in processedData)
       DOMElements.push(this.getDataSummary(processedData[product_use_name], product_use_name))
 
     return (
@@ -188,10 +188,10 @@ class InfoWidget extends React.Component {
   }
 
   getDifferentproductUsed(features) {
-    var serviceProducts = [], oldFeatureName = '';
+    let serviceProducts = [], oldFeatureName = '';
 
-    for (var feature in features) {
-      var currentCLMS = features[feature].attributes.Copernicus_Land_Monitoring_Service_products_used;
+    for (let feature in features) {
+      let currentCLMS = features[feature].attributes.Copernicus_Land_Monitoring_Service_products_used;
       if (currentCLMS != oldFeatureName && !serviceProducts.includes(currentCLMS)) {
         serviceProducts.push(currentCLMS);
         oldFeatureName = currentCLMS;
@@ -206,7 +206,7 @@ class InfoWidget extends React.Component {
   showSummary() {
     if (view !== undefined && this.features === undefined) {
       (async () => {
-        var query = layerRegion.createQuery();
+        let query = layerRegion.createQuery();
         query.set({
           where: '1=1',
           geometryType: 'esriGeometryEnvelope',
@@ -216,7 +216,7 @@ class InfoWidget extends React.Component {
           orderByFields: 'Copernicus_Land_Monitoring_Service_products_used',
           format: 'JSON',
         });
-        var features = await layerRegion.queryFeatures().then((featureSet) => {
+        let features = await layerRegion.queryFeatures().then((featureSet) => {
           return featureSet.features;
         });
 
@@ -224,7 +224,7 @@ class InfoWidget extends React.Component {
 
         this.features = features;
 
-        this.setState({ useCaseLevel: 1, region: '', selectedUseCase: '' });
+        this.setState({ useCaseLevel: 1, region: '', selectedUseCase: '', previousState: this.state.useCaseLevel });
       })();
 
     } else if (this.features !== undefined) {
@@ -264,7 +264,12 @@ class InfoWidget extends React.Component {
   * @param {*} nextProps
   */
   componentWillReceiveProps(nextProps) {
-    this.setState({ useCaseLevel: nextProps.mapViewer.state.useCaseLevel, region: nextProps.mapViewer.state.region, selectedUseCase: nextProps.mapViewer.state.selectedUseCase });
+    this.setState({
+      useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
+      region: nextProps.mapViewer.state.region,
+      selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
+      previousState: this.state.useCaseLevel
+    });
   }
 
   /**
@@ -279,8 +284,11 @@ class InfoWidget extends React.Component {
     else if (this.state.useCaseLevel == 2)
       return this.showBrief(this.state.region);
 
-    else if (this.state.useCaseLevel == 3)
+    else if (this.state.useCaseLevel == 3) {
+      let boundingBox = navigationControl.clearBBOX(this.state.selectedUseCase.BBOX);
+      navigationControl.navigateToRegion(boundingBox, this);
       return this.showUseCase(this.state.selectedUseCase);
+    }
 
 
     else return true;

@@ -1,4 +1,4 @@
-var FeatureLayer, Extent;
+let FeatureLayer, Extent;
 class LayerControl {
   //props es un json con los diferentes parametros (map, etc...)
   constructor(props) {
@@ -14,7 +14,7 @@ class LayerControl {
    * @returns FeatureLayer
    */
   createLayer(layerInfo) {
-    var newLayer = new FeatureLayer({
+    let newLayer = new FeatureLayer({
       url: layerInfo.url,
       id: layerInfo.id,
       outFields: ['*'],
@@ -37,9 +37,9 @@ class LayerControl {
    * @param {string} id
    */
   showLayer(id) {
-    var items = this.map.layers.items;
-    for (var layer in items)
-      items[layer].id == id ? (items[layer].visible = true) : '';
+    let items = this.map.layers.items;
+    for (let layer in items)
+      items[layer].id == id && (items[layer].visible = true);
 
   }
 
@@ -48,9 +48,9 @@ class LayerControl {
    * @param {string} id
    */
   hideLayer(id) {
-    var items = this.map.layers.items;
-    for (var layer in items)
-      items[layer].id == id ? (items[layer].visible = false) : '';
+    let items = this.map.layers.items;
+    for (let layer in items)
+      items[layer].id == id && (items[layer].visible = false);
 
   }
 
@@ -59,9 +59,9 @@ class LayerControl {
    * @param {string} id
    */
   removeLayer(id) {
-    var items = this.map.layers.items;
-    for (var layer in items)
-      items[layer].id == id ? this.map.remove(items[layer]) : '';
+    let items = this.map.layers.items;
+    for (let layer in items)
+      items[layer].id == id && this.map.remove(items[layer]);
 
   }
 
@@ -71,7 +71,7 @@ class LayerControl {
    */
 
   zoomToExtent(boundingBox) {
-    var newExtent = new Extent(
+    let newExtent = new Extent(
       boundingBox[0],
       boundingBox[1],
       boundingBox[2],
@@ -88,10 +88,10 @@ class LayerControl {
    */
   async getPointInfo(screenPoint, options) {
     const pointInformation = await this.view
-      .hitTest(screenPoint, options ? options : '')
+      .hitTest(screenPoint, options && options)
       .then(function (response) {
         if (response.results.length) {
-          var graphic = response.results.filter(function (result) {
+          let graphic = response.results.filter(function (result) {
             return result.graphic;
           });
           return graphic[0].graphic.attributes;

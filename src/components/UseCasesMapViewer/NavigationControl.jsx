@@ -16,7 +16,8 @@ class NavigationControl extends React.Component {
   showWorld(infoWidget) {
     this.layerControl.hideLayer('layerSpatial');
     this.layerControl.showLayer('layerRegion');
-    this.view.center = this.center;
+    this.view.center.latitude = this.center[1];
+    this.view.center.longitude = this.center[0];
     this.view.zoom = 1;
     infoWidget.setState({ useCaseLevel: 1 });
   }
@@ -34,7 +35,7 @@ class NavigationControl extends React.Component {
     this.layerControl.zoomToExtent(boundingBox);
     this.layerControl.hideLayer('layerRegion');
     this.layerControl.showLayer('layerSpatial');
-    infoWidget.state.useCaseLevel = 2;
+    // infoWidget.state.useCaseLevel = 2;
   }
 
   /**
@@ -43,19 +44,34 @@ class NavigationControl extends React.Component {
    */
   navigateToLocation() { }
 
+  clearBBOX(stringBbox) {
+    let floatBbox = [];
+
+    stringBbox = stringBbox.replace('[', '');
+    stringBbox = stringBbox.replace(']', '');
+    stringBbox = stringBbox.split(',');
+
+    for (let number in stringBbox)
+      floatBbox.push(parseFloat(stringBbox[number]));
+
+    return floatBbox;
+  }
+
   /**
    * Returns to the previous status.
    */
   returnToPrevious(infoWidget) {
-    switch (infoWidget.state.useCaseLevel - 1) {
+    switch (infoWidget.state.previousState == infoWidget.state.useCaseLevel ? infoWidget.state.useCaseLevel - 1 : infoWidget.state.previousState) {
       case 1:
-        debugger;
         this.showWorld(infoWidget);
         break;
 
       case 2:
-        infoWidget.setState({ useCaseLevel: 2, region: infoWidget.state.selectedUseCase.Region })
+        let boundingBox = this.clearBBOX(infoWidget.state.selectedUseCase.BBOX);
+        this.navigateToRegion(boundingBox, infoWidget);
+        infoWidget.setState({ useCaseLevel: 2, region: infoWidget.state.selectedUseCase.Region });
         break;
+
       default:
         this.showWorld(infoWidget);
         break;
