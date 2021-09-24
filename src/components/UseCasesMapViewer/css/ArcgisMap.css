@@ -31,8 +31,24 @@
   font-weight: bold;
 }
 
-.use-cases-products-map, .map {
+.use-cases-products-map, .use-cases-products-map .map {
   height: 25rem;
+}
+
+.use-cases-products-map .esri-attribution {
+  display: none;
+}
+
+.use-cases-products-map .esri-widget .esri-popup__header {
+  display: none;
+}
+
+.use-cases-products-map .esri-widget .esri-popup__content {
+  margin-top: 1rem !important;
+}
+
+.use-cases-products-map .esri-widget .esri-popup__footer {
+  display: none;
 }
 
 .use-cases-products-list {
@@ -131,12 +147,13 @@
 }
 
 .use-case-element-description {
+  margin-bottom: 0;
   color: #656565;
   font-size: 0.875rem;
 }
 
 .use-case-element-description span:not(:last-of-type) {
-  display: inline-block;
+  display: inline;
   padding-right: 0.5rem;
   border-right: solid 1px #656565;
   margin-right: 0.5rem;
@@ -229,16 +246,4 @@
 .use-case-detail-description p {
   color: #656565;
   font-size: 0.875rem;
-}
-
-.esri-widget .esri-popup__header {
-  display: none;
-}
-
-.esri-widget .esri-popup__content {
-  margin-top: 1rem !important;
-}
-
-.esri-widget .esri-popup__footer {
-  display: none;
 }

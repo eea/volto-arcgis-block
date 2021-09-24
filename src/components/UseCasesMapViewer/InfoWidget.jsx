@@ -26,7 +26,7 @@ class InfoWidget extends React.Component {
     return (
       <>
         <div className="use-cases-products-title">
-          use case info
+          Use case detail
         </div>
         <div className="use-case-detail">
           <div className="use-case-detail-close">
@@ -71,7 +71,7 @@ class InfoWidget extends React.Component {
     const children = data.map((val) => {
       return (
         <>
-          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val, previousState: this.state.useCaseLevel })} id={`use_case_ ${val.OBJECTID}`}>
+          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val, previousState: this.state.useCaseLevel })} id={`use_case_${val.OBJECTID}`}>
             <div className="use-case-element-title">{val.Use_case_title}</div>
             <div className="use-case-element-description">
               <span>{val.Use_case_topics}</span>

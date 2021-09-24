@@ -138,6 +138,7 @@ class UseCasesMapViewer extends React.Component {
             this.setState({ useCaseLevel: 2, region: selectedRegion, previousState: this.state.useCaseLevel });
             this.view.popup.close();
             this.popupOnce = true;
+            document.querySelector('.map').style.cursor = '';
 
           } else if (this.state.useCaseLevel == 2) {
             navigationControl.navigateToLocation(boundingBox, selectedTitle, selectedRegion, layerSpatial);
@@ -147,18 +148,21 @@ class UseCasesMapViewer extends React.Component {
       })();
     });
 
-    this.view.on("pointer-move", (e) => {
+    this.view.on('pointer-move', (e) => {
       let screenPoint = {
         x: e.x,
         y: e.y,
       };
 
-      if (this.state.useCaseLevel == 1) {
+      let useCaseLevel = document.querySelector('.use-case-button-back') ? 2 : document.querySelector('.use-cases-products-list') ? 1 : 3;
+
+      if (useCaseLevel == 1) {
         this.view.hitTest(screenPoint)
           .then((response) => {
             if (response.results.length > 1) {
               if (response.results[0].graphic.geometry != null && this.popupOnce) {
                 this.popupOnce = false;
+                document.querySelector('.map').style.cursor = 'pointer';
                 let region = response.results[0].graphic.attributes.Region;
 
                 this.getRegionInfo(region, (data) => {
@@ -190,20 +194,22 @@ class UseCasesMapViewer extends React.Component {
             } else {
               this.view.popup.close();
               this.popupOnce = true;
+              document.querySelector('.map').style.cursor = '';
             }
           });
-      } else if (this.state.useCaseLevel == 2) {
+      } else if (useCaseLevel == 2) {
         this.view.hitTest(screenPoint)
           .then((response) => {
             if (response.results.length > 1) {
               if (response.results[0].graphic.geometry != null && this.popupOnce) {
                 this.popupOnce = false;
-                //document.querySelector('#use_case_'+response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
-
+                document.querySelector('.map').style.cursor = 'pointer';
+                document.querySelector('#use_case_'+response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
               }
             } else {
               this.popupOnce = true;
-              //if(document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
+              document.querySelector('.map').style.cursor = '';
+              if(document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
             }
           });
       }
