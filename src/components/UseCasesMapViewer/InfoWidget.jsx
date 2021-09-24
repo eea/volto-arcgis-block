@@ -71,7 +71,7 @@ class InfoWidget extends React.Component {
     const children = data.map((val) => {
       return (
         <>
-          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val, previousState: this.state.useCaseLevel })} id={'use_case_' + val.OBJECTID}>
+          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val, previousState: this.state.useCaseLevel })} id={`use_case_ ${val.OBJECTID}`}>
             <div className="use-case-element-title">{val.Use_case_title}</div>
             <div className="use-case-element-description">
               <span>{val.Use_case_topics}</span>
@@ -91,7 +91,7 @@ class InfoWidget extends React.Component {
 
 
   showBrief(selectedRegion) {
-    let regionFeatures = []
+    const regionFeatures = []
 
     for (let feature in this.features) {
       if (this.features[feature].attributes.Region == selectedRegion) {
@@ -123,8 +123,8 @@ class InfoWidget extends React.Component {
   }
 
   proccessDataSummary() {
-    let serviceProducts = this.getDifferentproductUsed(this.features);
-    let elements = [];
+    const serviceProducts = this.getDifferentproductUsed(this.features);
+    const elements = [];
 
     for (let serviceProduct in serviceProducts) {
       processedData[serviceProducts[serviceProduct]] = [];
@@ -169,14 +169,13 @@ class InfoWidget extends React.Component {
   * @param {*} e
   */
   toggleDropdownContent(e) {
-    debugger;
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
   }
 
   setDOMSummary() {
     this.proccessDataSummary();
-    let DOMElements = []
+    const DOMElements = []
     for (let product_use_name in processedData)
       DOMElements.push(this.getDataSummary(processedData[product_use_name], product_use_name))
 
@@ -206,20 +205,7 @@ class InfoWidget extends React.Component {
   showSummary() {
     if (view !== undefined && this.features === undefined) {
       (async () => {
-        let query = layerRegion.createQuery();
-        query.set({
-          where: '1=1',
-          geometryType: 'esriGeometryEnvelope',
-          outField: [
-            'Copernicus_Land_Monitoring_Service_products_used, Use_case_title, Use_case_topics, Use_case_submitting_production_year, Spatial_coverage',
-          ],
-          orderByFields: 'Copernicus_Land_Monitoring_Service_products_used',
-          format: 'JSON',
-        });
-        let features = await layerRegion.queryFeatures().then((featureSet) => {
-          return featureSet.features;
-        });
-
+        let features = await layerRegion.queryFeatures().then((featureSet) => featureSet.features);
         features = layerControl.orderFeatures(features);
 
         this.features = features;
@@ -278,20 +264,23 @@ class InfoWidget extends React.Component {
   */
   useCasesInformationPanel() {
 
-    if (this.state.useCaseLevel == 1)
-      return this.showSummary();
+    switch (this.state.useCaseLevel) {
 
-    else if (this.state.useCaseLevel == 2)
-      return this.showBrief(this.state.region);
+      case 1:
+        return this.showSummary();
 
-    else if (this.state.useCaseLevel == 3) {
-      let boundingBox = navigationControl.clearBBOX(this.state.selectedUseCase.BBOX);
-      navigationControl.navigateToRegion(boundingBox, this);
-      return this.showUseCase(this.state.selectedUseCase);
+      case 2:
+        return this.showBrief(this.state.region);
+
+      case 3:
+        const title = this.state.selectedUseCase.Use_case_title;
+        const bbox = this.state.selectedUseCase.BBOX;
+        const region = this.state.selectedUseCase.Region;
+        navigationControl.navigateToLocation(bbox, title, region, layerSpatial);
+        return this.showUseCase(this.state.selectedUseCase);
     }
 
 
-    else return true;
   }
 
   /**

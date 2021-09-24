@@ -14,7 +14,7 @@ class LayerControl {
    * @returns FeatureLayer
    */
   createLayer(layerInfo) {
-    let newLayer = new FeatureLayer({
+    const newLayer = new FeatureLayer({
       url: layerInfo.url,
       id: layerInfo.id,
       outFields: ['*'],
@@ -37,7 +37,7 @@ class LayerControl {
    * @param {string} id
    */
   showLayer(id) {
-    let items = this.map.layers.items;
+    const items = this.map.layers.items;
     for (let layer in items)
       items[layer].id == id && (items[layer].visible = true);
 
@@ -48,7 +48,7 @@ class LayerControl {
    * @param {string} id
    */
   hideLayer(id) {
-    let items = this.map.layers.items;
+    const items = this.map.layers.items;
     for (let layer in items)
       items[layer].id == id && (items[layer].visible = false);
 
@@ -59,7 +59,7 @@ class LayerControl {
    * @param {string} id
    */
   removeLayer(id) {
-    let items = this.map.layers.items;
+    const items = this.map.layers.items;
     for (let layer in items)
       items[layer].id == id && this.map.remove(items[layer]);
 
@@ -71,7 +71,7 @@ class LayerControl {
    */
 
   zoomToExtent(boundingBox) {
-    let newExtent = new Extent(
+    const newExtent = new Extent(
       boundingBox[0],
       boundingBox[1],
       boundingBox[2],
@@ -91,7 +91,7 @@ class LayerControl {
       .hitTest(screenPoint, options && options)
       .then(function (response) {
         if (response.results.length) {
-          let graphic = response.results.filter(function (result) {
+          const graphic = response.results.filter(function (result) {
             return result.graphic;
           });
           return graphic[0].graphic.attributes;
@@ -111,6 +111,14 @@ class LayerControl {
       return 0;
     });
     return features;
+  }
+
+  async queryLayer(layer, query) {
+    let layerQuery = layer.createQuery();
+
+    layerQuery.where = query;
+    const result = await layer.queryFeatures(layerQuery).then((featureSet) => featureSet.features);
+    return result;
   }
 }
 

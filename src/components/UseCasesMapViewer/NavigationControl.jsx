@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 
+let layerRegion, layerSpatial;
 class NavigationControl extends React.Component {
   constructor(props) {
     super(props);
@@ -7,6 +8,8 @@ class NavigationControl extends React.Component {
     this.view = props.view;
     this.center = props.center;
     this.layerControl = props.layerControl;
+    layerRegion = props.layerRegion;
+    layerSpatial = props.layerSpatial;
   }
 
   /**
@@ -16,8 +19,15 @@ class NavigationControl extends React.Component {
   showWorld(infoWidget) {
     this.layerControl.hideLayer('layerSpatial');
     this.layerControl.showLayer('layerRegion');
-    this.view.center.latitude = this.center[1];
-    this.view.center.longitude = this.center[0];
+    if (this.view.center) {
+      this.view.center.latitude = this.center[1];
+      this.view.center.longitude = this.center[0];
+    } else {
+      this.view.center = {
+        latitude: this.center[1],
+        longitude: this.center[0]
+      }
+    }
     this.view.zoom = 1;
     infoWidget.setState({ useCaseLevel: 1 });
   }
@@ -31,22 +41,29 @@ class NavigationControl extends React.Component {
    * @param {*} layerSpatial
    * @param {*} infoWidget
    */
-  navigateToRegion(boundingBox, infoWidget) {
+  navigateToRegion(bBox, region, layer) {
+    const boundingBox = this.clearBBOX(bBox);
     this.layerControl.zoomToExtent(boundingBox);
     this.layerControl.hideLayer('layerRegion');
     this.layerControl.showLayer('layerSpatial');
-    // infoWidget.state.useCaseLevel = 2;
+    layer.definitionExpression = `Region = \'${region}\'`;
   }
 
   /**
    * When the user clicks on a use case location, the layers are deactivated, only a point at the location is shown and the contour of the country/organization.
    * The information about use cases is displayed on infoWidget.
    */
-  navigateToLocation() { }
+  navigateToLocation(bBox, useCaseTitle, region, layer) {
+    // layerSpatial.setDefinitionExpression(point);
+    this.navigateToRegion(bBox, region, layer)
+    const expression = `Use_case_title = \'${useCaseTitle}\'`;
+    layer.definitionExpression = expression;
+
+  }
 
   clearBBOX(stringBbox) {
-    let floatBbox = [];
-
+    const floatBbox = [];
+    // typeof stringBbox !== 'string' && (stringBbox = stringBbox.toString());
     stringBbox = stringBbox.replace('[', '');
     stringBbox = stringBbox.replace(']', '');
     stringBbox = stringBbox.split(',');
@@ -67,8 +84,7 @@ class NavigationControl extends React.Component {
         break;
 
       case 2:
-        let boundingBox = this.clearBBOX(infoWidget.state.selectedUseCase.BBOX);
-        this.navigateToRegion(boundingBox, infoWidget);
+        this.navigateToRegion(infoWidget.state.selectedUseCase.BBOX, infoWidget.state.selectedUseCase.Region, layerSpatial);
         infoWidget.setState({ useCaseLevel: 2, region: infoWidget.state.selectedUseCase.Region });
         break;
 

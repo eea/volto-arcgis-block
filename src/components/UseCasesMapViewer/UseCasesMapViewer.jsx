@@ -7,7 +7,7 @@ import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
 
-let Map, MapView, Zoom, FeatureLayer, Extent;
+let Map, MapView, FeatureLayer, Extent;
 
 class UseCasesMapViewer extends React.Component {
   /**
@@ -37,14 +37,12 @@ class UseCasesMapViewer extends React.Component {
     return loadModules([
       'esri/WebMap',
       'esri/views/MapView',
-      'esri/widgets/Zoom',
       'esri/layers/FeatureLayer',
       'esri/geometry/Extent',
-    ]).then(([_Map, _MapView, _Zoom, _FeatureLayer, _Extent]) => {
-      [Map, MapView, Zoom, FeatureLayer, Extent] = [
+    ]).then(([_Map, _MapView, _FeatureLayer, _Extent]) => {
+      [Map, MapView, FeatureLayer, Extent] = [
         _Map,
         _MapView,
-        _Zoom,
         _FeatureLayer,
         _Extent,
       ];
@@ -80,20 +78,20 @@ class UseCasesMapViewer extends React.Component {
       position: 'top-right',
     });
 
-    let layerControl = new LayerControl({
+    const layerControl = new LayerControl({
       map: this.map,
       view: this.view,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
 
-    let layerSpatial = layerControl.createLayer({
+    const layerSpatial = layerControl.createLayer({
       id: 'layerSpatial',
       url:
         'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
     });
 
-    let layerRegion = layerControl.createLayer({
+    const layerRegion = layerControl.createLayer({
       id: 'layerRegion',
       url:
         'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0',
@@ -103,14 +101,16 @@ class UseCasesMapViewer extends React.Component {
     layerControl.addLayer(layerSpatial);
     layerControl.hideLayer(layerSpatial.id);
 
-    let navigationControl = new NavigationControl({
+    const navigationControl = new NavigationControl({
       map: this.map,
       view: this.view,
       center: this.mapCfg.center,
       layerControl: layerControl,
+      layerRegion: layerRegion,
+      layerSpatial: layerSpatial,
     });
 
-    let infoWidget = new InfoWidget({
+    const infoWidget = new InfoWidget({
       map: this.map,
       view: this.view,
       layerControl: layerControl,
@@ -122,16 +122,28 @@ class UseCasesMapViewer extends React.Component {
 
 
     this.view.on('click', (e) => {
-      let screenPoint = { x: e.x, y: e.y };
+      const screenPoint = { x: e.x, y: e.y };
 
       (async () => {
-        let selectedPoint = await layerControl.getPointInfo(screenPoint);
-        let selectedRegion = selectedPoint.Region;
-        let boundingBox = navigationControl.clearBBOX(selectedPoint.BBOX);
-        navigationControl.navigateToRegion(boundingBox, infoWidget);
-        this.setState({ useCaseLevel: 2, region: selectedRegion });
-        this.view.popup.close();
-        this.popupOnce = true;
+
+        const selectedPoint = await layerControl.getPointInfo(screenPoint);
+        if (selectedPoint.BBOX) {
+
+          const selectedRegion = selectedPoint.Region;
+          const boundingBox = selectedPoint.BBOX;
+          const selectedTitle = selectedPoint.Use_case_title;
+
+          if (this.state.useCaseLevel == 1) {
+            navigationControl.navigateToRegion(boundingBox, selectedRegion, layerSpatial);
+            this.setState({ useCaseLevel: 2, region: selectedRegion, previousState: this.state.useCaseLevel });
+            this.view.popup.close();
+            this.popupOnce = true;
+
+          } else if (this.state.useCaseLevel == 2) {
+            navigationControl.navigateToLocation(boundingBox, selectedTitle, selectedRegion, layerSpatial);
+            this.setState({ useCaseLevel: 3, selectedUseCase: selectedPoint, previousState: this.state.useCaseLevel });
+          }
+        }
       })();
     });
 
@@ -157,16 +169,16 @@ class UseCasesMapViewer extends React.Component {
 
                   let string = '';
                   if (data_eu > 0) {
-                    string = string + '<div>EU-27 + UK use cases: ' + data_eu + '</div>';
+                    string += `<div>EU-27 + UK use cases: ${data_eu}</div>`;
                   }
                   if (data_eea > 0) {
-                    string = string + '<div>EEA use cases: ' + data_eea + '</div>';
+                    string += `<div>EEA use cases: ${data_eea}</div>`;
                   }
                   if (data_global > 0) {
-                    string = string + '<div>Global use cases: ' + data_global + '</div>';
+                    string += `<div>Global use cases: ${data_global}</div>`;
                   }
                   if (data_country > 0) {
-                    string = string + '<div>Other countries use cases: ' + data_country + '</div>';
+                    string += `<div>Other countries use cases: ${data_country}</div>`;
                   }
 
                   this.view.popup.open({
@@ -209,7 +221,7 @@ class UseCasesMapViewer extends React.Component {
 
   getRegionInfo(region, callback) {
     let xmlhttp;
-    let url = 'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0/query?where=Region+%3D+%27' + region + '%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson';
+    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -246,16 +258,15 @@ class UseCasesMapViewer extends React.Component {
       event.stopPropagation();
     });
 
+    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
     view.on('key-down', function (event) {
-      let prohibitedKeys = ['+', '-', 'Shift', '_', '='];
-      let keyPressed = event.key;
+      const keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
     view.on('key-down', ['Shift'], function (event) {
-      let prohibitedKeys = ['+', '-', 'Shift', '_', '='];
-      let keyPressed = event.key;
+      const keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
