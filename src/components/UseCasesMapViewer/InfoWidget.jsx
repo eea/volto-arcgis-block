@@ -2,7 +2,7 @@ import React, { createRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 
-let FeatureLayer, layerControl, navigationControl, map, view, layerRegion, layerSpatial, processedData = [];
+let FeatureLayer, layerControl, navigationControl, map, view, layerRegion, layerSpatial, processedData = [], SimpleMarkerSymbol, SimpleRenderer;
 
 class InfoWidget extends React.Component {
   constructor(props) {
@@ -15,6 +15,8 @@ class InfoWidget extends React.Component {
     layerControl = props.layerControl;
     layerRegion = props.layerRegion;
     layerSpatial = props.layerSpatial;
+    SimpleMarkerSymbol = props.SimpleMarkerSymbol;
+    SimpleRenderer = props.SimpleRenderer;
     this.container = createRef();
   }
 
@@ -94,7 +96,7 @@ class InfoWidget extends React.Component {
     const regionFeatures = []
 
     for (let feature in this.features) {
-      if (this.features[feature].attributes.Region == selectedRegion) {
+      if (this.features[feature].attributes.Region == selectedRegion) {   
         regionFeatures.push(this.features[feature].attributes)
       }
     }
@@ -105,7 +107,7 @@ class InfoWidget extends React.Component {
           use cases
         </div>
         <div className="use-cases-products-list">
-          <div key="{index}" className="use-cases-dropdown">
+          <div key={selectedRegion} className="use-cases-dropdown">
             <a
               className="use-case-button-back"
               role="button"
@@ -205,7 +207,7 @@ class InfoWidget extends React.Component {
   showSummary() {
     if (view !== undefined && this.features === undefined) {
       (async () => {
-        let features = await layerRegion.queryFeatures().then((featureSet) => featureSet.features);
+        let features = await layerSpatial.queryFeatures().then((featureSet) => featureSet.features);
         features = layerControl.orderFeatures(features);
 
         this.features = features;
@@ -265,14 +267,24 @@ class InfoWidget extends React.Component {
   useCasesInformationPanel() {
 
     switch (this.state.useCaseLevel) {
-
       case 1:
+        if (layerControl) {
+          layerControl.hideLayer(layerSpatial.id);
+          layerControl.showLayer(layerRegion.id);
+        }
+
         return this.showSummary();
 
       case 2:
+        layerControl.hideLayer(layerRegion.id);
+        layerControl.showLayer(layerSpatial.id);
+
         return this.showBrief(this.state.region);
 
       case 3:
+        layerControl.hideLayer(layerRegion.id);
+        layerControl.showLayer(layerSpatial.id);
+
         const title = this.state.selectedUseCase.Use_case_title;
         const bbox = this.state.selectedUseCase.BBOX;
         const region = this.state.selectedUseCase.Region;

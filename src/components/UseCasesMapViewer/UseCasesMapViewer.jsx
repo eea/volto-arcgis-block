@@ -7,7 +7,7 @@ import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
 
-let Map, MapView, FeatureLayer, Extent;
+let Map, MapView, FeatureLayer, Extent, SimpleMarkerSymbol, SimpleRenderer;
 
 class UseCasesMapViewer extends React.Component {
   /**
@@ -39,12 +39,16 @@ class UseCasesMapViewer extends React.Component {
       'esri/views/MapView',
       'esri/layers/FeatureLayer',
       'esri/geometry/Extent',
-    ]).then(([_Map, _MapView, _FeatureLayer, _Extent]) => {
-      [Map, MapView, FeatureLayer, Extent] = [
+      "esri/symbols/SimpleMarkerSymbol",
+      "esri/renderers/SimpleRenderer"
+    ]).then(([_Map, _MapView, _FeatureLayer, _Extent, _SimpleMarkerSymbol, _SimpleRenderer]) => {
+      [Map, MapView, FeatureLayer, Extent, SimpleMarkerSymbol, SimpleRenderer] = [
         _Map,
         _MapView,
         _FeatureLayer,
         _Extent,
+        _SimpleMarkerSymbol,
+        _SimpleRenderer
       ];
     });
   }
@@ -94,8 +98,32 @@ class UseCasesMapViewer extends React.Component {
     const layerRegion = layerControl.createLayer({
       id: 'layerRegion',
       url:
-        'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0',
+        'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion_count/MapServer/0',
     });
+
+
+
+
+    const renderer = new SimpleRenderer({
+      symbol: new SimpleMarkerSymbol({
+        size: 4,
+        color: "Yellow",
+        outline: null,
+        visualVariables: [{
+          type: "color",
+          field: Use_case_submitting_production_year,
+          // features with 30 ppl/sq km or below are assigned the first color
+          stops: [
+            { value: 2020, color: "Blue" },
+            { value: 2019, color: "Black" },
+            { value: 2018, color: "Green" },
+          ]
+        }]
+      }),
+    });
+
+    layerSpatial.renderer = renderer;
+
 
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
@@ -118,6 +146,8 @@ class UseCasesMapViewer extends React.Component {
       FeatureLayer: FeatureLayer,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
+      SimpleMarkerSymbol: SimpleMarkerSymbol,
+      SimpleRenderer: SimpleRenderer,
     });
 
 
@@ -204,12 +234,12 @@ class UseCasesMapViewer extends React.Component {
               if (response.results[0].graphic.geometry != null && this.popupOnce) {
                 this.popupOnce = false;
                 document.querySelector('.map').style.cursor = 'pointer';
-                document.querySelector('#use_case_'+response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
+                document.querySelector('#use_case_' + response.results[0].graphic.attributes.OBJECTID).classList.add('selected');
               }
             } else {
               this.popupOnce = true;
               document.querySelector('.map').style.cursor = '';
-              if(document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
+              if (document.querySelector('.use-case-element.selected')) document.querySelector('.use-case-element.selected').classList.remove('selected');
             }
           });
       }
@@ -227,7 +257,7 @@ class UseCasesMapViewer extends React.Component {
 
   getRegionInfo(region, callback) {
     let xmlhttp;
-    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatial/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
