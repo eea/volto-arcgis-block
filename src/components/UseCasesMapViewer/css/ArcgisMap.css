@@ -1,0 +1,249 @@
+/*Use cases*/
+.use-cases-block:not(:last-of-type) {
+  margin-bottom: 3rem;
+}
+
+.use-cases-block h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.green-container {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: #a0b1280f;
+}
+
+.green-container .ccl-button {
+  margin: 0 auto;
+}
+
+.use-cases-products-block {
+  margin-bottom: 3rem;
+}
+
+.use-cases-products-title {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.use-cases-products-map, .use-cases-products-map .map {
+  height: 25rem;
+}
+
+.use-cases-products-map .esri-attribution {
+  display: none;
+}
+
+.use-cases-products-map .esri-widget .esri-popup__header {
+  display: none;
+}
+
+.use-cases-products-map .esri-widget .esri-popup__content {
+  margin-top: 1rem !important;
+}
+
+.use-cases-products-map .esri-widget .esri-popup__footer {
+  display: none;
+}
+
+.use-cases-products-list {
+  max-height: 25rem;
+  overflow-y: auto;
+}
+
+.use-cases-products .dropdown {
+  margin-bottom: 1rem;
+}
+
+.use-cases-dropdown .ccl-expandable__button {
+  position: relative;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  padding-right: 2.5rem;
+  border-bottom: solid 2px #a0b128;
+  margin: 0;
+  background-color: white;
+  color: #a0b128;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.use-cases-dropdown .ccl-expandable__button::after {
+  position: absolute;
+  right: 0;
+  font-family: 'ccl-icons';
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -webkit-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+.use-cases-dropdown .ccl-expandable__button[aria-expanded='false']::after {
+  content: '\e914';
+  transform: rotate(0deg);
+  -webkit-transition: transform 0.3s ease-out;
+  transition: transform 0.3s ease-out;
+}
+
+.use-cases-dropdown .ccl-expandable__button[aria-expanded='true']::after {
+  content: '\e914';
+  transform: rotate(-180deg);
+  -webkit-transition: transform 0.3s ease-out;
+  transition: transform 0.3s ease-out;
+}
+
+.use-cases-dropdown .ccl-expandable__button::after {
+  margin-right: 1rem;
+  color: #a0b128;
+}
+
+.use-cases-dropdown .ccl-expandable__button:hover::after {
+  color: #7c8921;
+}
+
+.use-cases-dropdown .ccl-expandable__button[aria-expanded='false'] + * {
+  display: none;
+}
+
+.use-cases-dropdown .ccl-expandable__button[aria-expanded='true'] + * {
+  display: block;
+}
+
+.use-cases-element-container {
+  margin: 0;
+}
+
+.use-case-element {
+  padding: 1rem;
+  border-bottom: solid 1px #a0b12833;
+  cursor: pointer;
+}
+
+.use-case-element:hover {
+  background: #a0b1280d;
+}
+
+.use-case-element.selected {
+  background: #a0b1280d;
+}
+
+.use-case-element:last-of-type {
+  border: none;
+  margin-bottom: 0;
+}
+
+.use-case-element-title {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.use-case-element-description {
+  margin-bottom: 0;
+  color: #656565;
+  font-size: 0.875rem;
+}
+
+.use-case-element-description span:not(:last-of-type) {
+  display: inline;
+  padding-right: 0.5rem;
+  border-right: solid 1px #656565;
+  margin-right: 0.5rem;
+}
+
+.use-cases-products-container {
+  display: flex;
+  height: 20rem;
+  flex-direction: column;
+}
+
+.use-cases-map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #ebebeb;
+}
+
+.use-case-button-back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.use-case-button-back .esri-icon-left-arrow {
+  margin-right: 0.5rem;
+}
+
+.use-case-detail {
+  position: relative;
+  height: 25rem;
+  overflow-y: auto;
+}
+
+.use-case-detail-close {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.5rem;
+  background: #ffffffbf;
+  color: #a0b128;
+  cursor: pointer;
+}
+
+.use-case-detail-close:hover {
+  color: #7c8921;
+}
+
+.use-case-detail-image {
+  height: 15rem;
+}
+
+.use-case-detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.use-case-detail-content {
+  margin: 1rem;
+}
+
+.use-case-detail-product {
+  margin-bottom: 0.5rem;
+  color: #a0b128;
+  font-size: 0.875rem;
+}
+
+.use-case-detail-title {
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+  font-weight: bold;
+}
+
+.use-case-detail-info {
+  margin-bottom: 0.5rem;
+  color: #656565;
+  font-size: 0.875rem;
+}
+
+.use-case-detail-info span:not(:last-of-type) {
+  display: inline-block;
+  padding-right: 0.5rem;
+  border-right: solid 1px #656565;
+  margin-right: 0.5rem;
+}
+
+.use-case-detail-description p {
+  color: #656565;
+  font-size: 0.875rem;
+}

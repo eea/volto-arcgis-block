@@ -1,8 +1,6 @@
 import React from 'react';
 import loadable from '@loadable/component';
-import { SidebarPortal } from '@plone/volto/components';
-import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
-import { UseCaseListSchema } from './UseCaseListSchema';
+import config from '@eeacms/volto-arcgis-block/components/UseCasesMapViewer/config';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
@@ -16,7 +14,7 @@ const Edit = (props) => {
 
   return (
     <>
-      <UseCasesMapViewer {...props} />{' '}
+      <UseCasesMapViewer cfg={config} />{' '}
       <SidebarPortal selected={selected}>
         <InlineForm
           schema={UseCaseListSchema()}
