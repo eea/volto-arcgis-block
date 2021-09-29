@@ -18,7 +18,7 @@ class LayerControl {
       url: layerInfo.url,
       id: layerInfo.id,
       outFields: ['*'],
-      popupEnabled: layerInfo.popup != undefined ? layerInfo.popup : true,
+      popupEnabled: layerInfo.popup !== undefined ? layerInfo.popup : true,
     });
 
     return newLayer;
@@ -39,8 +39,7 @@ class LayerControl {
   showLayer(id) {
     const items = this.map.layers.items;
     for (let layer in items)
-      items[layer].id == id && (items[layer].visible = true);
-
+      items[layer].id === id && (items[layer].visible = true);
   }
 
   /**
@@ -50,8 +49,7 @@ class LayerControl {
   hideLayer(id) {
     const items = this.map.layers.items;
     for (let layer in items)
-      items[layer].id == id && (items[layer].visible = false);
-
+      items[layer].id === id && (items[layer].visible = false);
   }
 
   /**
@@ -61,8 +59,7 @@ class LayerControl {
   removeLayer(id) {
     const items = this.map.layers.items;
     for (let layer in items)
-      items[layer].id == id && this.map.remove(items[layer]);
-
+      items[layer].id === id && this.map.remove(items[layer]);
   }
 
   /**
@@ -102,10 +99,16 @@ class LayerControl {
 
   orderFeatures(features) {
     features.sort(function (a, b) {
-      if (a.attributes.Copernicus_Land_Monitoring_Service_products_used < b.attributes.Copernicus_Land_Monitoring_Service_products_used)
+      if (
+        a.attributes.Copernicus_Land_Monitoring_Service_products_used <
+        b.attributes.Copernicus_Land_Monitoring_Service_products_used
+      )
         return -1;
 
-      if (a.attributes.Copernicus_Land_Monitoring_Service_products_used > b.attributes.Copernicus_Land_Monitoring_Service_products_used)
+      if (
+        a.attributes.Copernicus_Land_Monitoring_Service_products_used >
+        b.attributes.Copernicus_Land_Monitoring_Service_products_used
+      )
         return 1;
 
       return 0;
@@ -117,7 +120,9 @@ class LayerControl {
     let layerQuery = layer.createQuery();
 
     layerQuery.where = query;
-    const result = await layer.queryFeatures(layerQuery).then((featureSet) => featureSet.features);
+    const result = await layer
+      .queryFeatures(layerQuery)
+      .then((featureSet) => featureSet.features);
     return result;
   }
 }

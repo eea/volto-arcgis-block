@@ -1,4 +1,7 @@
 import React from 'react';
+import { SidebarPortal } from '@plone/volto/components';
+import InlineForm from '@plone/volto/components/manage/Form/InlineForm';
+import { UseCaseListSchema } from './UseCaseListSchema';
 import loadable from '@loadable/component';
 import config from '@eeacms/volto-arcgis-block/components/UseCasesMapViewer/config';
 

@@ -1,4 +1,4 @@
-import React, { createRef } from 'react';
+import React from 'react';
 
 let layerRegion, layerSpatial;
 class NavigationControl extends React.Component {
@@ -17,19 +17,22 @@ class NavigationControl extends React.Component {
    * @param {*} infoWidget
    */
   showWorld(infoWidget) {
-    this.layerControl.hideLayer('layerSpatial');
-    this.layerControl.showLayer('layerRegion');
+    this.layerControl.hideLayer(layerSpatial.id);
+    this.layerControl.showLayer(layerRegion.id);
     if (this.view.center) {
       this.view.center.latitude = this.center[1];
       this.view.center.longitude = this.center[0];
     } else {
       this.view.center = {
         latitude: this.center[1],
-        longitude: this.center[0]
-      }
+        longitude: this.center[0],
+      };
     }
     this.view.zoom = 1;
-    infoWidget.setState({ useCaseLevel: 1 });
+    infoWidget.setState({
+      useCaseLevel: 1,
+      previousState: infoWidget.state.useCaseLevel,
+    });
   }
 
   /**
@@ -44,9 +47,9 @@ class NavigationControl extends React.Component {
   navigateToRegion(bBox, region, layer) {
     const boundingBox = this.clearBBOX(bBox);
     this.layerControl.zoomToExtent(boundingBox);
-    this.layerControl.hideLayer('layerRegion');
-    this.layerControl.showLayer('layerSpatial');
-    layer.definitionExpression = `Region = \'${region}\'`;
+    this.layerControl.hideLayer(layerRegion.id);
+    this.layerControl.showLayer(layerSpatial.id);
+    layer.definitionExpression = `Region = '${region}'`;
   }
 
   /**
@@ -55,10 +58,9 @@ class NavigationControl extends React.Component {
    */
   navigateToLocation(bBox, useCaseTitle, region, layer) {
     // layerSpatial.setDefinitionExpression(point);
-    this.navigateToRegion(bBox, region, layer)
-    const expression = `Use_case_title = \'${useCaseTitle}\'`;
+    this.navigateToRegion(bBox, region, layer);
+    const expression = `Use_case_title = '${useCaseTitle}'`;
     layer.definitionExpression = expression;
-
   }
 
   clearBBOX(stringBbox) {
@@ -78,14 +80,26 @@ class NavigationControl extends React.Component {
    * Returns to the previous status.
    */
   returnToPrevious(infoWidget) {
-    switch (infoWidget.state.previousState == infoWidget.state.useCaseLevel ? infoWidget.state.useCaseLevel - 1 : infoWidget.state.previousState) {
+    switch (
+      infoWidget.state.previousState === infoWidget.state.useCaseLevel
+        ? infoWidget.state.useCaseLevel - 1
+        : infoWidget.state.previousState
+    ) {
       case 1:
         this.showWorld(infoWidget);
         break;
 
       case 2:
-        this.navigateToRegion(infoWidget.state.selectedUseCase.BBOX, infoWidget.state.selectedUseCase.Region, layerSpatial);
-        infoWidget.setState({ useCaseLevel: 2, region: infoWidget.state.selectedUseCase.Region });
+        this.navigateToRegion(
+          infoWidget.state.selectedUseCase.BBOX,
+          infoWidget.state.selectedUseCase.Region,
+          layerSpatial,
+        );
+        infoWidget.setState({
+          useCaseLevel: 2,
+          region: infoWidget.state.selectedUseCase.Region,
+          previousState: infoWidget.state.useCaseLevel,
+        });
         break;
 
       default:

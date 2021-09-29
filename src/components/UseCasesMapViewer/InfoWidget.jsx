@@ -1,15 +1,27 @@
-import React, { createRef, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { loadModules, loadCss } from 'esri-loader';
+import React, { createRef } from 'react';
 
-let FeatureLayer, layerControl, navigationControl, map, view, layerRegion, layerSpatial, processedData = [], SimpleMarkerSymbol, SimpleRenderer;
+let FeatureLayer,
+  layerControl,
+  navigationControl,
+  map,
+  view,
+  layerRegion,
+  layerSpatial,
+  processedData = [],
+  SimpleMarkerSymbol,
+  SimpleRenderer;
 
 class InfoWidget extends React.Component {
   constructor(props) {
     super(props);
     map = props.map;
     view = props.view;
-    this.state = { useCaseLevel: 1, region: '', selectedUseCase: '', previousState: 1 };
+    this.state = {
+      useCaseLevel: 1,
+      region: '',
+      selectedUseCase: '',
+      previousState: 1,
+    };
     FeatureLayer = props.FeatureLayer;
     navigationControl = props.navigationControl;
     layerControl = props.layerControl;
@@ -27,12 +39,16 @@ class InfoWidget extends React.Component {
   showUseCase(UseCase) {
     return (
       <>
-        <div className="use-cases-products-title">
-          Use case detail
-        </div>
+        <div className="use-cases-products-title">Use case detail</div>
         <div className="use-case-detail">
           <div className="use-case-detail-close">
-            <span className="ccl-icon-close" aria-label="Close" role="button" onClick={() => navigationControl.returnToPrevious(this)}></span>
+            <span
+              className="ccl-icon-close"
+              aria-label="Close"
+              aria-hidden="true"
+              role="button"
+              onClick={() => navigationControl.returnToPrevious(this)}
+            ></span>
           </div>
           <div className="use-case-detail-image">
             <img
@@ -43,19 +59,22 @@ class InfoWidget extends React.Component {
             />
           </div>
           <div className="use-case-detail-content">
-            <div className="use-case-detail-product">{UseCase.Copernicus_Land_Monitoring_Service_products_used}</div>
-            <div className="use-case-detail-title"><h3>{UseCase.Use_case_title}</h3></div>
+            <div className="use-case-detail-product">
+              {UseCase.Copernicus_Land_Monitoring_Service_products_used}
+            </div>
+            <div className="use-case-detail-title">
+              <h3>{UseCase.Use_case_title}</h3>
+            </div>
             <div className="use-case-detail-info">
               <span>{UseCase.Use_case_topics}</span>
               <span>{UseCase.Use_case_submitting_production_year}</span>
               <span>{UseCase.Spatial_coverage}</span>
             </div>
             <div className="use-case-detail-description">
+              <p>{UseCase.Use_case_summary}</p>
               <p>
-                {UseCase.Use_case_summary}
-              </p>
-              <p>
-                For further information <a href={UseCase.Links_to_web_sites}>here</a>.
+                For further information{' '}
+                <a href={UseCase.Links_to_web_sites}>here</a>.
               </p>
             </div>
           </div>
@@ -73,7 +92,19 @@ class InfoWidget extends React.Component {
     const children = data.map((val) => {
       return (
         <>
-          <div key={val.Use_case_title} className="use-case-element" onClick={() => this.setState({ useCaseLevel: 3, selectedUseCase: val, previousState: this.state.useCaseLevel })} id={`use_case_${val.OBJECTID}`}>
+          <div
+            key={val.Use_case_title}
+            className="use-case-element"
+            aria-hidden="true"
+            onClick={() =>
+              this.setState({
+                useCaseLevel: 3,
+                selectedUseCase: val,
+                previousState: this.state.useCaseLevel,
+              })
+            }
+            id={`use_case_${val.OBJECTID}`}
+          >
             <div className="use-case-element-title">{val.Use_case_title}</div>
             <div className="use-case-element-description">
               <span>{val.Use_case_topics}</span>
@@ -81,23 +112,19 @@ class InfoWidget extends React.Component {
               <span>{val.Spatial_coverage}</span>
             </div>
           </div>
-        </>);
+        </>
+      );
     });
 
-    return (
-      <>
-        {children}
-      </>
-    )
+    return <>{children}</>;
   }
 
-
   showBrief(selectedRegion) {
-    const regionFeatures = []
+    const regionFeatures = [];
 
     for (let feature in this.features) {
-      if (this.features[feature].attributes.Region == selectedRegion) {   
-        regionFeatures.push(this.features[feature].attributes)
+      if (this.features[feature].attributes.Region === selectedRegion) {
+        regionFeatures.push(this.features[feature].attributes);
       }
     }
     return (
@@ -108,15 +135,14 @@ class InfoWidget extends React.Component {
         </div>
         <div className="use-cases-products-list">
           <div key={selectedRegion} className="use-cases-dropdown">
-            <a
+            <button
               className="use-case-button-back"
-              role="button"
               tabIndex="0"
               onClick={() => navigationControl.returnToPrevious(this)}
             >
               <span className="esri-icon-left-arrow"></span>
               Back
-            </a>
+            </button>
             {this.getDataBrief(regionFeatures)}
           </div>
         </div>
@@ -137,17 +163,21 @@ class InfoWidget extends React.Component {
     }
 
     for (let element in elements) {
-      processedData[elements[element].Copernicus_Land_Monitoring_Service_products_used].push(elements[element]);
+      processedData[
+        elements[element].Copernicus_Land_Monitoring_Service_products_used
+      ].push(elements[element]);
     }
-
   }
 
   getDataSummary(data, Copernicus_Land_Monitoring_Service_products_used) {
-    const children = this.getDataBrief(data)
+    const children = this.getDataBrief(data);
 
     return (
       <>
-        <div key={Copernicus_Land_Monitoring_Service_products_used} className="use-cases-dropdown">
+        <div
+          key={Copernicus_Land_Monitoring_Service_products_used}
+          className="use-cases-dropdown"
+        >
           <div
             className="ccl-expandable__button"
             aria-expanded="false"
@@ -158,18 +188,16 @@ class InfoWidget extends React.Component {
           >
             {Copernicus_Land_Monitoring_Service_products_used}
           </div>
-          <div className="use-cases-element-container">
-            {children}
-          </div>
+          <div className="use-cases-element-container">{children}</div>
         </div>
       </>
-    )
+    );
   }
 
   /**
-  * Method to toggle dropdown content
-  * @param {*} e
-  */
+   * Method to toggle dropdown content
+   * @param {*} e
+   */
   toggleDropdownContent(e) {
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
@@ -177,23 +205,27 @@ class InfoWidget extends React.Component {
 
   setDOMSummary() {
     this.proccessDataSummary();
-    const DOMElements = []
+    const DOMElements = [];
     for (let product_use_name in processedData)
-      DOMElements.push(this.getDataSummary(processedData[product_use_name], product_use_name))
+      DOMElements.push(
+        this.getDataSummary(processedData[product_use_name], product_use_name),
+      );
 
-    return (
-      <>
-        {DOMElements}
-      </>
-    )
+    return <>{DOMElements}</>;
   }
 
   getDifferentproductUsed(features) {
-    let serviceProducts = [], oldFeatureName = '';
+    let serviceProducts = [],
+      oldFeatureName = '';
 
     for (let feature in features) {
-      let currentCLMS = features[feature].attributes.Copernicus_Land_Monitoring_Service_products_used;
-      if (currentCLMS != oldFeatureName && !serviceProducts.includes(currentCLMS)) {
+      let currentCLMS =
+        features[feature].attributes
+          .Copernicus_Land_Monitoring_Service_products_used;
+      if (
+        currentCLMS !== oldFeatureName &&
+        !serviceProducts.includes(currentCLMS)
+      ) {
         serviceProducts.push(currentCLMS);
         oldFeatureName = currentCLMS;
       }
@@ -202,70 +234,69 @@ class InfoWidget extends React.Component {
   }
 
   /**
-  * Shows summarized information of a whole set of use cases.
-  */
+   * Shows summarized information of a whole set of use cases.
+   */
   showSummary() {
     if (view !== undefined && this.features === undefined) {
       (async () => {
-        let features = await layerSpatial.queryFeatures().then((featureSet) => featureSet.features);
+        let features = await layerSpatial
+          .queryFeatures()
+          .then((featureSet) => featureSet.features);
         features = layerControl.orderFeatures(features);
 
         this.features = features;
 
-        this.setState({ useCaseLevel: 1, region: '', selectedUseCase: '', previousState: this.state.useCaseLevel });
+        this.setState({
+          useCaseLevel: 1,
+          region: '',
+          selectedUseCase: '',
+          previousState: this.state.useCaseLevel,
+        });
       })();
-
     } else if (this.features !== undefined) {
-
       return (
         <>
           <div className="use-cases-products-title">
             <span>{this.features.length} </span>
             use cases
           </div>
-          <div className="use-cases-products-list">
-            {this.setDOMSummary()}
-          </div>
+          <div className="use-cases-products-list">{this.setDOMSummary()}</div>
         </>
       );
     } else {
-      return (
-        <>
-        </>
-      );
+      return <></>;
     }
   }
 
   /**
-  * It highlights the information displayed for a use case on the infoWidget.
-  * */
-  highligtInfo() { }
+   * It highlights the information displayed for a use case on the infoWidget.
+   * */
+  highligtInfo() {}
 
   /**
-  * Highlights the point on the map corresponding to the use case
-  * @param {*} coords
-  */
-  highligtPoint(coords) { }
+   * Highlights the point on the map corresponding to the use case
+   * @param {*} coords
+   */
+  highligtPoint(coords) {}
 
   /**
-  * This methos will update the component.
-  * @param {*} nextProps
-  */
+   * This methos will update the component.
+   * @param {*} nextProps
+   */
   componentWillReceiveProps(nextProps) {
     this.setState({
       useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
       region: nextProps.mapViewer.state.region,
       selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
-      previousState: this.state.useCaseLevel
+      previousState: this.state.useCaseLevel,
     });
   }
 
   /**
-  * This method will return the corresponding lateral menu depending on layers.
-  * @returns HTML
-  */
+   * This method will return the corresponding lateral menu depending on layers.
+   * @returns HTML
+   */
   useCasesInformationPanel() {
-
     switch (this.state.useCaseLevel) {
       case 1:
         if (layerControl) {
@@ -290,17 +321,21 @@ class InfoWidget extends React.Component {
         const region = this.state.selectedUseCase.Region;
         navigationControl.navigateToLocation(bbox, title, region, layerSpatial);
         return this.showUseCase(this.state.selectedUseCase);
+      default:
+        if (layerControl) {
+          layerControl.hideLayer(layerSpatial.id);
+          layerControl.showLayer(layerRegion.id);
+        }
+
+        return this.showSummary();
     }
-
-
   }
 
   /**
-  * This method renders the component
-  * @returns jsx
-  */
+   * This method renders the component
+   * @returns jsx
+   */
   render() {
-
     return (
       <>
         <div className="use-cases-products-block cont-w-50">
@@ -309,7 +344,6 @@ class InfoWidget extends React.Component {
       </>
     );
   }
-
 }
 
 export default InfoWidget;
