@@ -31,7 +31,8 @@
   font-weight: bold;
 }
 
-.use-cases-products-map, .use-cases-products-map .map {
+.use-cases-products-map,
+.use-cases-products-map .map {
   height: 25rem;
 }
 
