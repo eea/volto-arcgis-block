@@ -21,7 +21,7 @@ class PrintWidget extends React.Component {
     this.titleMaxLength = 50;
     this.authorMaxLength = 60;
     this.textMaxLength = 180;
-    this.sizeMax = 3000;
+    this.sizeMax = 6000;
     this.dpiMax = 1200;
     this.scaleMax = 600000000;
   }
@@ -136,7 +136,7 @@ class PrintWidget extends React.Component {
   }
 
   imposeMax(el) {
-    if (el.value != '') {
+    if (el.value !== '') {
       if (parseInt(el.value) < parseInt(el.min)) {
         el.value = el.min;
       }
