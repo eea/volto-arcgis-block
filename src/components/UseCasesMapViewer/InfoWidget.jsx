@@ -132,7 +132,7 @@ class InfoWidget extends React.Component {
         </div>
         <div className="use-cases-products-list">
           <div key={selectedRegion} className="use-cases-dropdown">
-            <a
+            <button
               className="use-case-button-back"
               tabIndex="0"
               onClick={() => {
@@ -141,7 +141,7 @@ class InfoWidget extends React.Component {
             >
               <span className="esri-icon-left-arrow"></span>
               Back
-            </a>
+            </button>
             {this.getDataBrief(regionFeatures)}
           </div>
         </div>

@@ -7,7 +7,14 @@ import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
 
-let Map, MapView, FeatureLayer, Extent, SimpleMarkerSymbol, SimpleRenderer, Basemap, VectorTileLayer;
+let Map,
+  MapView,
+  FeatureLayer,
+  Extent,
+  SimpleMarkerSymbol,
+  SimpleRenderer,
+  Basemap,
+  VectorTileLayer;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -79,16 +86,14 @@ class UseCasesMapViewer extends React.Component {
 
     const gray_basemap = new VectorTileLayer({
       portalItem: {
-        id: "291da5eab3a0412593b66d384379f89f",
+        id: '291da5eab3a0412593b66d384379f89f',
       },
     });
 
     let basemap = new Basemap({
-      baseLayers: [
-        gray_basemap,
-      ]
+      baseLayers: [gray_basemap],
     });
-    
+
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
