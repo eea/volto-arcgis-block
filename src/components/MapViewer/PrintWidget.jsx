@@ -19,8 +19,11 @@ class PrintWidget extends React.Component {
     this.menuClass =
       'esri-icon-printer esri-widget--button esri-widget esri-interactive';
     this.titleMaxLength = 50;
-    this.authorMaxLength = 65;
+    this.authorMaxLength = 60;
     this.textMaxLength = 180;
+    this.sizeMax = 6000;
+    this.dpiMax = 1200;
+    this.scaleMax = 600000000;
   }
 
   loader() {
@@ -87,10 +90,6 @@ class PrintWidget extends React.Component {
             this.setTextFilters();
             let optSVGZ = document.querySelector("[value='svgz']");
             optSVGZ && optSVGZ.parentElement.removeChild(optSVGZ);
-            let fileName = document.querySelector(
-              "[data-input-name='fileName']",
-            );
-            fileName.parentElement.setAttribute('style', 'display:none');
           } else {
             this.setLayoutConstraints();
           }
@@ -136,6 +135,17 @@ class PrintWidget extends React.Component {
     elem.setSelectionRange(c, c);
   }
 
+  imposeMax(el) {
+    if (el.value !== '') {
+      if (parseInt(el.value) < parseInt(el.min)) {
+        el.value = el.min;
+      }
+      if (parseInt(el.value) > parseInt(el.max)) {
+        el.value = el.max;
+      }
+    }
+  }
+
   setTextFilters() {
     let inputs = document.querySelectorAll('input.esri-print__input-text');
     inputs.forEach((input) => {
@@ -152,6 +162,20 @@ class PrintWidget extends React.Component {
         }
         input.oninput = () => {
           this.noSpecialChars(input);
+        };
+      } else if (input.type === 'number' && !input.oninput) {
+        if (
+          input.getAttribute('data-input-name') === 'width' ||
+          input.getAttribute('data-input-name') === 'height'
+        ) {
+          input.setAttribute('max', '' + this.sizeMax);
+        } else if (input.getAttribute('data-input-name') === 'dpi') {
+          input.setAttribute('max', '' + this.dpiMax);
+        } else if (input.getAttribute('data-input-name') === 'scale') {
+          input.setAttribute('max', '' + this.scaleMax);
+        }
+        input.oninput = () => {
+          this.imposeMax(input);
         };
       }
     });
