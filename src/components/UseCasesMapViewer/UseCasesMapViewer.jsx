@@ -7,7 +7,7 @@ import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
 import NavigationControl from './NavigationControl';
 
-let Map, MapView, FeatureLayer, Extent, SimpleMarkerSymbol, SimpleRenderer;
+let Map, MapView, FeatureLayer, Extent, SimpleMarkerSymbol, SimpleRenderer, Basemap, VectorTileLayer;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -32,6 +32,8 @@ class UseCasesMapViewer extends React.Component {
       'esri/geometry/Extent',
       'esri/symbols/SimpleMarkerSymbol',
       'esri/renderers/SimpleRenderer',
+      'esri/Basemap',
+      'esri/layers/VectorTileLayer',
     ]).then(
       ([
         _Map,
@@ -40,6 +42,8 @@ class UseCasesMapViewer extends React.Component {
         _Extent,
         _SimpleMarkerSymbol,
         _SimpleRenderer,
+        _Basemap,
+        _VectorTileLayer,
       ]) => {
         [
           Map,
@@ -48,6 +52,8 @@ class UseCasesMapViewer extends React.Component {
           Extent,
           SimpleMarkerSymbol,
           SimpleRenderer,
+          Basemap,
+          VectorTileLayer,
         ] = [
           _Map,
           _MapView,
@@ -55,6 +61,8 @@ class UseCasesMapViewer extends React.Component {
           _Extent,
           _SimpleMarkerSymbol,
           _SimpleRenderer,
+          _Basemap,
+          _VectorTileLayer,
         ];
       },
     );
@@ -69,10 +77,22 @@ class UseCasesMapViewer extends React.Component {
     loadCss();
     await this.loader();
 
+    const gray_basemap = new VectorTileLayer({
+      portalItem: {
+        id: "291da5eab3a0412593b66d384379f89f",
+      },
+    });
+
+    let basemap = new Basemap({
+      baseLayers: [
+        gray_basemap,
+      ]
+    });
+    
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
-      basemap: 'gray-vector',
+      basemap: basemap,
     });
 
     this.view = new MapView({
@@ -172,7 +192,7 @@ class UseCasesMapViewer extends React.Component {
 
   getRegionInfo(region, callback) {
     let xmlhttp;
-    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatial/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
@@ -304,7 +324,6 @@ class UseCasesMapViewer extends React.Component {
               let region = response.results[0].graphic.attributes.Region;
 
               this.getRegionInfo(region, (data) => {
-                // if (data.error.code !== 500) {
                 let data_eu = data.features.filter(
                   (a) =>
                     a.attributes.Spatial_coverage === 'EU' ||
@@ -345,7 +364,6 @@ class UseCasesMapViewer extends React.Component {
                   },
                   content: string,
                 });
-                // }
               });
             }
           } else {
