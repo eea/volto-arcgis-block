@@ -164,6 +164,11 @@
   font-size: 1rem;
 }
 
+.esri-print input[type='checkbox'] {
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
 /* Area */
 .area-container {
   display: flex;
