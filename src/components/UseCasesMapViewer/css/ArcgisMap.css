@@ -176,8 +176,15 @@
 .use-case-button-back {
   display: inline-flex;
   align-items: center;
+  border: none;
   margin-bottom: 0.5rem;
+  background: none;
+  color: #a0b128;
   cursor: pointer;
+}
+
+.use-case-button-back:hover {
+  color: #7c8921;
 }
 
 .use-case-button-back .esri-icon-left-arrow {
