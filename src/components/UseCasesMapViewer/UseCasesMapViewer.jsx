@@ -10,17 +10,8 @@ import NavigationControl from './NavigationControl';
 let Map, MapView, FeatureLayer, Extent, SimpleMarkerSymbol, SimpleRenderer;
 
 class UseCasesMapViewer extends React.Component {
-  /**
-   * This method does the creation of the main component
-   * @param {*} props
-   */
   constructor(props) {
     super(props);
-    //we create a reference to the DOM element that will
-    //be later mounted. We will use the reference that we
-    //create here to reference the DOM element from javascript
-    //code, for example, to create later a MapView component
-    //that will use the map div to show the map
     this.mapdiv = createRef();
     this.mapCfg = props.cfg.Map;
     this.compCfg = this.props.cfg.Components;
@@ -164,7 +155,93 @@ class UseCasesMapViewer extends React.Component {
       SimpleRenderer: SimpleRenderer,
     });
 
-    this.view.on('click', (e) => {
+    this.setMapFunctions(
+      this.view,
+      layerControl,
+      infoWidget,
+      navigationControl,
+      layerSpatial,
+    );
+
+    //Once we have created the MapView, we need to ensure that the map div
+    //is refreshed in order to show the map on it. To do so, we need to
+    //trigger the renderization again, and to trigger the renderization
+    //we invoke the setState method, that changes the state and forces a
+    //react component to render itself again
+    this.setState(() => {
+      return {
+        useCaseLevel: 1,
+      };
+    });
+  }
+
+  getRegionInfo(region, callback) {
+    let xmlhttp;
+    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatial/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function () {
+      if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+        let data = JSON.parse(this.responseText);
+        callback(data);
+      }
+    };
+    xmlhttp.open('GET', url, true);
+    xmlhttp.send();
+  }
+
+  /**
+   * This method will disable all the functionalities on the map
+   * @param {MapView} view
+   * @param {LayerControl} layerControl
+   * @param {InfoWidget} infoWidget
+   * @param {NavigationControl} navigationControl
+   * @param {FeatureLayer} layerSpatial
+   */
+  setMapFunctions(
+    view,
+    layerControl,
+    infoWidget,
+    navigationControl,
+    layerSpatial,
+  ) {
+    view.on('mouse-wheel', function (event) {
+      event.stopPropagation();
+    });
+    view.on('double-click', function (event) {
+      event.stopPropagation();
+    });
+    view.on('double-click', ['Control'], function (event) {
+      event.stopPropagation();
+    });
+
+    view.on('click', ['Shift'], function (event) {
+      event.stopPropagation();
+    });
+    view.on('drag', function (event) {
+      event.stopPropagation();
+    });
+    view.on('drag', ['Shift'], function (event) {
+      event.stopPropagation();
+    });
+
+    view.on('drag', ['Shift', 'Control'], function (event) {
+      event.stopPropagation();
+    });
+
+    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+    view.on('key-down', function (event) {
+      const keyPressed = event.key;
+      if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+        event.stopPropagation();
+      }
+    });
+    view.on('key-down', ['Shift'], function (event) {
+      const keyPressed = event.key;
+      if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+        event.stopPropagation();
+      }
+    });
+    view.on('click', (e) => {
       const screenPoint = { x: e.x, y: e.y };
 
       (async () => {
@@ -173,7 +250,7 @@ class UseCasesMapViewer extends React.Component {
           const selectedRegion = selectedPoint.Region;
           const boundingBox = selectedPoint.BBOX;
           const selectedTitle = selectedPoint.Use_case_title;
-          if (infoWidget.state.useCaseLevel === 1) {
+          if (this.state.useCaseLevel === 1) {
             navigationControl.navigateToRegion(
               boundingBox,
               selectedRegion,
@@ -186,10 +263,10 @@ class UseCasesMapViewer extends React.Component {
                 previousState: prevState.useCaseLevel,
               };
             });
-            this.view.popup.close();
+            view.popup.close();
             this.popupOnce = true;
             document.querySelector('.map').style.cursor = '';
-          } else if (infoWidget.state.useCaseLevel === 2) {
+          } else if (this.state.useCaseLevel === 2) {
             navigationControl.navigateToLocation(
               boundingBox,
               selectedTitle,
@@ -208,7 +285,7 @@ class UseCasesMapViewer extends React.Component {
       })();
     });
 
-    this.view.on('pointer-move', (e) => {
+    view.on('pointer-move', (e) => {
       let screenPoint = {
         x: e.x,
         y: e.y,
@@ -221,7 +298,7 @@ class UseCasesMapViewer extends React.Component {
         : 3;
 
       if (useCaseLevel === 1) {
-        this.view.hitTest(screenPoint).then((response) => {
+        view.hitTest(screenPoint).then((response) => {
           if (response.results.length > 1) {
             if (
               response.results[0].graphic.geometry !== null &&
@@ -266,7 +343,7 @@ class UseCasesMapViewer extends React.Component {
                   string += `<div>Other countries use cases: ${data_country}</div>`;
                 }
 
-                this.view.popup.open({
+                view.popup.open({
                   location: {
                     latitude: response.results[0].graphic.geometry.latitude,
                     longitude: response.results[0].graphic.geometry.longitude,
@@ -277,13 +354,13 @@ class UseCasesMapViewer extends React.Component {
               });
             }
           } else {
-            this.view.popup.close();
+            view.popup.close();
             this.popupOnce = true;
             document.querySelector('.map').style.cursor = '';
           }
         });
       } else if (useCaseLevel === 2) {
-        this.view.hitTest(screenPoint).then((response) => {
+        view.hitTest(screenPoint).then((response) => {
           if (response.results.length > 1) {
             if (
               response.results[0].graphic.geometry !== null &&
@@ -307,73 +384,6 @@ class UseCasesMapViewer extends React.Component {
                 .classList.remove('selected');
           }
         });
-      }
-    });
-
-    //Once we have created the MapView, we need to ensure that the map div
-    //is refreshed in order to show the map on it. To do so, we need to
-    //trigger the renderization again, and to trigger the renderization
-    //we invoke the setState method, that changes the state and forces a
-    //react component to render itself again
-    this.disableMapFunctions(this.view);
-
-    this.setState(() => {
-      return {
-        useCaseLevel: 1,
-      };
-    });
-  }
-
-  getRegionInfo(region, callback) {
-    let xmlhttp;
-    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatial/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
-    xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function () {
-      if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-        let data = JSON.parse(this.responseText);
-        callback(data);
-      }
-    };
-    xmlhttp.open('GET', url, true);
-    xmlhttp.send();
-  }
-
-  disableMapFunctions(view) {
-    view.on('mouse-wheel', function (event) {
-      event.stopPropagation();
-    });
-    view.on('double-click', function (event) {
-      event.stopPropagation();
-    });
-    view.on('double-click', ['Control'], function (event) {
-      event.stopPropagation();
-    });
-
-    view.on('click', ['Shift'], function (event) {
-      event.stopPropagation();
-    });
-    view.on('drag', function (event) {
-      event.stopPropagation();
-    });
-    view.on('drag', ['Shift'], function (event) {
-      event.stopPropagation();
-    });
-
-    view.on('drag', ['Shift', 'Control'], function (event) {
-      event.stopPropagation();
-    });
-
-    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
-    view.on('key-down', function (event) {
-      const keyPressed = event.key;
-      if (prohibitedKeys.indexOf(keyPressed) !== -1) {
-        event.stopPropagation();
-      }
-    });
-    view.on('key-down', ['Shift'], function (event) {
-      const keyPressed = event.key;
-      if (prohibitedKeys.indexOf(keyPressed) !== -1) {
-        event.stopPropagation();
       }
     });
   }

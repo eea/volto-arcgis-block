@@ -14,7 +14,7 @@ class NavigationControl extends React.Component {
 
   /**
    *  Establish the initial behavior
-   * @param {*} infoWidget
+   * @param {InfoWidget} infoWidget
    */
   showWorld(infoWidget) {
     this.layerControl.hideLayer(layerSpatial.id);
@@ -38,10 +38,9 @@ class NavigationControl extends React.Component {
    * When the user clicks on a region point, the map zooms to region.
    * The layer changes to use cases level.
    * InfoWidget shows the summary of use cases for the region
-   * @param {*} boundingBox
-   * @param {*} layerRegion
-   * @param {*} layerSpatial
-   * @param {*} infoWidget
+   * @param {String} bBox
+   * @param {String} region
+   * @param {FeatureLayer} layer
    */
   navigateToRegion(bBox, region, layer) {
     const boundingBox = this.clearBBOX(bBox);
@@ -54,6 +53,10 @@ class NavigationControl extends React.Component {
   /**
    * When the user clicks on a use case location, the layers are deactivated, only a point at the location is shown and the contour of the country/organization.
    * The information about use cases is displayed on infoWidget.
+   * @param {String} bBox
+   * @param {String} useCaseTitle
+   * @param {String} region
+   * @param {FeatureLayer} layer
    */
   navigateToLocation(bBox, useCaseTitle, region, layer) {
     // layerSpatial.setDefinitionExpression(point);
@@ -62,6 +65,11 @@ class NavigationControl extends React.Component {
     layer.definitionExpression = expression;
   }
 
+  /**
+   * Clears the bounding box string and transfrom to Array
+   * @param {String} stringBbox
+   * @returns Array BBox
+   */
   clearBBOX(stringBbox) {
     const floatBbox = [];
     // typeof stringBbox !== 'string' && (stringBbox = stringBbox.toString());
@@ -77,6 +85,7 @@ class NavigationControl extends React.Component {
 
   /**
    * Returns to the previous status.
+   * @param {InfoWidget} infoWidget
    */
   returnToPrevious(infoWidget) {
     switch (

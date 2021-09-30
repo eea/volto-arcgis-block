@@ -33,8 +33,9 @@ class InfoWidget extends React.Component {
   }
 
   /**
-   * Shows detailed information of a given use case.
-   * @param {*} UseCase
+   * Renders lateral menu when a specific use case is selected
+   * @param {Object} UseCase
+   * @returns lateralMenu DOM
    */
   showUseCase(UseCase) {
     return (
@@ -84,10 +85,10 @@ class InfoWidget extends React.Component {
   }
 
   /**
-   * Shows summarized information of a given use case.
-   * @param {*} UseCase
+   * Generates the DOM for selected region
+   * @param {Object} data
+   * @returns useCasesRegion
    */
-
   getDataBrief(data) {
     const children = data.map((val) => {
       return (
@@ -121,6 +122,11 @@ class InfoWidget extends React.Component {
     return <>{children}</>;
   }
 
+  /**
+   * Shows use cases brief information of selected region
+   * @param {String} selectedRegion
+   * @returns useCasesDOM
+   */
   showBrief(selectedRegion) {
     const regionFeatures = [];
 
@@ -154,6 +160,9 @@ class InfoWidget extends React.Component {
     );
   }
 
+  /**
+   * Transfrom raw data to ordered data by Service products
+   */
   proccessDataSummary() {
     const serviceProducts = this.getDifferentproductUsed(this.features);
     const elements = [];
@@ -173,6 +182,12 @@ class InfoWidget extends React.Component {
     }
   }
 
+  /**
+   * Creates lateral menu ordered by specified ServiceProduct
+   * @param {Object} data
+   * @param {String} Copernicus_Land_Monitoring_Service_products_used
+   * @returns lateralMenuDOM
+   */
   getDataSummary(data, Copernicus_Land_Monitoring_Service_products_used) {
     const children = this.getDataBrief(data);
 
@@ -200,13 +215,17 @@ class InfoWidget extends React.Component {
 
   /**
    * Method to toggle dropdown content
-   * @param {*} e
+   * @param {Event} e
    */
   toggleDropdownContent(e) {
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
   }
 
+  /**
+   * Returns lateral menu
+   * @returns lateralMenuDOM
+   */
   setDOMSummary() {
     this.proccessDataSummary();
     const DOMElements = [];
@@ -218,6 +237,11 @@ class InfoWidget extends React.Component {
     return <>{DOMElements}</>;
   }
 
+  /**
+   * Returns all different service product names
+   * @param {Array} features
+   * @returns allServiceProductNames
+   */
   getDifferentproductUsed(features) {
     let serviceProducts = [],
       oldFeatureName = '';
@@ -287,7 +311,7 @@ class InfoWidget extends React.Component {
 
   /**
    * This methos will update the component.
-   * @param {*} nextProps
+   * @param {Object} nextProps
    */
   componentWillReceiveProps(nextProps) {
     this.setState((prevState) => {

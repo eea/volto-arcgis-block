@@ -1,6 +1,5 @@
 let FeatureLayer, Extent;
 class LayerControl {
-  //props es un json con los diferentes parametros (map, etc...)
   constructor(props) {
     this.map = props.map;
     this.view = props.view;
@@ -34,7 +33,7 @@ class LayerControl {
 
   /**
    * This method will show the layer on the map.
-   * @param {string} id
+   * @param {String} id
    */
   showLayer(id) {
     const items = this.map.layers.items;
@@ -44,7 +43,7 @@ class LayerControl {
 
   /**
    * This method will hide a layer from the map, without removing it.
-   * @param {string} id
+   * @param {String} id
    */
   hideLayer(id) {
     const items = this.map.layers.items;
@@ -55,7 +54,7 @@ class LayerControl {
 
   /**
    * This method removes the layer from the map.
-   * @param {string} id
+   * @param {String} id
    */
   removeLayer(id) {
     const items = this.map.layers.items;
@@ -67,7 +66,6 @@ class LayerControl {
    * This method zooms the map to a certain extent specified by a bounding box
    * @param {Array} boundingBox
    */
-
   zoomToExtent(boundingBox) {
     const newExtent = new Extent(
       boundingBox[0],
@@ -98,6 +96,11 @@ class LayerControl {
     return pointInformation;
   }
 
+  /**
+   * Order retreived features by Service product name
+   * @param {Object} features
+   * @returns features ordered
+   */
   orderFeatures(features) {
     features.sort(function (a, b) {
       if (
@@ -115,16 +118,6 @@ class LayerControl {
       return 0;
     });
     return features;
-  }
-
-  async queryLayer(layer, query) {
-    let layerQuery = layer.createQuery();
-
-    layerQuery.where = query;
-    const result = await layer
-      .queryFeatures(layerQuery)
-      .then((featureSet) => featureSet.features);
-    return result;
   }
 }
 
