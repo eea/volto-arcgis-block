@@ -1,20 +1,13 @@
 import React, { createRef } from 'react';
 
-let FeatureLayer,
-  layerControl,
+let layerControl,
   navigationControl,
-  map,
   view,
-  layerRegion,
   layerSpatial,
-  processedData = [],
-  SimpleMarkerSymbol,
-  SimpleRenderer;
-
+  processedData = [];
 class InfoWidget extends React.Component {
   constructor(props) {
     super(props);
-    map = props.map;
     view = props.view;
     this.state = {
       useCaseLevel: 1,
@@ -22,13 +15,9 @@ class InfoWidget extends React.Component {
       selectedUseCase: '',
       previousState: 1,
     };
-    FeatureLayer = props.FeatureLayer;
     navigationControl = props.navigationControl;
     layerControl = props.layerControl;
-    layerRegion = props.layerRegion;
     layerSpatial = props.layerSpatial;
-    SimpleMarkerSymbol = props.SimpleMarkerSymbol;
-    SimpleRenderer = props.SimpleRenderer;
     this.container = createRef();
   }
 

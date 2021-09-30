@@ -144,15 +144,10 @@ class UseCasesMapViewer extends React.Component {
     });
 
     const infoWidget = new InfoWidget({
-      map: this.map,
       view: this.view,
       layerControl: layerControl,
       navigationControl: navigationControl,
-      FeatureLayer: FeatureLayer,
-      layerRegion: layerRegion,
       layerSpatial: layerSpatial,
-      SimpleMarkerSymbol: SimpleMarkerSymbol,
-      SimpleRenderer: SimpleRenderer,
     });
 
     this.setMapFunctions(
