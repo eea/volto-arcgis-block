@@ -97,10 +97,12 @@ class InfoWidget extends React.Component {
             className="use-case-element"
             aria-hidden="true"
             onClick={() =>
-              this.setState({
-                useCaseLevel: 3,
-                selectedUseCase: val,
-                previousState: this.state.useCaseLevel,
+              this.setState((prevState) => {
+                return {
+                  useCaseLevel: 3,
+                  selectedUseCase: val,
+                  previousState: prevState.useCaseLevel,
+                };
               })
             }
             id={`use_case_${val.OBJECTID}`}
@@ -138,7 +140,9 @@ class InfoWidget extends React.Component {
             <button
               className="use-case-button-back"
               tabIndex="0"
-              onClick={() => navigationControl.returnToPrevious(this)}
+              onClick={() => {
+                navigationControl.showWorld(this);
+              }}
             >
               <span className="esri-icon-left-arrow"></span>
               Back
@@ -246,11 +250,13 @@ class InfoWidget extends React.Component {
 
         this.features = features;
 
-        this.setState({
-          useCaseLevel: 1,
-          region: '',
-          selectedUseCase: '',
-          previousState: this.state.useCaseLevel,
+        this.setState((prevState) => {
+          return {
+            useCaseLevel: 1,
+            region: '',
+            selectedUseCase: '',
+            previousState: prevState.useCaseLevel,
+          };
         });
       })();
     } else if (this.features !== undefined) {
@@ -284,11 +290,13 @@ class InfoWidget extends React.Component {
    * @param {*} nextProps
    */
   componentWillReceiveProps(nextProps) {
-    this.setState({
-      useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
-      region: nextProps.mapViewer.state.region,
-      selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
-      previousState: this.state.useCaseLevel,
+    this.setState((prevState) => {
+      return {
+        useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
+        region: nextProps.mapViewer.state.region,
+        selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
+        previousState: prevState.useCaseLevel,
+      };
     });
   }
 
@@ -299,35 +307,17 @@ class InfoWidget extends React.Component {
   useCasesInformationPanel() {
     switch (this.state.useCaseLevel) {
       case 1:
-        if (layerControl) {
-          layerControl.hideLayer(layerSpatial.id);
-          layerControl.showLayer(layerRegion.id);
-        }
-
         return this.showSummary();
-
       case 2:
-        layerControl.hideLayer(layerRegion.id);
-        layerControl.showLayer(layerSpatial.id);
-
         return this.showBrief(this.state.region);
-
       case 3:
-        layerControl.hideLayer(layerRegion.id);
-        layerControl.showLayer(layerSpatial.id);
-
         const title = this.state.selectedUseCase.Use_case_title;
         const bbox = this.state.selectedUseCase.BBOX;
         const region = this.state.selectedUseCase.Region;
         navigationControl.navigateToLocation(bbox, title, region, layerSpatial);
         return this.showUseCase(this.state.selectedUseCase);
       default:
-        if (layerControl) {
-          layerControl.hideLayer(layerSpatial.id);
-          layerControl.showLayer(layerRegion.id);
-        }
-
-        return this.showSummary();
+        return 0;
     }
   }
 

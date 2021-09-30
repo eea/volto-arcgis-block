@@ -48,8 +48,9 @@ class LayerControl {
    */
   hideLayer(id) {
     const items = this.map.layers.items;
-    for (let layer in items)
+    for (let layer in items) {
       items[layer].id === id && (items[layer].visible = false);
+    }
   }
 
   /**

@@ -120,7 +120,7 @@ class UseCasesMapViewer extends React.Component {
     const renderer = new SimpleRenderer({
       symbol: new SimpleMarkerSymbol({
         size: 4,
-        color: 'Yellow',
+        color: 'Green',
         outline: null,
         visualVariables: [
           {
@@ -173,32 +173,35 @@ class UseCasesMapViewer extends React.Component {
           const selectedRegion = selectedPoint.Region;
           const boundingBox = selectedPoint.BBOX;
           const selectedTitle = selectedPoint.Use_case_title;
-
-          if (this.state.useCaseLevel === 1) {
+          if (infoWidget.state.useCaseLevel === 1) {
             navigationControl.navigateToRegion(
               boundingBox,
               selectedRegion,
               layerSpatial,
             );
-            this.setState({
-              useCaseLevel: 2,
-              region: selectedRegion,
-              previousState: this.state.useCaseLevel,
+            this.setState((prevState) => {
+              return {
+                useCaseLevel: 2,
+                region: selectedRegion,
+                previousState: prevState.useCaseLevel,
+              };
             });
             this.view.popup.close();
             this.popupOnce = true;
             document.querySelector('.map').style.cursor = '';
-          } else if (this.state.useCaseLevel === 2) {
+          } else if (infoWidget.state.useCaseLevel === 2) {
             navigationControl.navigateToLocation(
               boundingBox,
               selectedTitle,
               selectedRegion,
               layerSpatial,
             );
-            this.setState({
-              useCaseLevel: 3,
-              selectedUseCase: selectedPoint,
-              previousState: this.state.useCaseLevel,
+            this.setState((prevState) => {
+              return {
+                useCaseLevel: 3,
+                selectedUseCase: selectedPoint,
+                previousState: prevState.useCaseLevel,
+              };
             });
           }
         }
@@ -229,6 +232,7 @@ class UseCasesMapViewer extends React.Component {
               let region = response.results[0].graphic.attributes.Region;
 
               this.getRegionInfo(region, (data) => {
+                // if (data.error.code !== 500) {
                 let data_eu = data.features.filter(
                   (a) =>
                     a.attributes.Spatial_coverage === 'EU' ||
@@ -269,6 +273,7 @@ class UseCasesMapViewer extends React.Component {
                   },
                   content: string,
                 });
+                // }
               });
             }
           } else {
@@ -312,7 +317,11 @@ class UseCasesMapViewer extends React.Component {
     //react component to render itself again
     this.disableMapFunctions(this.view);
 
-    this.setState({ useCaseLevel: 1 });
+    this.setState(() => {
+      return {
+        useCaseLevel: 1,
+      };
+    });
   }
 
   getRegionInfo(region, callback) {

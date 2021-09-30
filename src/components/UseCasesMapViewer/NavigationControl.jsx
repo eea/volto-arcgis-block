@@ -29,9 +29,8 @@ class NavigationControl extends React.Component {
       };
     }
     this.view.zoom = 1;
-    infoWidget.setState({
-      useCaseLevel: 1,
-      previousState: infoWidget.state.useCaseLevel,
+    infoWidget.setState(() => {
+      return { useCaseLevel: 1 };
     });
   }
 
@@ -95,10 +94,11 @@ class NavigationControl extends React.Component {
           infoWidget.state.selectedUseCase.Region,
           layerSpatial,
         );
-        infoWidget.setState({
-          useCaseLevel: 2,
-          region: infoWidget.state.selectedUseCase.Region,
-          previousState: infoWidget.state.useCaseLevel,
+        infoWidget.setState(() => {
+          return {
+            useCaseLevel: 2,
+            region: infoWidget.state.selectedUseCase.Region,
+          };
         });
         break;
 
