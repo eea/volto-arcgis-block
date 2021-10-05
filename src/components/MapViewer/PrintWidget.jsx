@@ -97,7 +97,7 @@ class PrintWidget extends React.Component {
         }
       });
     });
-    observer.observe(mapOnly, { attributes: true });
+    mapOnly && observer.observe(mapOnly, { attributes: true });
   }
 
   setLayoutConstraints() {
@@ -122,7 +122,7 @@ class PrintWidget extends React.Component {
     var observer = new MutationObserver((m) => {
       advancedFunction(m);
     });
-    observer.observe(advanceOptions, { attributes: true });
+    advanceOptions && observer.observe(advanceOptions, { attributes: true });
   }
 
   noSpecialChars(elem) {

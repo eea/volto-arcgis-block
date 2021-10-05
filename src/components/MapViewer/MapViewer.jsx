@@ -89,7 +89,7 @@ class MapViewer extends React.Component {
     //trigger the renderization again, and to trigger the renderization
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
-    // this.setState({});
+    this.setState({});
   }
 
   setActiveWidget(widget) {
@@ -114,6 +114,7 @@ class MapViewer extends React.Component {
    * @returns jsx
    */
   renderBasemap() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
   }
 
@@ -122,11 +123,13 @@ class MapViewer extends React.Component {
   }
 
   renderMeasurement() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view)
       return <MeasurementWidget view={this.view} mapViewer={this} />;
   }
 
   renderPrint() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
   }
 
