@@ -87,13 +87,11 @@ class InfoWidget extends React.Component {
             className="use-case-element"
             aria-hidden="true"
             onClick={() =>
-              this.setState((prevState) => {
-                return {
-                  useCaseLevel: 3,
-                  selectedUseCase: val,
-                  previousState: prevState.useCaseLevel,
-                };
-              })
+              this.setState((prevState) => ({
+                useCaseLevel: 3,
+                selectedUseCase: val,
+                previousState: prevState.useCaseLevel,
+              }))
             }
             id={`use_case_${val.OBJECTID}`}
           >
@@ -263,14 +261,12 @@ class InfoWidget extends React.Component {
 
         this.features = features;
 
-        this.setState((prevState) => {
-          return {
-            useCaseLevel: 1,
-            region: '',
-            selectedUseCase: '',
-            previousState: prevState.useCaseLevel,
-          };
-        });
+        this.setState((prevState) => ({
+          useCaseLevel: 1,
+          region: '',
+          selectedUseCase: '',
+          previousState: prevState.useCaseLevel,
+        }));
       })();
     } else if (this.features !== undefined) {
       return (
@@ -303,14 +299,12 @@ class InfoWidget extends React.Component {
    * @param {Object} nextProps
    */
   componentWillReceiveProps(nextProps) {
-    this.setState((prevState) => {
-      return {
-        useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
-        region: nextProps.mapViewer.state.region,
-        selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
-        previousState: prevState.useCaseLevel,
-      };
-    });
+    this.setState((prevState) => ({
+      useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
+      region: nextProps.mapViewer.state.region,
+      selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
+      previousState: prevState.useCaseLevel,
+    }));
   }
 
   /**
@@ -327,7 +321,14 @@ class InfoWidget extends React.Component {
         const title = this.state.selectedUseCase.Use_case_title;
         const bbox = this.state.selectedUseCase.BBOX;
         const region = this.state.selectedUseCase.Region;
-        navigationControl.navigateToLocation(bbox, title, region, layerSpatial);
+        const country = this.state.selectedUseCase.Spatial_coverage;
+        navigationControl.navigateToLocation(
+          bbox,
+          title,
+          region,
+          country,
+          layerSpatial,
+        );
         return this.showUseCase(this.state.selectedUseCase);
       default:
         return 0;

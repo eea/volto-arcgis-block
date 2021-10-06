@@ -11,10 +11,14 @@ let Map,
   MapView,
   FeatureLayer,
   Extent,
+  UniqueValueRenderer,
   SimpleMarkerSymbol,
-  SimpleRenderer,
+  Color,
   Basemap,
-  VectorTileLayer;
+  VectorTileLayer,
+  layerControl,
+  navigationControl,
+  layerSpatial;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -38,8 +42,9 @@ class UseCasesMapViewer extends React.Component {
       'esri/views/MapView',
       'esri/layers/FeatureLayer',
       'esri/geometry/Extent',
+      'esri/Color',
       'esri/symbols/SimpleMarkerSymbol',
-      'esri/renderers/SimpleRenderer',
+      'esri/renderers/UniqueValueRenderer',
       'esri/Basemap',
       'esri/layers/VectorTileLayer',
     ]).then(
@@ -48,8 +53,9 @@ class UseCasesMapViewer extends React.Component {
         _MapView,
         _FeatureLayer,
         _Extent,
+        _Color,
         _SimpleMarkerSymbol,
-        _SimpleRenderer,
+        _UniqueValueRenderer,
         _Basemap,
         _VectorTileLayer,
       ]) => {
@@ -58,8 +64,9 @@ class UseCasesMapViewer extends React.Component {
           MapView,
           FeatureLayer,
           Extent,
+          Color,
           SimpleMarkerSymbol,
-          SimpleRenderer,
+          UniqueValueRenderer,
           Basemap,
           VectorTileLayer,
         ] = [
@@ -67,8 +74,9 @@ class UseCasesMapViewer extends React.Component {
           _MapView,
           _FeatureLayer,
           _Extent,
+          _Color,
           _SimpleMarkerSymbol,
-          _SimpleRenderer,
+          _UniqueValueRenderer,
           _Basemap,
           _VectorTileLayer,
         ];
@@ -115,50 +123,71 @@ class UseCasesMapViewer extends React.Component {
       position: 'top-right',
     });
 
-    const layerControl = new LayerControl({
+    layerControl = new LayerControl({
       map: this.map,
       view: this.view,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
-
-    const layerSpatial = layerControl.createLayer({
+    layerSpatial = layerControl.createLayer({
       id: 'layerSpatial',
       url: this.serviceCfg.SpatialCoverageLayer,
     });
+
+    const size = '6px';
+    const markerType = 'simple-marker';
+
+    const levelRenderer = {
+      type: 'unique-value',
+      field: 'Spatial_coverage',
+      defaultSymbol: { type: markerType, size: size, color: 'yellow' },
+      uniqueValueInfos: [
+        {
+          value: 'EU',
+          symbol: {
+            type: markerType,
+            size: size,
+            color: 'blue',
+          },
+        },
+        {
+          value: 'UK',
+          symbol: {
+            type: markerType,
+            size: size,
+            color: 'blue',
+          },
+        },
+        {
+          value: 'EEA',
+          symbol: {
+            type: markerType,
+            size: size,
+            color: 'green',
+          },
+        },
+        {
+          value: 'Global',
+          symbol: {
+            type: markerType,
+            size: size,
+            color: 'black',
+          },
+        },
+      ],
+    };
+    layerSpatial.renderer = levelRenderer;
 
     const layerRegion = layerControl.createLayer({
       id: 'layerRegion',
       url: this.serviceCfg.RegionLayer,
     });
 
-    const renderer = new SimpleRenderer({
-      symbol: new SimpleMarkerSymbol({
-        size: 4,
-        color: 'Green',
-        outline: null,
-        visualVariables: [
-          {
-            type: 'color',
-            field: 'Use_case_submitting_production_year',
-            // features with 30 ppl/sq km or below are assigned the first color
-            stops: [
-              { value: 2020, color: 'Blue' },
-              { value: 2019, color: 'Black' },
-              { value: 2018, color: 'Green' },
-            ],
-          },
-        ],
-      }),
-    });
-
-    layerSpatial.renderer = renderer;
-
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
     layerControl.hideLayer(layerSpatial.id);
 
-    const navigationControl = new NavigationControl({
+    navigationControl = new NavigationControl({
       map: this.map,
       view: this.view,
       center: this.mapCfg.center,
@@ -167,17 +196,9 @@ class UseCasesMapViewer extends React.Component {
       layerSpatial: layerSpatial,
     });
 
-    const infoWidget = new InfoWidget({
-      view: this.view,
-      layerControl: layerControl,
-      navigationControl: navigationControl,
-      layerSpatial: layerSpatial,
-    });
-
     this.setMapFunctions(
       this.view,
       layerControl,
-      infoWidget,
       navigationControl,
       layerSpatial,
     );
@@ -187,11 +208,7 @@ class UseCasesMapViewer extends React.Component {
     //trigger the renderization again, and to trigger the renderization
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
-    this.setState(() => {
-      return {
-        useCaseLevel: 1,
-      };
-    });
+    this.setState(() => ({ useCaseLevel: 1 }));
   }
 
   getRegionInfo(region, callback) {
@@ -212,17 +229,10 @@ class UseCasesMapViewer extends React.Component {
    * This method will disable all the functionalities on the map
    * @param {MapView} view
    * @param {LayerControl} layerControl
-   * @param {InfoWidget} infoWidget
    * @param {NavigationControl} navigationControl
    * @param {FeatureLayer} layerSpatial
    */
-  setMapFunctions(
-    view,
-    layerControl,
-    infoWidget,
-    navigationControl,
-    layerSpatial,
-  ) {
+  setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
     view.on('mouse-wheel', function (event) {
       event.stopPropagation();
     });
@@ -269,6 +279,7 @@ class UseCasesMapViewer extends React.Component {
           const selectedRegion = selectedPoint.Region;
           const boundingBox = selectedPoint.BBOX;
           const selectedTitle = selectedPoint.Use_case_title;
+          const selectedSpatial = selectedPoint.Spatial_coverage;
           if (this.state.useCaseLevel === 1) {
             navigationControl.navigateToRegion(
               boundingBox,
@@ -290,6 +301,7 @@ class UseCasesMapViewer extends React.Component {
               boundingBox,
               selectedTitle,
               selectedRegion,
+              selectedSpatial,
               layerSpatial,
             );
             this.setState((prevState) => {
@@ -406,7 +418,17 @@ class UseCasesMapViewer extends React.Component {
   }
 
   renderInfo() {
-    return <InfoWidget view={this.view} mapViewer={this} />;
+    if (this.view) {
+      return (
+        <InfoWidget
+          view={this.view}
+          mapViewer={this}
+          layerControl={layerControl}
+          navigationControl={navigationControl}
+          layerSpatial={layerSpatial}
+        />
+      );
+    }
   }
 
   /**
