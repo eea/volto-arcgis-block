@@ -6,11 +6,9 @@ const config = {
   },
   Services: {
     RegionLayer:
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion/MapServer/0',
+      'https://bm-eugis.ml/arcgis/rest/services/CLMS/UseCasesRegion_count/MapServer/0',
     SpatialCoverageLayer:
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
-    QueryService:
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0/query',
+      'https://bm-eugis.ml/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
   },
 };
 export default config;
