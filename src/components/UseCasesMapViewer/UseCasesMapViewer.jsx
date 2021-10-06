@@ -21,6 +21,7 @@ class UseCasesMapViewer extends React.Component {
     super(props);
     this.mapdiv = createRef();
     this.mapCfg = props.cfg.Map;
+    this.serviceCfg = props.cfg.Services;
     this.compCfg = this.props.cfg.Components;
     this.url = this.props.cfg.url;
     this.map = null;
@@ -123,14 +124,12 @@ class UseCasesMapViewer extends React.Component {
 
     const layerSpatial = layerControl.createLayer({
       id: 'layerSpatial',
-      url:
-        'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
+      url: this.serviceCfg.SpatialCoverageLayer,
     });
 
     const layerRegion = layerControl.createLayer({
       id: 'layerRegion',
-      url:
-        'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion_count/MapServer/0',
+      url: this.serviceCfg.RegionLayer,
     });
 
     const renderer = new SimpleRenderer({
@@ -197,7 +196,7 @@ class UseCasesMapViewer extends React.Component {
 
   getRegionInfo(region, callback) {
     let xmlhttp;
-    const url = `https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    const url = `${this.serviceCfg.SpatialCoverageLayer}/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
