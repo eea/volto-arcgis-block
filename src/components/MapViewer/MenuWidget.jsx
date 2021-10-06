@@ -1,6 +1,7 @@
 import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
+import { layer } from '@fortawesome/fontawesome-svg-core';
 var WMSLayer;
 
 class MenuWidget extends React.Component {
@@ -138,11 +139,31 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodProcessProduct(product, prodIndex, inheritedIndex) {
+    // vector guardando los q van a estar activos
+    var dataset_def = [];
     var datasets = [];
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
+
+    // IDS del dataset
+    var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
+
+
+    // // Bucle para averiguar qué datasets tienen default active.
+    // for (var jsn in product.Datasets){
+    //     if (product.Datasets[jsn].Default_active == true) {
+    //       // console.log (product.Datasets[jsn])
+    //       prod_default.push(product.Datasets[jsn])
+    //       console.log(prod_default)
+    //     }
+    // }
+
     for (var i in product.Datasets) {
+      if (product.Datasets[i].Default_active == true) {
+        dataset_def.push(idDataset);
+      }
+
       datasets.push(
         this.metodProcessDataset(
           product.Datasets[i],
@@ -153,6 +174,8 @@ class MenuWidget extends React.Component {
       );
       index++;
     }
+
+    console.log(dataset_def);
 
     return (
       <div
@@ -182,6 +205,7 @@ class MenuWidget extends React.Component {
                   value="name"
                   className="ccl-checkbox ccl-required ccl-form-check-input"
                   key={'h' + prodIndex}
+                  defcheck={dataset_def}
                   onChange={(e) =>
                     this.toggleProduct(e.target.checked, checkProduct)
                   }
@@ -231,12 +255,16 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodProcessDataset(dataset, datIndex, inheritedIndex, checkProduct) {
+    var layer_default = [];
     var layers = [];
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
     for (var i in dataset.Layer) {
+      if (dataset.Layer[i].Default_active == true) {
+        layer_default.push(dataset.Layer[i].LayerId);
+      }
       layers.push(
         this.metodProcessLayer(
           dataset.Layer[i],
@@ -244,6 +272,7 @@ class MenuWidget extends React.Component {
           inheritedIndexDataset,
           dataset.ViewService,
           checkIndex,
+          layer_default
         ),
       );
       index++;
@@ -265,6 +294,7 @@ class MenuWidget extends React.Component {
             parentid={checkProduct}
             name=""
             value="name"
+            defcheck={layer_default}
             className="ccl-checkbox ccl-required ccl-form-check-input"
             key={'c' + datIndex}
             onChange={(e) => {
@@ -601,6 +631,27 @@ class MenuWidget extends React.Component {
     }
     this.layersReorder();
     */
+  }
+
+  /**
+   * Method to active datasets by default (Product)
+   * @param {*} product
+   * @param {*} elem checkbox
+   */
+  defaultProduct(product, elem) {
+    var def = product.Default_active;
+    //  console.log(def)
+    //  if (def == true){
+    //    elem.getAttribute('paredn')
+    //   //  seleccionar checkbox que sea de los datasets que estén con default active
+    //  }
+    //  var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
+    // datasetChecks.forEach((element) => {
+    // element.checked = value;
+    // console.log(element)
+    // console.log(value)
+    // this.toggleDataset(value, element.id);
+    // });
   }
 
   /**
