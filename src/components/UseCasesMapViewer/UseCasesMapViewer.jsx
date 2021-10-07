@@ -11,9 +11,6 @@ let Map,
   MapView,
   FeatureLayer,
   Extent,
-  UniqueValueRenderer,
-  SimpleMarkerSymbol,
-  Color,
   Basemap,
   VectorTileLayer,
   layerControl,
@@ -30,10 +27,21 @@ class UseCasesMapViewer extends React.Component {
     this.url = this.props.cfg.url;
     this.map = null;
     this.id = props.id;
+    this.popupOnce = false;
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
-    this.popupOnce = false;
+    this.spatialConfig = {
+      id: 'spatialLayer',
+      url: props.cfg.Services.SpatialCoverageLayer,
+      render: props.cfg.SpatialRenderer,
+    };
+    this.regionConfig = {
+      id: 'regionLayer',
+      url: props.cfg.Services.RegionLayer,
+      render: props.cfg.RegionMarkerRenderer,
+      label: props.cfg.RegionLabel,
+    };
   }
 
   loader() {
@@ -42,9 +50,6 @@ class UseCasesMapViewer extends React.Component {
       'esri/views/MapView',
       'esri/layers/FeatureLayer',
       'esri/geometry/Extent',
-      'esri/Color',
-      'esri/symbols/SimpleMarkerSymbol',
-      'esri/renderers/UniqueValueRenderer',
       'esri/Basemap',
       'esri/layers/VectorTileLayer',
     ]).then(
@@ -55,28 +60,16 @@ class UseCasesMapViewer extends React.Component {
         _Extent,
         _Color,
         _SimpleMarkerSymbol,
-        _UniqueValueRenderer,
         _Basemap,
         _VectorTileLayer,
       ]) => {
-        [
-          Map,
-          MapView,
-          FeatureLayer,
-          Extent,
-          Color,
-          SimpleMarkerSymbol,
-          UniqueValueRenderer,
-          Basemap,
-          VectorTileLayer,
-        ] = [
+        [Map, MapView, FeatureLayer, Extent, Basemap, VectorTileLayer] = [
           _Map,
           _MapView,
           _FeatureLayer,
           _Extent,
           _Color,
           _SimpleMarkerSymbol,
-          _UniqueValueRenderer,
           _Basemap,
           _VectorTileLayer,
         ];
@@ -129,59 +122,21 @@ class UseCasesMapViewer extends React.Component {
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
+
     layerSpatial = layerControl.createLayer({
-      id: 'layerSpatial',
-      url: this.serviceCfg.SpatialCoverageLayer,
+      id: this.spatialConfig.id,
+      url: this.spatialConfig.url,
     });
 
-    const size = '6px';
-    const markerType = 'simple-marker';
-
-    const levelRenderer = {
-      type: 'unique-value',
-      field: 'Spatial_coverage',
-      defaultSymbol: { type: markerType, size: size, color: 'yellow' },
-      uniqueValueInfos: [
-        {
-          value: 'EU',
-          symbol: {
-            type: markerType,
-            size: size,
-            color: 'blue',
-          },
-        },
-        {
-          value: 'UK',
-          symbol: {
-            type: markerType,
-            size: size,
-            color: 'blue',
-          },
-        },
-        {
-          value: 'EEA',
-          symbol: {
-            type: markerType,
-            size: size,
-            color: 'green',
-          },
-        },
-        {
-          value: 'Global',
-          symbol: {
-            type: markerType,
-            size: size,
-            color: 'black',
-          },
-        },
-      ],
-    };
-    layerSpatial.renderer = levelRenderer;
+    layerSpatial.renderer = this.spatialConfig.render;
 
     const layerRegion = layerControl.createLayer({
-      id: 'layerRegion',
-      url: this.serviceCfg.RegionLayer,
+      id: this.regionConfig.id,
+      url: this.regionConfig.url,
     });
+
+    layerRegion.renderer = this.regionConfig.render;
+    layerRegion.labelingInfo = [this.regionConfig.label];
 
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
@@ -213,7 +168,7 @@ class UseCasesMapViewer extends React.Component {
 
   getRegionInfo(region, callback) {
     let xmlhttp;
-    const url = `${this.serviceCfg.SpatialCoverageLayer}/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    const url = `${this.spatialConfig.url}/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
