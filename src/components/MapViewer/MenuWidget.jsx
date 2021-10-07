@@ -150,7 +150,6 @@ class MenuWidget extends React.Component {
       if (product.Datasets[i].Default_active == true) {
         var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
         dataset_def.push(idDataset);
-        index++;
       }
 
       datasets.push(
@@ -165,10 +164,12 @@ class MenuWidget extends React.Component {
     }
 
     // Si el vector está vacio, le añado el primero (primero de product.Datasets[0])
-    console.log(dataset_def)
-    // if (dataset_def && dataset_def.length){
-    //   console.log("Estoy vacío")
-    // }
+    if (!dataset_def.length) {
+      var idDataset = 'map_dataset_' + inheritedIndexProduct + '_0';
+      dataset_def.push(idDataset);
+    }
+
+    console.log(dataset_def);
 
     return (
       <div
@@ -258,6 +259,12 @@ class MenuWidget extends React.Component {
       if (dataset.Layer[i].Default_active == true) {
         layer_default.push(dataset.Layer[i].LayerId);
       }
+      // else{
+      //   // layer_default.push(dataset.Layer[i].LayerId)
+      //   layers = dataset.Layer[i];
+      //   console.log(layer_default)
+      //   }
+
       layers.push(
         this.metodProcessLayer(
           dataset.Layer[i],
@@ -271,6 +278,10 @@ class MenuWidget extends React.Component {
       index++;
     }
 
+    if (!layer_default.length) {
+      layer_default.push(dataset.Layer[0].LayerId);
+      console.log(layer_default);
+    }
     // ./dataset-catalogue/dataset-info.html
     // ./dataset-catalogue/dataset-download.html
 
@@ -480,7 +491,7 @@ class MenuWidget extends React.Component {
     //   element.checked = value;
     // });
 
-    // query selector que seleccione por bucle los elementos (dataset) que el id sea defcheck
+    // query selector que seleccione por los elementos (dataset) que el id sea defcheck
 
     var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
     datasetChecks.forEach((element) => {
