@@ -146,22 +146,11 @@ class MenuWidget extends React.Component {
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
 
-    // IDS del dataset
-    var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
-
-
-    // // Bucle para averiguar qué datasets tienen default active.
-    // for (var jsn in product.Datasets){
-    //     if (product.Datasets[jsn].Default_active == true) {
-    //       // console.log (product.Datasets[jsn])
-    //       prod_default.push(product.Datasets[jsn])
-    //       console.log(prod_default)
-    //     }
-    // }
-
     for (var i in product.Datasets) {
       if (product.Datasets[i].Default_active == true) {
+        var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
         dataset_def.push(idDataset);
+        index++;
       }
 
       datasets.push(
@@ -175,7 +164,11 @@ class MenuWidget extends React.Component {
       index++;
     }
 
-    console.log(dataset_def);
+    // Si el vector está vacio, le añado el primero (primero de product.Datasets[0])
+    console.log(dataset_def)
+    // if (dataset_def && dataset_def.length){
+    //   console.log("Estoy vacío")
+    // }
 
     return (
       <div
@@ -207,7 +200,7 @@ class MenuWidget extends React.Component {
                   key={'h' + prodIndex}
                   defcheck={dataset_def}
                   onChange={(e) =>
-                    this.toggleProduct(e.target.checked, checkProduct)
+                    this.toggleProduct(e.target.checked, checkProduct, e)
                   }
                 ></input>
                 <label
@@ -272,7 +265,7 @@ class MenuWidget extends React.Component {
           inheritedIndexDataset,
           dataset.ViewService,
           checkIndex,
-          layer_default
+          layer_default,
         ),
       );
       index++;
@@ -473,10 +466,22 @@ class MenuWidget extends React.Component {
 
   /**
    * Method to show/hide all the datasets of a product
-   * @param {*} value
+   * @param {*} value (e.target.checked)
    * @param {*} id
    */
-  toggleProduct(value, id) {
+  toggleProduct(value, id, element) {
+    // element = checkbox
+    // element.defcheck o get attribute
+    // descomponer el vector del defcheck (del elemento) y recorrer el foreach
+
+    // // Escoger los que tengan
+    // var dataDefaultCheck = document.querySelectorAll('[defcheck=' + defaultdataset + ']');
+    // dataDefaultCheck.forEach((element) => {
+    //   element.checked = value;
+    // });
+
+    // query selector que seleccione por bucle los elementos (dataset) que el id sea defcheck
+
     var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
     datasetChecks.forEach((element) => {
       element.checked = value;
