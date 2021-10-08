@@ -139,13 +139,13 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodProcessProduct(product, prodIndex, inheritedIndex) {
-    // vector guardando los q van a estar activos
     var dataset_def = [];
     var datasets = [];
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
 
+    //Add only default datasets
     for (var i in product.Datasets) {
       if (product.Datasets[i].Default_active == true) {
         var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
@@ -163,13 +163,12 @@ class MenuWidget extends React.Component {
       index++;
     }
 
-    // Si el vector está vacio, le añado el primero (primero de product.Datasets[0])
+    // Empty vector, add the first dataset
     if (!dataset_def.length) {
       var idDataset = 'map_dataset_' + inheritedIndexProduct + '_0';
       dataset_def.push(idDataset);
     }
 
-    console.log(dataset_def);
 
     return (
       <div
@@ -259,11 +258,6 @@ class MenuWidget extends React.Component {
       if (dataset.Layer[i].Default_active == true) {
         layer_default.push(dataset.Layer[i].LayerId);
       }
-      // else{
-      //   // layer_default.push(dataset.Layer[i].LayerId)
-      //   layers = dataset.Layer[i];
-      //   console.log(layer_default)
-      //   }
 
       layers.push(
         this.metodProcessLayer(
@@ -280,7 +274,6 @@ class MenuWidget extends React.Component {
 
     if (!layer_default.length) {
       layer_default.push(dataset.Layer[0].LayerId);
-      console.log(layer_default);
     }
     // ./dataset-catalogue/dataset-info.html
     // ./dataset-catalogue/dataset-download.html
@@ -479,19 +472,42 @@ class MenuWidget extends React.Component {
    * Method to show/hide all the datasets of a product
    * @param {*} value (e.target.checked)
    * @param {*} id
+   * @param {*} element (checkbox)
    */
   toggleProduct(value, id, element) {
-    // element = checkbox
-    // element.defcheck o get attribute
-    // descomponer el vector del defcheck (del elemento) y recorrer el foreach
+    var productDefCheck = element.target.getAttribute('defcheck');
+    var splitdefCheck= productDefCheck.split(',')
+    console.log(splitdefCheck)
+    
+    // queryselector all = vector, no elemento
+    var datasetChecks = []
+    var selector =[]
 
-    // // Escoger los que tengan
-    // var dataDefaultCheck = document.querySelectorAll('[defcheck=' + defaultdataset + ']');
-    // dataDefaultCheck.forEach((element) => {
-    //   element.checked = value;
+    // loop para extraer cada splitdefCheck para que saque el querySelector
+    // queryselector devuelve un vector, no los elementos
+  //   for(var i = 0; i< document.querySelector('[id^=action_]').length; i++) {
+  //     document.getElementById('action_'+i);
+  // }
+
+    var a = splitdefCheck[i]
+    for (a; i < splitdefCheck.length; i++){
+      var selector = document.querySelector('[id=' + splitdefCheck[i] + ']')
+      console.log(a)
+      // datasetChecks.push(selector)
+    }
+    // console.log(selector)
+
+    // });
+    // console.log(datasetChecks)
+    // datasetChecks.forEach((element) => {
+      // console.log("Esto es elemento antes" + element)
+      // element.checked = value;
+      // console.log("Esto es elemento.checked" + element.checked)
+      // console.log(value)
+      // this.toggleDataset(value, element.id);
     // });
 
-    // query selector que seleccione por los elementos (dataset) que el id sea defcheck
+    
 
     var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
     datasetChecks.forEach((element) => {
@@ -647,27 +663,6 @@ class MenuWidget extends React.Component {
     }
     this.layersReorder();
     */
-  }
-
-  /**
-   * Method to active datasets by default (Product)
-   * @param {*} product
-   * @param {*} elem checkbox
-   */
-  defaultProduct(product, elem) {
-    var def = product.Default_active;
-    //  console.log(def)
-    //  if (def == true){
-    //    elem.getAttribute('paredn')
-    //   //  seleccionar checkbox que sea de los datasets que estén con default active
-    //  }
-    //  var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
-    // datasetChecks.forEach((element) => {
-    // element.checked = value;
-    // console.log(element)
-    // console.log(value)
-    // this.toggleDataset(value, element.id);
-    // });
   }
 
   /**
