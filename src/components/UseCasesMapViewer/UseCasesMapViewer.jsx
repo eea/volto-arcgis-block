@@ -58,8 +58,6 @@ class UseCasesMapViewer extends React.Component {
         _MapView,
         _FeatureLayer,
         _Extent,
-        _Color,
-        _SimpleMarkerSymbol,
         _Basemap,
         _VectorTileLayer,
       ]) => {
@@ -68,8 +66,6 @@ class UseCasesMapViewer extends React.Component {
           _MapView,
           _FeatureLayer,
           _Extent,
-          _Color,
-          _SimpleMarkerSymbol,
           _Basemap,
           _VectorTileLayer,
         ];
