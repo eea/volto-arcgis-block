@@ -135,14 +135,23 @@ class PrintWidget extends React.Component {
     elem.setSelectionRange(c, c);
   }
 
-  imposeMax(el) {
-    if (el.value !== '') {
-      if (parseInt(el.value) < parseInt(el.min)) {
-        el.value = el.min;
+  imposeMax(elem) {
+    if (elem.value !== '') {
+      if (parseInt(elem.value) < parseInt(elem.min)) {
+        elem.value = elem.min;
       }
-      if (parseInt(el.value) > parseInt(el.max)) {
-        el.value = el.max;
+      if (parseInt(elem.value) > parseInt(elem.max)) {
+        elem.value = elem.max;
       }
+    } else {
+      elem.value = elem.value.replace(/[^e\+\-]/gi, '');
+    }
+  }
+
+  noSpecialNumbs(e) {
+    var invalidChars = ['-', '+', 'e'];
+    if (invalidChars.includes(e.key)) {
+      e.preventDefault();
     }
   }
 
@@ -176,6 +185,9 @@ class PrintWidget extends React.Component {
         }
         input.oninput = () => {
           this.imposeMax(input);
+        };
+        input.onkeydown = (e) => {
+          this.noSpecialNumbs(e);
         };
       }
     });
