@@ -144,7 +144,7 @@ class PrintWidget extends React.Component {
         elem.value = elem.max;
       }
     } else {
-      elem.value = elem.value.replace(/[^e\+\-]/gi, '');
+      elem.value = elem.value.replace(/[^e+-]/gi, '');
     }
   }
 
