@@ -29,9 +29,9 @@ class NavigationControl extends React.Component {
       };
     }
     this.view.zoom = 1;
-    infoWidget.setState(() => {
-      return { useCaseLevel: 1 };
-    });
+    infoWidget.setState(() => ({
+      useCaseLevel: 1,
+    }));
   }
 
   /**
@@ -58,10 +58,10 @@ class NavigationControl extends React.Component {
    * @param {String} region
    * @param {FeatureLayer} layer
    */
-  navigateToLocation(bBox, useCaseTitle, region, layer) {
+  navigateToLocation(bBox, useCaseTitle, region, country, layer) {
     // layerSpatial.setDefinitionExpression(point);
     this.navigateToRegion(bBox, region, layer);
-    const expression = `Use_case_title = '${useCaseTitle}'`;
+    const expression = `Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`;
     layer.definitionExpression = expression;
   }
 
@@ -103,12 +103,10 @@ class NavigationControl extends React.Component {
           infoWidget.state.selectedUseCase.Region,
           layerSpatial,
         );
-        infoWidget.setState(() => {
-          return {
-            useCaseLevel: 2,
-            region: infoWidget.state.selectedUseCase.Region,
-          };
-        });
+        infoWidget.setState(() => ({
+          useCaseLevel: 2,
+          region: infoWidget.state.selectedUseCase.Region,
+        }));
         break;
 
       default:
