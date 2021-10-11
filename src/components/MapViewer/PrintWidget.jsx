@@ -114,7 +114,6 @@ class PrintWidget extends React.Component {
         }
       });
     });
-
   }
 
   setLayoutConstraints() {
