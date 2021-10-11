@@ -62,10 +62,12 @@ class InfoWidget extends React.Component {
             </div>
             <div className="use-case-detail-description">
               <p>{UseCase.Use_case_summary}</p>
-              <p>
-                For further information{' '}
-                <a href={UseCase.Links_to_web_sites}>here</a>.
-              </p>
+              {UseCase.Links_to_web_sites && (
+                <p>
+                  For further information{' '}
+                  <a href={UseCase.Links_to_web_sites}>here</a>.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -329,6 +331,9 @@ class InfoWidget extends React.Component {
           country,
           layerSpatial,
         );
+        document
+          .querySelector('.use-cases-products-list')
+          .scrollTo({ top: 0, behavior: 'smooth' });
         return this.showUseCase(this.state.selectedUseCase);
       default:
         return 0;
