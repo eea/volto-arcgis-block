@@ -28,13 +28,11 @@ const config = {
                   LayerId: 'Coastal_Zones_2012_vector53031',
                   Title: 'Coastal Zones 2012 vector',
                   Default_active: false,
-                  
-
                 },
                 {
                   LayerId: 'Coastal_Zones_2012_raster55645',
                   Title: 'Coastal Zones 2012 raster',
-                  Default_active: false ,
+                  Default_active: false,
                 },
               ],
               DownloadService: 'EEA',
