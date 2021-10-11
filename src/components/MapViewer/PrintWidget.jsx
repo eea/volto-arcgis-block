@@ -21,7 +21,7 @@ class PrintWidget extends React.Component {
     this.titleMaxLength = 50;
     this.authorMaxLength = 60;
     this.textMaxLength = 180;
-    this.sizeMax = 6000;
+    this.sizeMax = 15000;
     this.dpiMax = 1200;
     this.scaleMax = 600000000;
   }
@@ -90,6 +90,10 @@ class PrintWidget extends React.Component {
             this.setTextFilters();
             let optSVGZ = document.querySelector("[value='svgz']");
             optSVGZ && optSVGZ.parentElement.removeChild(optSVGZ);
+            let advanceOptions = document.querySelector(
+              '.esri-print__advanced-options-button',
+            );
+            observer2.observe(advanceOptions, { attributes: true });
           } else {
             this.setLayoutConstraints();
           }
@@ -97,6 +101,20 @@ class PrintWidget extends React.Component {
       });
     });
     observer.observe(mapOnly, { attributes: true });
+
+    var observer2 = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'aria-expanded') {
+          let currentExpand = mutation.target.getAttribute('aria-expanded');
+          if (currentExpand === 'true') {
+            this.setTextFilters();
+          } else {
+            this.setLayoutConstraints();
+          }
+        }
+      });
+    });
+
   }
 
   setLayoutConstraints() {
@@ -144,12 +162,12 @@ class PrintWidget extends React.Component {
         elem.value = elem.max;
       }
     } else {
-      elem.value = elem.value.replace(/[^e+-]/gi, '');
+      elem.value = elem.value.replace(/[^e+-,.]/gi, '');
     }
   }
 
   noSpecialNumbs(e) {
-    var invalidChars = ['-', '+', 'e'];
+    var invalidChars = ['-', '+', 'e', ',', '.'];
     if (invalidChars.includes(e.key)) {
       e.preventDefault();
     }
