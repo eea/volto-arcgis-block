@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
-import { layer } from '@fortawesome/fontawesome-svg-core';
+// import { layer } from '@fortawesome/fontawesome-svg-core';
 var WMSLayer;
 
 class MenuWidget extends React.Component {
@@ -147,7 +147,7 @@ class MenuWidget extends React.Component {
 
     //Add only default datasets
     for (var i in product.Datasets) {
-      if (product.Datasets[i].Default_active == true) {
+      if (product.Datasets[i].Default_active === true) {
         var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
         dataset_def.push(idDataset);
       }
@@ -165,10 +165,9 @@ class MenuWidget extends React.Component {
 
     // Empty vector, add the first dataset
     if (!dataset_def.length) {
-      var idDataset = 'map_dataset_' + inheritedIndexProduct + '_0';
-      dataset_def.push(idDataset);
+      var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
+      dataset_def.push(idDatasetB);
     }
-
 
     return (
       <div
@@ -236,7 +235,8 @@ class MenuWidget extends React.Component {
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
-    productCheck.checked = datasetChecks.length === trueCheck;
+
+    productCheck.checked = trueCheck > 0;
   }
 
   /**
@@ -255,7 +255,7 @@ class MenuWidget extends React.Component {
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
     for (var i in dataset.Layer) {
-      if (dataset.Layer[i].Default_active == true) {
+      if (dataset.Layer[i].Default_active === true) {
         layer_default.push(dataset.Layer[i].LayerId);
       }
 
@@ -295,7 +295,7 @@ class MenuWidget extends React.Component {
             className="ccl-checkbox ccl-required ccl-form-check-input"
             key={'c' + datIndex}
             onChange={(e) => {
-              this.toggleDataset(e.target.checked, checkIndex);
+              this.toggleDataset(e.target.checked, checkIndex, e.target);
             }}
           ></input>
           <label
@@ -332,7 +332,7 @@ class MenuWidget extends React.Component {
 
   /**
    * Method to uncheck dataset checkbox if not all layers are checked
-   * @param {*} id
+   * @param {*} id parentId (id del dataset)
    */
 
   updateCheckDataset(id) {
@@ -340,8 +340,11 @@ class MenuWidget extends React.Component {
     let layerChecks = Array.from(
       document.querySelectorAll('[parentid=' + id + ']'),
     );
+
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
-    datasetCheck.checked = layerChecks.length === trueChecks;
+    //solo tiene que tener alguno length >0
+    datasetCheck.checked = trueChecks > 0;
+
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
   }
 
@@ -459,9 +462,12 @@ class MenuWidget extends React.Component {
    * Method to show/hide all the layers of a dataset
    * @param {*} value
    * @param {*} id
+   * @param {*} element
    */
-  toggleDataset(value, id) {
-    var layerChecks = document.querySelectorAll('[parentid=' + id + ']');
+  toggleDataset(value, id, e) {
+    var layerdef = e.getAttribute('defcheck');
+
+    var layerChecks = document.querySelectorAll('[id=' + layerdef + ']');
     layerChecks.forEach((element) => {
       element.checked = value;
       this.toggleLayer(element);
@@ -476,43 +482,18 @@ class MenuWidget extends React.Component {
    */
   toggleProduct(value, id, element) {
     var productDefCheck = element.target.getAttribute('defcheck');
-    var splitdefCheck= productDefCheck.split(',')
-    console.log(splitdefCheck)
-    
-    // queryselector all = vector, no elemento
-    var datasetChecks = []
-    var selector =[]
+    var splitdefCheck = productDefCheck.split(',');
 
-    // loop para extraer cada splitdefCheck para que saque el querySelector
-    // queryselector devuelve un vector, no los elementos
-  //   for(var i = 0; i< document.querySelector('[id^=action_]').length; i++) {
-  //     document.getElementById('action_'+i);
-  // }
+    var datasetChecks = [];
+    var selector = [];
 
-    var a = splitdefCheck[i]
-    for (a; i < splitdefCheck.length; i++){
-      var selector = document.querySelector('[id=' + splitdefCheck[i] + ']')
-      console.log(a)
-      // datasetChecks.push(selector)
+    for (var i = 0; i < splitdefCheck.length; i++) {
+      selector = document.querySelector('[id=' + splitdefCheck[i] + ']');
+      datasetChecks.push(selector);
     }
-    // console.log(selector)
-
-    // });
-    // console.log(datasetChecks)
-    // datasetChecks.forEach((element) => {
-      // console.log("Esto es elemento antes" + element)
-      // element.checked = value;
-      // console.log("Esto es elemento.checked" + element.checked)
-      // console.log(value)
-      // this.toggleDataset(value, element.id);
-    // });
-
-    
-
-    var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
     datasetChecks.forEach((element) => {
       element.checked = value;
-      this.toggleDataset(value, element.id);
+      this.toggleDataset(value, element.id, element);
     });
   }
 
