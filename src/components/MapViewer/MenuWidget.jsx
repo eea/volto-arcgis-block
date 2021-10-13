@@ -466,8 +466,16 @@ class MenuWidget extends React.Component {
    */
   toggleDataset(value, id, e) {
     var layerdef = e.getAttribute('defcheck');
+    var splitdefCheck = layerdef.split(',');
 
-    var layerChecks = document.querySelectorAll('[id=' + layerdef + ']');
+    var layerChecks = [];
+    var selector = [];
+
+    for (var i = 0; i < splitdefCheck.length; i++) {
+      selector = document.querySelector('[id="' + splitdefCheck[i] + '"]');
+      layerChecks.push(selector);
+    }
+
     layerChecks.forEach((element) => {
       element.checked = value;
       this.toggleLayer(element);

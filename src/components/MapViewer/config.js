@@ -57,7 +57,7 @@ const config = {
                 {
                   LayerId: 'Coastal_Zones_2018_raster65095',
                   Title: 'Coastal Zones 2018 raster',
-                  Default_active: false,
+                  Default_active: true,
                 },
               ],
               DownloadService: 'EEA',
@@ -109,17 +109,17 @@ const config = {
               DatasetDescription:
                 'The Copernicus Fractional Snow Cover (FSC) product is generated in near real-time for the entire EEA38 and the United Kingdom, based on optical satellite data from the Sentinel-2 constellation (revisit time: 5 days with Sentinel-2A and Sentinel-2B). The product provides the fraction of the surface covered by snow at the top of canopy (FSC-TOC) and on ground (FSC-OG) per pixel as a percentage (0% – 100%) with a spatial resolution of 20 m x 20 m. The FSC is one of the products of the pan-European High-Resolution Snow & Ice service (HR-S&I), which are provided at high spatial resolution (20 m x 20 m), and are derived from the Sentinel-2 constellation data. They are generated over the entire EEA38 (32 member countries and 6 cooperating countries) and the United Kingdom, from September 1, 2016 onwards. Four types of HR-S&I products are proposed to users: the Fractional Snow Cover (FSC) product, the Persistent Snow Area (PSA) product, the River and Lake Ice Extent (RLIE) product and the Aggregated River and Lake Ice Extent (ARLIE) product. The FSC product is distributed in raster files covering an area of 110 km by 110 km with a pixel size of 20 m by 20 m in UTM/WGS84 projection, which corresponds to the Sentinel-2 input L1C product tile. Each product is composed of seven separate files corresponding to the different layers of the product, and another metadata file.',
               ViewService: 'https://cryo.land.copernicus.eu/wms/FSC/?',
-              Default_active: false,
+              Default_active: true,
               Layer: [
                 {
                   LayerId: '1_FSC_TOC',
                   Title: 'FSC_TOC',
-                  Default_active: false,
+                  Default_active: true,
                 },
                 {
                   LayerId: '2_FSC_QC_TOC',
                   Title: 'FSC_QC_TOC',
-                  Default_active: false,
+                  Default_active: true,
                 },
                 {
                   LayerId: '3_FSC_OG',
@@ -165,7 +165,7 @@ const config = {
                 {
                   LayerId: '1_RLIE',
                   Title: 'RLIE',
-                  Default_active: false,
+                  Default_active: true,
                 },
                 {
                   LayerId: '2_RLIE_QC',
