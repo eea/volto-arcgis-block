@@ -88,7 +88,6 @@ class NavigationControl extends React.Component {
 
    */
   returnToPrevious() {
-    debugger;
     switch (
       mapViewer.state.previousState === mapViewer.state.useCaseLevel
         ? mapViewer.state.useCaseLevel - 1
