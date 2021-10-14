@@ -1,6 +1,6 @@
 import React from 'react';
 
-let layerRegion, layerSpatial;
+let layerRegion, layerSpatial, mapViewer;
 class NavigationControl extends React.Component {
   constructor(props) {
     super(props);
@@ -8,15 +8,15 @@ class NavigationControl extends React.Component {
     this.view = props.view;
     this.center = props.center;
     this.layerControl = props.layerControl;
+    mapViewer = props.mapViewer;
     layerRegion = props.layerRegion;
     layerSpatial = props.layerSpatial;
   }
 
   /**
    *  Establish the initial behavior
-   * @param {InfoWidget} infoWidget
    */
-  showWorld(infoWidget) {
+  showWorld() {
     this.layerControl.hideLayer(layerSpatial.id);
     this.layerControl.showLayer(layerRegion.id);
     if (this.view.center) {
@@ -29,7 +29,7 @@ class NavigationControl extends React.Component {
       };
     }
     this.view.zoom = 1;
-    infoWidget.setState(() => ({
+    mapViewer.setState(() => ({
       useCaseLevel: 1,
     }));
   }
@@ -85,32 +85,32 @@ class NavigationControl extends React.Component {
 
   /**
    * Returns to the previous status.
-   * @param {InfoWidget} infoWidget
+
    */
-  returnToPrevious(infoWidget) {
+  returnToPrevious() {
     switch (
-      infoWidget.state.previousState === infoWidget.state.useCaseLevel
-        ? infoWidget.state.useCaseLevel - 1
-        : infoWidget.state.previousState
+      mapViewer.state.previousState === mapViewer.state.useCaseLevel
+        ? mapViewer.state.useCaseLevel - 1
+        : mapViewer.state.previousState
     ) {
       case 1:
-        this.showWorld(infoWidget);
+        this.showWorld();
         break;
 
       case 2:
         this.navigateToRegion(
-          infoWidget.state.selectedUseCase.BBOX,
-          infoWidget.state.selectedUseCase.Region,
+          mapViewer.state.selectedUseCase.BBOX,
+          mapViewer.state.selectedUseCase.Region,
           layerSpatial,
         );
-        infoWidget.setState(() => ({
+        mapViewer.setState(() => ({
           useCaseLevel: 2,
-          region: infoWidget.state.selectedUseCase.Region,
+          region: mapViewer.state.selectedUseCase.Region,
         }));
         break;
 
       default:
-        this.showWorld(infoWidget);
+        this.showWorld();
         break;
     }
   }

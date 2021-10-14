@@ -143,6 +143,7 @@ class UseCasesMapViewer extends React.Component {
       view: this.view,
       center: this.mapCfg.center,
       layerControl: layerControl,
+      mapViewer: this,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
     });
@@ -332,7 +333,6 @@ class UseCasesMapViewer extends React.Component {
                 let data_country = data.features.filter(
                   (a) =>
                     a.attributes.Spatial_coverage !== 'EU' &&
-                    a.attributes.Spatial_coverage !== 'UK' &&
                     a.attributes.Spatial_coverage !== 'EEA' &&
                     a.attributes.Spatial_coverage !== 'GLOBAL',
                 ).length;

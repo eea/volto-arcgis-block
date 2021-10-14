@@ -3,18 +3,14 @@ import React, { createRef } from 'react';
 let layerControl,
   navigationControl,
   view,
+  mapViewer,
   layerSpatial,
   processedData = [];
 class InfoWidget extends React.Component {
   constructor(props) {
     super(props);
     view = props.view;
-    this.state = {
-      useCaseLevel: 1,
-      region: '',
-      selectedUseCase: '',
-      previousState: 1,
-    };
+    mapViewer = props.mapViewer;
     navigationControl = props.navigationControl;
     layerControl = props.layerControl;
     layerSpatial = props.layerSpatial;
@@ -37,7 +33,7 @@ class InfoWidget extends React.Component {
               aria-label="Close"
               aria-hidden="true"
               role="button"
-              onClick={() => navigationControl.returnToPrevious(this)}
+              onClick={() => navigationControl.returnToPrevious()}
             ></span>
           </div>
           <div className="use-case-detail-image">
@@ -136,7 +132,7 @@ class InfoWidget extends React.Component {
               className="use-case-button-back"
               tabIndex="0"
               onClick={() => {
-                navigationControl.showWorld(this);
+                navigationControl.showWorld();
               }}
             >
               <span className="esri-icon-left-arrow"></span>
@@ -263,7 +259,7 @@ class InfoWidget extends React.Component {
 
         this.features = features;
 
-        this.setState((prevState) => ({
+        mapViewer.setState((prevState) => ({
           useCaseLevel: 1,
           region: '',
           selectedUseCase: '',
@@ -271,15 +267,26 @@ class InfoWidget extends React.Component {
         }));
       })();
     } else if (this.features !== undefined) {
-      return (
-        <>
-          <div className="use-cases-products-title">
-            <span>{this.features.length} </span>
-            use cases
-          </div>
-          <div className="use-cases-products-list">{this.setDOMSummary()}</div>
-        </>
-      );
+      if (mapViewer.state.useCaseLevel !== 1) {
+        mapViewer.setState((prevState) => ({
+          useCaseLevel: 1,
+          region: '',
+          selectedUseCase: '',
+          previousState: prevState.useCaseLevel,
+        }));
+      } else {
+        return (
+          <>
+            <div className="use-cases-products-title">
+              <span>{this.features.length} </span>
+              use cases
+            </div>
+            <div className="use-cases-products-list">
+              {this.setDOMSummary()}
+            </div>
+          </>
+        );
+      }
     } else {
       return <></>;
     }
@@ -297,33 +304,20 @@ class InfoWidget extends React.Component {
   highligtPoint(coords) {}
 
   /**
-   * This methos will update the component.
-   * @param {Object} nextProps
-   */
-  componentWillReceiveProps(nextProps) {
-    this.setState((prevState) => ({
-      useCaseLevel: nextProps.mapViewer.state.useCaseLevel,
-      region: nextProps.mapViewer.state.region,
-      selectedUseCase: nextProps.mapViewer.state.selectedUseCase,
-      previousState: prevState.useCaseLevel,
-    }));
-  }
-
-  /**
    * This method will return the corresponding lateral menu depending on layers.
    * @returns HTML
    */
   useCasesInformationPanel() {
-    switch (this.state.useCaseLevel) {
+    switch (mapViewer.state.useCaseLevel) {
       case 1:
         return this.showSummary();
       case 2:
-        return this.showBrief(this.state.region);
+        return this.showBrief(mapViewer.state.region);
       case 3:
-        const title = this.state.selectedUseCase.Use_case_title;
-        const bbox = this.state.selectedUseCase.BBOX;
-        const region = this.state.selectedUseCase.Region;
-        const country = this.state.selectedUseCase.Spatial_coverage;
+        const title = mapViewer.state.selectedUseCase.Use_case_title;
+        const bbox = mapViewer.state.selectedUseCase.BBOX;
+        const region = mapViewer.state.selectedUseCase.Region;
+        const country = mapViewer.state.selectedUseCase.Spatial_coverage;
         navigationControl.navigateToLocation(
           bbox,
           title,
@@ -334,7 +328,7 @@ class InfoWidget extends React.Component {
         document
           .querySelector('.use-cases-products-list')
           .scrollTo({ top: 0, behavior: 'smooth' });
-        return this.showUseCase(this.state.selectedUseCase);
+        return this.showUseCase(mapViewer.state.selectedUseCase);
       default:
         return 0;
     }
