@@ -42,6 +42,13 @@ class UseCasesMapViewer extends React.Component {
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
     };
+    this.state = {
+      useCaseLevel: 1,
+      region: '',
+      selectedUseCase: '',
+      selectedUseCases: [],
+      previousState: 1,
+    };
   }
 
   loader() {
@@ -115,6 +122,7 @@ class UseCasesMapViewer extends React.Component {
     layerControl = new LayerControl({
       map: this.map,
       view: this.view,
+      mapViewer: this,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
@@ -143,6 +151,7 @@ class UseCasesMapViewer extends React.Component {
       view: this.view,
       center: this.mapCfg.center,
       layerControl: layerControl,
+      mapViewer: this,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
     });
@@ -160,20 +169,6 @@ class UseCasesMapViewer extends React.Component {
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
     this.setState(() => ({ useCaseLevel: 1 }));
-  }
-
-  getRegionInfo(region, callback) {
-    let xmlhttp;
-    const url = `${this.spatialConfig.url}/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
-    xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function () {
-      if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-        let data = JSON.parse(this.responseText);
-        callback(data);
-      }
-    };
-    xmlhttp.open('GET', url, true);
-    xmlhttp.send();
   }
 
   /**
@@ -225,13 +220,13 @@ class UseCasesMapViewer extends React.Component {
       const screenPoint = { x: e.x, y: e.y };
 
       (async () => {
-        const selectedPoint = await layerControl.getPointInfo(screenPoint);
+        let selectedPoint = await layerControl.getPointInfo(screenPoint);
         if (selectedPoint.BBOX) {
           const selectedRegion = selectedPoint.Region;
           const boundingBox = selectedPoint.BBOX;
           const selectedTitle = selectedPoint.Use_case_title;
           const selectedSpatial = selectedPoint.Spatial_coverage;
-          if (this.state.useCaseLevel === 1) {
+          if (this.state.useCaseLevel === 1 && selectedPoint.COUNT > 1) {
             navigationControl.navigateToRegion(
               boundingBox,
               selectedRegion,
@@ -244,25 +239,67 @@ class UseCasesMapViewer extends React.Component {
                 previousState: prevState.useCaseLevel,
               };
             });
-            view.popup.close();
-            this.popupOnce = true;
-            document.querySelector('.map').style.cursor = '';
-          } else if (this.state.useCaseLevel === 2) {
-            navigationControl.navigateToLocation(
-              boundingBox,
-              selectedTitle,
-              selectedRegion,
-              selectedSpatial,
-              layerSpatial,
-            );
-            this.setState((prevState) => {
-              return {
-                useCaseLevel: 3,
-                selectedUseCase: selectedPoint,
-                previousState: prevState.useCaseLevel,
+          } else if (
+            this.state.useCaseLevel === 2 ||
+            selectedPoint.COUNT === 1
+          ) {
+            if (!layerSpatial.visible && selectedPoint.COUNT === 1) {
+              layerControl.getRegionInfo(
+                selectedRegion,
+                (data, MapViewerThis) => {
+                  data = data.features[0].attributes;
+                  navigationControl.navigateToRegion(
+                    data.BBOX,
+                    data.Region,
+                    layerSpatial,
+                  );
+
+                  MapViewerThis.setState((prevState) => {
+                    return {
+                      useCaseLevel: 4,
+                      selectedUseCase: data,
+                      region: data.Region,
+                      previousState: prevState.useCaseLevel,
+                    };
+                  });
+                },
+              );
+            } else {
+              const latLon = {
+                latitude: selectedPoint.Latitude,
+                longitude: selectedPoint.Longitude,
               };
-            });
+              layerControl.checkIfMorePoints(latLon, (data, MapViewerThis) => {
+                if (data.features.length !== 1) {
+                  MapViewerThis.setState((prevState) => {
+                    return {
+                      useCaseLevel: 3,
+                      selectedUseCases: data.features,
+                      previousState: prevState.useCaseLevel,
+                    };
+                  });
+                } else {
+                  navigationControl.navigateToLocation(
+                    boundingBox,
+                    selectedTitle,
+                    selectedRegion,
+                    selectedSpatial,
+                    layerSpatial,
+                  );
+                  MapViewerThis.setState((prevState) => {
+                    return {
+                      useCaseLevel: 4,
+                      selectedUseCase: selectedPoint,
+                      previousState: prevState.useCaseLevel,
+                    };
+                  });
+                }
+              });
+            }
           }
+          view.popup.close();
+          this.popupOnce = true;
+          document.querySelector('.map').style.cursor = '';
         }
       })();
     });
@@ -273,13 +310,7 @@ class UseCasesMapViewer extends React.Component {
         y: e.y,
       };
 
-      let useCaseLevel = document.querySelector('.use-case-button-back')
-        ? 2
-        : document.querySelector('.use-cases-products-list')
-        ? 1
-        : 3;
-
-      if (useCaseLevel === 1) {
+      if (this.state.useCaseLevel === 1) {
         view.hitTest(screenPoint).then((response) => {
           if (response.results.length > 1) {
             if (
@@ -290,11 +321,9 @@ class UseCasesMapViewer extends React.Component {
               document.querySelector('.map').style.cursor = 'pointer';
               let region = response.results[0].graphic.attributes.Region;
 
-              this.getRegionInfo(region, (data) => {
+              layerControl.getRegionInfo(region, (data) => {
                 let data_eu = data.features.filter(
-                  (a) =>
-                    a.attributes.Spatial_coverage === 'EU' ||
-                    a.attributes.Spatial_coverage === 'UK',
+                  (a) => a.attributes.Spatial_coverage === 'EU',
                 ).length;
                 let data_eea = data.features.filter(
                   (a) => a.attributes.Spatial_coverage === 'EEA',
@@ -305,7 +334,6 @@ class UseCasesMapViewer extends React.Component {
                 let data_country = data.features.filter(
                   (a) =>
                     a.attributes.Spatial_coverage !== 'EU' &&
-                    a.attributes.Spatial_coverage !== 'UK' &&
                     a.attributes.Spatial_coverage !== 'EEA' &&
                     a.attributes.Spatial_coverage !== 'GLOBAL',
                 ).length;
@@ -339,7 +367,7 @@ class UseCasesMapViewer extends React.Component {
             document.querySelector('.map').style.cursor = '';
           }
         });
-      } else if (useCaseLevel === 2) {
+      } else if (this.state.useCaseLevel === 2) {
         view.hitTest(screenPoint).then((response) => {
           if (response.results.length > 1) {
             if (

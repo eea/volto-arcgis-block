@@ -1,8 +1,9 @@
-let FeatureLayer, Extent;
+let FeatureLayer, Extent, mapViewer;
 class LayerControl {
   constructor(props) {
     this.map = props.map;
     this.view = props.view;
+    mapViewer = props.mapViewer;
     FeatureLayer = props.FeatureLayer;
     Extent = props.Extent;
   }
@@ -94,6 +95,32 @@ class LayerControl {
         }
       });
     return pointInformation;
+  }
+
+  getRegionInfo(region, callback) {
+    const xmlhttp = new XMLHttpRequest();
+    const url = `${mapViewer.spatialConfig.url}/query?where=Region+%3D+%27${region}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    xmlhttp.onreadystatechange = () => {
+      if (xmlhttp.readyState === 4 && xmlhttp.status === 200)
+        callback(this.returnData(xmlhttp), mapViewer);
+    };
+    xmlhttp.open('GET', url, true);
+    xmlhttp.send();
+  }
+
+  checkIfMorePoints(latLon, callback) {
+    const xmlhttp = new XMLHttpRequest();
+    const url = `${mapViewer.spatialConfig.url}/query?where=Latitude%3D+${latLon.latitude}+AND+Longitude%3D+${latLon.longitude}&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`;
+    xmlhttp.onreadystatechange = () => {
+      if (xmlhttp.readyState === 4 && xmlhttp.status === 200)
+        callback(this.returnData(xmlhttp), mapViewer);
+    };
+    xmlhttp.open('GET', url, true);
+    xmlhttp.send();
+  }
+
+  returnData(xmlhttp) {
+    return JSON.parse(xmlhttp.responseText);
   }
 
   /**

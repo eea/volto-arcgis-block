@@ -53,7 +53,7 @@
 }
 
 .use-cases-products-list {
-  max-height: 25rem;
+  height: 25rem;
   overflow-y: auto;
 }
 
