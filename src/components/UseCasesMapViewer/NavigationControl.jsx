@@ -88,6 +88,7 @@ class NavigationControl extends React.Component {
 
    */
   returnToPrevious() {
+    debugger;
     switch (
       mapViewer.state.previousState === mapViewer.state.useCaseLevel
         ? mapViewer.state.useCaseLevel - 1
@@ -108,7 +109,11 @@ class NavigationControl extends React.Component {
           region: mapViewer.state.selectedUseCase.Region,
         }));
         break;
-
+      case 3:
+        mapViewer.setState(() => ({
+          useCaseLevel: 3,
+        }));
+        break;
       default:
         this.showWorld();
         break;

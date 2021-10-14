@@ -85,8 +85,8 @@ class InfoWidget extends React.Component {
             className="use-case-element"
             aria-hidden="true"
             onClick={() =>
-              this.setState((prevState) => ({
-                useCaseLevel: 3,
+              mapViewer.setState((prevState) => ({
+                useCaseLevel: 4,
                 selectedUseCase: val,
                 previousState: prevState.useCaseLevel,
               }))
@@ -114,35 +114,67 @@ class InfoWidget extends React.Component {
    */
   showBrief(selectedRegion) {
     const regionFeatures = [];
-
-    for (let feature in this.features) {
-      if (this.features[feature].attributes.Region === selectedRegion) {
-        regionFeatures.push(this.features[feature].attributes);
+    if (mapViewer.state.useCaseLevel === 2) {
+      for (let feature in this.features) {
+        if (this.features[feature].attributes.Region === selectedRegion) {
+          regionFeatures.push(this.features[feature].attributes);
+        }
       }
-    }
-    return (
-      <>
-        <div className="use-cases-products-title">
-          <span>{regionFeatures.length} </span>
-          use cases
-        </div>
-        <div className="use-cases-products-list">
-          <div key={selectedRegion} className="use-cases-dropdown">
-            <button
-              className="use-case-button-back"
-              tabIndex="0"
-              onClick={() => {
-                navigationControl.showWorld();
-              }}
-            >
-              <span className="esri-icon-left-arrow"></span>
-              Back
-            </button>
-            {this.getDataBrief(regionFeatures)}
+      layerSpatial.definitionExpression = '';
+      return (
+        <div>
+          <div className="use-cases-products-title">
+            <span>{regionFeatures.length} </span>
+            use cases
+          </div>
+          <div className="use-cases-products-list">
+            <div key={selectedRegion} className="use-cases-dropdown">
+              <button
+                className="use-case-button-back"
+                tabIndex="0"
+                onClick={() => {
+                  navigationControl.showWorld();
+                }}
+              >
+                <span className="esri-icon-left-arrow"></span>
+                Back
+              </button>
+              {this.getDataBrief(regionFeatures)}
+            </div>
           </div>
         </div>
-      </>
-    );
+      );
+    } else if (mapViewer.state.useCaseLevel === 3) {
+      layerSpatial.definitionExpression = `Latitude = ${mapViewer.state.selectedUseCases[0].attributes.Latitude} AND Longitude = ${mapViewer.state.selectedUseCases[0].attributes.Longitude}`;
+      for (let feature in mapViewer.state.selectedUseCases) {
+        regionFeatures.push(
+          mapViewer.state.selectedUseCases[feature].attributes,
+        );
+      }
+      return (
+        <>
+          <div className="use-cases-products-title">
+            <span>{regionFeatures.length} </span>
+            use cases
+          </div>
+          <div className="use-cases-products-list">
+            <div key={selectedRegion} className="use-cases-dropdown">
+              <button
+                className="use-case-button-back"
+                tabIndex="0"
+                onClick={() => {
+                  navigationControl.returnToPrevious();
+                }}
+              >
+                <span className="esri-icon-left-arrow"></span>
+                Back
+              </button>
+              {this.getDataBrief(regionFeatures)}
+            </div>
+          </div>
+        </>
+      );
+    }
   }
 
   /**
@@ -314,6 +346,8 @@ class InfoWidget extends React.Component {
       case 2:
         return this.showBrief(mapViewer.state.region);
       case 3:
+        return this.showBrief(mapViewer.state.selectedUseCases);
+      case 4:
         const title = mapViewer.state.selectedUseCase.Use_case_title;
         const bbox = mapViewer.state.selectedUseCase.BBOX;
         const region = mapViewer.state.selectedUseCase.Region;
