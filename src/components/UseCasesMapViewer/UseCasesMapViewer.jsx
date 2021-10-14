@@ -321,9 +321,7 @@ class UseCasesMapViewer extends React.Component {
 
               this.getRegionInfo(region, (data) => {
                 let data_eu = data.features.filter(
-                  (a) =>
-                    a.attributes.Spatial_coverage === 'EU' ||
-                    a.attributes.Spatial_coverage === 'UK',
+                  (a) => a.attributes.Spatial_coverage === 'EU',
                 ).length;
                 let data_eea = data.features.filter(
                   (a) => a.attributes.Spatial_coverage === 'EEA',
