@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+//import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 
 var Graphic, Extent, FeatureLayer, GroupLayer;
