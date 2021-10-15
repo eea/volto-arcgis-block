@@ -120,7 +120,6 @@ class InfoWidget extends React.Component {
           regionFeatures.push(this.features[feature].attributes);
         }
       }
-      layerSpatial.definitionExpression = '';
       return (
         <div>
           <div className="use-cases-products-title">
@@ -145,7 +144,10 @@ class InfoWidget extends React.Component {
         </div>
       );
     } else if (mapViewer.state.useCaseLevel === 3) {
-      layerSpatial.definitionExpression = `Latitude = ${mapViewer.state.selectedUseCases[0].attributes.Latitude} AND Longitude = ${mapViewer.state.selectedUseCases[0].attributes.Longitude}`;
+      layerSpatial.definitionExpression !== null
+        ? (layerSpatial.definitionExpression += ` AND Latitude = ${mapViewer.state.selectedUseCases[0].attributes.Latitude} AND Longitude = ${mapViewer.state.selectedUseCases[0].attributes.Longitude}`)
+        : (layerSpatial.definitionExpression = `Latitude = ${mapViewer.state.selectedUseCases[0].attributes.Latitude} AND Longitude = ${mapViewer.state.selectedUseCases[0].attributes.Longitude}`);
+
       for (let feature in mapViewer.state.selectedUseCases) {
         regionFeatures.push(
           mapViewer.state.selectedUseCases[feature].attributes,
