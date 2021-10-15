@@ -478,7 +478,7 @@
 
 .map-download-area,
 .map-download-resource {
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .map-download-header {
@@ -488,6 +488,10 @@
   font-weight: bold;
 }
 
+.map-download-resource select {
+  cursor: pointer;
+}
+
 .map-download-area .ccl-form-legend + .ccl-form-group {
   margin-top: 0.5rem;
 }
@@ -495,10 +499,16 @@
 .map-download-buttons {
   display: flex;
   justify-content: space-between;
+  margin-top: 1rem;
 }
 
 .map-download-block .ccl-form-group:not(:first-of-type) {
   margin-top: 0.5rem;
+}
+
+#download_panel .area-panel {
+  width: 100%;
+  height: 100%;
 }
 
 /* Legend*/
