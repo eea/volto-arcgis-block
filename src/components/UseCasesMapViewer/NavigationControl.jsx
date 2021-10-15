@@ -19,16 +19,9 @@ class NavigationControl extends React.Component {
   showWorld() {
     this.layerControl.hideLayer(layerSpatial.id);
     this.layerControl.showLayer(layerRegion.id);
-    if (this.view.center) {
-      this.view.center.latitude = this.center[1];
-      this.view.center.longitude = this.center[0];
-    } else {
-      this.view.center = {
-        latitude: this.center[1],
-        longitude: this.center[0],
-      };
-    }
-    this.view.zoom = 1;
+    this.view.center = this.center;
+    this.view.zoom = 0;
+
     mapViewer.setState(() => ({
       useCaseLevel: 1,
     }));

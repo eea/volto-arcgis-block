@@ -179,6 +179,8 @@ class UseCasesMapViewer extends React.Component {
    * @param {FeatureLayer} layerSpatial
    */
   setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
+    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+
     view.on('mouse-wheel', function (event) {
       event.stopPropagation();
     });
@@ -198,12 +200,9 @@ class UseCasesMapViewer extends React.Component {
     view.on('drag', ['Shift'], function (event) {
       event.stopPropagation();
     });
-
     view.on('drag', ['Shift', 'Control'], function (event) {
       event.stopPropagation();
     });
-
-    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
     view.on('key-down', function (event) {
       const keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {

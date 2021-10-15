@@ -33,6 +33,10 @@
   outline: none;
 }
 
+.esri-view-height-less-than-medium .esri-popup__main-container {
+  max-height: 250px !important;
+}
+
 .esri-component.esri-zoom.esri-widget {
   margin-bottom: 0;
   background: none;

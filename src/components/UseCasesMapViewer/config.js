@@ -15,8 +15,8 @@ const greenRegion = '#acba47';
 const config = {
   Map: {
     div: 'mapDiv',
-    center: [15, 50],
-    zoom: 1,
+    center: [10.78, 30],
+    zoom: 0,
   },
   Services: {
     RegionLayer:
