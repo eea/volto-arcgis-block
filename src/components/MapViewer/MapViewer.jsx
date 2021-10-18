@@ -9,6 +9,10 @@ import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import MenuWidget from './MenuWidget';
+import { MapViewerConfig } from '../../actions';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom;
 
@@ -18,12 +22,6 @@ class MapViewer extends React.Component {
    * @param {*} props
    */
   constructor(props) {
-    /* --> this is a code to fetch for the URL
-    console.log(props);
-    fetch(props.url)
-    .then(response =>{console.log(response); response.json()})
-    .then(data => console.log(data)); <-- */
-
     super(props);
     //we create a reference to the DOM element that will
     //be later mounted. We will use the reference that we
@@ -81,12 +79,17 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
+    // After launching the MapViewerConfig action
+    // we will have stored the json response here:
+    // this.props.mapviewer_config
+    this.props.MapViewerConfig(this.props.url);
+
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
     //trigger the renderization again, and to trigger the renderization
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
-    this.setState({});
+    //this.setState({});
   }
 
   setActiveWidget(widget) {
@@ -111,6 +114,7 @@ class MapViewer extends React.Component {
    * @returns jsx
    */
   renderBasemap() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
   }
 
@@ -119,17 +123,27 @@ class MapViewer extends React.Component {
   }
 
   renderMeasurement() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view)
       return <MeasurementWidget view={this.view} mapViewer={this} />;
   }
 
   renderPrint() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
   }
 
   renderArea() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view)
-      return <AreaWidget view={this.view} map={this.map} mapViewer={this} />;
+      return (
+        <AreaWidget
+          view={this.view}
+          map={this.map}
+          mapViewer={this}
+          download={this.props.mapviewer_config.Download}
+        />
+      );
   }
 
   renderScale() {
@@ -141,7 +155,8 @@ class MapViewer extends React.Component {
       return (
         <MenuWidget
           view={this.view}
-          conf={this.compCfg}
+          conf={this.props.mapviewer_config.Components}
+          download={this.props.mapviewer_config.Download}
           map={this.map}
           mapViewer={this}
         />
@@ -172,4 +187,11 @@ class MapViewer extends React.Component {
   }
 }
 
-export default MapViewer;
+export default compose(
+  connect(
+    (state, props) => ({
+      mapviewer_config: state.mapviewer_config.mapviewer_config,
+    }),
+    { MapViewerConfig },
+  ),
+)(MapViewer);

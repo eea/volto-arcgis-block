@@ -100,20 +100,7 @@ class PrintWidget extends React.Component {
         }
       });
     });
-    observer.observe(mapOnly, { attributes: true });
-
-    var observer2 = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'aria-expanded') {
-          let currentExpand = mutation.target.getAttribute('aria-expanded');
-          if (currentExpand === 'true') {
-            this.setTextFilters();
-          } else {
-            this.setLayoutConstraints();
-          }
-        }
-      });
-    });
+    mapOnly && observer.observe(mapOnly, { attributes: true });
   }
 
   setLayoutConstraints() {
@@ -138,7 +125,7 @@ class PrintWidget extends React.Component {
     var observer = new MutationObserver((m) => {
       advancedFunction(m);
     });
-    observer.observe(advanceOptions, { attributes: true });
+    advanceOptions && observer.observe(advanceOptions, { attributes: true });
   }
 
   noSpecialChars(elem) {

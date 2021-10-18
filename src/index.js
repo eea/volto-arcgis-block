@@ -9,7 +9,8 @@ import {
 } from '@eeacms/volto-arcgis-block/components';
 import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
 import { USE_CASES_BLOCK } from '@eeacms/volto-arcgis-block/constants';
-
+// CUSTOM REDUCERS IMPORT
+import reducers from './reducers';
 export default (config) => {
   config.blocks.blocksConfig[ARCGIS_BLOCK] = {
     id: ARCGIS_BLOCK, // The name (id) of the block
@@ -55,6 +56,10 @@ export default (config) => {
       addPermission: [], // Future proof (not implemented yet) add user permission role(s)
       view: [], // Future proof (not implemented yet) view user role(s)
     },
+  };
+  config.addonReducers = {
+    ...config.addonReducers,
+    ...reducers,
   };
   return config;
 };

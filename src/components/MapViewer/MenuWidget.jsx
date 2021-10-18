@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
-// import { layer } from '@fortawesome/fontawesome-svg-core';
+import AreaWidget from './AreaWidget';
 var WMSLayer;
 
 class MenuWidget extends React.Component {
@@ -69,7 +69,10 @@ class MenuWidget extends React.Component {
     loadCss();
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-left');
-
+    if (this.props.download) {
+      document.querySelector('.area-panel').style.display = 'block';
+      document.querySelector('.area-panel input:checked').click();
+    }
     //to watch the component
     this.setState({});
   }
@@ -714,18 +717,33 @@ class MenuWidget extends React.Component {
               >
                 Products and datasets
               </span>
-              <span
-                className="tab"
-                id="active_label"
-                role="tab"
-                aria-controls="active_panel"
-                aria-selected="false"
-                onClick={(e) => this.toggleTab(e)}
-                onKeyDown={(e) => this.toggleTab(e)}
-                tabIndex="0"
-              >
-                Active on map
-              </span>
+              {this.props.download ? (
+                <span
+                  className="tab"
+                  id="download_label"
+                  role="tab"
+                  aria-controls="download_panel"
+                  aria-selected="false"
+                  onClick={(e) => this.toggleTab(e)}
+                  onKeyDown={(e) => this.toggleTab(e)}
+                  tabIndex="0"
+                >
+                  Download
+                </span>
+              ) : (
+                <span
+                  className="tab"
+                  id="active_label"
+                  role="tab"
+                  aria-controls="active_panel"
+                  aria-selected="false"
+                  onClick={(e) => this.toggleTab(e)}
+                  onKeyDown={(e) => this.toggleTab(e)}
+                  tabIndex="0"
+                >
+                  Active on map
+                </span>
+              )}
             </div>
             <div className="panels" id="paneles">
               <div
@@ -736,19 +754,35 @@ class MenuWidget extends React.Component {
               >
                 {this.metodprocessJSON()}
               </div>
-              <div
-                className="panel"
-                id="active_panel"
-                role="tabpanel"
-                aria-hidden="true"
-              >
-                <div id="active_layers" className="map-active-layers">
-                  {this.activeLayersAsArray()}
-                  <span className="message" id="nolayers_message">
-                    No layers selected
-                  </span>
+              {this.props.download ? (
+                <div
+                  className="panel"
+                  id="download_panel"
+                  role="tabpanel"
+                  aria-hidden="true"
+                >
+                  <AreaWidget
+                    view={this.props.view}
+                    map={this.props.map}
+                    mapViewer={this.props.mapViewer}
+                    download={this.props.download}
+                  />
                 </div>
-              </div>
+              ) : (
+                <div
+                  className="panel"
+                  id="active_panel"
+                  role="tabpanel"
+                  aria-hidden="true"
+                >
+                  <div id="active_layers" className="map-active-layers">
+                    {this.activeLayersAsArray()}
+                    <span className="message" id="nolayers_message">
+                      No layers selected
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div
