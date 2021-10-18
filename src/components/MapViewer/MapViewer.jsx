@@ -89,7 +89,7 @@ class MapViewer extends React.Component {
     //trigger the renderization again, and to trigger the renderization
     //we invoke the setState method, that changes the state and forces a
     //react component to render itself again
-    this.setState({});
+    //this.setState({});
   }
 
   setActiveWidget(widget) {
@@ -143,11 +143,12 @@ class MapViewer extends React.Component {
   }
 
   renderMenu() {
-    if (this.view)
+    if (this.view)    
       return (
         <MenuWidget
           view={this.view}
-          conf={this.compCfg}
+          conf={this.props.mapviewer_config.Components}
+          download={this.props.mapviewer_config.Download}
           map={this.map}
           mapViewer={this}
         />
