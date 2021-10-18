@@ -90,9 +90,9 @@ class PrintWidget extends React.Component {
             this.setTextFilters();
             let optSVGZ = document.querySelector("[value='svgz']");
             optSVGZ && optSVGZ.parentElement.removeChild(optSVGZ);
-            let advanceOptions = document.querySelector(
+            /*let advanceOptions = document.querySelector(
               '.esri-print__advanced-options-button',
-            );
+            );*/
             let fileName = document.querySelector(
               "[data-input-name='fileName']",
             );
