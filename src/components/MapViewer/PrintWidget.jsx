@@ -93,7 +93,10 @@ class PrintWidget extends React.Component {
             let advanceOptions = document.querySelector(
               '.esri-print__advanced-options-button',
             );
-            observer2.observe(advanceOptions, { attributes: true });
+            let fileName = document.querySelector(
+              "[data-input-name='fileName']",
+            );
+            fileName.parentElement.setAttribute('style', 'display:none');
           } else {
             this.setLayoutConstraints();
           }
