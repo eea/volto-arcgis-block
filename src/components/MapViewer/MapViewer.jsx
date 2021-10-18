@@ -151,7 +151,7 @@ class MapViewer extends React.Component {
   }
 
   renderMenu() {
-    if (this.view)    
+    if (this.view)
       return (
         <MenuWidget
           view={this.view}
@@ -159,7 +159,6 @@ class MapViewer extends React.Component {
           download={this.props.mapviewer_config.Download}
           map={this.map}
           mapViewer={this}
-          download={this.props.mapviewer_config.Download}
         />
       ); //call conf
   }
