@@ -1,6 +1,7 @@
 import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
+//import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 
 var Graphic, Extent, FeatureLayer, GroupLayer;
@@ -13,7 +14,9 @@ class AreaWidget extends React.Component {
   constructor(props) {
     super(props);
     //We create a reference to a DOM element to be mounted
-    this.container = createRef();
+    this.container = this.props.download
+      ? document.querySelector('#download_panel')
+      : createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
     this.state = { showMapMenu: false };
@@ -145,12 +148,14 @@ class AreaWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
     this.nutsGroupLayer = new GroupLayer({
       title: 'nuts',
       opacity: 0.5,
     });
     this.props.map.add(this.nutsGroupLayer);
+    this.props.download
+      ? this.props.view.ui.add(this.container)
+      : this.props.view.ui.add(this.container.current, 'top-right');
   }
   /**
    * This method renders the component
@@ -160,15 +165,17 @@ class AreaWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="area-container">
-          <div
-            className={this.menuClass}
-            id="map_area_button"
-            title="Area"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
-            tabIndex="0"
-            role="button"
-          ></div>
+          {!this.props.download && (
+            <div
+              className={this.menuClass}
+              id="map_area_button"
+              title="Area"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          )}
           <div className="area-panel">
             <div className="ccl-form">
               <fieldset className="ccl-fieldset">
@@ -251,6 +258,40 @@ class AreaWidget extends React.Component {
                     </div>
                   </label>
                 </div>
+                {this.props.download && (
+                  <div>
+                    {/* <div class="map-download-resource">
+                      <div class="ccl-form">
+                        <div class="map-download-header">
+                          <label for="download_area_select" class="map-download-header-title">Download resource as</label>
+                          <span class="info-icon" tooltip="Info" direction="up">
+                            <FontAwesomeIcon
+                              className="map-menu-icon"
+                              icon={['fas', 'info-circle']}
+                            />
+                          </span>
+                        </div>
+                        <div class="ccl-select-container">
+                          <div class="ccl-select-container">
+                            <select class="ccl-select" id="download_area_select" name="" >
+                              <option value="option1">GeoTiff</option>
+                              <option value="option2">ESRI Geodatabase</option>
+                              <option value="option3">SQLite Database</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div> */}
+                    <div class="map-download-buttons">
+                      <button class="ccl-button ccl-button-green">
+                        Add to cart
+                      </button>
+                      <button class="ccl-button ccl-button--default">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </fieldset>
             </div>
           </div>

@@ -134,8 +134,16 @@ class MapViewer extends React.Component {
   }
 
   renderArea() {
+    if (this.props.mapviewer_config.Download) return;
     if (this.view)
-      return <AreaWidget view={this.view} map={this.map} mapViewer={this} />;
+      return (
+        <AreaWidget
+          view={this.view}
+          map={this.map}
+          mapViewer={this}
+          download={this.props.mapviewer_config.Download}
+        />
+      );
   }
 
   renderScale() {
@@ -151,6 +159,7 @@ class MapViewer extends React.Component {
           download={this.props.mapviewer_config.Download}
           map={this.map}
           mapViewer={this}
+          download={this.props.mapviewer_config.Download}
         />
       ); //call conf
   }
