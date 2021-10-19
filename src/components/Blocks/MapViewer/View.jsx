@@ -15,7 +15,7 @@ const View = (props) => {
   return (
     <MapViewer
       cfg={config}
-      url={props.properties.parent['@id'] + '/@mapviewer'}
+      url={props.properties.parent['@id']}
       customClass={getClassName(data)}
       id={id}
     ></MapViewer>

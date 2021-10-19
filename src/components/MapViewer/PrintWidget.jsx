@@ -90,30 +90,20 @@ class PrintWidget extends React.Component {
             this.setTextFilters();
             let optSVGZ = document.querySelector("[value='svgz']");
             optSVGZ && optSVGZ.parentElement.removeChild(optSVGZ);
-            let advanceOptions = document.querySelector(
+            /*let advanceOptions = document.querySelector(
               '.esri-print__advanced-options-button',
+            );*/
+            let fileName = document.querySelector(
+              "[data-input-name='fileName']",
             );
-            observer2.observe(advanceOptions, { attributes: true });
+            fileName.parentElement.setAttribute('style', 'display:none');
           } else {
             this.setLayoutConstraints();
           }
         }
       });
     });
-    observer.observe(mapOnly, { attributes: true });
-
-    var observer2 = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'aria-expanded') {
-          let currentExpand = mutation.target.getAttribute('aria-expanded');
-          if (currentExpand === 'true') {
-            this.setTextFilters();
-          } else {
-            this.setLayoutConstraints();
-          }
-        }
-      });
-    });
+    mapOnly && observer.observe(mapOnly, { attributes: true });
   }
 
   setLayoutConstraints() {
@@ -138,7 +128,7 @@ class PrintWidget extends React.Component {
     var observer = new MutationObserver((m) => {
       advancedFunction(m);
     });
-    observer.observe(advanceOptions, { attributes: true });
+    advanceOptions && observer.observe(advanceOptions, { attributes: true });
   }
 
   noSpecialChars(elem) {
