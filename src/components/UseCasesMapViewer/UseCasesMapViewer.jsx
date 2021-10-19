@@ -179,7 +179,17 @@ class UseCasesMapViewer extends React.Component {
    * @param {FeatureLayer} layerSpatial
    */
   setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
-    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+    const prohibitedKeys = [
+      '+',
+      '-',
+      'Shift',
+      '_',
+      '=',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+    ];
 
     view.on('mouse-wheel', function (event) {
       event.stopPropagation();
