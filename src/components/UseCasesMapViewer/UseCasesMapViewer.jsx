@@ -244,6 +244,7 @@ class UseCasesMapViewer extends React.Component {
             this.setState((prevState) => {
               return {
                 useCaseLevel: 2,
+                selectedUseCase: selectedPoint,
                 region: selectedRegion,
                 previousState: prevState.useCaseLevel,
               };
@@ -283,6 +284,7 @@ class UseCasesMapViewer extends React.Component {
                   MapViewerThis.setState((prevState) => {
                     return {
                       useCaseLevel: 3,
+                      selectedUseCase: selectedPoint,
                       selectedUseCases: data.features,
                       previousState: prevState.useCaseLevel,
                     };
