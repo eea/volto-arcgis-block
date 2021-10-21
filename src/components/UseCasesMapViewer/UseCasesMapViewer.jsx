@@ -428,7 +428,7 @@ class UseCasesMapViewer extends React.Component {
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
     return (
-      <div>
+      <div className="use-cases-container">
         <div className="ccl-container">
           <div className="use-cases-block">
             <h2>See use cases by product</h2>
