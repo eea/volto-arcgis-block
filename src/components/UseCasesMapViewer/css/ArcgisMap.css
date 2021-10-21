@@ -21,7 +21,8 @@
   margin: 0 auto;
 }
 
-.use-cases-products-block {
+.use-cases-products-block,
+.use-cases-products-map {
   margin-bottom: 3rem;
 }
 
@@ -31,7 +32,10 @@
   font-weight: bold;
 }
 
-.use-cases-products-map,
+.use-cases-products-map {
+  height: 100%;
+}
+
 .use-cases-products-map .map {
   height: 25rem;
 }
@@ -53,7 +57,7 @@
 }
 
 .use-cases-products-list {
-  height: 25rem;
+  max-height: 25rem;
   overflow-y: auto;
 }
 

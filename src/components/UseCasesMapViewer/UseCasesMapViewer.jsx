@@ -179,7 +179,17 @@ class UseCasesMapViewer extends React.Component {
    * @param {FeatureLayer} layerSpatial
    */
   setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
-    const prohibitedKeys = ['+', '-', 'Shift', '_', '='];
+    const prohibitedKeys = [
+      '+',
+      '-',
+      'Shift',
+      '_',
+      '=',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+    ];
 
     view.on('mouse-wheel', function (event) {
       event.stopPropagation();
@@ -418,7 +428,7 @@ class UseCasesMapViewer extends React.Component {
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
     return (
-      <div>
+      <div className="use-cases-container">
         <div className="ccl-container">
           <div className="use-cases-block">
             <h2>See use cases by product</h2>

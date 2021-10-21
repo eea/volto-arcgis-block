@@ -21,7 +21,7 @@ class NavigationControl extends React.Component {
     this.layerControl.showLayer(layerRegion.id);
     this.view.center = this.center;
     this.view.zoom = 0;
-
+    layerSpatial.definitionExpression = null;
     mapViewer.setState(() => ({
       useCaseLevel: 1,
     }));
@@ -52,10 +52,10 @@ class NavigationControl extends React.Component {
    * @param {FeatureLayer} layer
    */
   navigateToLocation(bBox, useCaseTitle, region, country, layer) {
-    // layerSpatial.setDefinitionExpression(point);
     this.navigateToRegion(bBox, region, layer);
-    const expression = `Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`;
-    layer.definitionExpression = expression;
+    layerSpatial.definitionExpression !== null
+      ? (layer.definitionExpression += ` AND Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`)
+      : (layer.definitionExpression = `Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`);
   }
 
   /**

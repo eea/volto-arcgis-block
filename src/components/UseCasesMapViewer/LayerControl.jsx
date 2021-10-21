@@ -74,7 +74,38 @@ class LayerControl {
       boundingBox[2],
       boundingBox[3],
     );
+    const zoomOnBounding = this.getBoundsZoomLevel(boundingBox);
+    this.view.zoom = zoomOnBounding;
     this.view.extent = newExtent;
+  }
+
+  getBoundsZoomLevel(bounds) {
+    const mapDim = { height: this.view.height, width: this.view.width };
+    const WORLD_DIM = { height: 256, width: 256 };
+    const ZOOM_MAX = 5;
+
+    const ne = [bounds[2], bounds[3]];
+    const sw = [bounds[0], bounds[1]];
+
+    const latFraction = (this.latRad(ne[1]) - this.latRad(sw[1])) / Math.PI;
+
+    const lngDiff = ne[0] - sw[0];
+    const lngFraction = (lngDiff < 0 ? lngDiff + 360 : lngDiff) / 360;
+
+    const latZoom = this.zoom(mapDim.height, WORLD_DIM.height, latFraction);
+    const lngZoom = this.zoom(mapDim.width, WORLD_DIM.width, lngFraction);
+
+    return Math.min(latZoom, lngZoom, ZOOM_MAX);
+    //TODO calculate the corresponding level of zoom automatically
+  }
+  latRad(lat) {
+    const sin = Math.sin((lat * Math.PI) / 180);
+    const radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+    return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+  }
+
+  zoom(mapPx, worldPx, fraction) {
+    return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.LN2);
   }
 
   /**
