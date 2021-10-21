@@ -155,6 +155,33 @@ class LayerControl {
   }
 
   /**
+   * It highlights the information displayed for a use case on the infoWidget.
+   * */
+  highlightInfo(response) {
+    if (response.results.length > 1) {
+      if (
+        response.results[0].graphic.geometry !== null &&
+        mapViewer.popupOnce
+      ) {
+        mapViewer.popupOnce = false;
+        document.querySelector('.map').style.cursor = 'pointer';
+        document
+          .querySelector(
+            '#use_case_' + response.results[0].graphic.attributes.OBJECTID,
+          )
+          .classList.add('selected');
+      }
+    } else {
+      mapViewer.popupOnce = true;
+      document.querySelector('.map').style.cursor = '';
+      if (document.querySelector('.use-case-element.selected'))
+        document
+          .querySelector('.use-case-element.selected')
+          .classList.remove('selected');
+    }
+  }
+
+  /**
    * Order retreived features by Service product name
    * @param {Object} features
    * @returns features ordered

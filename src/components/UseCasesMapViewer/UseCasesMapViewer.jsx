@@ -380,28 +380,7 @@ class UseCasesMapViewer extends React.Component {
         });
       } else if (this.state.useCaseLevel === 2) {
         view.hitTest(screenPoint).then((response) => {
-          if (response.results.length > 1) {
-            if (
-              response.results[0].graphic.geometry !== null &&
-              this.popupOnce
-            ) {
-              this.popupOnce = false;
-              document.querySelector('.map').style.cursor = 'pointer';
-              document
-                .querySelector(
-                  '#use_case_' +
-                    response.results[0].graphic.attributes.OBJECTID,
-                )
-                .classList.add('selected');
-            }
-          } else {
-            this.popupOnce = true;
-            document.querySelector('.map').style.cursor = '';
-            if (document.querySelector('.use-case-element.selected'))
-              document
-                .querySelector('.use-case-element.selected')
-                .classList.remove('selected');
-          }
+          layerControl.highlightInfo(response);
         });
       }
     });

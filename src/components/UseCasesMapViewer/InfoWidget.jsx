@@ -327,17 +327,6 @@ class InfoWidget extends React.Component {
   }
 
   /**
-   * It highlights the information displayed for a use case on the infoWidget.
-   * */
-  highligtInfo() {}
-
-  /**
-   * Highlights the point on the map corresponding to the use case
-   * @param {*} coords
-   */
-  highligtPoint(coords) {}
-
-  /**
    * This method will return the corresponding lateral menu depending on layers.
    * @returns HTML
    */
