@@ -38,12 +38,6 @@ class NavigationControl extends React.Component {
   navigateToRegion(bBox, region, layer) {
     const boundingBox = this.clearBBOX(bBox);
     this.layerControl.zoomToExtent(boundingBox);
-    if (
-      region.toLowerCase() === 'south america' ||
-      region.toLowerCase() === 'africa'
-    ) {
-      this.view.zoom = 1;
-    }
     this.layerControl.hideLayer(layerRegion.id);
     this.layerControl.showLayer(layerSpatial.id);
     layer.definitionExpression = `Region = '${region}'`;
@@ -61,7 +55,7 @@ class NavigationControl extends React.Component {
     this.navigateToRegion(bBox, region, layer);
     layerSpatial.definitionExpression !== null
       ? (layer.definitionExpression += ` AND Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`)
-      : (layer.definitionExpression = ` Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`);
+      : (layer.definitionExpression = `Use_case_title = '${useCaseTitle}' AND Spatial_coverage = '${country}'`);
   }
 
   /**
