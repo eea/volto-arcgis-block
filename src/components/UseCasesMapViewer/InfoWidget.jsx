@@ -77,7 +77,7 @@ class InfoWidget extends React.Component {
    * @returns useCasesRegion
    */
   getDataBrief(data) {
-    const children = data.map((val) => {
+    let children = data.map((val) => {
       return (
         <>
           <div
@@ -113,7 +113,7 @@ class InfoWidget extends React.Component {
    * @returns useCasesDOM
    */
   showBrief(selectedRegion) {
-    const regionFeatures = [];
+    let regionFeatures = [];
     if (mapViewer.state.useCaseLevel === 2) {
       for (let feature in this.features) {
         if (this.features[feature].attributes.Region === selectedRegion) {
@@ -183,8 +183,8 @@ class InfoWidget extends React.Component {
    * Transfrom raw data to ordered data by Service products
    */
   proccessDataSummary() {
-    const serviceProducts = this.getDifferentproductUsed(this.features);
-    const elements = [];
+    let serviceProducts = this.getDifferentproductUsed(this.features);
+    let elements = [];
 
     for (let serviceProduct in serviceProducts) {
       processedData[serviceProducts[serviceProduct]] = [];
@@ -208,7 +208,7 @@ class InfoWidget extends React.Component {
    * @returns lateralMenuDOM
    */
   getDataSummary(data, Copernicus_Land_Monitoring_Service_products_used) {
-    const children = this.getDataBrief(data);
+    let children = this.getDataBrief(data);
 
     return (
       <>
@@ -247,7 +247,7 @@ class InfoWidget extends React.Component {
    */
   setDOMSummary() {
     this.proccessDataSummary();
-    const DOMElements = [];
+    let DOMElements = [];
     for (let product_use_name in processedData)
       DOMElements.push(
         this.getDataSummary(processedData[product_use_name], product_use_name),
@@ -327,17 +327,6 @@ class InfoWidget extends React.Component {
   }
 
   /**
-   * It highlights the information displayed for a use case on the infoWidget.
-   * */
-  highligtInfo() {}
-
-  /**
-   * Highlights the point on the map corresponding to the use case
-   * @param {*} coords
-   */
-  highligtPoint(coords) {}
-
-  /**
    * This method will return the corresponding lateral menu depending on layers.
    * @returns HTML
    */
@@ -350,10 +339,10 @@ class InfoWidget extends React.Component {
       case 3:
         return this.showBrief(mapViewer.state.selectedUseCases);
       case 4:
-        const title = mapViewer.state.selectedUseCase.Use_case_title;
-        const bbox = mapViewer.state.selectedUseCase.BBOX;
-        const region = mapViewer.state.selectedUseCase.Region;
-        const country = mapViewer.state.selectedUseCase.Spatial_coverage;
+        let title = mapViewer.state.selectedUseCase.Use_case_title;
+        let bbox = mapViewer.state.selectedUseCase.BBOX;
+        let region = mapViewer.state.selectedUseCase.Region;
+        let country = mapViewer.state.selectedUseCase.Spatial_coverage;
         navigationControl.navigateToLocation(
           bbox,
           title,
