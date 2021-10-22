@@ -36,7 +36,7 @@ class NavigationControl extends React.Component {
    * @param {FeatureLayer} layer
    */
   navigateToRegion(bBox, region, layer) {
-    const boundingBox = this.clearBBOX(bBox);
+    let boundingBox = this.clearBBOX(bBox);
     this.layerControl.zoomToExtent(boundingBox);
     this.layerControl.hideLayer(layerRegion.id);
     this.layerControl.showLayer(layerSpatial.id);
@@ -64,7 +64,7 @@ class NavigationControl extends React.Component {
    * @returns Array BBox
    */
   clearBBOX(stringBbox) {
-    const floatBbox = [];
+    let floatBbox = [];
     // typeof stringBbox !== 'string' && (stringBbox = stringBbox.toString());
     stringBbox = stringBbox.replace('[', '');
     stringBbox = stringBbox.replace(']', '');

@@ -28,6 +28,7 @@ class UseCasesMapViewer extends React.Component {
     this.map = null;
     this.id = props.id;
     this.popupOnce = false;
+    this.popupRegion = '';
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
@@ -123,6 +124,8 @@ class UseCasesMapViewer extends React.Component {
       map: this.map,
       view: this.view,
       mapViewer: this,
+      worldDimensions: this.mapCfg.worldDimensions,
+      maxZoom: this.mapCfg.maxZoom,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
@@ -134,7 +137,7 @@ class UseCasesMapViewer extends React.Component {
 
     layerSpatial.renderer = this.spatialConfig.render;
 
-    const layerRegion = layerControl.createLayer({
+    let layerRegion = layerControl.createLayer({
       id: this.regionConfig.id,
       url: this.regionConfig.url,
     });
@@ -179,17 +182,7 @@ class UseCasesMapViewer extends React.Component {
    * @param {FeatureLayer} layerSpatial
    */
   setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
-    const prohibitedKeys = [
-      '+',
-      '-',
-      'Shift',
-      '_',
-      '=',
-      'ArrowUp',
-      'ArrowDown',
-      'ArrowLeft',
-      'ArrowRight',
-    ];
+    const prohibitedKeys = this.mapCfg.prohibitedKeys;
 
     view.on('mouse-wheel', function (event) {
       event.stopPropagation();
@@ -214,27 +207,27 @@ class UseCasesMapViewer extends React.Component {
       event.stopPropagation();
     });
     view.on('key-down', function (event) {
-      const keyPressed = event.key;
+      let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
     view.on('key-down', ['Shift'], function (event) {
-      const keyPressed = event.key;
+      let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
     view.on('click', (e) => {
-      const screenPoint = { x: e.x, y: e.y };
+      let screenPoint = { x: e.x, y: e.y };
 
       (async () => {
         let selectedPoint = await layerControl.getPointInfo(screenPoint);
         if (selectedPoint.BBOX) {
-          const selectedRegion = selectedPoint.Region;
-          const boundingBox = selectedPoint.BBOX;
-          const selectedTitle = selectedPoint.Use_case_title;
-          const selectedSpatial = selectedPoint.Spatial_coverage;
+          let selectedRegion = selectedPoint.Region;
+          let boundingBox = selectedPoint.BBOX;
+          let selectedTitle = selectedPoint.Use_case_title;
+          let selectedSpatial = selectedPoint.Spatial_coverage;
           if (this.state.useCaseLevel === 1 && selectedPoint.COUNT > 1) {
             navigationControl.navigateToRegion(
               boundingBox,
@@ -244,6 +237,7 @@ class UseCasesMapViewer extends React.Component {
             this.setState((prevState) => {
               return {
                 useCaseLevel: 2,
+                selectedUseCase: selectedPoint,
                 region: selectedRegion,
                 previousState: prevState.useCaseLevel,
               };
@@ -274,7 +268,7 @@ class UseCasesMapViewer extends React.Component {
                 },
               );
             } else {
-              const latLon = {
+              let latLon = {
                 latitude: selectedPoint.Latitude,
                 longitude: selectedPoint.Longitude,
               };
@@ -283,6 +277,7 @@ class UseCasesMapViewer extends React.Component {
                   MapViewerThis.setState((prevState) => {
                     return {
                       useCaseLevel: 3,
+                      selectedUseCase: selectedPoint,
                       selectedUseCases: data.features,
                       previousState: prevState.useCaseLevel,
                     };
@@ -318,13 +313,13 @@ class UseCasesMapViewer extends React.Component {
         x: e.x,
         y: e.y,
       };
-
       if (this.state.useCaseLevel === 1) {
         view.hitTest(screenPoint).then((response) => {
           if (response.results.length > 1) {
             if (
               response.results[0].graphic.geometry !== null &&
-              this.popupOnce
+              this.popupOnce &&
+              this.popupRegion === response.results[0].graphic.attributes.Region
             ) {
               this.popupOnce = false;
               document.querySelector('.map').style.cursor = 'pointer';
@@ -369,37 +364,23 @@ class UseCasesMapViewer extends React.Component {
                   content: string,
                 });
               });
+            } else {
+              this.popupRegion = response.results[0].graphic.attributes.Region;
+              this.popupOnce = true;
+              if (response.results[0].graphic.attributes.Region === undefined) {
+                view.popup.close();
+                document.querySelector('.map').style.cursor = '';
+              }
             }
           } else {
-            view.popup.close();
             this.popupOnce = true;
             document.querySelector('.map').style.cursor = '';
+            view.popup.close();
           }
         });
       } else if (this.state.useCaseLevel === 2) {
         view.hitTest(screenPoint).then((response) => {
-          if (response.results.length > 1) {
-            if (
-              response.results[0].graphic.geometry !== null &&
-              this.popupOnce
-            ) {
-              this.popupOnce = false;
-              document.querySelector('.map').style.cursor = 'pointer';
-              document
-                .querySelector(
-                  '#use_case_' +
-                    response.results[0].graphic.attributes.OBJECTID,
-                )
-                .classList.add('selected');
-            }
-          } else {
-            this.popupOnce = true;
-            document.querySelector('.map').style.cursor = '';
-            if (document.querySelector('.use-case-element.selected'))
-              document
-                .querySelector('.use-case-element.selected')
-                .classList.remove('selected');
-          }
+          layerControl.highlightInfo(response);
         });
       }
     });
