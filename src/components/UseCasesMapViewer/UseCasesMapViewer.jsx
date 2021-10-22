@@ -314,83 +314,70 @@ class UseCasesMapViewer extends React.Component {
         y: e.y,
       };
       if (this.state.useCaseLevel === 1) {
-        setTimeout(function () {
-          view.hitTest(screenPoint).then((response) => {
-            if (response.results.length > 1) {
-              if (response.results[0].graphic.attributes.Region) {
-                if (
-                  response.results[0].graphic.geometry !== null &&
-                  this.popupOnce &&
-                  this.popupRegion ===
-                    response.results[0].graphic.attributes.Region
-                ) {
-                  this.popupOnce = false;
-                  document.querySelector('.map').style.cursor = 'pointer';
-                  let region = response.results[0].graphic.attributes.Region;
+        view.hitTest(screenPoint).then((response) => {
+          if (response.results.length > 1) {
+            if (
+              response.results[0].graphic.geometry !== null &&
+              this.popupOnce &&
+              this.popupRegion === response.results[0].graphic.attributes.Region
+            ) {
+              this.popupOnce = false;
+              document.querySelector('.map').style.cursor = 'pointer';
+              let region = response.results[0].graphic.attributes.Region;
 
-                  layerControl.getRegionInfo(region, (data) => {
-                    let data_eu = data.features.filter(
-                      (a) => a.attributes.Spatial_coverage === 'EU',
-                    ).length;
-                    let data_eea = data.features.filter(
-                      (a) => a.attributes.Spatial_coverage === 'EEA',
-                    ).length;
-                    let data_global = data.features.filter(
-                      (a) => a.attributes.Spatial_coverage === 'GLOBAL',
-                    ).length;
-                    let data_country = data.features.filter(
-                      (a) =>
-                        a.attributes.Spatial_coverage !== 'EU' &&
-                        a.attributes.Spatial_coverage !== 'EEA' &&
-                        a.attributes.Spatial_coverage !== 'GLOBAL',
-                    ).length;
+              layerControl.getRegionInfo(region, (data) => {
+                let data_eu = data.features.filter(
+                  (a) => a.attributes.Spatial_coverage === 'EU',
+                ).length;
+                let data_eea = data.features.filter(
+                  (a) => a.attributes.Spatial_coverage === 'EEA',
+                ).length;
+                let data_global = data.features.filter(
+                  (a) => a.attributes.Spatial_coverage === 'GLOBAL',
+                ).length;
+                let data_country = data.features.filter(
+                  (a) =>
+                    a.attributes.Spatial_coverage !== 'EU' &&
+                    a.attributes.Spatial_coverage !== 'EEA' &&
+                    a.attributes.Spatial_coverage !== 'GLOBAL',
+                ).length;
 
-                    let string = '';
-                    if (data_eu > 0) {
-                      string += `<div>EU-27 + UK use cases: ${data_eu}</div>`;
-                    }
-                    if (data_eea > 0) {
-                      string += `<div>EEA use cases: ${data_eea}</div>`;
-                    }
-                    if (data_global > 0) {
-                      string += `<div>Global use cases: ${data_global}</div>`;
-                    }
-                    if (data_country > 0) {
-                      string += `<div>Other countries use cases: ${data_country}</div>`;
-                    }
-
-                    view.popup.open({
-                      location: {
-                        latitude: response.results[0].graphic.geometry.latitude,
-                        longitude:
-                          response.results[0].graphic.geometry.longitude,
-                      },
-                      content: string,
-                    });
-                  });
-                } else {
-                  this.popupRegion =
-                    response.results[0].graphic.attributes.Region;
-                  this.popupOnce = true;
-                  if (
-                    response.results[0].graphic.attributes.Region === undefined
-                  ) {
-                    view.popup.close();
-                    document.querySelector('.map').style.cursor = '';
-                  }
+                let string = '';
+                if (data_eu > 0) {
+                  string += `<div>EU-27 + UK use cases: ${data_eu}</div>`;
                 }
-              } else {
-                this.popupOnce = true;
-                document.querySelector('.map').style.cursor = '';
-                view.popup.close();
-              }
+                if (data_eea > 0) {
+                  string += `<div>EEA use cases: ${data_eea}</div>`;
+                }
+                if (data_global > 0) {
+                  string += `<div>Global use cases: ${data_global}</div>`;
+                }
+                if (data_country > 0) {
+                  string += `<div>Other countries use cases: ${data_country}</div>`;
+                }
+
+                view.popup.open({
+                  location: {
+                    latitude: response.results[0].graphic.geometry.latitude,
+                    longitude: response.results[0].graphic.geometry.longitude,
+                  },
+                  content: string,
+                });
+              });
             } else {
+              this.popupRegion = response.results[0].graphic.attributes.Region;
               this.popupOnce = true;
-              document.querySelector('.map').style.cursor = '';
-              view.popup.close();
+              if (response.results[0].graphic.attributes.Region === undefined) {
+                view.popup.close();
+                document.querySelector('.map').style.cursor = '';
+              }
             }
-          });
-        }, 50);
+          } else {
+            this.popupOnce = true;
+            document.querySelector('.map').style.cursor = '';
+            view.popup.close();
+          }
+        });
       } else if (this.state.useCaseLevel === 2) {
         view.hitTest(screenPoint).then((response) => {
           layerControl.highlightInfo(response);
