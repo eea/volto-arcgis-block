@@ -124,6 +124,8 @@ class UseCasesMapViewer extends React.Component {
       map: this.map,
       view: this.view,
       mapViewer: this,
+      worldDimensions: this.mapCfg.worldDimensions,
+      maxZoom: this.mapCfg.maxZoom,
       FeatureLayer: FeatureLayer,
       Extent: Extent,
     });
@@ -135,7 +137,7 @@ class UseCasesMapViewer extends React.Component {
 
     layerSpatial.renderer = this.spatialConfig.render;
 
-    const layerRegion = layerControl.createLayer({
+    let layerRegion = layerControl.createLayer({
       id: this.regionConfig.id,
       url: this.regionConfig.url,
     });
@@ -180,17 +182,7 @@ class UseCasesMapViewer extends React.Component {
    * @param {FeatureLayer} layerSpatial
    */
   setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
-    const prohibitedKeys = [
-      '+',
-      '-',
-      'Shift',
-      '_',
-      '=',
-      'ArrowUp',
-      'ArrowDown',
-      'ArrowLeft',
-      'ArrowRight',
-    ];
+    const prohibitedKeys = this.mapCfg.prohibitedKeys;
 
     view.on('mouse-wheel', function (event) {
       event.stopPropagation();
@@ -215,27 +207,27 @@ class UseCasesMapViewer extends React.Component {
       event.stopPropagation();
     });
     view.on('key-down', function (event) {
-      const keyPressed = event.key;
+      let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
     view.on('key-down', ['Shift'], function (event) {
-      const keyPressed = event.key;
+      let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
     view.on('click', (e) => {
-      const screenPoint = { x: e.x, y: e.y };
+      let screenPoint = { x: e.x, y: e.y };
 
       (async () => {
         let selectedPoint = await layerControl.getPointInfo(screenPoint);
         if (selectedPoint.BBOX) {
-          const selectedRegion = selectedPoint.Region;
-          const boundingBox = selectedPoint.BBOX;
-          const selectedTitle = selectedPoint.Use_case_title;
-          const selectedSpatial = selectedPoint.Spatial_coverage;
+          let selectedRegion = selectedPoint.Region;
+          let boundingBox = selectedPoint.BBOX;
+          let selectedTitle = selectedPoint.Use_case_title;
+          let selectedSpatial = selectedPoint.Spatial_coverage;
           if (this.state.useCaseLevel === 1 && selectedPoint.COUNT > 1) {
             navigationControl.navigateToRegion(
               boundingBox,
@@ -276,7 +268,7 @@ class UseCasesMapViewer extends React.Component {
                 },
               );
             } else {
-              const latLon = {
+              let latLon = {
                 latitude: selectedPoint.Latitude,
                 longitude: selectedPoint.Longitude,
               };

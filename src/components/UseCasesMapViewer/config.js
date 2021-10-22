@@ -17,6 +17,19 @@ const config = {
     div: 'mapDiv',
     center: [10.78, 30],
     zoom: 0,
+    maxZoom: 5,
+    worldDimensions: { height: 256, width: 256 },
+    prohibitedKeys: [
+      '+',
+      '-',
+      'Shift',
+      '_',
+      '=',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+    ],
   },
   Services: {
     RegionLayer:
