@@ -344,16 +344,16 @@ class UseCasesMapViewer extends React.Component {
 
                 let string = '';
                 if (data_eu > 0) {
-                  string += `<div>EU-27 + UK use cases: ${data_eu}</div>`;
+                  string += `<div> ${data_eu} Use cases with EU27+UK coverage</div>`;
                 }
                 if (data_eea > 0) {
-                  string += `<div>EEA use cases: ${data_eea}</div>`;
+                  string += `<div> ${data_eea} Use cases with EEA38+UK coverage</div>`;
                 }
                 if (data_global > 0) {
                   string += `<div>Global use cases: ${data_global}</div>`;
                 }
                 if (data_country > 0) {
-                  string += `<div>Other countries use cases: ${data_country}</div>`;
+                  string += `<div> ${data_country} Use cases with one or multi-country coverage</div>`;
                 }
 
                 view.popup.open({
@@ -418,9 +418,7 @@ class UseCasesMapViewer extends React.Component {
         <div className="ccl-container ccl-container-flex">
           {this.renderInfo()}
           <div className="use-cases-products-map cont-w-50">
-            <div className="use-cases-products-title">
-              Organisation locations
-            </div>
+            <div className="use-cases-products-title">{this.mapCfg.title}</div>
             <div className={this.mapClass}>
               <div ref={this.mapdiv} className="map"></div>
             </div>
