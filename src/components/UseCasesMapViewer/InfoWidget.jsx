@@ -56,7 +56,7 @@ class InfoWidget extends React.Component {
               {UseCase.Links_to_web_sites && (
                 <p>
                   For further information
-                  <a href={UseCase.Links_to_web_sitessplit(' ')[0]}> here</a>.
+                  <a href={UseCase.Links_to_web_sites.split(' ')[0]}> here</a>.
                 </p>
               )}
             </div>
