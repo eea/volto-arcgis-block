@@ -344,16 +344,16 @@ class UseCasesMapViewer extends React.Component {
 
                 let string = '';
                 if (data_eu > 0) {
-                  string += `<div> ${data_eu} Use cases with EU27+UK coverage</div>`;
+                  string += `<div>${data_eu} Use cases with EU27+UK coverage</div>`;
                 }
                 if (data_eea > 0) {
-                  string += `<div> ${data_eea} Use cases with EEA38+UK coverage</div>`;
+                  string += `<div>${data_eea} Use cases with EEA38+UK coverage</div>`;
                 }
                 if (data_global > 0) {
                   string += `<div>Global use cases: ${data_global}</div>`;
                 }
                 if (data_country > 0) {
-                  string += `<div> ${data_country} Use cases with one or multi-country coverage</div>`;
+                  string += `<div>${data_country} Use cases with one or multi-country coverage</div>`;
                 }
 
                 view.popup.open({
