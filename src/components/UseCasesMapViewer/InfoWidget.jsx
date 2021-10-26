@@ -37,12 +37,7 @@ class InfoWidget extends React.Component {
             ></span>
           </div>
           <div className="use-case-detail-image">
-            <img
-              src={
-                'https://eu-copernicus.github.io/copernicus-component-library/assets/images/image_placeholder.jpg'
-              }
-              alt="Placeholder"
-            />
+            <img src={UseCase.Link_to_image} alt="Use Case" />
           </div>
           <div className="use-case-detail-content">
             <div className="use-case-detail-product">
@@ -60,8 +55,8 @@ class InfoWidget extends React.Component {
               <p>{UseCase.Use_case_summary}</p>
               {UseCase.Links_to_web_sites && (
                 <p>
-                  For further information{' '}
-                  <a href={UseCase.Links_to_web_sites}>here</a>.
+                  For further information
+                  <a href={UseCase.Links_to_web_sites.split(' ')[0]}> here</a>.
                 </p>
               )}
             </div>
@@ -78,6 +73,11 @@ class InfoWidget extends React.Component {
    */
   getDataBrief(data) {
     let children = data.map((val) => {
+      let responsibleOrganizationOrPerson = val.Responsible_organisation
+        ? val.Responsible_organisation
+        : val.Contact_person_name_
+        ? val.Contact_person_name_
+        : '';
       return (
         <>
           <div
@@ -98,6 +98,7 @@ class InfoWidget extends React.Component {
               <span>{val.Use_case_topics}</span>
               <span>{val.Use_case_submitting_production_year}</span>
               <span>{val.Spatial_coverage}</span>
+              <span>{responsibleOrganizationOrPerson}</span>
             </div>
           </div>
         </>
