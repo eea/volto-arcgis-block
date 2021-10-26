@@ -15,7 +15,6 @@ const greenRegion = '#acba47';
 const config = {
   Map: {
     div: 'mapDiv',
-    title: 'Geographical coverage of use cases',
     center: [10.78, 30],
     zoom: 0,
     maxZoom: 5,
