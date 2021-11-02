@@ -23,6 +23,11 @@ class InfoWidget extends React.Component {
    * @returns lateralMenu DOM
    */
   showUseCase(UseCase) {
+    let responsibleOrganizationOrPerson = UseCase.Responsible_organisation
+      ? UseCase.Responsible_organisation
+      : UseCase.Contact_person_name_
+      ? UseCase.Contact_person_name_
+      : '';
     return (
       <>
         <div className="use-cases-products-title">Use case detail</div>
@@ -50,6 +55,7 @@ class InfoWidget extends React.Component {
               <span>{UseCase.Use_case_topics}</span>
               <span>{UseCase.Use_case_submitting_production_year}</span>
               <span>{UseCase.Spatial_coverage}</span>
+              <span>{responsibleOrganizationOrPerson}</span>
             </div>
             <div className="use-case-detail-description">
               <p>{UseCase.Use_case_summary}</p>
