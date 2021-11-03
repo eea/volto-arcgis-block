@@ -357,9 +357,11 @@ class InfoWidget extends React.Component {
           country,
           layerSpatial,
         );
-        document
-          .querySelector('.use-cases-products-list')
-          .scrollTo({ top: 0, behavior: 'smooth' });
+        try {
+          document
+            .querySelector('.use-cases-products-list')
+            .scrollTo({ top: 0, behavior: 'smooth' });
+        } catch {}
         return this.showUseCase(mapViewer.state.selectedUseCase);
       default:
         return 0;
