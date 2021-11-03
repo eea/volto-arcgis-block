@@ -38,7 +38,6 @@
 }
 
 .esri-component.esri-zoom.esri-widget {
-  margin-bottom: 0;
   background: none;
   box-shadow: none;
 }
@@ -83,6 +82,11 @@
   box-shadow: none !important;
 }
 
+.basemap-panel.esri-basemap-gallery {
+  width: 300px;
+  max-height: 260px;
+}
+
 .esri-basemap-gallery {
   display: none;
   margin: 0 !important;
@@ -90,10 +94,6 @@
 
 .esri-basemap-gallery__item:first-child {
   margin: 0;
-}
-
-.esri-view-height-small .esri-ui-corner .esri-widget--panel-height-only {
-  max-height: 260px;
 }
 
 /* Measure */
@@ -104,12 +104,13 @@
 
 .measurement-container .measurement-area.esri-measurement {
   display: block;
-  width: 225px;
   flex-direction: column;
 }
 
 .measurement-panel {
   display: none;
+  width: 300px;
+  max-height: 260px;
 }
 
 .measurement-buttons {
@@ -192,7 +193,8 @@
 
 .area-panel {
   display: none;
-  width: 260px;
+  width: 300px;
+  max-height: 260px;
   padding: 1rem;
   background-color: white;
   font-size: 1rem;

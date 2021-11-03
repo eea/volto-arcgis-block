@@ -33,6 +33,7 @@ class LegendWidget extends React.Component {
    */
   openMenu() {
     if (this.state.showMapMenu) {
+      this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.legend-panel').style.display =
         'none';
       this.container.current
@@ -42,6 +43,7 @@ class LegendWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
+      this.props.mapViewer.setActiveWidget(this);
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.replace('esri-icon-legend', 'esri-icon-right-arrow');
