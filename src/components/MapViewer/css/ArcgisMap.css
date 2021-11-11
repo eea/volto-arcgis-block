@@ -197,9 +197,10 @@
 
 .map-menu.tab-container .tab {
   display: flex !important;
-  align-items: center;
-  justify-content: center;
   width: 50%;
+  align-items: center;
+  width: 50%;
+  justify-content: center;
   padding: 1rem;
   border-bottom: solid 4px white;
   margin: 0;
