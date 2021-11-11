@@ -129,6 +129,7 @@ class AreaWidget extends React.Component {
           }),
           symbol: fillSymbol,
         });
+        this.props.getCoords({ origin: e.origin, end: { x: e.x, y: e.y } });
         this.props.view.graphics.add(extentGraphic);
       }
     });
@@ -139,6 +140,7 @@ class AreaWidget extends React.Component {
     if (this.state.ShowGraphics) {
       this.state.ShowGraphics.remove();
       this.setState({ ShowGraphics: null });
+      this.props.getCoords({});
     }
     this.nutsGroupLayer.removeAll();
     this.props.view.graphics.removeAll();
@@ -258,40 +260,30 @@ class AreaWidget extends React.Component {
                     </div>
                   </label>
                 </div>
-                {this.props.download && (
-                  <div>
-                    {/* <div class="map-download-resource">
-                      <div class="ccl-form">
-                        <div class="map-download-header">
-                          <label for="download_area_select" class="map-download-header-title">Download resource as</label>
-                          <span class="info-icon" tooltip="Info" direction="up">
-                            <FontAwesomeIcon
-                              className="map-menu-icon"
-                              icon={['fas', 'info-circle']}
-                            />
-                          </span>
-                        </div>
+                <div>
+                  {/* <div class="map-download-resource">
+                    <div class="ccl-form">
+                      <div class="map-download-header">
+                        <label for="download_area_select" class="map-download-header-title">Download resource as</label>
+                        <span class="info-icon" tooltip="Info" direction="up">
+                          <FontAwesomeIcon
+                            className="map-menu-icon"
+                            icon={['fas', 'info-circle']}
+                          />
+                        </span>
+                      </div>
+                      <div class="ccl-select-container">
                         <div class="ccl-select-container">
-                          <div class="ccl-select-container">
-                            <select class="ccl-select" id="download_area_select" name="" >
-                              <option value="option1">GeoTiff</option>
-                              <option value="option2">ESRI Geodatabase</option>
-                              <option value="option3">SQLite Database</option>
-                            </select>
-                          </div>
+                          <select class="ccl-select" id="download_area_select" name="" >
+                            <option value="option1">GeoTiff</option>
+                            <option value="option2">ESRI Geodatabase</option>
+                            <option value="option3">SQLite Database</option>
+                          </select>
                         </div>
                       </div>
-                    </div> */}
-                    <div class="map-download-buttons">
-                      <button class="ccl-button ccl-button-green">
-                        Add to cart
-                      </button>
-                      <button class="ccl-button ccl-button--default">
-                        Cancel
-                      </button>
                     </div>
-                  </div>
-                )}
+                  </div> */}
+                </div>
               </fieldset>
             </div>
           </div>
@@ -300,5 +292,4 @@ class AreaWidget extends React.Component {
     );
   }
 }
-
 export default AreaWidget;
