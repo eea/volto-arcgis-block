@@ -40,19 +40,16 @@ export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
       }
     }
 
-    setMessage(area == '' ? 'Select an area' : 'Added to cart');
+    setMessage(area === '' ? 'Select an area' : 'Added to cart');
     setShowMessage(true);
     setTimeout(() => {
       setShowMessage(false);
     }, 5000);
 
-    if (area == '') {
+    if (area === '') {
       addCartItem(cartData)
         .then(() => {
           history.push('/' + locale + '/cart');
-        })
-        .catch((error) => {
-          console.log(error);
         });
     }
   };
