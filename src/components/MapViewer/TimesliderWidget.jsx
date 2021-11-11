@@ -1,6 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
-var TimeSlider, WMSLayer;
+var TimeSlider;
 
 class TimesliderWidget extends React.Component {
   /**
@@ -22,8 +22,8 @@ class TimesliderWidget extends React.Component {
     return loadModules([
       'esri/widgets/TimeSlider',
       'esri/layers/WMSLayer',
-    ]).then(([_TimeSlider, _WMSLayer]) => {
-      [TimeSlider, WMSLayer] = [_TimeSlider, _WMSLayer];
+    ]).then(([_TimeSlider]) => {
+      [TimeSlider] = [_TimeSlider];
     });
   }
 

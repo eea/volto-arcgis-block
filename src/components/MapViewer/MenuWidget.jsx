@@ -47,10 +47,9 @@ export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
     }, 5000);
 
     if (area === '') {
-      addCartItem(cartData)
-        .then(() => {
-          history.push('/' + locale + '/cart');
-        });
+      addCartItem(cartData).then(() => {
+        history.push('/' + locale + '/cart');
+      });
     }
   };
 
