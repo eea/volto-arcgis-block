@@ -48,7 +48,7 @@ class LegendWidget extends React.Component {
 
       this.container.current.children[1].querySelector(
         '.esri-legend__service-label',
-      ).textContent = 'Use Cases Legend';
+      ).textContent = 'Use Cases Coverage Legend';
 
       try {
         this.container.current.children[1]
