@@ -20,13 +20,12 @@ export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
   const checkArea = () => {
     let check = document.querySelector('.area-panel input:checked').value;
     let area;
-
     if (check === 'area') {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
         area = '';
       } else {
-        area = areaCoords;
+        area = 'Polygon';
       }
     } else {
       if (document.querySelector('.esri-popup__main-container')) {
@@ -40,20 +39,70 @@ export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
       }
     }
 
-    setMessage(area === '' ? 'Select an area' : 'Added to cart');
+    setMessage(area ? 'Added to cart' : 'Select an area');
     setShowMessage(true);
     setTimeout(() => {
       setShowMessage(false);
     }, 5000);
 
-    if (area === '') {
-      addCartItem(cartData).then(() => {
+    if (area) {
+      let data = checkCartData(cartData, area);
+      addCartItem(data).then(() => {
         history.push('/' + locale + '/cart');
       });
     }
   };
 
-  let downloadCancel = (mapViewer) => {
+  const checkCartData = (cartData, area) => {
+    let datasets = cartData[0].Products[0].Datasets;
+    let data = [];
+    datasets.forEach((dataset) => {
+      let id = dataset.DatasetId;
+      let name = dataset.DatasetTitle;
+      let datasetData = {
+        id: id,
+        UID: '5aa607ac07aa4a6da49dee6374ad649e',
+        area: area,
+        format: 'PDF',
+        name: name,
+        path: '213213',
+        resolution: '1080m',
+        size: '36 MB',
+        source: '234',
+        task_in_progress: false,
+        type: 'Raster',
+        unique_id:
+          '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
+        version: '1.0.0',
+        year: '2021',
+      };
+      if (area === 'Polygon') {
+        datasetData.areaCoords = [
+          areaCoords.origin.x,
+          areaCoords.origin.y,
+          areaCoords.end.x,
+          areaCoords.end.y,
+        ];
+      }
+      if (
+        dataset.IsTimeSeries &&
+        document
+          .querySelector('.map-dataset-checkbox input')
+          .hasAttribute('time-start')
+      ) {
+        let dataset = document.querySelector('.map-dataset-checkbox input');
+        let time = {
+          start: parseInt(dataset.getAttribute('time-start')),
+          end: parseInt(dataset.getAttribute('time-end')),
+        };
+        datasetData.timeExtent = [time.start, time.end];
+      }
+      data.push(datasetData);
+    });
+    return data;
+  };
+
+  const downloadCancel = (mapViewer) => {
     mapViewer.view.popup.close();
     mapViewer.view.graphics.removeAll();
   };
@@ -614,7 +663,7 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(this.layers[elem.id])}
+            this.renderTimeslider(elem, this.layers[elem.id])}
         </div>
       </div>
     );
@@ -717,6 +766,8 @@ class MenuWidget extends React.Component {
             )
             .classList.add('locked');
           document.querySelector('#products_label').classList.add('locked');
+          if (this.props.download)
+            document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
         } else {
           if (this.visibleLayers[layerId][1] === 'eye') {
@@ -750,6 +801,10 @@ class MenuWidget extends React.Component {
             )
             .classList.remove('locked');
           document.querySelector('#products_label').classList.remove('locked');
+          if (this.props.download)
+            document
+              .querySelector('#download_label')
+              .classList.remove('locked');
           if (
             document.contains(document.querySelector('.timeslider-container'))
           )
@@ -831,44 +886,29 @@ class MenuWidget extends React.Component {
     }
   }
 
-  renderTimeslider(layer) {
+  renderTimeslider(elem, layer) {
     if (this.props.view && layer) {
+      let activeLayer = document.querySelector('#active_' + elem.id);
+      let time = { elem: activeLayer };
+      if (this.props.download) {
+        let dataset = document.querySelector('.map-dataset-checkbox input');
+        time.dataset = dataset;
+      }
+      if (activeLayer.hasAttribute('time-start')) {
+        time.start = parseInt(activeLayer.getAttribute('time-start'));
+        time.end = parseInt(activeLayer.getAttribute('time-end'));
+      }
       ReactDOM.render(
         <TimesliderWidget
           view={this.props.view}
           map={this.map}
           layer={layer}
           download={this.props.download}
+          time={time}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
     }
-  }
-
-  /**
-   * Gets the data to be sent in the request to shopping cart
-   * @returns
-   */
-  getCartData() {
-    return [
-      {
-        id: '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a',
-        UID: '5aa607ac07aa4a6da49dee6374ad649e',
-        area: 'Area test',
-        format: 'PDF',
-        name: 'Dataset test',
-        path: '213213',
-        resolution: '1080m',
-        size: '36 MB',
-        source: '234',
-        task_in_progress: false,
-        type: 'Raster',
-        unique_id:
-          '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
-        version: '1.0.0',
-        year: '2021',
-      },
-    ];
   }
 
   /**
@@ -960,7 +1000,7 @@ class MenuWidget extends React.Component {
                     getCoords={this.getCoords}
                   />
                   <AddCartItem
-                    cartData={this.getCartData()}
+                    cartData={this.compCfg}
                     mapViewer={this.props.mapViewer}
                     areaCoords={this.state.areaCoords}
                   />
