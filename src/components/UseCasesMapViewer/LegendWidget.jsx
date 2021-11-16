@@ -11,11 +11,9 @@ class LegendWidget extends React.Component {
    */
   constructor(props) {
     super(props);
-    //We create a reference to a DOM element to be mounted
+    this.view = props.view;
+    this.mapViewer = props.mapViewer;
     this.container = createRef();
-    //Initially, we set the state of the component to
-    //not be showing the basemap panel
-    this.state = { showMapMenu: false };
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
   }
@@ -32,8 +30,7 @@ class LegendWidget extends React.Component {
    * and close actions of the component
    */
   openMenu() {
-    if (this.state.showMapMenu) {
-      this.props.mapViewer.setActiveWidget();
+    if (this.mapViewer.state.showMapMenu) {
       this.container.current.querySelector('.legend-panel').style.display =
         'none';
       this.container.current
@@ -41,17 +38,46 @@ class LegendWidget extends React.Component {
         .classList.replace('esri-icon-right-arrow', 'esri-icon-legend');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: false });
+      this.mapViewer.setState({ showMapMenu: false });
     } else {
-      this.props.mapViewer.setActiveWidget(this);
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.replace('esri-icon-legend', 'esri-icon-right-arrow');
       this.container.current.querySelector('.legend-panel').style.display =
         'block';
+
+      this.container.current.children[1].querySelector(
+        '.esri-legend__service-label',
+      ).textContent = 'Use Cases Legend';
+
+      try {
+        this.container.current.children[1]
+          .querySelector('.esri-legend__layer-caption')
+          .remove();
+      } catch {}
+      let legendCells = this.container.current.children[1].querySelectorAll(
+        '.esri-legend__layer-cell--info',
+      );
+
+      for (let i = 0; i < legendCells.length; i++) {
+        let currentValue = legendCells[i].textContent;
+        switch (currentValue.toLowerCase()) {
+          case 'eu':
+            legendCells[i].textContent = 'EU27+UK';
+            break;
+          case 'eea':
+            legendCells[i].textContent = 'EEA 38';
+            break;
+          case 'others':
+            legendCells[i].textContent = 'Country';
+            break;
+          default:
+            break;
+        }
+      }
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });
+      this.mapViewer.setState({ showMapMenu: true });
     }
   }
   /**
@@ -59,9 +85,9 @@ class LegendWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
+    this.view.ui.add(this.container.current, 'top-right');
     this.LegendWidget = new Legend({
-      view: this.props.view,
+      view: this.view,
       container: document.querySelector('.legend-panel'),
     });
   }
@@ -72,7 +98,11 @@ class LegendWidget extends React.Component {
   render() {
     return (
       <>
-        <div ref={this.container} className="legend-container">
+        <div
+          hidden={this.mapViewer.state.useCaseLevel === 1}
+          ref={this.container}
+          className="legend-container"
+        >
           <div
             className={this.menuClass}
             id="legend_button"

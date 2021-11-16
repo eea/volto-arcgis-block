@@ -280,11 +280,19 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodProcessProduct(product, prodIndex, inheritedIndex) {
+    var dataset_def = [];
     var datasets = [];
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
+
+    //Add only default datasets
     for (var i in product.Datasets) {
+      if (product.Datasets[i].Default_active === true) {
+        var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
+        dataset_def.push(idDataset);
+      }
+
       datasets.push(
         this.metodProcessDataset(
           product.Datasets[i],
@@ -294,6 +302,12 @@ class MenuWidget extends React.Component {
         ),
       );
       index++;
+    }
+
+    // Empty vector, add the first dataset
+    if (!dataset_def.length) {
+      var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
+      dataset_def.push(idDatasetB);
     }
 
     return (
@@ -324,8 +338,9 @@ class MenuWidget extends React.Component {
                   value="name"
                   className="ccl-checkbox ccl-required ccl-form-check-input"
                   key={'h' + prodIndex}
+                  defcheck={dataset_def}
                   onChange={(e) =>
-                    this.toggleProduct(e.target.checked, checkProduct)
+                    this.toggleProduct(e.target.checked, checkProduct, e)
                   }
                 ></input>
                 <label
@@ -361,7 +376,8 @@ class MenuWidget extends React.Component {
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
-    productCheck.checked = datasetChecks.length === trueCheck;
+
+    productCheck.checked = trueCheck > 0;
   }
 
   /**
@@ -373,12 +389,17 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodProcessDataset(dataset, datIndex, inheritedIndex, checkProduct) {
+    var layer_default = [];
     var layers = [];
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
     for (var i in dataset.Layer) {
+      if (dataset.Layer[i].Default_active === true) {
+        layer_default.push(dataset.Layer[i].LayerId);
+      }
+
       layers.push(
         this.metodProcessLayer(
           dataset.Layer[i],
@@ -387,11 +408,15 @@ class MenuWidget extends React.Component {
           dataset.ViewService,
           checkIndex,
           dataset.IsTimeSeries,
+          layer_default,
         ),
       );
       index++;
     }
 
+    if (!layer_default.length) {
+      layer_default.push(dataset.Layer[0].LayerId);
+    }
     // ./dataset-catalogue/dataset-info.html
     // ./dataset-catalogue/dataset-download.html
 
@@ -408,10 +433,11 @@ class MenuWidget extends React.Component {
             parentid={checkProduct}
             name=""
             value="name"
+            defcheck={layer_default}
             className="ccl-checkbox ccl-required ccl-form-check-input"
             key={'c' + datIndex}
             onChange={(e) => {
-              this.toggleDataset(e.target.checked, checkIndex);
+              this.toggleDataset(e.target.checked, checkIndex, e.target);
             }}
           ></input>
           <label
@@ -448,7 +474,7 @@ class MenuWidget extends React.Component {
 
   /**
    * Method to uncheck dataset checkbox if not all layers are checked
-   * @param {*} id
+   * @param {*} id parentId (id del dataset)
    */
 
   updateCheckDataset(id) {
@@ -456,8 +482,11 @@ class MenuWidget extends React.Component {
     let layerChecks = Array.from(
       document.querySelectorAll('[parentid=' + id + ']'),
     );
+
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
-    datasetCheck.checked = layerChecks.length === trueChecks;
+    //solo tiene que tener alguno length >0
+    datasetCheck.checked = trueChecks > 0;
+
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
   }
 
@@ -586,9 +615,20 @@ class MenuWidget extends React.Component {
    * Method to show/hide all the layers of a dataset
    * @param {*} value
    * @param {*} id
+   * @param {*} element
    */
-  toggleDataset(value, id) {
-    var layerChecks = document.querySelectorAll('[parentid=' + id + ']');
+  toggleDataset(value, id, e) {
+    var layerdef = e.getAttribute('defcheck');
+    var splitdefCheck = layerdef.split(',');
+
+    var layerChecks = [];
+    var selector = [];
+
+    for (var i = 0; i < splitdefCheck.length; i++) {
+      selector = document.querySelector('[id="' + splitdefCheck[i] + '"]');
+      layerChecks.push(selector);
+    }
+
     layerChecks.forEach((element) => {
       element.checked = value;
       this.toggleLayer(element);
@@ -597,14 +637,24 @@ class MenuWidget extends React.Component {
 
   /**
    * Method to show/hide all the datasets of a product
-   * @param {*} value
+   * @param {*} value (e.target.checked)
    * @param {*} id
+   * @param {*} element (checkbox)
    */
-  toggleProduct(value, id) {
-    var datasetChecks = document.querySelectorAll('[parentid=' + id + ']');
+  toggleProduct(value, id, element) {
+    var productDefCheck = element.target.getAttribute('defcheck');
+    var splitdefCheck = productDefCheck.split(',');
+
+    var datasetChecks = [];
+    var selector = [];
+
+    for (var i = 0; i < splitdefCheck.length; i++) {
+      selector = document.querySelector('[id=' + splitdefCheck[i] + ']');
+      datasetChecks.push(selector);
+    }
     datasetChecks.forEach((element) => {
       element.checked = value;
-      this.toggleDataset(value, element.id);
+      this.toggleDataset(value, element.id, element);
     });
   }
 
