@@ -618,17 +618,20 @@ class MenuWidget extends React.Component {
    * @param {*} element
    */
   toggleDataset(value, id, e) {
-    var layerdef = e.getAttribute('defcheck');
-    var splitdefCheck = layerdef.split(',');
+    let layerdef = e.getAttribute('defcheck');
+    let splitdefCheck = layerdef.split(',');
 
-    var layerChecks = [];
-    var selector = [];
+    let layerChecks = [];
+    let selector = [];
 
-    for (var i = 0; i < splitdefCheck.length; i++) {
-      selector = document.querySelector('[id="' + splitdefCheck[i] + '"]');
-      layerChecks.push(selector);
+    if (value) {
+      for (let i = 0; i < splitdefCheck.length; i++) {
+        selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
+        layerChecks.push(selector);
+      }
+    } else {
+      layerChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
-
     layerChecks.forEach((element) => {
       element.checked = value;
       this.toggleLayer(element);
@@ -642,15 +645,19 @@ class MenuWidget extends React.Component {
    * @param {*} element (checkbox)
    */
   toggleProduct(value, id, element) {
-    var productDefCheck = element.target.getAttribute('defcheck');
-    var splitdefCheck = productDefCheck.split(',');
+    let productDefCheck = element.target.getAttribute('defcheck');
+    let splitdefCheck = productDefCheck.split(',');
 
-    var datasetChecks = [];
-    var selector = [];
+    let datasetChecks = [];
+    let selector = [];
 
-    for (var i = 0; i < splitdefCheck.length; i++) {
-      selector = document.querySelector('[id=' + splitdefCheck[i] + ']');
-      datasetChecks.push(selector);
+    if (value) {
+      for (let i = 0; i < splitdefCheck.length; i++) {
+        selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
+        datasetChecks.push(selector);
+      }
+    } else {
+      datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
     datasetChecks.forEach((element) => {
       element.checked = value;
