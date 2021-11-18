@@ -34,8 +34,7 @@
     "esri-loader": "3.1.0",
     "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
-    "@fortawesome/react-fontawesome": "0.1.14",
-    "@eeacms/volto-clms-theme": "*"
+    "@fortawesome/react-fontawesome": "0.1.14"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.5",

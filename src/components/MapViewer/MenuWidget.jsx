@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom';
 import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
+/*eslint import/no-unresolved: 2*/
 import useCartState from '@eeacms/volto-clms-theme/utils/useCartState';
 import { useHistory } from 'react-router-dom';
 import { useIntl } from 'react-intl';
