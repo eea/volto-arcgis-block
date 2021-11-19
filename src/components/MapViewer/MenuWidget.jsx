@@ -545,9 +545,10 @@ class MenuWidget extends React.Component {
       >
         <input
           type="checkbox"
-          id={layer.LayerId}
+          id={layer.LayerId + '_' + parentIndex}
           parentid={parentIndex}
-          name=""
+          layerId={layer.LayerId}
+          name="layerCheckbox"
           value="name"
           className="ccl-checkbox ccl-required ccl-form-check-input"
           key={'c' + layerIndex}
@@ -558,7 +559,7 @@ class MenuWidget extends React.Component {
         ></input>
         <label
           className="ccl-form-check-label"
-          htmlFor={layer.LayerId}
+          htmlFor={layer.LayerId + '_' + parentIndex}
           key={'d' + layerIndex}
         >
           <span>{layer.Title}</span>
@@ -574,10 +575,10 @@ class MenuWidget extends React.Component {
   toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
-    var parentId = elem.getAttribute('parentid');
-
+    let parentId = elem.getAttribute('parentid');
+    let layerId = elem.getAttribute('layerId');
     if (elem.checked) {
-      this.map.add(this.layers[elem.id]);
+      this.map.add(this.layers[layerId]);
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['fas', 'step-forward'];
       this.activeLayersJSON[elem.id] = this.addActiveLayer(
@@ -585,10 +586,19 @@ class MenuWidget extends React.Component {
         Object.keys(this.activeLayersJSON).length,
       );
     } else {
-      this.map.remove(this.layers[elem.id]);
-      delete this.activeLayersJSON[elem.id];
-      delete this.visibleLayers[elem.id];
-      delete this.timeLayers[elem.id];
+      let checkboxes = document.getElementsByName('layerCheckbox');
+      let repeatedLayers = [];
+      for (let checkbox = 0; checkbox < checkboxes.length - 1; checkbox++) {
+        if (checkboxes[checkbox].getAttribute('layerId') === layerId) {
+          if (checkboxes[checkbox].checked) repeatedLayers.push(repeatedLayers);
+        }
+      }
+      if (repeatedLayers.length === 0) {
+        this.map.remove(this.layers[layerId]);
+        delete this.activeLayersJSON[elem.id];
+        delete this.visibleLayers[elem.id];
+        delete this.timeLayers[elem.id];
+      }
     }
     this.updateCheckDataset(parentId);
     this.setState({});
