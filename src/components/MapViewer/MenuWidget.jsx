@@ -2,8 +2,10 @@ import ReactDOM from 'react-dom';
 import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
+
 // eslint-disable-next-line import/no-unresolved
-import useCartState from '@eeacms/volto-clms-theme/utils/useCartState';
+// import useCartState from '@eeacms/volto-clms-theme/utils/useCartState';
+import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { useHistory } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import { Message } from 'semantic-ui-react';
