@@ -17,7 +17,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  color: #273b4b;
+  color: #212529;
   font-size: 2rem;
   touch-action: auto;
 }
@@ -33,8 +33,11 @@
   outline: none;
 }
 
+.esri-view-height-less-than-medium .esri-popup__main-container {
+  max-height: 250px !important;
+}
+
 .esri-component.esri-zoom.esri-widget {
-  margin-bottom: 0;
   background: none;
   box-shadow: none;
 }
@@ -79,6 +82,11 @@
   box-shadow: none !important;
 }
 
+.basemap-panel.esri-basemap-gallery {
+  width: 300px;
+  max-height: 260px;
+}
+
 .esri-basemap-gallery {
   display: none;
   margin: 0 !important;
@@ -86,10 +94,6 @@
 
 .esri-basemap-gallery__item:first-child {
   margin: 0;
-}
-
-.esri-view-height-small .esri-ui-corner .esri-widget--panel-height-only {
-  max-height: 260px;
 }
 
 /* Measure */
@@ -100,12 +104,13 @@
 
 .measurement-container .measurement-area.esri-measurement {
   display: block;
-  width: 225px;
   flex-direction: column;
 }
 
 .measurement-panel {
   display: none;
+  width: 300px;
+  max-height: 260px;
 }
 
 .measurement-buttons {
@@ -164,6 +169,22 @@
   font-size: 1rem;
 }
 
+.esri-print input[type='checkbox'] {
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.print-container .esri-print .esri-print__swap-button,
+.print-container .esri-print .esri-print__refresh-button {
+  color: #dadada;
+}
+
+.print-container .esri-print .esri-print__swap-button:hover,
+.print-container .esri-print .esri-print__refresh-button:hover {
+  background: none;
+  color: #212529;
+}
+
 /* Area */
 .area-container {
   display: flex;
@@ -172,7 +193,8 @@
 
 .area-panel {
   display: none;
-  width: 260px;
+  width: 300px;
+  max-height: 260px;
   padding: 1rem;
   background-color: white;
   font-size: 1rem;

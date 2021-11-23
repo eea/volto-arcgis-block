@@ -19,8 +19,11 @@ class PrintWidget extends React.Component {
     this.menuClass =
       'esri-icon-printer esri-widget--button esri-widget esri-interactive';
     this.titleMaxLength = 50;
-    this.authorMaxLength = 65;
+    this.authorMaxLength = 60;
     this.textMaxLength = 180;
+    this.sizeMax = 15000;
+    this.dpiMax = 1200;
+    this.scaleMax = 600000000;
   }
 
   loader() {
@@ -87,6 +90,9 @@ class PrintWidget extends React.Component {
             this.setTextFilters();
             let optSVGZ = document.querySelector("[value='svgz']");
             optSVGZ && optSVGZ.parentElement.removeChild(optSVGZ);
+            /*let advanceOptions = document.querySelector(
+              '.esri-print__advanced-options-button',
+            );*/
             let fileName = document.querySelector(
               "[data-input-name='fileName']",
             );
@@ -136,6 +142,26 @@ class PrintWidget extends React.Component {
     elem.setSelectionRange(c, c);
   }
 
+  imposeMax(elem) {
+    if (elem.value !== '') {
+      if (parseInt(elem.value) < parseInt(elem.min)) {
+        elem.value = elem.min;
+      }
+      if (parseInt(elem.value) > parseInt(elem.max)) {
+        elem.value = elem.max;
+      }
+    } else {
+      elem.value = elem.value.replace(/[^e+-,.]/gi, '');
+    }
+  }
+
+  noSpecialNumbs(e) {
+    var invalidChars = ['-', '+', 'e', ',', '.'];
+    if (invalidChars.includes(e.key)) {
+      e.preventDefault();
+    }
+  }
+
   setTextFilters() {
     let inputs = document.querySelectorAll('input.esri-print__input-text');
     inputs.forEach((input) => {
@@ -152,6 +178,23 @@ class PrintWidget extends React.Component {
         }
         input.oninput = () => {
           this.noSpecialChars(input);
+        };
+      } else if (input.type === 'number' && !input.oninput) {
+        if (
+          input.getAttribute('data-input-name') === 'width' ||
+          input.getAttribute('data-input-name') === 'height'
+        ) {
+          input.setAttribute('max', '' + this.sizeMax);
+        } else if (input.getAttribute('data-input-name') === 'dpi') {
+          input.setAttribute('max', '' + this.dpiMax);
+        } else if (input.getAttribute('data-input-name') === 'scale') {
+          input.setAttribute('max', '' + this.scaleMax);
+        }
+        input.oninput = () => {
+          this.imposeMax(input);
+        };
+        input.onkeydown = (e) => {
+          this.noSpecialNumbs(e);
         };
       }
     });
