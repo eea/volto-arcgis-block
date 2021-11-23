@@ -190,6 +190,7 @@
 
 /* Left menu */
 .map-menu {
+  position: relative;
   display: none;
   width: 450px;
   font-size: 1rem;
@@ -278,6 +279,14 @@
   to {
     opacity: 1;
   }
+}
+
+.map-menu .login-block {
+  width: 100%;
+  margin: 0;
+  background: none;
+  float: none;
+  font-size: 0.85rem;
 }
 
 .map-menu.tab-container .panel-selected {
@@ -523,6 +532,15 @@
   height: 100%;
 }
 
+.ui.floating.message {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  transform: translate(0, 4rem);
+}
+
 /* Legend*/
 .legend-container {
   display: flex;
@@ -536,4 +554,13 @@
 
 .legend-panel.esri-legend {
   overflow: auto;
+}
+
+/* Modal */
+.ui.modal {
+  margin: 0 !important;
+}
+
+.ui.modal p {
+  font-size: 1rem;
 }
