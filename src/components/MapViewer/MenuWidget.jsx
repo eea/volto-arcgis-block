@@ -8,7 +8,7 @@ import { useIntl } from 'react-intl';
 import { Message } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-var WMSLayer;
+var WMSLayer, WMTSLayer;
 
 export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
   const { addCartItem } = useCartState();
@@ -161,9 +161,12 @@ class MenuWidget extends React.Component {
   };
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer']).then(([_WMSLayer]) => {
-      WMSLayer = _WMSLayer;
-    });
+    return loadModules(['esri/layers/WMSLayer', 'esri/layers/WMTSLayer']).then(
+      ([_WMSLayer, _WMTSLayer]) => {
+        WMSLayer = _WMSLayer;
+        WMTSLayer = _WMTSLayer;
+      },
+    );
   }
 
   /**
@@ -220,7 +223,7 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodprocessJSON() {
-    if (!WMSLayer) return;
+    if (!WMSLayer && !WMTSLayer) return;
     var components = [];
     var index = 0;
     for (var i in this.compCfg) {
@@ -309,7 +312,6 @@ class MenuWidget extends React.Component {
       var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
       dataset_def.push(idDatasetB);
     }
-
     return (
       <div
         className="map-menu-product-dropdown"
@@ -397,7 +399,7 @@ class MenuWidget extends React.Component {
 
     for (var i in dataset.Layer) {
       if (dataset.Layer[i].Default_active === true) {
-        layer_default.push(dataset.Layer[i].LayerId);
+        layer_default.push(dataset.Layer[i].LayerId + '_' + checkIndex);
       }
 
       layers.push(
@@ -415,7 +417,7 @@ class MenuWidget extends React.Component {
     }
 
     if (!layer_default.length) {
-      layer_default.push(dataset.Layer[0].LayerId);
+      layer_default.push(dataset.Layer[0].LayerId + '_' + checkIndex);
     }
     // ./dataset-catalogue/dataset-info.html
     // ./dataset-catalogue/dataset-download.html
@@ -515,25 +517,40 @@ class MenuWidget extends React.Component {
 
     //Add sublayers and popup enabled for layers
     if (!this.layers.hasOwnProperty(layer.LayerId)) {
-      this.layers[layer.LayerId] = new WMSLayer({
-        url: urlWMS,
-        featureInfoFormat: 'text/html',
-        featureInfoUrl: urlWMS,
-        //id: layer.LayerId,
-        title: '',
-        legendEnabled: true,
-        sublayers: [
-          {
-            name: layer.LayerId,
+      if (
+        urlWMS.toLowerCase().includes('/wms') ||
+        urlWMS.toLowerCase().includes('=wms')
+      ) {
+        this.layers[layer.LayerId] = new WMSLayer({
+          url: urlWMS,
+          featureInfoFormat: 'text/html',
+          featureInfoUrl: urlWMS,
+          //id: layer.LayerId,
+          title: '',
+          legendEnabled: true,
+          sublayers: [
+            {
+              name: layer.LayerId,
+              title: layer.Title,
+              popupEnabled: true,
+              queryable: true,
+              visble: true,
+              legendEnabled: true,
+              legendUrl: urlWMS + legendRequest + layer.LayerId,
+            },
+          ],
+        });
+      } else {
+        this.layers[layer.LayerId] = new WMTSLayer({
+          url: urlWMS,
+          //id: layer.LayerId,
+          title: '',
+          activeLayer: {
+            id: layer.LayerId,
             title: layer.Title,
-            popupEnabled: true,
-            queryable: true,
-            visble: true,
-            legendEnabled: true,
-            legendUrl: urlWMS + legendRequest + layer.LayerId,
           },
-        ],
-      });
+        });
+      }
     }
 
     return (
@@ -547,7 +564,7 @@ class MenuWidget extends React.Component {
           type="checkbox"
           id={layer.LayerId + '_' + parentIndex}
           parentid={parentIndex}
-          layerId={layer.LayerId}
+          layerid={layer.LayerId}
           name="layerCheckbox"
           value="name"
           className="ccl-checkbox ccl-required ccl-form-check-input"
@@ -576,7 +593,7 @@ class MenuWidget extends React.Component {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
-    let layerId = elem.getAttribute('layerId');
+    let layerId = elem.getAttribute('layerid');
     if (elem.checked) {
       this.map.add(this.layers[layerId]);
       this.visibleLayers[elem.id] = ['fas', 'eye'];
@@ -589,7 +606,7 @@ class MenuWidget extends React.Component {
       let checkboxes = document.getElementsByName('layerCheckbox');
       let repeatedLayers = [];
       for (let checkbox = 0; checkbox < checkboxes.length - 1; checkbox++) {
-        if (checkboxes[checkbox].getAttribute('layerId') === layerId) {
+        if (checkboxes[checkbox].getAttribute('layerid') === layerId) {
           if (checkboxes[checkbox].checked) repeatedLayers.push(repeatedLayers);
         }
       }
@@ -633,7 +650,6 @@ class MenuWidget extends React.Component {
 
     let layerChecks = [];
     let selector = [];
-
     if (value) {
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
