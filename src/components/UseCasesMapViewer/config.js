@@ -7,7 +7,7 @@ const greenSpatial = '#a2b32e';
 const black = '#000000';
 
 const regionMarkerSize = '40px';
-const regionOutlineSize = '8px';
+const regionOutlineSize = '6px';
 const regionLabelTextPosition = 'center-center';
 const grey = '#656565';
 const greenRegion = '#acba47';

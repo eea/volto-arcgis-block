@@ -2,18 +2,26 @@ import ReactDOM from 'react-dom';
 import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
-import useCartState from '@eeacms/volto-clms-theme/utils/useCartState';
+import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { useHistory } from 'react-router-dom';
 import { useIntl } from 'react-intl';
-import { Message } from 'semantic-ui-react';
+import { Message, Modal } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 var WMSLayer, WMTSLayer;
 
-export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
-  const { addCartItem } = useCartState();
+export const AddCartItem = ({
+  cartData,
+  mapViewer,
+  props,
+  download,
+  areaData,
+  dataset,
+}) => {
+  const { addCartItem, isLoggedIn } = useCartState();
   const [message, setMessage] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
+  const [modal, setModal] = useState(false);
   const history = useHistory();
   const { locale } = useIntl();
 
@@ -28,83 +36,101 @@ export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
         area = 'Polygon';
       }
     } else {
-      if (document.querySelector('.esri-popup__main-container')) {
-        let nutsId = [
-          ...document.querySelectorAll('.esri-feature-fields__field-header'),
-        ].filter((a) => a.textContent.includes('NUTS_ID'))[0].nextElementSibling
-          .innerText;
-        area = nutsId;
+      if (areaData) {
+        area = areaData;
       } else {
         area = '';
       }
     }
-
-    setMessage(area ? 'Added to cart' : 'Select an area');
-    setShowMessage(true);
-    setTimeout(() => {
-      setShowMessage(false);
-    }, 5000);
-
-    if (area) {
-      let data = checkCartData(cartData, area);
+    if (download) {
+      setMessage(area ? 'Added to cart' : 'Select an area');
+      showMessageTimer();
+      if (area) {
+        let data = checkCartData(cartData, area);
+        addCartItem(data).then(() => {
+          history.push('/' + locale + '/cart');
+        });
+      }
+    } else {
+      setModal(false);
+      let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
-        history.push('/' + locale + '/cart');
+        setMessage('Added to cart');
+        showMessageTimer();
       });
     }
   };
 
-  const checkCartData = (cartData, area) => {
-    let datasets = cartData[0].Products[0].Datasets;
-    let data = [];
-    datasets.forEach((dataset) => {
-      let id = dataset.DatasetId;
-      let name = dataset.DatasetTitle;
-      let datasetData = {
-        id: id,
-        UID: '5aa607ac07aa4a6da49dee6374ad649e',
-        area: area,
-        format: 'PDF',
-        name: name,
-        path: '213213',
-        resolution: '1080m',
-        size: '36 MB',
-        source: '234',
-        task_in_progress: false,
-        type: 'Raster',
-        unique_id:
-          '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
-        version: '1.0.0',
-        year: '2021',
+  const checkCartData = (cartData, area, dataset) => {
+    if (!dataset) {
+      dataset = cartData[0].Products[0].Datasets[0];
+    }
+    let id = dataset.DatasetId;
+    let name = dataset.DatasetTitle;
+    let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
+    let datasetData = {
+      id: id,
+      UID: '5aa607ac07aa4a6da49dee6374ad649e',
+      area: area,
+      format: 'PDF',
+      name: name,
+      path: '213213',
+      resolution: '1080m',
+      size: '36 MB',
+      source: '234',
+      task_in_progress: false,
+      type: 'Raster',
+      unique_id:
+        '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
+      version: '1.0.0',
+      year: '2021',
+    };
+    if (area === 'Polygon') {
+      datasetData.areaCoords = [
+        areaData.origin.x,
+        areaData.origin.y,
+        areaData.end.x,
+        areaData.end.y,
+      ];
+    }
+    if (
+      dataset.IsTimeSeries &&
+      datasetElem
+        .querySelector('.map-dataset-checkbox input')
+        .hasAttribute('time-start')
+    ) {
+      let datasetInput = datasetElem.querySelector(
+        '.map-dataset-checkbox input',
+      );
+      let time = {
+        start: parseInt(datasetInput.getAttribute('time-start')),
+        end: parseInt(datasetInput.getAttribute('time-end')),
       };
-      if (area === 'Polygon') {
-        datasetData.areaCoords = [
-          areaCoords.origin.x,
-          areaCoords.origin.y,
-          areaCoords.end.x,
-          areaCoords.end.y,
-        ];
-      }
-      if (
-        dataset.IsTimeSeries &&
-        document
-          .querySelector('.map-dataset-checkbox input')
-          .hasAttribute('time-start')
-      ) {
-        let dataset = document.querySelector('.map-dataset-checkbox input');
-        let time = {
-          start: parseInt(dataset.getAttribute('time-start')),
-          end: parseInt(dataset.getAttribute('time-end')),
-        };
-        datasetData.timeExtent = [time.start, time.end];
-      }
-      data.push(datasetData);
-    });
+      datasetData.timeExtent = [time.start, time.end];
+    }
+    let data = [datasetData];
     return data;
   };
 
   const downloadCancel = (mapViewer) => {
     mapViewer.view.popup.close();
     mapViewer.view.graphics.removeAll();
+    props.updateArea('');
+  };
+
+  const showMessageTimer = () => {
+    setShowMessage(true);
+    setTimeout(() => {
+      setShowMessage(false);
+    }, 4000);
+  };
+
+  const showModal = () => {
+    setModal(true);
+  };
+
+  const closeModal = () => {
+    setModal(false);
   };
 
   return (
@@ -114,22 +140,84 @@ export const AddCartItem = ({ cartData, mapViewer, areaCoords }) => {
           {message}
         </Message>
       )}
-      <div className="map-download-buttons">
-        <button
-          id="map_download_add"
-          className="ccl-button ccl-button-green"
-          onClick={() => checkArea()}
-        >
-          Add to cart
-        </button>
-        <button
-          id="map_download_cancel"
-          className="ccl-button ccl-button--default"
-          onClick={() => downloadCancel(mapViewer)}
-        >
-          Cancel
-        </button>
-      </div>
+      {download ? (
+        <div className="map-download-buttons">
+          <button
+            id="map_download_add"
+            className="ccl-button ccl-button-green"
+            onClick={() => checkArea()}
+          >
+            Add to cart
+          </button>
+          <button
+            id="map_download_cancel"
+            className="ccl-button ccl-button--default"
+            onClick={() => downloadCancel(mapViewer)}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <>
+          <Modal size="tiny" open={modal}>
+            <Modal.Content>
+              <p>Do you want to add this dataset to the cart?</p>
+            </Modal.Content>
+            <Modal.Actions>
+              <div className="map-download-buttons">
+                <button
+                  className="ccl-button ccl-button-green"
+                  onClick={() => checkArea()}
+                >
+                  Add to cart
+                </button>
+                <button
+                  className="ccl-button ccl-button--default"
+                  onClick={() => closeModal()}
+                >
+                  Cancel
+                </button>
+              </div>
+            </Modal.Actions>
+          </Modal>
+          <div className={'map-menu-icons' + (isLoggedIn ? '' : ' locked')}>
+            <FontAwesomeIcon
+              className="map-menu-icon"
+              icon={['fas', 'download']}
+              onClick={() => {
+                isLoggedIn && showModal();
+              }}
+            />
+          </div>
+        </>
+      )}
+    </>
+  );
+};
+
+export const CheckLogin = () => {
+  const { isLoggedIn } = useCartState();
+  const { locale } = useIntl();
+  return (
+    <>
+      {!isLoggedIn && (
+        <div className="login-block">
+          <div className="login-content">
+            <a
+              className="ccl-button ccl-button--default"
+              href={'/' + locale + '/login'}
+            >
+              Login to download the data
+            </a>
+            <p className="login-block-new">
+              New user?{' '}
+              <a href={'/' + locale + '/register'}>
+                Follow this link to register
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 };
@@ -145,7 +233,7 @@ class MenuWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false, areaCoords: {} };
+    this.state = { showMapMenu: false };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
     this.map = this.props.map;
@@ -155,10 +243,6 @@ class MenuWidget extends React.Component {
     this.activeLayers = [];
     this.activeLayersJSON = {};
   }
-
-  getCoords = (coords) => {
-    this.setState({ areaCoords: coords });
-  };
 
   loader() {
     return loadModules(['esri/layers/WMSLayer', 'esri/layers/WMTSLayer']).then(
@@ -426,6 +510,7 @@ class MenuWidget extends React.Component {
       <div
         className="ccl-form-group map-menu-dataset"
         id={'dataset_' + inheritedIndexDataset}
+        datasetid={dataset.DatasetId}
         key={'a' + datIndex}
       >
         <div className="map-dataset-checkbox" key={'b' + datIndex}>
@@ -449,20 +534,16 @@ class MenuWidget extends React.Component {
           >
             <span>{dataset.DatasetTitle}</span>
           </label>
-          <div className="map-menu-icons">
-            {/*
-            <a href="#" className="map-menu-icon" aria-label="Dataset info">
-                <i className="fas fa-info-circle"></i></a>
-            <a href="#" className="map-menu-icon" aria-label="Dataset download">
-                <i className="fas fa-download"></i></a>
-            */}
-            <span className="map-menu-icon" aria-label="Dataset info">
-              <i className="fas fa-info-circle"></i>
-            </span>
-            <span className="map-menu-icon" aria-label="Dataset download">
-              <i className="fas fa-download"></i>
-            </span>
-          </div>
+          {!this.props.download && (
+            <AddCartItem
+              cartData={this.compCfg}
+              props={this.props}
+              mapViewer={this.props.mapViewer}
+              download={this.props.download}
+              areaData={this.props.area}
+              dataset={dataset}
+            />
+          )}
         </div>
         <div
           className="ccl-form map-menu-layers-container"
@@ -1053,6 +1134,7 @@ class MenuWidget extends React.Component {
                 role="tabpanel"
                 aria-hidden="false"
               >
+                {!this.props.download && <CheckLogin />}
                 {this.metodprocessJSON()}
               </div>
               <div
@@ -1068,7 +1150,7 @@ class MenuWidget extends React.Component {
                   </span>
                 </div>
               </div>
-              {this.props.download && (
+              {this.props.download && this.props.view && (
                 <div
                   className="panel"
                   id="download_panel"
@@ -1080,12 +1162,14 @@ class MenuWidget extends React.Component {
                     map={this.props.map}
                     mapViewer={this.props.mapViewer}
                     download={this.props.download}
-                    getCoords={this.getCoords}
+                    updateArea={this.props.updateArea}
                   />
                   <AddCartItem
                     cartData={this.compCfg}
+                    props={this.props}
                     mapViewer={this.props.mapViewer}
-                    areaCoords={this.state.areaCoords}
+                    download={this.props.download}
+                    areaData={this.props.area}
                   />
                 </div>
               )}
