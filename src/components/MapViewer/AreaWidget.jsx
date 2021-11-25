@@ -189,24 +189,26 @@ class AreaWidget extends React.Component {
     this.props.view.on('click', (event) => {
       this.props.view.hitTest(event).then((response) => {
         if (response.results.length > 0) {
-          var graphic = response.results.filter((result) => {
+          let graphic = response.results.filter((result) => {
+            let layer;
             if ('nuts0 nuts1 nuts3'.includes(result.graphic.layer.id)) {
-              return result.graphic;
+              layer = result.graphic;
             }
+            return layer;
           })[0].graphic;
           if (graphic) {
-            var geometry = graphic.geometry;
+            let geometry = graphic.geometry;
             if (geometry.type === 'polygon') {
               let nuts = graphic.attributes.NUTS_ID;
               this.props.updateArea(nuts);
-              var symbol = new SimpleFillSymbol(
+              let symbol = new SimpleFillSymbol(
                 'solid',
                 new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
                 new Color([232, 104, 80, 0.25]),
               );
-              var graphic = new Graphic(geometry, symbol);
+              let highlight = new Graphic(geometry, symbol);
               this.props.view.graphics.removeAll();
-              this.props.view.graphics.add(graphic);
+              this.props.view.graphics.add(highlight);
             }
           }
         }

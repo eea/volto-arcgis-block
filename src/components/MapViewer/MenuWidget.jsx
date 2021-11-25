@@ -53,7 +53,6 @@ export const AddCartItem = ({
       }
     } else {
       setModal(false);
-      console.log(dataset);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
         setMessage('Added to cart');
@@ -196,7 +195,7 @@ export const AddCartItem = ({
   );
 };
 
-export const CheckLogin = ({}) => {
+export const CheckLogin = () => {
   const { isLoggedIn } = useCartState();
   const { locale } = useIntl();
   return (
