@@ -58,7 +58,9 @@
   display: none;
 }
 
-.use-cases-products-map .esri-popup--aligned-top-center .esri-popup__main-container.esri-widget {
+.use-cases-products-map
+  .esri-popup--aligned-top-center
+  .esri-popup__main-container.esri-widget {
   width: auto;
   max-width: 360px;
 }
