@@ -37,6 +37,11 @@ class MapViewer extends React.Component {
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
+    this.state = {};
+  }
+
+  updateArea(shared_value) {
+    this.mapViewer.setState({ area: shared_value });
   }
 
   loader() {
@@ -142,6 +147,7 @@ class MapViewer extends React.Component {
           map={this.map}
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
+          updateArea={this.updateArea}
         />
       );
   }
@@ -159,6 +165,8 @@ class MapViewer extends React.Component {
           download={this.props.mapviewer_config.Download}
           map={this.map}
           mapViewer={this}
+          updateArea={this.updateArea}
+          area={this.state.area}
         />
       ); //call conf
   }

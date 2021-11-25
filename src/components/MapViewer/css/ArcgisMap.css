@@ -38,7 +38,6 @@
 }
 
 .esri-component.esri-zoom.esri-widget {
-  margin-bottom: 0;
   background: none;
   box-shadow: none;
 }
@@ -83,6 +82,11 @@
   box-shadow: none !important;
 }
 
+.basemap-panel.esri-basemap-gallery {
+  width: 300px;
+  max-height: 260px;
+}
+
 .esri-basemap-gallery {
   display: none;
   margin: 0 !important;
@@ -90,10 +94,6 @@
 
 .esri-basemap-gallery__item:first-child {
   margin: 0;
-}
-
-.esri-view-height-small .esri-ui-corner .esri-widget--panel-height-only {
-  max-height: 260px;
 }
 
 /* Measure */
@@ -104,12 +104,13 @@
 
 .measurement-container .measurement-area.esri-measurement {
   display: block;
-  width: 225px;
   flex-direction: column;
 }
 
 .measurement-panel {
   display: none;
+  width: 300px;
+  max-height: 260px;
 }
 
 .measurement-buttons {
@@ -192,7 +193,8 @@
 
 .area-panel {
   display: none;
-  width: 260px;
+  width: 300px;
+  max-height: 260px;
   padding: 1rem;
   background-color: white;
   font-size: 1rem;
@@ -210,14 +212,17 @@
 
 /* Left menu */
 .map-menu {
+  position: relative;
   display: none;
   width: 450px;
   font-size: 1rem;
 }
 
 .map-menu.tab-container .tab {
-  display: inline-block;
+  display: flex !important;
   width: 50%;
+  align-items: center;
+  justify-content: center;
   padding: 1rem;
   border-bottom: solid 4px white;
   margin: 0;
@@ -226,6 +231,7 @@
   cursor: pointer;
   font-weight: bold;
   text-align: center;
+  white-space: normal;
 }
 
 .map-menu.tab-container .tab-selected {
@@ -234,6 +240,9 @@
 }
 
 .map-menu.tab-container .tabs {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
   border-bottom: solid 1px #dadada;
   background-color: white;
   white-space: nowrap;
@@ -292,6 +301,14 @@
   to {
     opacity: 1;
   }
+}
+
+.map-menu .login-block {
+  width: 100%;
+  margin: 0;
+  background: none;
+  float: none;
+  font-size: 0.85rem;
 }
 
 .map-menu.tab-container .panel-selected {
@@ -450,6 +467,12 @@
   cursor: move;
 }
 
+.locked {
+  cursor: auto;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .active-layer-options {
   white-space: nowrap;
 }
@@ -519,7 +542,7 @@
 .map-download-buttons {
   display: flex;
   justify-content: space-between;
-  margin-top: 1rem;
+  margin: 0 1rem;
 }
 
 .map-download-block .ccl-form-group:not(:first-of-type) {
@@ -529,6 +552,15 @@
 #download_panel .area-panel {
   width: 100%;
   height: 100%;
+}
+
+.ui.floating.message {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  transform: translate(0, 4rem);
 }
 
 /* Legend*/
@@ -544,4 +576,13 @@
 
 .legend-panel.esri-legend {
   overflow: auto;
+}
+
+/* Modal */
+.ui.modal {
+  margin: 0 !important;
+}
+
+.ui.modal p {
+  font-size: 1rem;
 }

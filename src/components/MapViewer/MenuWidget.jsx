@@ -1,8 +1,226 @@
-import React, { createRef } from 'react';
+import ReactDOM from 'react-dom';
+import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
+import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
+import { useHistory } from 'react-router-dom';
+import { useIntl } from 'react-intl';
+import { Message, Modal } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
-var WMSLayer;
+import TimesliderWidget from './TimesliderWidget';
+var WMSLayer, WMTSLayer;
+
+export const AddCartItem = ({
+  cartData,
+  mapViewer,
+  props,
+  download,
+  areaData,
+  dataset,
+}) => {
+  const { addCartItem, isLoggedIn } = useCartState();
+  const [message, setMessage] = useState(0);
+  const [showMessage, setShowMessage] = useState(false);
+  const [modal, setModal] = useState(false);
+  const history = useHistory();
+  const { locale } = useIntl();
+
+  const checkArea = () => {
+    let check = document.querySelector('.area-panel input:checked').value;
+    let area;
+    if (check === 'area') {
+      let graphics = mapViewer.view.graphics;
+      if (graphics.length === 0) {
+        area = '';
+      } else {
+        area = 'Polygon';
+      }
+    } else {
+      if (areaData) {
+        area = areaData;
+      } else {
+        area = '';
+      }
+    }
+    if (download) {
+      setMessage(area ? 'Added to cart' : 'Select an area');
+      showMessageTimer();
+      if (area) {
+        let data = checkCartData(cartData, area);
+        addCartItem(data).then(() => {
+          history.push('/' + locale + '/cart');
+        });
+      }
+    } else {
+      setModal(false);
+      let data = checkCartData(cartData, area, dataset);
+      addCartItem(data).then(() => {
+        setMessage('Added to cart');
+        showMessageTimer();
+      });
+    }
+  };
+
+  const checkCartData = (cartData, area, dataset) => {
+    if (!dataset) {
+      dataset = cartData[0].Products[0].Datasets[0];
+    }
+    let id = dataset.DatasetId;
+    let name = dataset.DatasetTitle;
+    let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
+    let datasetData = {
+      id: id,
+      UID: '5aa607ac07aa4a6da49dee6374ad649e',
+      area: area,
+      format: 'PDF',
+      name: name,
+      path: '213213',
+      resolution: '1080m',
+      size: '36 MB',
+      source: '234',
+      task_in_progress: false,
+      type: 'Raster',
+      unique_id:
+        '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
+      version: '1.0.0',
+      year: '2021',
+    };
+    if (area === 'Polygon') {
+      datasetData.areaCoords = [
+        areaData.origin.x,
+        areaData.origin.y,
+        areaData.end.x,
+        areaData.end.y,
+      ];
+    }
+    if (
+      dataset.IsTimeSeries &&
+      datasetElem
+        .querySelector('.map-dataset-checkbox input')
+        .hasAttribute('time-start')
+    ) {
+      let datasetInput = datasetElem.querySelector(
+        '.map-dataset-checkbox input',
+      );
+      let time = {
+        start: parseInt(datasetInput.getAttribute('time-start')),
+        end: parseInt(datasetInput.getAttribute('time-end')),
+      };
+      datasetData.timeExtent = [time.start, time.end];
+    }
+    let data = [datasetData];
+    return data;
+  };
+
+  const downloadCancel = (mapViewer) => {
+    mapViewer.view.popup.close();
+    mapViewer.view.graphics.removeAll();
+    props.updateArea('');
+  };
+
+  const showMessageTimer = () => {
+    setShowMessage(true);
+    setTimeout(() => {
+      setShowMessage(false);
+    }, 4000);
+  };
+
+  const showModal = () => {
+    setModal(true);
+  };
+
+  const closeModal = () => {
+    setModal(false);
+  };
+
+  return (
+    <>
+      {showMessage && (
+        <Message floating size="small" timeout={5000}>
+          {message}
+        </Message>
+      )}
+      {download ? (
+        <div className="map-download-buttons">
+          <button
+            id="map_download_add"
+            className="ccl-button ccl-button-green"
+            onClick={() => checkArea()}
+          >
+            Add to cart
+          </button>
+          <button
+            id="map_download_cancel"
+            className="ccl-button ccl-button--default"
+            onClick={() => downloadCancel(mapViewer)}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <>
+          <Modal size="tiny" open={modal}>
+            <Modal.Content>
+              <p>Do you want to add this dataset to the cart?</p>
+            </Modal.Content>
+            <Modal.Actions>
+              <div className="map-download-buttons">
+                <button
+                  className="ccl-button ccl-button-green"
+                  onClick={() => checkArea()}
+                >
+                  Add to cart
+                </button>
+                <button
+                  className="ccl-button ccl-button--default"
+                  onClick={() => closeModal()}
+                >
+                  Cancel
+                </button>
+              </div>
+            </Modal.Actions>
+          </Modal>
+          <div className={'map-menu-icons' + (isLoggedIn ? '' : ' locked')}>
+            <FontAwesomeIcon
+              className="map-menu-icon"
+              icon={['fas', 'download']}
+              onClick={() => {
+                isLoggedIn && showModal();
+              }}
+            />
+          </div>
+        </>
+      )}
+    </>
+  );
+};
+
+export const CheckLogin = () => {
+  const { isLoggedIn } = useCartState();
+  const { locale } = useIntl();
+  return (
+    <>
+      {!isLoggedIn && (
+        <div className="login-block">
+          <div className="login-content">
+            <a
+              className="ccl-button ccl-button--default"
+              href={'/' + locale + '/login'}
+            >
+              Login to download the data
+            </a>
+            <p className="login-block-new">
+              New user?{' '}
+              <a href={'/' + locale + '/register'}>
+                Follow this link to register
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 class MenuWidget extends React.Component {
   /**
@@ -27,9 +245,12 @@ class MenuWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer']).then(([_WMSLayer]) => {
-      WMSLayer = _WMSLayer;
-    });
+    return loadModules(['esri/layers/WMSLayer', 'esri/layers/WMTSLayer']).then(
+      ([_WMSLayer, _WMTSLayer]) => {
+        WMSLayer = _WMSLayer;
+        WMTSLayer = _WMTSLayer;
+      },
+    );
   }
 
   /**
@@ -45,6 +266,8 @@ class MenuWidget extends React.Component {
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.replace('esri-icon-left-arrow', 'esri-icon-drag-horizontal');
+      if (document.contains(document.querySelector('.timeslider-container')))
+        document.querySelector('.timeslider-container').style.display = 'none';
 
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
@@ -56,6 +279,8 @@ class MenuWidget extends React.Component {
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.replace('esri-icon-drag-horizontal', 'esri-icon-left-arrow');
+      if (document.contains(document.querySelector('.timeslider-container')))
+        document.querySelector('.timeslider-container').style.display = 'block';
 
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
@@ -82,7 +307,7 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodprocessJSON() {
-    if (!WMSLayer) return;
+    if (!WMSLayer && !WMTSLayer) return;
     var components = [];
     var index = 0;
     for (var i in this.compCfg) {
@@ -171,7 +396,6 @@ class MenuWidget extends React.Component {
       var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
       dataset_def.push(idDatasetB);
     }
-
     return (
       <div
         className="map-menu-product-dropdown"
@@ -259,7 +483,7 @@ class MenuWidget extends React.Component {
 
     for (var i in dataset.Layer) {
       if (dataset.Layer[i].Default_active === true) {
-        layer_default.push(dataset.Layer[i].LayerId);
+        layer_default.push(dataset.Layer[i].LayerId + '_' + checkIndex);
       }
 
       layers.push(
@@ -269,6 +493,7 @@ class MenuWidget extends React.Component {
           inheritedIndexDataset,
           dataset.ViewService,
           checkIndex,
+          dataset.IsTimeSeries,
           layer_default,
         ),
       );
@@ -276,7 +501,7 @@ class MenuWidget extends React.Component {
     }
 
     if (!layer_default.length) {
-      layer_default.push(dataset.Layer[0].LayerId);
+      layer_default.push(dataset.Layer[0].LayerId + '_' + checkIndex);
     }
     // ./dataset-catalogue/dataset-info.html
     // ./dataset-catalogue/dataset-download.html
@@ -285,6 +510,7 @@ class MenuWidget extends React.Component {
       <div
         className="ccl-form-group map-menu-dataset"
         id={'dataset_' + inheritedIndexDataset}
+        datasetid={dataset.DatasetId}
         key={'a' + datIndex}
       >
         <div className="map-dataset-checkbox" key={'b' + datIndex}>
@@ -308,20 +534,16 @@ class MenuWidget extends React.Component {
           >
             <span>{dataset.DatasetTitle}</span>
           </label>
-          <div className="map-menu-icons">
-            {/*
-                        <a href="#" className="map-menu-icon" aria-label="Dataset info">
-                            <i className="fas fa-info-circle"></i></a>
-                        <a href="#" className="map-menu-icon" aria-label="Dataset download">
-                            <i className="fas fa-download"></i></a>
-                        */}
-            <span className="map-menu-icon" aria-label="Dataset info">
-              <i className="fas fa-info-circle"></i>
-            </span>
-            <span className="map-menu-icon" aria-label="Dataset download">
-              <i className="fas fa-download"></i>
-            </span>
-          </div>
+          {!this.props.download && (
+            <AddCartItem
+              cartData={this.compCfg}
+              props={this.props}
+              mapViewer={this.props.mapViewer}
+              download={this.props.download}
+              areaData={this.props.area}
+              dataset={dataset}
+            />
+          )}
         </div>
         <div
           className="ccl-form map-menu-layers-container"
@@ -360,7 +582,14 @@ class MenuWidget extends React.Component {
    * @param {*} parentIndex
    * @returns
    */
-  metodProcessLayer(layer, layerIndex, inheritedIndex, urlWMS, parentIndex) {
+  metodProcessLayer(
+    layer,
+    layerIndex,
+    inheritedIndex,
+    urlWMS,
+    parentIndex,
+    isTimeSeries,
+  ) {
     //For Legend request
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
@@ -369,25 +598,40 @@ class MenuWidget extends React.Component {
 
     //Add sublayers and popup enabled for layers
     if (!this.layers.hasOwnProperty(layer.LayerId)) {
-      this.layers[layer.LayerId] = new WMSLayer({
-        url: urlWMS,
-        featureInfoFormat: 'text/html',
-        featureInfoUrl: urlWMS,
-        //id: layer.LayerId,
-        title: '',
-        legendEnabled: true,
-        sublayers: [
-          {
-            name: layer.LayerId,
+      if (
+        urlWMS.toLowerCase().includes('/wms') ||
+        urlWMS.toLowerCase().includes('=wms')
+      ) {
+        this.layers[layer.LayerId] = new WMSLayer({
+          url: urlWMS,
+          featureInfoFormat: 'text/html',
+          featureInfoUrl: urlWMS,
+          //id: layer.LayerId,
+          title: '',
+          legendEnabled: true,
+          sublayers: [
+            {
+              name: layer.LayerId,
+              title: layer.Title,
+              popupEnabled: true,
+              queryable: true,
+              visble: true,
+              legendEnabled: true,
+              legendUrl: urlWMS + legendRequest + layer.LayerId,
+            },
+          ],
+        });
+      } else {
+        this.layers[layer.LayerId] = new WMTSLayer({
+          url: urlWMS,
+          //id: layer.LayerId,
+          title: '',
+          activeLayer: {
+            id: layer.LayerId,
             title: layer.Title,
-            popupEnabled: true,
-            queryable: true,
-            visble: true,
-            legendEnabled: true,
-            legendUrl: urlWMS + legendRequest + layer.LayerId,
           },
-        ],
-      });
+        });
+      }
     }
 
     return (
@@ -395,12 +639,14 @@ class MenuWidget extends React.Component {
         className="ccl-form-group map-menu-layer"
         id={'layer_' + inheritedIndexLayer}
         key={'a' + layerIndex}
+        data-timeseries={isTimeSeries}
       >
         <input
           type="checkbox"
-          id={layer.LayerId}
+          id={layer.LayerId + '_' + parentIndex}
           parentid={parentIndex}
-          name=""
+          layerid={layer.LayerId}
+          name="layerCheckbox"
           value="name"
           className="ccl-checkbox ccl-required ccl-form-check-input"
           key={'c' + layerIndex}
@@ -411,7 +657,7 @@ class MenuWidget extends React.Component {
         ></input>
         <label
           className="ccl-form-check-label"
-          htmlFor={layer.LayerId}
+          htmlFor={layer.LayerId + '_' + parentIndex}
           key={'d' + layerIndex}
         >
           <span>{layer.Title}</span>
@@ -426,19 +672,31 @@ class MenuWidget extends React.Component {
    */
   toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
-    var parentId = elem.getAttribute('parentid');
-
+    if (!this.timeLayers) this.timeLayers = {};
+    let parentId = elem.getAttribute('parentid');
+    let layerId = elem.getAttribute('layerid');
     if (elem.checked) {
-      this.map.add(this.layers[elem.id]);
+      this.map.add(this.layers[layerId]);
       this.visibleLayers[elem.id] = ['fas', 'eye'];
+      this.timeLayers[elem.id] = ['fas', 'step-forward'];
       this.activeLayersJSON[elem.id] = this.addActiveLayer(
         elem,
         Object.keys(this.activeLayersJSON).length,
       );
     } else {
-      this.map.remove(this.layers[elem.id]);
-      delete this.activeLayersJSON[elem.id];
-      delete this.visibleLayers[elem.id];
+      let checkboxes = document.getElementsByName('layerCheckbox');
+      let repeatedLayers = [];
+      for (let checkbox = 0; checkbox < checkboxes.length - 1; checkbox++) {
+        if (checkboxes[checkbox].getAttribute('layerid') === layerId) {
+          if (checkboxes[checkbox].checked) repeatedLayers.push(repeatedLayers);
+        }
+      }
+      if (repeatedLayers.length === 0) {
+        this.map.remove(this.layers[layerId]);
+        delete this.activeLayersJSON[elem.id];
+        delete this.visibleLayers[elem.id];
+        delete this.timeLayers[elem.id];
+      }
     }
     this.updateCheckDataset(parentId);
     this.setState({});
@@ -468,17 +726,19 @@ class MenuWidget extends React.Component {
    * @param {*} element
    */
   toggleDataset(value, id, e) {
-    var layerdef = e.getAttribute('defcheck');
-    var splitdefCheck = layerdef.split(',');
+    let layerdef = e.getAttribute('defcheck');
+    let splitdefCheck = layerdef.split(',');
 
-    var layerChecks = [];
-    var selector = [];
-
-    for (var i = 0; i < splitdefCheck.length; i++) {
-      selector = document.querySelector('[id="' + splitdefCheck[i] + '"]');
-      layerChecks.push(selector);
+    let layerChecks = [];
+    let selector = [];
+    if (value) {
+      for (let i = 0; i < splitdefCheck.length; i++) {
+        selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
+        layerChecks.push(selector);
+      }
+    } else {
+      layerChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
-
     layerChecks.forEach((element) => {
       element.checked = value;
       this.toggleLayer(element);
@@ -492,15 +752,19 @@ class MenuWidget extends React.Component {
    * @param {*} element (checkbox)
    */
   toggleProduct(value, id, element) {
-    var productDefCheck = element.target.getAttribute('defcheck');
-    var splitdefCheck = productDefCheck.split(',');
+    let productDefCheck = element.target.getAttribute('defcheck');
+    let splitdefCheck = productDefCheck.split(',');
 
-    var datasetChecks = [];
-    var selector = [];
+    let datasetChecks = [];
+    let selector = [];
 
-    for (var i = 0; i < splitdefCheck.length; i++) {
-      selector = document.querySelector('[id=' + splitdefCheck[i] + ']');
-      datasetChecks.push(selector);
+    if (value) {
+      for (let i = 0; i < splitdefCheck.length; i++) {
+        selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
+        datasetChecks.push(selector);
+      }
+    } else {
+      datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
     datasetChecks.forEach((element) => {
       element.checked = value;
@@ -539,6 +803,15 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
+          {elem.parentElement.dataset.timeseries === 'true' && (
+            <span className="active-layer-time">
+              <FontAwesomeIcon
+                className="map-menu-icon"
+                icon={this.timeLayers[elem.id]}
+                onClick={(e) => this.showTimeSlider(elem)}
+              />
+            </span>
+          )}
           <span className="active-layer-hide">
             <FontAwesomeIcon
               className="map-menu-icon"
@@ -553,6 +826,8 @@ class MenuWidget extends React.Component {
               onClick={() => this.deleteCrossEvent(elem)}
             />
           </span>
+          {this.timeLayers[elem.id][1] === 'stop' &&
+            this.renderTimeslider(elem, this.layers[elem.id])}
         </div>
       </div>
     );
@@ -628,6 +903,97 @@ class MenuWidget extends React.Component {
   }
 
   /**
+   * Method to show/hide time slider
+   * @param {*} e From the click event
+   * @param {*} id id from elem
+   */
+  showTimeSlider(elem) {
+    let activeLayers = document.querySelectorAll('.active-layer');
+    if (this.timeLayers[elem.id][1] === 'step-forward') {
+      activeLayers.forEach((layer) => {
+        let layerId = layer.getAttribute('layer-id');
+        let order = this.activeLayersJSON[layerId].props['layer-order'];
+        if (elem.id === layerId) {
+          this.timeLayers[elem.id] = ['fas', 'stop'];
+          if (this.visibleLayers[layerId][1] === 'eye-slash') {
+            this.layers[layerId].visible = true;
+            this.visibleLayers[layerId] = ['fas', 'eye'];
+          }
+          document
+            .querySelector(
+              '.active-layer[layer-id="' + layerId + '"] .active-layer-hide',
+            )
+            .classList.add('locked');
+          document
+            .querySelector(
+              '.active-layer[layer-id="' + layerId + '"] .active-layer-delete',
+            )
+            .classList.add('locked');
+          document.querySelector('#products_label').classList.add('locked');
+          if (this.props.download)
+            document.querySelector('#download_label').classList.add('locked');
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+        } else {
+          if (this.visibleLayers[layerId][1] === 'eye') {
+            this.layers[layerId].visible = false;
+            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+          }
+          document
+            .querySelector('.active-layer[layer-id="' + layerId + '"]')
+            .classList.add('locked');
+          this.activeLayersJSON[layerId] = this.addActiveLayer(
+            document.getElementById(layerId),
+            order,
+          );
+        }
+      });
+    } else {
+      activeLayers.forEach((layer) => {
+        let layerId = layer.getAttribute('layer-id');
+        let order = this.activeLayersJSON[layerId].props['layer-order'];
+        if (elem.id === layerId) {
+          this.timeLayers[elem.id] = ['fas', 'step-forward'];
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          document
+            .querySelector(
+              '.active-layer[layer-id="' + layerId + '"] .active-layer-hide',
+            )
+            .classList.remove('locked');
+          document
+            .querySelector(
+              '.active-layer[layer-id="' + layerId + '"] .active-layer-delete',
+            )
+            .classList.remove('locked');
+          document.querySelector('#products_label').classList.remove('locked');
+          if (this.props.download)
+            document
+              .querySelector('#download_label')
+              .classList.remove('locked');
+          if (
+            document.contains(document.querySelector('.timeslider-container'))
+          )
+            ReactDOM.unmountComponentAtNode(
+              document.querySelector('.esri-ui-bottom-right'),
+            );
+        } else {
+          if (this.visibleLayers[layerId][1] === 'eye-slash') {
+            this.layers[layerId].visible = true;
+            this.visibleLayers[layerId] = ['fas', 'eye'];
+            this.activeLayersJSON[layerId] = this.addActiveLayer(
+              document.getElementById(layerId),
+              order,
+            );
+          }
+          document
+            .querySelector('.active-layer[layer-id="' + layerId + '"]')
+            .classList.remove('locked');
+        }
+      });
+    }
+    this.setState({});
+  }
+
+  /**
    * Method to show/hide layer from "Active Layers"
    * @param {*} e From the click event
    * @param {*} id id from elem
@@ -644,17 +1010,6 @@ class MenuWidget extends React.Component {
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
     this.setState({});
-
-    /*
-    if (eye.className === 'fas fa-eye') {
-      eye.className = 'fas fa-eye fa-eye-slash';
-      
-    } else {
-      eye.className = 'fas fa-eye';
-      
-    }
-    this.layersReorder();
-    */
   }
 
   /**
@@ -676,9 +1031,9 @@ class MenuWidget extends React.Component {
   toggleTab(e) {
     if (!e.currentTarget.classList.contains('tab-selected')) {
       var tabsel = document.querySelector('.tab-selected');
-      var tab = document.querySelector('span.tab:not(.tab-selected)');
+      var tab = e.currentTarget;
       var panelsel = document.querySelector('.panel-selected');
-      var panel = document.querySelector('div.panel:not(.panel-selected)');
+      var panel = document.getElementById(tab.getAttribute('aria-controls'));
 
       tabsel.className = 'tab';
       tabsel.setAttribute('aria-selected', 'false');
@@ -692,6 +1047,31 @@ class MenuWidget extends React.Component {
       if (tab.id === 'active_label') {
         this.layersReorder();
       }
+    }
+  }
+
+  renderTimeslider(elem, layer) {
+    if (this.props.view && layer) {
+      let activeLayer = document.querySelector('#active_' + elem.id);
+      let time = { elem: activeLayer };
+      if (this.props.download) {
+        let dataset = document.querySelector('.map-dataset-checkbox input');
+        time.dataset = dataset;
+      }
+      if (activeLayer.hasAttribute('time-start')) {
+        time.start = parseInt(activeLayer.getAttribute('time-start'));
+        time.end = parseInt(activeLayer.getAttribute('time-end'));
+      }
+      ReactDOM.render(
+        <TimesliderWidget
+          view={this.props.view}
+          map={this.map}
+          layer={layer}
+          download={this.props.download}
+          time={time}
+        />,
+        document.querySelector('.esri-ui-bottom-right'),
+      );
     }
   }
 
@@ -714,10 +1094,24 @@ class MenuWidget extends React.Component {
                 onClick={(e) => this.toggleTab(e)}
                 onKeyDown={(e) => this.toggleTab(e)}
                 tabIndex="0"
+                style={this.props.download ? { width: '33.333%' } : {}}
               >
                 Products and datasets
               </span>
-              {this.props.download ? (
+              <span
+                className="tab"
+                id="active_label"
+                role="tab"
+                aria-controls="active_panel"
+                aria-selected="false"
+                onClick={(e) => this.toggleTab(e)}
+                onKeyDown={(e) => this.toggleTab(e)}
+                tabIndex="0"
+                style={this.props.download ? { width: '33.333%' } : {}}
+              >
+                Active on map
+              </span>
+              {this.props.download && (
                 <span
                   className="tab"
                   id="download_label"
@@ -727,21 +1121,9 @@ class MenuWidget extends React.Component {
                   onClick={(e) => this.toggleTab(e)}
                   onKeyDown={(e) => this.toggleTab(e)}
                   tabIndex="0"
+                  style={this.props.download ? { width: '33.333%' } : {}}
                 >
                   Download
-                </span>
-              ) : (
-                <span
-                  className="tab"
-                  id="active_label"
-                  role="tab"
-                  aria-controls="active_panel"
-                  aria-selected="false"
-                  onClick={(e) => this.toggleTab(e)}
-                  onKeyDown={(e) => this.toggleTab(e)}
-                  tabIndex="0"
-                >
-                  Active on map
                 </span>
               )}
             </div>
@@ -752,9 +1134,23 @@ class MenuWidget extends React.Component {
                 role="tabpanel"
                 aria-hidden="false"
               >
+                {!this.props.download && <CheckLogin />}
                 {this.metodprocessJSON()}
               </div>
-              {this.props.download ? (
+              <div
+                className="panel"
+                id="active_panel"
+                role="tabpanel"
+                aria-hidden="true"
+              >
+                <div id="active_layers" className="map-active-layers">
+                  {this.activeLayersAsArray()}
+                  <span className="message" id="nolayers_message">
+                    No layers selected
+                  </span>
+                </div>
+              </div>
+              {this.props.download && this.props.view && (
                 <div
                   className="panel"
                   id="download_panel"
@@ -766,21 +1162,15 @@ class MenuWidget extends React.Component {
                     map={this.props.map}
                     mapViewer={this.props.mapViewer}
                     download={this.props.download}
+                    updateArea={this.props.updateArea}
                   />
-                </div>
-              ) : (
-                <div
-                  className="panel"
-                  id="active_panel"
-                  role="tabpanel"
-                  aria-hidden="true"
-                >
-                  <div id="active_layers" className="map-active-layers">
-                    {this.activeLayersAsArray()}
-                    <span className="message" id="nolayers_message">
-                      No layers selected
-                    </span>
-                  </div>
+                  <AddCartItem
+                    cartData={this.compCfg}
+                    props={this.props}
+                    mapViewer={this.props.mapViewer}
+                    download={this.props.download}
+                    areaData={this.props.area}
+                  />
                 </div>
               )}
             </div>
