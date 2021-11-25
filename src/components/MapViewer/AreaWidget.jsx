@@ -4,7 +4,13 @@ import React, { createRef } from 'react';
 //import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 
-var Graphic, Extent, FeatureLayer, GroupLayer;
+var Graphic,
+  Extent,
+  FeatureLayer,
+  GroupLayer,
+  Color,
+  SimpleLineSymbol,
+  SimpleFillSymbol;
 
 class AreaWidget extends React.Component {
   /**
@@ -32,14 +38,38 @@ class AreaWidget extends React.Component {
       'esri/geometry/Extent',
       'esri/layers/FeatureLayer',
       'esri/layers/GroupLayer',
-    ]).then(([_Graphic, _Extent, _FeatureLayer, _GroupLayer]) => {
-      [Graphic, Extent, FeatureLayer, GroupLayer] = [
+      'esri/Color',
+      'esri/symbols/SimpleLineSymbol',
+      'esri/symbols/SimpleFillSymbol',
+    ]).then(
+      ([
         _Graphic,
         _Extent,
         _FeatureLayer,
         _GroupLayer,
-      ];
-    });
+        _Color,
+        _SimpleLineSymbol,
+        _SimpleFillSymbol,
+      ]) => {
+        [
+          Graphic,
+          Extent,
+          FeatureLayer,
+          GroupLayer,
+          Color,
+          SimpleLineSymbol,
+          SimpleFillSymbol,
+        ] = [
+          _Graphic,
+          _Extent,
+          _FeatureLayer,
+          _GroupLayer,
+          _Color,
+          _SimpleLineSymbol,
+          _SimpleFillSymbol,
+        ];
+      },
+    );
   }
 
   /**
@@ -93,7 +123,7 @@ class AreaWidget extends React.Component {
       url: url,
       id: id,
       outFields: ['*'],
-      popupEnabled: true,
+      popupEnabled: false,
       definitionExpression: 'LEVL_CODE=' + level,
     });
     this.nutsGroupLayer.add(layer);
@@ -129,7 +159,7 @@ class AreaWidget extends React.Component {
           }),
           symbol: fillSymbol,
         });
-        this.props.getCoords({ origin: e.origin, end: { x: e.x, y: e.y } });
+        this.props.updateArea({ origin: e.origin, end: { x: e.x, y: e.y } });
         this.props.view.graphics.add(extentGraphic);
       }
     });
@@ -140,10 +170,11 @@ class AreaWidget extends React.Component {
     if (this.state.ShowGraphics) {
       this.state.ShowGraphics.remove();
       this.setState({ ShowGraphics: null });
-      this.props.getCoords({});
+      this.props.updateArea();
     }
     this.nutsGroupLayer.removeAll();
     this.props.view.graphics.removeAll();
+    this.props.updateArea();
   }
   /**
    * This method is executed after the rener method is executed
@@ -155,10 +186,39 @@ class AreaWidget extends React.Component {
       opacity: 0.5,
     });
     this.props.map.add(this.nutsGroupLayer);
+    this.props.view.on('click', (event) => {
+      this.props.view.hitTest(event).then((response) => {
+        if (response.results.length > 0) {
+          let graphic = response.results.filter((result) => {
+            let layer;
+            if ('nuts0 nuts1 nuts3'.includes(result.graphic.layer.id)) {
+              layer = result.graphic;
+            }
+            return layer;
+          })[0].graphic;
+          if (graphic) {
+            let geometry = graphic.geometry;
+            if (geometry.type === 'polygon') {
+              let nuts = graphic.attributes.NUTS_ID;
+              this.props.updateArea(nuts);
+              let symbol = new SimpleFillSymbol(
+                'solid',
+                new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
+                new Color([232, 104, 80, 0.25]),
+              );
+              let highlight = new Graphic(geometry, symbol);
+              this.props.view.graphics.removeAll();
+              this.props.view.graphics.add(highlight);
+            }
+          }
+        }
+      });
+    });
     this.props.download
       ? this.props.view.ui.add(this.container)
       : this.props.view.ui.add(this.container.current, 'top-right');
   }
+
   /**
    * This method renders the component
    * @returns jsx
