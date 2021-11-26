@@ -16,7 +16,8 @@ let Map,
   VectorTileLayer,
   layerControl,
   navigationControl,
-  layerSpatial;
+  layerSpatial,
+  layerNUTS;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -43,6 +44,11 @@ class UseCasesMapViewer extends React.Component {
       url: props.cfg.Services.RegionLayer,
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
+    };
+    this.NUTSConfig = {
+      id: 'NUTSLayer',
+      url: props.cfg.Services.NUTS_service,
+      render: props.cfg.NUTSRenderer,
     };
     this.state = {
       useCaseLevel: 1,
@@ -144,11 +150,20 @@ class UseCasesMapViewer extends React.Component {
       url: this.regionConfig.url,
     });
 
+    layerNUTS = layerControl.createLayer({
+      id: this.NUTSConfig.id,
+      url: this.NUTSConfig.url,
+    });
+
     layerRegion.renderer = this.regionConfig.render;
     layerRegion.labelingInfo = [this.regionConfig.label];
+    layerNUTS.renderer = this.NUTSConfig.render;
 
+    layerControl.addLayer(layerNUTS);
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
+
+    layerControl.hideLayer(layerNUTS.id);
     layerControl.hideLayer(layerSpatial.id);
 
     navigationControl = new NavigationControl({
@@ -159,6 +174,7 @@ class UseCasesMapViewer extends React.Component {
       mapViewer: this,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
+      layerNUTS: layerNUTS,
     });
 
     this.setMapFunctions(
@@ -397,6 +413,7 @@ class UseCasesMapViewer extends React.Component {
           layerControl={layerControl}
           navigationControl={navigationControl}
           layerSpatial={layerSpatial}
+          layerNUTS={layerNUTS}
         />
       );
     }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-let layerRegion, layerSpatial, mapViewer;
+let layerRegion, layerSpatial, layerNUTS, mapViewer;
 class NavigationControl extends React.Component {
   constructor(props) {
     super(props);
@@ -11,6 +11,7 @@ class NavigationControl extends React.Component {
     mapViewer = props.mapViewer;
     layerRegion = props.layerRegion;
     layerSpatial = props.layerSpatial;
+    layerNUTS = props.layerNUTS;
   }
 
   /**
@@ -81,6 +82,9 @@ class NavigationControl extends React.Component {
 
    */
   returnToPrevious() {
+    // this.layerControl.hideLayer(layerNUTS.id);
+    this.layerControl.getGeometry('none', layerNUTS);
+
     switch (
       mapViewer.state.previousState === mapViewer.state.useCaseLevel
         ? mapViewer.state.useCaseLevel - 1
