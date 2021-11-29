@@ -20,10 +20,28 @@ class LayerControl {
       url: layerInfo.url,
       id: layerInfo.id,
       outFields: ['*'],
+      legendEnabled: layerInfo.legend,
       popupEnabled: layerInfo.popup !== undefined ? layerInfo.popup : true,
     });
 
     return newLayer;
+  }
+
+  getGeometry(country, layer) {
+    layer.definitionExpression = `LEVL_CODE = 0 AND (`;
+    if (country === 'EU' || country === 'EEA') {
+      let states = mapViewer.props.cfg.Codes[country];
+      for (let i = 0; i < states.length; i++) {
+        layer.definitionExpression += `CNTR_CODE = '${states[i]}'`;
+        if (i < states.length - 1) {
+          layer.definitionExpression += ' OR ';
+        } else {
+          layer.definitionExpression += ')';
+        }
+      }
+    } else {
+      layer.definitionExpression += `CNTR_CODE = '${country}')`;
+    }
   }
 
   /**

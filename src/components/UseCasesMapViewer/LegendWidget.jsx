@@ -99,9 +99,11 @@ class LegendWidget extends React.Component {
     return (
       <>
         <div
-          hidden={this.mapViewer.state.useCaseLevel === 1}
           ref={this.container}
           className="legend-container"
+          style={{
+            display: this.mapViewer.state.useCaseLevel === 1 ? 'none' : '',
+          }}
         >
           <div
             className={this.menuClass}

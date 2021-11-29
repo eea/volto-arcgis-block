@@ -827,7 +827,10 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(elem, this.layers[elem.id])}
+            this.renderTimeslider(
+              elem,
+              this.layers[elem.getAttribute('layerid')],
+            )}
         </div>
       </div>
     );
