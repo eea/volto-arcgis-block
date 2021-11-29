@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import { loadModules, loadCss } from 'esri-loader';
 import LayerControl from './LayerControl';
 import InfoWidget from './InfoWidget';
+import LegendWidget from './LegendWidget';
 import NavigationControl from './NavigationControl';
 
 let Map,
@@ -49,6 +50,7 @@ class UseCasesMapViewer extends React.Component {
       selectedUseCase: '',
       selectedUseCases: [],
       previousState: 1,
+      showMapMenu: false,
     };
   }
 
@@ -400,6 +402,12 @@ class UseCasesMapViewer extends React.Component {
     }
   }
 
+  renderLegend() {
+    if (this.view) {
+      return <LegendWidget view={this.view} mapViewer={this} />;
+    }
+  }
+
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -417,6 +425,7 @@ class UseCasesMapViewer extends React.Component {
         </div>
         <div className="ccl-container ccl-container-flex">
           {this.renderInfo()}
+          {this.renderLegend()}
           <div className="use-cases-products-map cont-w-50">
             <div className="use-cases-products-title">{this.mapCfg.title}</div>
             <div className={this.mapClass}>
