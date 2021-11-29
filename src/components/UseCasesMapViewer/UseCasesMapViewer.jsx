@@ -38,17 +38,20 @@ class UseCasesMapViewer extends React.Component {
       id: 'spatialLayer',
       url: props.cfg.Services.SpatialCoverageLayer,
       render: props.cfg.SpatialRenderer,
+      showLegend: true,
     };
     this.regionConfig = {
       id: 'regionLayer',
       url: props.cfg.Services.RegionLayer,
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
+      showLegend: false,
     };
     this.NUTSConfig = {
       id: 'NUTSLayer',
       url: props.cfg.Services.NUTS_service,
       render: props.cfg.NUTSRenderer,
+      showLegend: false,
     };
     this.state = {
       useCaseLevel: 1,
@@ -141,6 +144,7 @@ class UseCasesMapViewer extends React.Component {
     layerSpatial = layerControl.createLayer({
       id: this.spatialConfig.id,
       url: this.spatialConfig.url,
+      legend: this.spatialConfig.showLegend,
     });
 
     layerSpatial.renderer = this.spatialConfig.render;
@@ -148,11 +152,13 @@ class UseCasesMapViewer extends React.Component {
     let layerRegion = layerControl.createLayer({
       id: this.regionConfig.id,
       url: this.regionConfig.url,
+      legend: this.regionConfig.showLegend,
     });
 
     layerNUTS = layerControl.createLayer({
       id: this.NUTSConfig.id,
       url: this.NUTSConfig.url,
+      legend: this.NUTSConfig.showLegend,
     });
 
     layerRegion.renderer = this.regionConfig.render;

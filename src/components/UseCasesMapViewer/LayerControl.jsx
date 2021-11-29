@@ -20,6 +20,7 @@ class LayerControl {
       url: layerInfo.url,
       id: layerInfo.id,
       outFields: ['*'],
+      legendEnabled: layerInfo.legend,
       popupEnabled: layerInfo.popup !== undefined ? layerInfo.popup : true,
     });
 
