@@ -737,7 +737,6 @@ class MenuWidget extends React.Component {
     let selector = [];
     if (value) {
       for (let i = 0; i < splitdefCheck.length; i++) {
-        debugger;
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
         layerChecks.push(selector);
       }
