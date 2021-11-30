@@ -381,6 +381,9 @@ class UseCasesMapViewer extends React.Component {
           }
         });
       } else if (this.state.useCaseLevel === 2) {
+        if (document.querySelector('.esri-popup').hasChildNodes()) {
+          view.popup.close();
+        }
         view.hitTest(screenPoint).then((response) => {
           layerControl.highlightInfo(response);
         });
