@@ -267,6 +267,7 @@
 .map-menu label span {
   color: black;
   line-height: inherit;
+  word-break: break-word;
 }
 
 .map-menu .ccl-expandable__button::after {
