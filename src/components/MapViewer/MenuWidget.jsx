@@ -27,17 +27,24 @@ export const AddCartItem = ({
 
   const checkArea = () => {
     let check = document.querySelector('.area-panel input:checked').value;
-    let area;
+    let area = [];
     if (check === 'area') {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
         area = '';
       } else {
-        area = 'Polygon';
+        area.type = 'polygon';
+        area.value = [
+          areaData.origin.x,
+          areaData.origin.y,
+          areaData.end.x,
+          areaData.end.y,
+        ];
       }
     } else {
       if (areaData) {
-        area = areaData;
+        area.type = 'nuts';
+        area.value = areaData;
       } else {
         area = '';
       }
@@ -66,33 +73,11 @@ export const AddCartItem = ({
       dataset = cartData[0].Products[0].Datasets[0];
     }
     let id = dataset.DatasetId;
-    let name = dataset.DatasetTitle;
     let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
     let datasetData = {
       id: id,
-      UID: '5aa607ac07aa4a6da49dee6374ad649e',
       area: area,
-      format: 'PDF',
-      name: name,
-      path: '213213',
-      resolution: '1080m',
-      size: '36 MB',
-      source: '234',
-      task_in_progress: false,
-      type: 'Raster',
-      unique_id:
-        '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
-      version: '1.0.0',
-      year: '2021',
     };
-    if (area === 'Polygon') {
-      datasetData.areaCoords = [
-        areaData.origin.x,
-        areaData.origin.y,
-        areaData.end.x,
-        areaData.end.y,
-      ];
-    }
     if (
       dataset.IsTimeSeries &&
       datasetElem
