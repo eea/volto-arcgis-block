@@ -27,17 +27,24 @@ export const AddCartItem = ({
 
   const checkArea = () => {
     let check = document.querySelector('.area-panel input:checked').value;
-    let area;
+    let area = [];
     if (check === 'area') {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
         area = '';
       } else {
-        area = 'Polygon';
+        area.type = 'polygon';
+        area.value = [
+          areaData.origin.x,
+          areaData.origin.y,
+          areaData.end.x,
+          areaData.end.y,
+        ];
       }
     } else {
       if (areaData) {
-        area = areaData;
+        area.type = 'nuts';
+        area.value = areaData;
       } else {
         area = '';
       }
@@ -66,33 +73,11 @@ export const AddCartItem = ({
       dataset = cartData[0].Products[0].Datasets[0];
     }
     let id = dataset.DatasetId;
-    let name = dataset.DatasetTitle;
     let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
     let datasetData = {
       id: id,
-      UID: '5aa607ac07aa4a6da49dee6374ad649e',
       area: area,
-      format: 'PDF',
-      name: name,
-      path: '213213',
-      resolution: '1080m',
-      size: '36 MB',
-      source: '234',
-      task_in_progress: false,
-      type: 'Raster',
-      unique_id:
-        '5becde46-9fdf-46ff-ad2c-c928a1ef0a3a5aa607ac07aa4a6da49dee6374ad649e',
-      version: '1.0.0',
-      year: '2021',
     };
-    if (area === 'Polygon') {
-      datasetData.areaCoords = [
-        areaData.origin.x,
-        areaData.origin.y,
-        areaData.end.x,
-        areaData.end.y,
-      ];
-    }
     if (
       dataset.IsTimeSeries &&
       datasetElem
@@ -483,7 +468,9 @@ class MenuWidget extends React.Component {
 
     for (var i in dataset.Layer) {
       if (dataset.Layer[i].Default_active === true) {
-        layer_default.push(dataset.Layer[i].LayerId + '_' + checkIndex);
+        layer_default.push(
+          dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
+        );
       }
 
       layers.push(
@@ -501,7 +488,9 @@ class MenuWidget extends React.Component {
     }
 
     if (!layer_default.length) {
-      layer_default.push(dataset.Layer[0].LayerId + '_' + checkIndex);
+      layer_default.push(
+        dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
+      );
     }
     // ./dataset-catalogue/dataset-info.html
     // ./dataset-catalogue/dataset-download.html
@@ -643,7 +632,7 @@ class MenuWidget extends React.Component {
       >
         <input
           type="checkbox"
-          id={layer.LayerId + '_' + parentIndex}
+          id={layer.LayerId + '_' + inheritedIndexLayer}
           parentid={parentIndex}
           layerid={layer.LayerId}
           name="layerCheckbox"
@@ -657,7 +646,7 @@ class MenuWidget extends React.Component {
         ></input>
         <label
           className="ccl-form-check-label"
-          htmlFor={layer.LayerId + '_' + parentIndex}
+          htmlFor={layer.LayerId + '_' + inheritedIndexLayer}
           key={'d' + layerIndex}
         >
           <span>{layer.Title}</span>
@@ -1002,12 +991,13 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
+    let elementId = elem.getAttribute('layerid');
     if (this.visibleLayers[elem.id][1] === 'eye') {
-      this.layers[elem.id].visible = false;
+      this.layers[elementId].visible = false;
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
     } else {
-      this.map.add(this.layers[elem.id]);
-      this.layers[elem.id].visible = true;
+      this.map.add(this.layers[elementId]);
+      this.layers[elementId].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
