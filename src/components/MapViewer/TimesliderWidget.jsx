@@ -49,6 +49,14 @@ class TimesliderWidget extends React.Component {
 
     this.props.view.whenLayerView(this.layer).then((lv) => {
       this.TimesliderWidget.fullTimeExtent = this.layer.timeInfo.fullTimeExtent;
+      if (
+        !this.layer.url.toLowerCase().includes('wms') &&
+        !this.layer.url.toLowerCase().includes('wmts')
+      ) {
+        this.TimesliderWidget.stops = {
+          interval: this.layer.timeInfo.interval,
+        };
+      }
     });
 
     this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
