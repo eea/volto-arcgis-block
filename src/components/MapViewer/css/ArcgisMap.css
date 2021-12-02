@@ -294,9 +294,9 @@
 }
 
 .map-menu .panel {
+  position: relative;
   display: none;
   animation: fadein 0.8s;
-  position: relative;
 }
 @keyframes fadein {
   from {
@@ -475,6 +475,7 @@
 .active-layer-name {
   word-break: break-word;
 }
+
 .locked {
   cursor: auto;
   opacity: 0.3;
