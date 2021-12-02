@@ -144,7 +144,7 @@ export const AddCartItem = ({
         </div>
       ) : (
         <>
-          <Modal size="tiny" open={modal}>
+          <Modal size="tiny" open={modal} className="map-download-modal">
             <Modal.Content>
               <p>Do you want to add this dataset to the cart?</p>
             </Modal.Content>

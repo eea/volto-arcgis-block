@@ -586,10 +586,25 @@
 }
 
 /* Modal */
-.ui.modal {
+.map-download-modal.ui.modal {
   margin: 0 !important;
 }
 
-.ui.modal p {
+.map-download-modal.ui.modal p {
   font-size: 1rem;
+}
+
+.map-download-modal.ui.modal > .actions {
+  padding: 1.5rem;
+}
+
+@media only screen and (max-width: 767px) {
+  .map-download-modal.ui.modal > .content,
+  .map-download-modal.ui.modal > .actions {
+    padding: 1.5rem !important;
+  }
+}
+
+.map-download-modal .map-download-buttons {
+  margin: 0;
 }
