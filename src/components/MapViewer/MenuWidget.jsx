@@ -121,7 +121,15 @@ export const AddCartItem = ({
   return (
     <>
       {showMessage && (
-        <Message floating size="small" timeout={5000}>
+        <Message
+          floating
+          size="small"
+          style={{
+            transform: download
+              ? 'translate(1rem, 4rem)'
+              : 'translate(1rem, 2rem)',
+          }}
+        >
           {message}
         </Message>
       )}

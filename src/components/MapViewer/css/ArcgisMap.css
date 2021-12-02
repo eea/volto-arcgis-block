@@ -296,6 +296,7 @@
 .map-menu .panel {
   display: none;
   animation: fadein 0.8s;
+  position: relative;
 }
 @keyframes fadein {
   from {
@@ -565,9 +566,8 @@
   position: absolute;
   z-index: 1;
   left: 0;
-  width: 100%;
+  width: calc(100% - 2rem);
   margin: 0;
-  transform: translate(0, 4rem);
 }
 
 /* Legend*/
