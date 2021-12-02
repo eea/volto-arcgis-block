@@ -97,7 +97,7 @@
 }
 
 .esri-basemap-gallery__item {
-  margin: 0 ;
+  margin: 0;
 }
 
 /* Measure */
@@ -471,6 +471,9 @@
   cursor: move;
 }
 
+.active-layer-name {
+  word-break: break-word;
+}
 .locked {
   cursor: auto;
   opacity: 0.3;
