@@ -8,7 +8,7 @@ import { useIntl } from 'react-intl';
 import { Message, Modal } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-var WMSLayer, WMTSLayer;
+var WMSLayer, WMTSLayer, FeatureLayer;
 
 export const AddCartItem = ({
   cartData,
@@ -121,7 +121,15 @@ export const AddCartItem = ({
   return (
     <>
       {showMessage && (
-        <Message floating size="small" timeout={5000}>
+        <Message
+          floating
+          size="small"
+          style={{
+            transform: download
+              ? 'translate(1rem, 4rem)'
+              : 'translate(1rem, 2rem)',
+          }}
+        >
           {message}
         </Message>
       )}
@@ -144,7 +152,7 @@ export const AddCartItem = ({
         </div>
       ) : (
         <>
-          <Modal size="tiny" open={modal}>
+          <Modal size="tiny" open={modal} className="map-download-modal">
             <Modal.Content>
               <p>Do you want to add this dataset to the cart?</p>
             </Modal.Content>
@@ -230,12 +238,15 @@ class MenuWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer', 'esri/layers/WMTSLayer']).then(
-      ([_WMSLayer, _WMTSLayer]) => {
-        WMSLayer = _WMSLayer;
-        WMTSLayer = _WMTSLayer;
-      },
-    );
+    return loadModules([
+      'esri/layers/WMSLayer',
+      'esri/layers/WMTSLayer',
+      'esri/layers/FeatureLayer',
+    ]).then(([_WMSLayer, _WMTSLayer, _FeatureLayer]) => {
+      WMSLayer = _WMSLayer;
+      WMTSLayer = _WMTSLayer;
+      FeatureLayer = _FeatureLayer;
+    });
   }
 
   /**
@@ -292,7 +303,7 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodprocessJSON() {
-    if (!WMSLayer && !WMTSLayer) return;
+    if (!WMSLayer && !WMTSLayer && !FeatureLayer) return;
     var components = [];
     var index = 0;
     for (var i in this.compCfg) {
@@ -587,10 +598,7 @@ class MenuWidget extends React.Component {
 
     //Add sublayers and popup enabled for layers
     if (!this.layers.hasOwnProperty(layer.LayerId)) {
-      if (
-        urlWMS.toLowerCase().includes('/wms') ||
-        urlWMS.toLowerCase().includes('=wms')
-      ) {
+      if (urlWMS.toLowerCase().includes('wms')) {
         this.layers[layer.LayerId] = new WMSLayer({
           url: urlWMS,
           featureInfoFormat: 'text/html',
@@ -604,13 +612,13 @@ class MenuWidget extends React.Component {
               title: layer.Title,
               popupEnabled: true,
               queryable: true,
-              visble: true,
+              visible: true,
               legendEnabled: true,
               legendUrl: urlWMS + legendRequest + layer.LayerId,
             },
           ],
         });
-      } else {
+      } else if (urlWMS.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId] = new WMTSLayer({
           url: urlWMS,
           //id: layer.LayerId,
@@ -619,6 +627,13 @@ class MenuWidget extends React.Component {
             id: layer.LayerId,
             title: layer.Title,
           },
+        });
+      } else {
+        this.layers[layer.LayerId] = new FeatureLayer({
+          url: urlWMS,
+          //id: layer.LayerId,
+          title: '',
+          popupEnabled: true,
         });
       }
     }
