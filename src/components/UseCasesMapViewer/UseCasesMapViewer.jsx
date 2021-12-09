@@ -398,7 +398,6 @@ class UseCasesMapViewer extends React.Component {
           layerControl={layerControl}
           navigationControl={navigationControl}
           layerSpatial={layerSpatial}
-          layerNUTS={layerNUTS}
           thumbnail={this.thumbnail}
         />
       );
