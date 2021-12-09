@@ -26,6 +26,7 @@ class UseCasesMapViewer extends React.Component {
     this.serviceCfg = props.cfg.Services;
     this.compCfg = this.props.cfg.Components;
     this.url = this.props.cfg.url;
+    this.thumbnail = this.props.cfg.Thumbnail;
     this.map = null;
     this.id = props.id;
     this.popupOnce = false;
@@ -397,6 +398,8 @@ class UseCasesMapViewer extends React.Component {
           layerControl={layerControl}
           navigationControl={navigationControl}
           layerSpatial={layerSpatial}
+          layerNUTS={layerNUTS}
+          thumbnail={this.thumbnail}
         />
       );
     }
