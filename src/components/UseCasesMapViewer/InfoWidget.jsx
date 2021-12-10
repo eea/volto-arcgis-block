@@ -5,6 +5,7 @@ let layerControl,
   view,
   mapViewer,
   layerSpatial,
+  layerNUTS,
   processedData = [];
 class InfoWidget extends React.Component {
   constructor(props) {
@@ -14,6 +15,7 @@ class InfoWidget extends React.Component {
     navigationControl = props.navigationControl;
     layerControl = props.layerControl;
     layerSpatial = props.layerSpatial;
+    layerNUTS = props.layerNUTS;
     this.container = createRef();
   }
 
@@ -23,11 +25,13 @@ class InfoWidget extends React.Component {
    * @returns lateralMenu DOM
    */
   showUseCase(UseCase) {
+    layerControl.getGeometry(UseCase.Spatial_coverage, layerNUTS);
     let responsibleOrganizationOrPerson = UseCase.Responsible_organisation
       ? UseCase.Responsible_organisation
       : UseCase.Contact_person_name_
       ? UseCase.Contact_person_name_
       : '';
+    layerControl.showLayer(layerNUTS.id);
     return (
       <>
         <div className="use-cases-products-title">Use case detail</div>

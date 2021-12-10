@@ -16,7 +16,8 @@ let Map,
   VectorTileLayer,
   layerControl,
   navigationControl,
-  layerSpatial;
+  layerSpatial,
+  layerNUTS;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -38,12 +39,20 @@ class UseCasesMapViewer extends React.Component {
       id: 'spatialLayer',
       url: props.cfg.Services.SpatialCoverageLayer,
       render: props.cfg.SpatialRenderer,
+      showLegend: true,
     };
     this.regionConfig = {
       id: 'regionLayer',
       url: props.cfg.Services.RegionLayer,
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
+      showLegend: false,
+    };
+    this.NUTSConfig = {
+      id: 'NUTSLayer',
+      url: props.cfg.Services.NUTS_service,
+      render: props.cfg.NUTSRenderer,
+      showLegend: false,
     };
     this.state = {
       useCaseLevel: 1,
@@ -136,6 +145,7 @@ class UseCasesMapViewer extends React.Component {
     layerSpatial = layerControl.createLayer({
       id: this.spatialConfig.id,
       url: this.spatialConfig.url,
+      legend: this.spatialConfig.showLegend,
     });
 
     layerSpatial.renderer = this.spatialConfig.render;
@@ -143,13 +153,24 @@ class UseCasesMapViewer extends React.Component {
     let layerRegion = layerControl.createLayer({
       id: this.regionConfig.id,
       url: this.regionConfig.url,
+      legend: this.regionConfig.showLegend,
+    });
+
+    layerNUTS = layerControl.createLayer({
+      id: this.NUTSConfig.id,
+      url: this.NUTSConfig.url,
+      legend: this.NUTSConfig.showLegend,
     });
 
     layerRegion.renderer = this.regionConfig.render;
     layerRegion.labelingInfo = [this.regionConfig.label];
+    layerNUTS.renderer = this.NUTSConfig.render;
 
+    layerControl.addLayer(layerNUTS);
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
+
+    layerControl.hideLayer(layerNUTS.id);
     layerControl.hideLayer(layerSpatial.id);
 
     navigationControl = new NavigationControl({
@@ -160,6 +181,7 @@ class UseCasesMapViewer extends React.Component {
       mapViewer: this,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
+      layerNUTS: layerNUTS,
     });
 
     this.setMapFunctions(
@@ -382,6 +404,9 @@ class UseCasesMapViewer extends React.Component {
           }
         });
       } else if (this.state.useCaseLevel === 2) {
+        if (document.querySelector('.esri-popup').hasChildNodes()) {
+          view.popup.close();
+        }
         view.hitTest(screenPoint).then((response) => {
           layerControl.highlightInfo(response);
         });
@@ -399,6 +424,7 @@ class UseCasesMapViewer extends React.Component {
           navigationControl={navigationControl}
           layerSpatial={layerSpatial}
           thumbnail={this.thumbnail}
+          layerNUTS={layerNUTS}
         />
       );
     }
