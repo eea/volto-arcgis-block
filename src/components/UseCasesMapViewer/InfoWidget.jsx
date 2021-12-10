@@ -46,7 +46,14 @@ class InfoWidget extends React.Component {
             ></span>
           </div>
           <div className="use-case-detail-image">
-            <img src={UseCase.Link_to_image} alt="Use Case" />
+            <img
+              src={
+                UseCase.Link_to_image
+                  ? UseCase.Link_to_image
+                  : this.props.thumbnail
+              }
+              alt="Use Case"
+            />
           </div>
           <div className="use-case-detail-content">
             <div className="use-case-detail-product">
