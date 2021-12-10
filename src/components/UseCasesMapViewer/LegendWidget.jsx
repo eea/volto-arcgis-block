@@ -48,7 +48,7 @@ class LegendWidget extends React.Component {
 
       this.container.current.children[1].querySelector(
         '.esri-legend__service-label',
-      ).textContent = 'Use Cases Coverage Legend';
+      ).textContent = 'Legend';
 
       try {
         this.container.current.children[1]
@@ -63,13 +63,13 @@ class LegendWidget extends React.Component {
         let currentValue = legendCells[i].textContent;
         switch (currentValue.toLowerCase()) {
           case 'eu':
-            legendCells[i].textContent = 'EU27+UK';
+            legendCells[i].textContent = 'EU27+UK coverage';
             break;
           case 'eea':
-            legendCells[i].textContent = 'EEA 38';
+            legendCells[i].textContent = 'EEA 38 coverage';
             break;
           case 'others':
-            legendCells[i].textContent = 'Country';
+            legendCells[i].textContent = 'Country coverage';
             break;
           default:
             break;
