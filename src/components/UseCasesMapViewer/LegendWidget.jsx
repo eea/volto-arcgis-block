@@ -66,7 +66,7 @@ class LegendWidget extends React.Component {
             legendCells[i].textContent = 'EU27+UK coverage';
             break;
           case 'eea':
-            legendCells[i].textContent = 'EEA 38 coverage';
+            legendCells[i].textContent = 'EEA38+UK coverage';
             break;
           case 'others':
             legendCells[i].textContent = 'Country coverage';
