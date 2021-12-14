@@ -5,7 +5,6 @@ let layerControl,
   view,
   mapViewer,
   layerSpatial,
-  layerNUTS,
   processedData = [];
 class InfoWidget extends React.Component {
   constructor(props) {
@@ -15,7 +14,6 @@ class InfoWidget extends React.Component {
     navigationControl = props.navigationControl;
     layerControl = props.layerControl;
     layerSpatial = props.layerSpatial;
-    layerNUTS = props.layerNUTS;
     this.container = createRef();
   }
 
