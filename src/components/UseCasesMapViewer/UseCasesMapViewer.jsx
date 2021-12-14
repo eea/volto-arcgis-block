@@ -297,6 +297,8 @@ class UseCasesMapViewer extends React.Component {
                 longitude: selectedPoint.Longitude,
               };
               layerControl.checkIfMorePoints(latLon, (data, MapViewerThis) => {
+                layerControl.getGeometry(selectedSpatial, layerNUTS);
+                layerControl.showLayer(layerNUTS.id);
                 if (data.features.length !== 1) {
                   MapViewerThis.setState((prevState) => {
                     return {

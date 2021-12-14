@@ -83,7 +83,6 @@ class NavigationControl extends React.Component {
    */
   returnToPrevious() {
     // this.layerControl.hideLayer(layerNUTS.id);
-    this.layerControl.getGeometry('none', layerNUTS);
 
     switch (
       mapViewer.state.previousState === mapViewer.state.useCaseLevel
@@ -91,10 +90,12 @@ class NavigationControl extends React.Component {
         : mapViewer.state.previousState
     ) {
       case 1:
+        this.layerControl.getGeometry('none', layerNUTS);
         this.showWorld();
         break;
 
       case 2:
+        this.layerControl.getGeometry('none', layerNUTS);
         this.navigateToRegion(
           mapViewer.state.selectedUseCase.BBOX,
           mapViewer.state.selectedUseCase.Region,

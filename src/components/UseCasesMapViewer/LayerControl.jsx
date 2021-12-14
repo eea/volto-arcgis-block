@@ -40,7 +40,7 @@ class LayerControl {
         }
       }
     } else {
-      layer.definitionExpression += `CNTR_CODE = 'none')`;
+      layer.definitionExpression += `CNTR_CODE = '${country}')`;
     }
   }
 
