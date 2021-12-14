@@ -111,6 +111,9 @@ class AreaWidget extends React.Component {
   nuts1handler(e) {
     this.loadNutsService(e.target.value, 1);
   }
+  nuts2handler(e) {
+    this.loadNutsService(e.target.value, 2);
+  }
   nuts3handler(e) {
     this.loadNutsService(e.target.value, 3);
   }
@@ -191,7 +194,7 @@ class AreaWidget extends React.Component {
         if (response.results.length > 0) {
           let graphic = response.results.filter((result) => {
             let layer;
-            if ('nuts0 nuts1 nuts3'.includes(result.graphic.layer.id)) {
+            if ('nuts0 nuts1 nuts2 nuts3'.includes(result.graphic.layer.id)) {
               layer = result.graphic;
             }
             return layer;
@@ -282,6 +285,22 @@ class AreaWidget extends React.Component {
                     htmlFor="download_area_select_nuts1"
                   >
                     <span>NUTS 1</span>
+                  </label>
+                </div>
+                <div className="ccl-form-group">
+                  <input
+                    type="radio"
+                    id="download_area_select_nuts2"
+                    name="downloadAreaSelect"
+                    value="nuts2"
+                    className="ccl-checkbox ccl-required ccl-form-check-input"
+                    onClick={this.nuts2handler.bind(this)}
+                  ></input>
+                  <label
+                    className="ccl-form-radio-label"
+                    htmlFor="download_area_select_nuts2"
+                  >
+                    <span>NUTS 2</span>
                   </label>
                 </div>
                 <div className="ccl-form-group">
