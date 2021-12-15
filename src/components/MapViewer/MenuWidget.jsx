@@ -704,10 +704,9 @@ class MenuWidget extends React.Component {
         elem,
         Object.keys(this.activeLayersJSON).length,
       );
-      let nuts;
-      this.map.layers.items.find((layer) => {
+      let nuts = this.map.layers.items.find((layer) => {
         if (layer.title === 'nuts') {
-          nuts = layer;
+          return layer;
         }
       });
       if (nuts) {
