@@ -199,7 +199,7 @@ class AreaWidget extends React.Component {
     });
     this.props.map.add(this.nutsGroupLayer);
     this.props.view.on('click', (event) => {
-      if (this.props.mapViewer.activeWidget == this) {
+      if (this.props.mapViewer.activeWidget === this) {
         this.props.view.hitTest(event).then((response) => {
           if (response.results.length > 0) {
             let graphic = response.results.filter((result) => {
