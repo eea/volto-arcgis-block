@@ -595,7 +595,6 @@ class MenuWidget extends React.Component {
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     //For each layer
     var inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
-    debugger;
     //Add sublayers and popup enabled for layers
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
