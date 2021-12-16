@@ -118,6 +118,23 @@ export const AddCartItem = ({
     setModal(false);
   };
 
+  const checkScrollPosition = () => {
+    let dt = document.querySelector(
+      '.map-menu-dataset[datasetid="' +
+        dataset.DatasetId +
+        '"] .map-dataset-checkbox',
+    );
+    if (
+      dt.offsetTop + dt.offsetHeight + 4 * 16 >
+      document.querySelector('.panels').offsetHeight +
+        document.querySelector('.panels').scrollTop
+    ) {
+      return 'translate(1rem, -5rem)';
+    } else {
+      return 'translate(1rem, 2rem)';
+    }
+  };
+
   return (
     <>
       {showMessage && (
@@ -127,7 +144,7 @@ export const AddCartItem = ({
           style={{
             transform: download
               ? 'translate(1rem, 4rem)'
-              : 'translate(1rem, 2rem)',
+              : checkScrollPosition(),
           }}
         >
           {message}
@@ -633,9 +650,9 @@ class MenuWidget extends React.Component {
         this.layers[
           layer.LayerId + '_' + inheritedIndexLayer
         ] = new FeatureLayer({
-          url: urlWMS,
-          //id: layer.LayerId,
-          title: '',
+          url: urlWMS + (urlWMS.endsWith('/') ? '' : '/') + layer.LayerId,
+          id: layer.LayerId,
+          title: layer.Title,
           popupEnabled: true,
         });
       }
@@ -690,6 +707,10 @@ class MenuWidget extends React.Component {
         elem,
         Object.keys(this.activeLayersJSON).length,
       );
+      let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
+      if (nuts) {
+        this.map.reorder(nuts, this.map.layers.items.length + 1);
+      }
     } else {
       let checkboxes = document.getElementsByName('layerCheckbox');
       let repeatedLayers = [];

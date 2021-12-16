@@ -130,6 +130,18 @@ class AreaWidget extends React.Component {
       definitionExpression: 'LEVL_CODE=' + level,
     });
     this.nutsGroupLayer.add(layer);
+    let index = this.getHighestIndex();
+    this.props.map.reorder(this.nutsGroupLayer, index + 1);
+  }
+  getHighestIndex() {
+    let index = 0;
+    document.querySelectorAll('.active-layer').forEach((layer) => {
+      let value = parseInt(layer.getAttribute('layer-order'));
+      if (value > index) {
+        index = value;
+      }
+    });
+    return index;
   }
   rectanglehandler() {
     this.clearWidget();
@@ -190,33 +202,36 @@ class AreaWidget extends React.Component {
     });
     this.props.map.add(this.nutsGroupLayer);
     this.props.view.on('click', (event) => {
-      this.props.view.hitTest(event).then((response) => {
-        if (response.results.length > 0) {
-          let graphic = response.results.filter((result) => {
-            let layer;
-            if ('nuts0 nuts1 nuts2 nuts3'.includes(result.graphic.layer.id)) {
-              layer = result.graphic;
-            }
-            return layer;
-          })[0].graphic;
-          if (graphic) {
-            let geometry = graphic.geometry;
-            if (geometry.type === 'polygon') {
-              let nuts = graphic.attributes.NUTS_ID;
-              this.props.updateArea(nuts);
-              let symbol = new SimpleFillSymbol(
-                'solid',
-                new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
-                new Color([232, 104, 80, 0.25]),
-              );
-              let highlight = new Graphic(geometry, symbol);
-              this.props.view.graphics.removeAll();
-              this.props.view.graphics.add(highlight);
+      if (this.props.mapViewer.activeWidget === this) {
+        this.props.view.hitTest(event).then((response) => {
+          if (response.results.length > 0) {
+            let graphic = response.results.filter((result) => {
+              let layer;
+              if ('nuts0 nuts1 nuts2 nuts3'.includes(result.graphic.layer.id)) {
+                layer = result.graphic;
+              }
+              return layer;
+            })[0].graphic;
+            if (graphic) {
+              let geometry = graphic.geometry;
+              if (geometry.type === 'polygon') {
+                let nuts = graphic.attributes.NUTS_ID;
+                this.props.updateArea(nuts);
+                let symbol = new SimpleFillSymbol(
+                  'solid',
+                  new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
+                  new Color([232, 104, 80, 0.25]),
+                );
+                let highlight = new Graphic(geometry, symbol);
+                this.props.view.graphics.removeAll();
+                this.props.view.graphics.add(highlight);
+              }
             }
           }
-        }
-      });
+        });
+      }
     });
+
     this.props.download
       ? this.props.view.ui.add(this.container)
       : this.props.view.ui.add(this.container.current, 'top-right');
