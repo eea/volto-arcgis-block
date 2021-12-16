@@ -36,10 +36,13 @@ const config = {
     Highlight_service:
       'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/UseCasesWorldCountries/MapServer/1',
     RegionLayer:
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion_count/MapServer/0',
+      'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/UseCasesRegion_count/MapServer/0',
     SpatialCoverageLayer:
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
+      'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
   },
+  Thumbnail:
+    'https://eu-copernicus.github.io/copernicus-component-library/assets/images/image_placeholder.jpg',
+
   Codes: {
     EU: [
       'BE',

@@ -8,7 +8,7 @@ import { useIntl } from 'react-intl';
 import { Message, Modal } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-var WMSLayer, WMTSLayer;
+var WMSLayer, WMTSLayer, FeatureLayer;
 
 export const AddCartItem = ({
   cartData,
@@ -118,10 +118,35 @@ export const AddCartItem = ({
     setModal(false);
   };
 
+  const checkScrollPosition = () => {
+    let dt = document.querySelector(
+      '.map-menu-dataset[datasetid="' +
+        dataset.DatasetId +
+        '"] .map-dataset-checkbox',
+    );
+    if (
+      dt.offsetTop + dt.offsetHeight + 4 * 16 >
+      document.querySelector('.panels').offsetHeight +
+        document.querySelector('.panels').scrollTop
+    ) {
+      return 'translate(1rem, -5rem)';
+    } else {
+      return 'translate(1rem, 2rem)';
+    }
+  };
+
   return (
     <>
       {showMessage && (
-        <Message floating size="small" timeout={5000}>
+        <Message
+          floating
+          size="small"
+          style={{
+            transform: download
+              ? 'translate(1rem, 4rem)'
+              : checkScrollPosition(),
+          }}
+        >
           {message}
         </Message>
       )}
@@ -144,7 +169,7 @@ export const AddCartItem = ({
         </div>
       ) : (
         <>
-          <Modal size="tiny" open={modal}>
+          <Modal size="tiny" open={modal} className="map-download-modal">
             <Modal.Content>
               <p>Do you want to add this dataset to the cart?</p>
             </Modal.Content>
@@ -230,12 +255,15 @@ class MenuWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer', 'esri/layers/WMTSLayer']).then(
-      ([_WMSLayer, _WMTSLayer]) => {
-        WMSLayer = _WMSLayer;
-        WMTSLayer = _WMTSLayer;
-      },
-    );
+    return loadModules([
+      'esri/layers/WMSLayer',
+      'esri/layers/WMTSLayer',
+      'esri/layers/FeatureLayer',
+    ]).then(([_WMSLayer, _WMTSLayer, _FeatureLayer]) => {
+      WMSLayer = _WMSLayer;
+      WMTSLayer = _WMTSLayer;
+      FeatureLayer = _FeatureLayer;
+    });
   }
 
   /**
@@ -292,7 +320,7 @@ class MenuWidget extends React.Component {
    * @returns
    */
   metodprocessJSON() {
-    if (!WMSLayer && !WMTSLayer) return;
+    if (!WMSLayer && !WMTSLayer && !FeatureLayer) return;
     var components = [];
     var index = 0;
     for (var i in this.compCfg) {
@@ -584,14 +612,12 @@ class MenuWidget extends React.Component {
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     //For each layer
     var inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
-
     //Add sublayers and popup enabled for layers
-    if (!this.layers.hasOwnProperty(layer.LayerId)) {
-      if (
-        urlWMS.toLowerCase().includes('/wms') ||
-        urlWMS.toLowerCase().includes('=wms')
-      ) {
-        this.layers[layer.LayerId] = new WMSLayer({
+    if (
+      !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
+    ) {
+      if (urlWMS.toLowerCase().includes('wms')) {
+        this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMSLayer({
           url: urlWMS,
           featureInfoFormat: 'text/html',
           featureInfoUrl: urlWMS,
@@ -604,14 +630,14 @@ class MenuWidget extends React.Component {
               title: layer.Title,
               popupEnabled: true,
               queryable: true,
-              visble: true,
+              visible: true,
               legendEnabled: true,
               legendUrl: urlWMS + legendRequest + layer.LayerId,
             },
           ],
         });
-      } else {
-        this.layers[layer.LayerId] = new WMTSLayer({
+      } else if (urlWMS.toLowerCase().includes('wmts')) {
+        this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
           url: urlWMS,
           //id: layer.LayerId,
           title: '',
@@ -619,6 +645,15 @@ class MenuWidget extends React.Component {
             id: layer.LayerId,
             title: layer.Title,
           },
+        });
+      } else {
+        this.layers[
+          layer.LayerId + '_' + inheritedIndexLayer
+        ] = new FeatureLayer({
+          url: urlWMS + (urlWMS.endsWith('/') ? '' : '/') + layer.LayerId,
+          id: layer.LayerId,
+          title: layer.Title,
+          popupEnabled: true,
         });
       }
     }
@@ -665,13 +700,17 @@ class MenuWidget extends React.Component {
     let parentId = elem.getAttribute('parentid');
     let layerId = elem.getAttribute('layerid');
     if (elem.checked) {
-      this.map.add(this.layers[layerId]);
+      this.map.add(this.layers[elem.id]);
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['fas', 'step-forward'];
       this.activeLayersJSON[elem.id] = this.addActiveLayer(
         elem,
         Object.keys(this.activeLayersJSON).length,
       );
+      let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
+      if (nuts) {
+        this.map.reorder(nuts, this.map.layers.items.length + 1);
+      }
     } else {
       let checkboxes = document.getElementsByName('layerCheckbox');
       let repeatedLayers = [];
@@ -681,7 +720,7 @@ class MenuWidget extends React.Component {
         }
       }
       if (repeatedLayers.length === 0) {
-        this.map.remove(this.layers[layerId]);
+        this.map.remove(this.layers[elem.id]);
         delete this.activeLayersJSON[elem.id];
         delete this.visibleLayers[elem.id];
         delete this.timeLayers[elem.id];
@@ -816,10 +855,7 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(
-              elem,
-              this.layers[elem.getAttribute('layerid')],
-            )}
+            this.renderTimeslider(elem, this.layers[elem.id])}
         </div>
       </div>
     );
@@ -860,10 +896,7 @@ class MenuWidget extends React.Component {
     this.layerReorder(reorder_elem.id, counter);
     while ((reorder_elem = reorder_elem.nextSibling)) {
       reorder_elem.setAttribute('layer-order', counter++);
-      this.layerReorder(
-        this.layers[reorder_elem.getAttribute('layer-id')],
-        counter,
-      );
+      this.layerReorder(this.layers[reorder_elem.id], counter);
     }
   }
 
@@ -904,21 +937,21 @@ class MenuWidget extends React.Component {
     if (this.timeLayers[elem.id][1] === 'step-forward') {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
-        let order = this.activeLayersJSON[layerId].props['layer-order'];
+        let order = this.activeLayersJSON[elem.id].props['layer-order'];
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'stop'];
-          if (this.visibleLayers[layerId][1] === 'eye-slash') {
-            this.layers[layerId].visible = true;
-            this.visibleLayers[layerId] = ['fas', 'eye'];
+          if (this.visibleLayers[elem.id][1] === 'eye-slash') {
+            this.layers[elem.id].visible = true;
+            this.visibleLayers[elem.id] = ['fas', 'eye'];
           }
           document
             .querySelector(
-              '.active-layer[layer-id="' + layerId + '"] .active-layer-hide',
+              '.active-layer[layer-id="' + elem.id + '"] .active-layer-hide',
             )
             .classList.add('locked');
           document
             .querySelector(
-              '.active-layer[layer-id="' + layerId + '"] .active-layer-delete',
+              '.active-layer[layer-id="' + elem.id + '"] .active-layer-delete',
             )
             .classList.add('locked');
           document.querySelector('#products_label').classList.add('locked');
@@ -926,15 +959,15 @@ class MenuWidget extends React.Component {
             document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
         } else {
-          if (this.visibleLayers[layerId][1] === 'eye') {
-            this.layers[layerId].visible = false;
-            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+          if (this.visibleLayers[elem.id][1] === 'eye') {
+            this.layers[elem.id].visible = false;
+            this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
           }
           document
-            .querySelector('.active-layer[layer-id="' + layerId + '"]')
+            .querySelector('.active-layer[layer-id="' + elem.id + '"]')
             .classList.add('locked');
-          this.activeLayersJSON[layerId] = this.addActiveLayer(
-            document.getElementById(layerId),
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(
+            document.getElementById(elem.id),
             order,
           );
         }
@@ -942,18 +975,18 @@ class MenuWidget extends React.Component {
     } else {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
-        let order = this.activeLayersJSON[layerId].props['layer-order'];
+        let order = this.activeLayersJSON[elem.id].props['layer-order'];
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'step-forward'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
           document
             .querySelector(
-              '.active-layer[layer-id="' + layerId + '"] .active-layer-hide',
+              '.active-layer[layer-id="' + elem.id + '"] .active-layer-hide',
             )
             .classList.remove('locked');
           document
             .querySelector(
-              '.active-layer[layer-id="' + layerId + '"] .active-layer-delete',
+              '.active-layer[layer-id="' + elem.id + '"] .active-layer-delete',
             )
             .classList.remove('locked');
           document.querySelector('#products_label').classList.remove('locked');
@@ -968,16 +1001,16 @@ class MenuWidget extends React.Component {
               document.querySelector('.esri-ui-bottom-right'),
             );
         } else {
-          if (this.visibleLayers[layerId][1] === 'eye-slash') {
-            this.layers[layerId].visible = true;
-            this.visibleLayers[layerId] = ['fas', 'eye'];
-            this.activeLayersJSON[layerId] = this.addActiveLayer(
-              document.getElementById(layerId),
+          if (this.visibleLayers[elem.id][1] === 'eye-slash') {
+            this.layers[elem.id].visible = true;
+            this.visibleLayers[elem.id] = ['fas', 'eye'];
+            this.activeLayersJSON[elem.id] = this.addActiveLayer(
+              document.getElementById(elem.id),
               order,
             );
           }
           document
-            .querySelector('.active-layer[layer-id="' + layerId + '"]')
+            .querySelector('.active-layer[layer-id="' + elem.id + '"]')
             .classList.remove('locked');
         }
       });
@@ -991,13 +1024,13 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    let elementId = elem.getAttribute('layerid');
+    // let elementId = elem.getAttribute('layerid');
     if (this.visibleLayers[elem.id][1] === 'eye') {
-      this.layers[elementId].visible = false;
+      this.layers[elem.id].visible = false;
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
     } else {
-      this.map.add(this.layers[elementId]);
-      this.layers[elementId].visible = true;
+      this.map.add(this.layers[elem.id]);
+      this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
