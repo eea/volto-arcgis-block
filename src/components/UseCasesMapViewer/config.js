@@ -33,8 +33,8 @@ const config = {
     ],
   },
   Services: {
-    NUTS_service:
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0',
+    Highlight_service:
+      'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/UseCasesWorldCountries/MapServer/1',
     RegionLayer:
       'https://bm-eugis.tk/arcgis/rest/services/CLMS/UseCasesRegion_count/MapServer/0',
     SpatialCoverageLayer:
@@ -116,7 +116,7 @@ const config = {
     ],
   },
 
-  NUTSRenderer: {
+  HightlightRenderer: {
     type: 'unique-value',
     field: 'LEVL_CODE',
     defaultSymbol: {
