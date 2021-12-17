@@ -17,7 +17,7 @@ let Map,
   layerControl,
   navigationControl,
   layerSpatial,
-  layerNUTS;
+  layerHighlight;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -48,10 +48,10 @@ class UseCasesMapViewer extends React.Component {
       label: props.cfg.RegionLabel,
       showLegend: false,
     };
-    this.NUTSConfig = {
-      id: 'NUTSLayer',
-      url: props.cfg.Services.NUTS_service,
-      render: props.cfg.NUTSRenderer,
+    this.HighlightConfig = {
+      id: 'HightlightLayer',
+      url: props.cfg.Services.Highlight_service,
+      render: props.cfg.HightlightRenderer,
       showLegend: false,
     };
     this.state = {
@@ -156,21 +156,21 @@ class UseCasesMapViewer extends React.Component {
       legend: this.regionConfig.showLegend,
     });
 
-    layerNUTS = layerControl.createLayer({
-      id: this.NUTSConfig.id,
-      url: this.NUTSConfig.url,
-      legend: this.NUTSConfig.showLegend,
+    layerHighlight = layerControl.createLayer({
+      id: this.HighlightConfig.id,
+      url: this.HighlightConfig.url,
+      legend: this.HighlightConfig.showLegend,
     });
 
     layerRegion.renderer = this.regionConfig.render;
     layerRegion.labelingInfo = [this.regionConfig.label];
-    layerNUTS.renderer = this.NUTSConfig.render;
+    layerHighlight.renderer = this.HighlightConfig.render;
 
-    layerControl.addLayer(layerNUTS);
+    layerControl.addLayer(layerHighlight);
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
 
-    layerControl.hideLayer(layerNUTS.id);
+    layerControl.hideLayer(layerHighlight.id);
     layerControl.hideLayer(layerSpatial.id);
 
     navigationControl = new NavigationControl({
@@ -181,7 +181,7 @@ class UseCasesMapViewer extends React.Component {
       mapViewer: this,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
-      layerNUTS: layerNUTS,
+      layerHighlight: layerHighlight,
     });
 
     this.setMapFunctions(
@@ -298,6 +298,8 @@ class UseCasesMapViewer extends React.Component {
                 longitude: selectedPoint.Longitude,
               };
               layerControl.checkIfMorePoints(latLon, (data, MapViewerThis) => {
+                layerControl.getGeometry(selectedSpatial, layerHighlight);
+                layerControl.showLayer(layerHighlight.id);
                 if (data.features.length !== 1) {
                   MapViewerThis.setState((prevState) => {
                     return {
@@ -424,7 +426,7 @@ class UseCasesMapViewer extends React.Component {
           navigationControl={navigationControl}
           layerSpatial={layerSpatial}
           thumbnail={this.thumbnail}
-          layerNUTS={layerNUTS}
+          layerHighlight={layerHighlight}
         />
       );
     }

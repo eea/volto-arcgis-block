@@ -28,11 +28,11 @@ class LayerControl {
   }
 
   getGeometry(country, layer) {
-    layer.definitionExpression = `LEVL_CODE = 0 AND (`;
+    layer.definitionExpression = `(`;
     if (country === 'EU' || country === 'EEA') {
       let states = mapViewer.props.cfg.Codes[country];
       for (let i = 0; i < states.length; i++) {
-        layer.definitionExpression += `CNTR_CODE = '${states[i]}'`;
+        layer.definitionExpression += `CNTR_ID = '${states[i]}'`;
         if (i < states.length - 1) {
           layer.definitionExpression += ' OR ';
         } else {
@@ -40,7 +40,7 @@ class LayerControl {
         }
       }
     } else {
-      layer.definitionExpression += `CNTR_CODE = 'none')`;
+      layer.definitionExpression += `CNTR_ID = '${country}')`;
     }
   }
 
