@@ -37,7 +37,8 @@
   max-height: 250px !important;
 }
 
-.esri-ui-top-right, .esri-ui-top-left {
+.esri-ui-top-right,
+.esri-ui-top-left {
   z-index: 1;
 }
 
