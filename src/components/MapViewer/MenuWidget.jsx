@@ -8,6 +8,7 @@ import { useIntl } from 'react-intl';
 import { Message, Modal } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
+import InfoWidget from './InfoWidget';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
 export const AddCartItem = ({
@@ -711,6 +712,23 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
+      if (Object.keys(this.timeLayers).length > 0) {
+        if (!document.querySelector('.info-container')) {
+          let div = document.createElement('div');
+          document.querySelector('.esri-ui-top-right').appendChild(div);
+          ReactDOM.render(
+            <InfoWidget
+              view={this.props.view}
+              map={this.map}
+              mapViewer={this.props.mapViewer}
+            />,
+            div,
+          );
+          div.remove();
+        } else {
+          document.querySelector('.info-container').style.display = '';
+        }
+      }
     } else {
       let checkboxes = document.getElementsByName('layerCheckbox');
       let repeatedLayers = [];
@@ -727,6 +745,13 @@ class MenuWidget extends React.Component {
       }
     }
     this.updateCheckDataset(parentId);
+    if (
+      Object.keys(this.timeLayers).length === 0 &&
+      document.querySelector('.info-container')
+    ) {
+      this.props.mapViewer.closeActiveWidget();
+      document.querySelector('.info-container').style.display = 'none';
+    }
     this.setState({});
   }
 
