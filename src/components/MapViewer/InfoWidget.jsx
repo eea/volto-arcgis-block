@@ -356,6 +356,7 @@ class InfoWidget extends React.Component {
                 <select
                   className="esri-select"
                   value={this.state.variables.selected}
+                  onBlur={(e) => this.selectVariable(e.target.value)}
                   onChange={(e) => this.selectVariable(e.target.value)}
                 >
                   {this.state.variables.options.map((option) => (
