@@ -145,17 +145,17 @@ class InfoWidget extends React.Component {
   removeMarker() {
     if (
       this.props.view.graphics.items.find((a) => {
-        return a.attributes ? a.attributes.id == 'pixel-info' : false;
+        return a.attributes ? a.attributes.id === 'pixel-info' : false;
       })
     ) {
       let marker = this.props.view.graphics.items.find((a) => {
-        return a.attributes && a.attributes.id == 'pixel-info';
+        return a.attributes && a.attributes.id === 'pixel-info';
       });
       this.props.view.graphics.remove(marker);
     }
 
     let marker = this.props.view.graphics.items.find((a) => {
-      return a.attributes ? a.attributes.id == 'pixel-info' : false;
+      return a.attributes ? a.attributes.id === 'pixel-info' : false;
     });
     this.props.view.graphics.remove(marker);
   }
@@ -170,10 +170,10 @@ class InfoWidget extends React.Component {
     let fields = layer.fields
       .filter((a) => {
         return (
-          a.type != 'date' &&
-          a.type != 'geometry' &&
-          a.type != 'string' &&
-          a.type != 'oid'
+          a.type !== 'date' &&
+          a.type !== 'geometry' &&
+          a.type !== 'string' //&&
+          //a.type !== 'oid'
         );
       })
       .map((b) => {
@@ -276,7 +276,7 @@ class InfoWidget extends React.Component {
         shared: true,
         useHTML: true,
         headerFormat:
-          '{point.x:%d/%m/%Y}<br>' + '<b>{point.point.symbolName}</b>',
+          '{point.x:%d/%m/%Y}<br><b>{point.point.symbolName}</b>',
       },
       series: [
         {
