@@ -75,6 +75,12 @@ class LegendWidget extends React.Component {
             break;
         }
       }
+
+      let legendRow = document.querySelectorAll('.esri-legend__layer-row');
+      for (let i = 0; i < legendRow.length; i++) {
+        legendRow[i].textContent.toLowerCase() === 'global' &&
+          legendRow[i].remove();
+      }
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.mapViewer.setState({ showMapMenu: true });

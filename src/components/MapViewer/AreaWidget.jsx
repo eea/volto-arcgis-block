@@ -1,7 +1,4 @@
 import React, { createRef } from 'react';
-//import "@arcgis/core/assets/esri/css/main.css";
-//import "./css/ArcgisMap.css";
-//import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 
 var Graphic,
@@ -202,7 +199,14 @@ class AreaWidget extends React.Component {
     });
     this.props.map.add(this.nutsGroupLayer);
     this.props.view.on('click', (event) => {
-      if (this.props.mapViewer.activeWidget === this) {
+      if (
+        (this.props.mapViewer.activeWidget === this || this.props.download) &&
+        (this.props.mapViewer.activeWidget
+          ? !this.props.mapViewer.activeWidget.container.current.classList.contains(
+              'info-container',
+            )
+          : true)
+      ) {
         this.props.view.hitTest(event).then((response) => {
           if (response.results.length > 0) {
             let graphic = response.results.filter((result) => {

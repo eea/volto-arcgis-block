@@ -37,6 +37,11 @@
   max-height: 250px !important;
 }
 
+.esri-ui-top-right,
+.esri-ui-top-left {
+  z-index: 1;
+}
+
 .esri-component.esri-zoom.esri-widget {
   background: none;
   box-shadow: none;
@@ -74,6 +79,10 @@
 
 .basemap-container {
   order: 5;
+}
+
+.info-container {
+  order: 6;
 }
 
 /* Basemap */
@@ -584,6 +593,26 @@
 
 .legend-panel.esri-legend {
   overflow: auto;
+}
+
+/* Pixel info */
+.info-container {
+  display: flex;
+  box-shadow: none !important;
+}
+
+.info-panel {
+  display: none;
+  overflow: auto;
+  width: 300px;
+  max-height: 240px;
+  padding: 1rem;
+  background-color: white;
+  font-size: 1rem;
+}
+
+.info-panel select {
+  margin-bottom: 1rem;
 }
 
 /* Modal */
