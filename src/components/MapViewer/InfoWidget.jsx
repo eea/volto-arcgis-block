@@ -275,8 +275,7 @@ class InfoWidget extends React.Component {
       tooltip: {
         shared: true,
         useHTML: true,
-        headerFormat:
-          '{point.x:%d/%m/%Y}<br><b>{point.point.symbolName}</b>',
+        headerFormat: '{point.x:%d/%m/%Y}<br><b>{point.point.symbolName}</b>',
       },
       series: [
         {
