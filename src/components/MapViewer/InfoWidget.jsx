@@ -172,8 +172,8 @@ class InfoWidget extends React.Component {
         return (
           a.type !== 'date' &&
           a.type !== 'geometry' &&
-          a.type !== 'string' //&&
-          //a.type !== 'oid'
+          a.type !== 'string' &&
+          a.type !== 'oid'
         );
       })
       .map((b) => {
