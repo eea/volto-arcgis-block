@@ -19,10 +19,7 @@ class TimesliderWidget extends React.Component {
   }
 
   loader() {
-    return loadModules([
-      'esri/widgets/TimeSlider',
-      'esri/layers/WMSLayer',
-    ]).then(([_TimeSlider]) => {
+    return loadModules(['esri/widgets/TimeSlider']).then(([_TimeSlider]) => {
       [TimeSlider] = [_TimeSlider];
     });
   }
