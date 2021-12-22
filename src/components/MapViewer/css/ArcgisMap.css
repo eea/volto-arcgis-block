@@ -17,7 +17,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  color: #273b4b;
+  color: #212529;
   font-size: 2rem;
   touch-action: auto;
 }
@@ -33,8 +33,16 @@
   outline: none;
 }
 
+.esri-view-height-less-than-medium .esri-popup__main-container {
+  max-height: 250px !important;
+}
+
+.esri-ui-top-right,
+.esri-ui-top-left {
+  z-index: 1;
+}
+
 .esri-component.esri-zoom.esri-widget {
-  margin-bottom: 0;
   background: none;
   box-shadow: none;
 }
@@ -73,10 +81,19 @@
   order: 5;
 }
 
+.info-container {
+  order: 6;
+}
+
 /* Basemap */
 .basemap-container {
   display: flex;
   box-shadow: none !important;
+}
+
+.basemap-panel.esri-basemap-gallery {
+  width: 300px;
+  max-height: 260px;
 }
 
 .esri-basemap-gallery {
@@ -85,11 +102,11 @@
 }
 
 .esri-basemap-gallery__item:first-child {
-  margin: 0;
+  margin-top: 0;
 }
 
-.esri-view-height-small .esri-ui-corner .esri-widget--panel-height-only {
-  max-height: 260px;
+.esri-basemap-gallery__item {
+  margin: 0;
 }
 
 /* Measure */
@@ -100,12 +117,13 @@
 
 .measurement-container .measurement-area.esri-measurement {
   display: block;
-  width: 225px;
   flex-direction: column;
 }
 
 .measurement-panel {
   display: none;
+  width: 300px;
+  max-height: 260px;
 }
 
 .measurement-buttons {
@@ -144,7 +162,6 @@
 
 .measurement-coords {
   display: none;
-  max-width: 225px;
   padding: 1rem;
   background-color: white;
 }
@@ -164,6 +181,22 @@
   font-size: 1rem;
 }
 
+.esri-print input[type='checkbox'] {
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.print-container .esri-print .esri-print__swap-button,
+.print-container .esri-print .esri-print__refresh-button {
+  color: #dadada;
+}
+
+.print-container .esri-print .esri-print__swap-button:hover,
+.print-container .esri-print .esri-print__refresh-button:hover {
+  background: none;
+  color: #212529;
+}
+
 /* Area */
 .area-container {
   display: flex;
@@ -172,7 +205,8 @@
 
 .area-panel {
   display: none;
-  width: 260px;
+  width: 300px;
+  max-height: 260px;
   padding: 1rem;
   background-color: white;
   font-size: 1rem;
@@ -190,14 +224,17 @@
 
 /* Left menu */
 .map-menu {
+  position: relative;
   display: none;
   width: 450px;
   font-size: 1rem;
 }
 
 .map-menu.tab-container .tab {
-  display: inline-block;
+  display: flex !important;
   width: 50%;
+  align-items: center;
+  justify-content: center;
   padding: 1rem;
   border-bottom: solid 4px white;
   margin: 0;
@@ -206,6 +243,7 @@
   cursor: pointer;
   font-weight: bold;
   text-align: center;
+  white-space: normal;
 }
 
 .map-menu.tab-container .tab-selected {
@@ -214,6 +252,9 @@
 }
 
 .map-menu.tab-container .tabs {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
   border-bottom: solid 1px #dadada;
   background-color: white;
   white-space: nowrap;
@@ -239,6 +280,7 @@
 .map-menu label span {
   color: black;
   line-height: inherit;
+  word-break: break-word;
 }
 
 .map-menu .ccl-expandable__button::after {
@@ -261,6 +303,7 @@
 }
 
 .map-menu .panel {
+  position: relative;
   display: none;
   animation: fadein 0.8s;
 }
@@ -272,6 +315,14 @@
   to {
     opacity: 1;
   }
+}
+
+.map-menu .login-block {
+  width: 100%;
+  margin: 0;
+  background: none;
+  float: none;
+  font-size: 0.85rem;
 }
 
 .map-menu.tab-container .panel-selected {
@@ -430,6 +481,16 @@
   cursor: move;
 }
 
+.active-layer-name {
+  word-break: break-word;
+}
+
+.locked {
+  cursor: auto;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .active-layer-options {
   white-space: nowrap;
 }
@@ -478,7 +539,7 @@
 
 .map-download-area,
 .map-download-resource {
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .map-download-header {
@@ -488,6 +549,10 @@
   font-weight: bold;
 }
 
+.map-download-resource select {
+  cursor: pointer;
+}
+
 .map-download-area .ccl-form-legend + .ccl-form-group {
   margin-top: 0.5rem;
 }
@@ -495,10 +560,24 @@
 .map-download-buttons {
   display: flex;
   justify-content: space-between;
+  margin: 0 1rem;
 }
 
 .map-download-block .ccl-form-group:not(:first-of-type) {
   margin-top: 0.5rem;
+}
+
+#download_panel .area-panel {
+  width: 100%;
+  height: 100%;
+}
+
+.ui.floating.message {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: calc(100% - 2rem);
+  margin: 0;
 }
 
 /* Legend*/
@@ -514,4 +593,48 @@
 
 .legend-panel.esri-legend {
   overflow: auto;
+}
+
+/* Pixel info */
+.info-container {
+  display: flex;
+  box-shadow: none !important;
+}
+
+.info-panel {
+  display: none;
+  overflow: auto;
+  width: 300px;
+  max-height: 240px;
+  padding: 1rem;
+  background-color: white;
+  font-size: 1rem;
+}
+
+.info-panel select {
+  margin-bottom: 1rem;
+}
+
+/* Modal */
+.map-download-modal.ui.modal {
+  margin: 0 !important;
+}
+
+.map-download-modal.ui.modal p {
+  font-size: 1rem;
+}
+
+.map-download-modal.ui.modal > .actions {
+  padding: 1.5rem;
+}
+
+@media only screen and (max-width: 767px) {
+  .map-download-modal.ui.modal > .content,
+  .map-download-modal.ui.modal > .actions {
+    padding: 1.5rem !important;
+  }
+}
+
+.map-download-modal .map-download-buttons {
+  margin: 0;
 }

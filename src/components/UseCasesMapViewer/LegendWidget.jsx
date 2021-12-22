@@ -48,7 +48,7 @@ class LegendWidget extends React.Component {
 
       this.container.current.children[1].querySelector(
         '.esri-legend__service-label',
-      ).textContent = 'Use Cases Coverage Legend';
+      ).textContent = 'Legend';
 
       try {
         this.container.current.children[1]
@@ -63,17 +63,23 @@ class LegendWidget extends React.Component {
         let currentValue = legendCells[i].textContent;
         switch (currentValue.toLowerCase()) {
           case 'eu':
-            legendCells[i].textContent = 'EU27+UK';
+            legendCells[i].textContent = 'EU27+UK coverage';
             break;
           case 'eea':
-            legendCells[i].textContent = 'EEA 38';
+            legendCells[i].textContent = 'EEA38+UK coverage';
             break;
           case 'others':
-            legendCells[i].textContent = 'Country';
+            legendCells[i].textContent = 'Country coverage';
             break;
           default:
             break;
         }
+      }
+
+      let legendRow = document.querySelectorAll('.esri-legend__layer-row');
+      for (let i = 0; i < legendRow.length; i++) {
+        legendRow[i].textContent.toLowerCase() === 'global' &&
+          legendRow[i].remove();
       }
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
@@ -99,9 +105,11 @@ class LegendWidget extends React.Component {
     return (
       <>
         <div
-          hidden={this.mapViewer.state.useCaseLevel === 1}
           ref={this.container}
           className="legend-container"
+          style={{
+            display: this.mapViewer.state.useCaseLevel === 1 ? 'none' : '',
+          }}
         >
           <div
             className={this.menuClass}

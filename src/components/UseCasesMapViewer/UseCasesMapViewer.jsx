@@ -16,7 +16,8 @@ let Map,
   VectorTileLayer,
   layerControl,
   navigationControl,
-  layerSpatial;
+  layerSpatial,
+  layerHighlight;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -26,6 +27,7 @@ class UseCasesMapViewer extends React.Component {
     this.serviceCfg = props.cfg.Services;
     this.compCfg = this.props.cfg.Components;
     this.url = this.props.cfg.url;
+    this.thumbnail = this.props.cfg.Thumbnail;
     this.map = null;
     this.id = props.id;
     this.popupOnce = false;
@@ -37,12 +39,20 @@ class UseCasesMapViewer extends React.Component {
       id: 'spatialLayer',
       url: props.cfg.Services.SpatialCoverageLayer,
       render: props.cfg.SpatialRenderer,
+      showLegend: true,
     };
     this.regionConfig = {
       id: 'regionLayer',
       url: props.cfg.Services.RegionLayer,
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
+      showLegend: false,
+    };
+    this.HighlightConfig = {
+      id: 'HightlightLayer',
+      url: props.cfg.Services.Highlight_service,
+      render: props.cfg.HightlightRenderer,
+      showLegend: false,
     };
     this.state = {
       useCaseLevel: 1,
@@ -135,6 +145,7 @@ class UseCasesMapViewer extends React.Component {
     layerSpatial = layerControl.createLayer({
       id: this.spatialConfig.id,
       url: this.spatialConfig.url,
+      legend: this.spatialConfig.showLegend,
     });
 
     layerSpatial.renderer = this.spatialConfig.render;
@@ -142,13 +153,24 @@ class UseCasesMapViewer extends React.Component {
     let layerRegion = layerControl.createLayer({
       id: this.regionConfig.id,
       url: this.regionConfig.url,
+      legend: this.regionConfig.showLegend,
+    });
+
+    layerHighlight = layerControl.createLayer({
+      id: this.HighlightConfig.id,
+      url: this.HighlightConfig.url,
+      legend: this.HighlightConfig.showLegend,
     });
 
     layerRegion.renderer = this.regionConfig.render;
     layerRegion.labelingInfo = [this.regionConfig.label];
+    layerHighlight.renderer = this.HighlightConfig.render;
 
+    layerControl.addLayer(layerHighlight);
     layerControl.addLayer(layerRegion);
     layerControl.addLayer(layerSpatial);
+
+    layerControl.hideLayer(layerHighlight.id);
     layerControl.hideLayer(layerSpatial.id);
 
     navigationControl = new NavigationControl({
@@ -159,6 +181,7 @@ class UseCasesMapViewer extends React.Component {
       mapViewer: this,
       layerRegion: layerRegion,
       layerSpatial: layerSpatial,
+      layerHighlight: layerHighlight,
     });
 
     this.setMapFunctions(
@@ -275,6 +298,8 @@ class UseCasesMapViewer extends React.Component {
                 longitude: selectedPoint.Longitude,
               };
               layerControl.checkIfMorePoints(latLon, (data, MapViewerThis) => {
+                layerControl.getGeometry(selectedSpatial, layerHighlight);
+                layerControl.showLayer(layerHighlight.id);
                 if (data.features.length !== 1) {
                   MapViewerThis.setState((prevState) => {
                     return {
@@ -400,6 +425,8 @@ class UseCasesMapViewer extends React.Component {
           layerControl={layerControl}
           navigationControl={navigationControl}
           layerSpatial={layerSpatial}
+          thumbnail={this.thumbnail}
+          layerHighlight={layerHighlight}
         />
       );
     }

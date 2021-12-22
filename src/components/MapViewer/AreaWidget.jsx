@@ -1,9 +1,13 @@
 import React, { createRef } from 'react';
-//import "@arcgis/core/assets/esri/css/main.css";
-//import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 
-var Graphic, Extent, FeatureLayer, GroupLayer;
+var Graphic,
+  Extent,
+  FeatureLayer,
+  GroupLayer,
+  Color,
+  SimpleLineSymbol,
+  SimpleFillSymbol;
 
 class AreaWidget extends React.Component {
   /**
@@ -13,7 +17,9 @@ class AreaWidget extends React.Component {
   constructor(props) {
     super(props);
     //We create a reference to a DOM element to be mounted
-    this.container = createRef();
+    this.container = this.props.download
+      ? document.querySelector('#download_panel')
+      : createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
     this.state = { showMapMenu: false };
@@ -29,14 +35,38 @@ class AreaWidget extends React.Component {
       'esri/geometry/Extent',
       'esri/layers/FeatureLayer',
       'esri/layers/GroupLayer',
-    ]).then(([_Graphic, _Extent, _FeatureLayer, _GroupLayer]) => {
-      [Graphic, Extent, FeatureLayer, GroupLayer] = [
+      'esri/Color',
+      'esri/symbols/SimpleLineSymbol',
+      'esri/symbols/SimpleFillSymbol',
+    ]).then(
+      ([
         _Graphic,
         _Extent,
         _FeatureLayer,
         _GroupLayer,
-      ];
-    });
+        _Color,
+        _SimpleLineSymbol,
+        _SimpleFillSymbol,
+      ]) => {
+        [
+          Graphic,
+          Extent,
+          FeatureLayer,
+          GroupLayer,
+          Color,
+          SimpleLineSymbol,
+          SimpleFillSymbol,
+        ] = [
+          _Graphic,
+          _Extent,
+          _FeatureLayer,
+          _GroupLayer,
+          _Color,
+          _SimpleLineSymbol,
+          _SimpleFillSymbol,
+        ];
+      },
+    );
   }
 
   /**
@@ -78,6 +108,9 @@ class AreaWidget extends React.Component {
   nuts1handler(e) {
     this.loadNutsService(e.target.value, 1);
   }
+  nuts2handler(e) {
+    this.loadNutsService(e.target.value, 2);
+  }
   nuts3handler(e) {
     this.loadNutsService(e.target.value, 3);
   }
@@ -85,15 +118,27 @@ class AreaWidget extends React.Component {
     this.clearWidget();
 
     var url =
-      'https://bm-eugis.tk/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0';
+      'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0';
     var layer = new FeatureLayer({
       url: url,
       id: id,
       outFields: ['*'],
-      popupEnabled: true,
+      popupEnabled: false,
       definitionExpression: 'LEVL_CODE=' + level,
     });
     this.nutsGroupLayer.add(layer);
+    let index = this.getHighestIndex();
+    this.props.map.reorder(this.nutsGroupLayer, index + 1);
+  }
+  getHighestIndex() {
+    let index = 0;
+    document.querySelectorAll('.active-layer').forEach((layer) => {
+      let value = parseInt(layer.getAttribute('layer-order'));
+      if (value > index) {
+        index = value;
+      }
+    });
+    return index;
   }
   rectanglehandler() {
     this.clearWidget();
@@ -126,6 +171,7 @@ class AreaWidget extends React.Component {
           }),
           symbol: fillSymbol,
         });
+        this.props.updateArea({ origin: e.origin, end: { x: e.x, y: e.y } });
         this.props.view.graphics.add(extentGraphic);
       }
     });
@@ -136,22 +182,65 @@ class AreaWidget extends React.Component {
     if (this.state.ShowGraphics) {
       this.state.ShowGraphics.remove();
       this.setState({ ShowGraphics: null });
+      this.props.updateArea();
     }
     this.nutsGroupLayer.removeAll();
     this.props.view.graphics.removeAll();
+    this.props.updateArea();
   }
   /**
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
     this.nutsGroupLayer = new GroupLayer({
       title: 'nuts',
       opacity: 0.5,
     });
     this.props.map.add(this.nutsGroupLayer);
+    this.props.view.on('click', (event) => {
+      if (
+        (this.props.mapViewer.activeWidget === this || this.props.download) &&
+        (this.props.mapViewer.activeWidget
+          ? !this.props.mapViewer.activeWidget.container.current.classList.contains(
+              'info-container',
+            )
+          : true)
+      ) {
+        this.props.view.hitTest(event).then((response) => {
+          if (response.results.length > 0) {
+            let graphic = response.results.filter((result) => {
+              let layer;
+              if ('nuts0 nuts1 nuts2 nuts3'.includes(result.graphic.layer.id)) {
+                layer = result.graphic;
+              }
+              return layer;
+            })[0].graphic;
+            if (graphic) {
+              let geometry = graphic.geometry;
+              if (geometry.type === 'polygon') {
+                let nuts = graphic.attributes.NUTS_ID;
+                this.props.updateArea(nuts);
+                let symbol = new SimpleFillSymbol(
+                  'solid',
+                  new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
+                  new Color([232, 104, 80, 0.25]),
+                );
+                let highlight = new Graphic(geometry, symbol);
+                this.props.view.graphics.removeAll();
+                this.props.view.graphics.add(highlight);
+              }
+            }
+          }
+        });
+      }
+    });
+
+    this.props.download
+      ? this.props.view.ui.add(this.container)
+      : this.props.view.ui.add(this.container.current, 'top-right');
   }
+
   /**
    * This method renders the component
    * @returns jsx
@@ -160,15 +249,17 @@ class AreaWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="area-container">
-          <div
-            className={this.menuClass}
-            id="map_area_button"
-            title="Area"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
-            tabIndex="0"
-            role="button"
-          ></div>
+          {!this.props.download && (
+            <div
+              className={this.menuClass}
+              id="map_area_button"
+              title="Area"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          )}
           <div className="area-panel">
             <div className="ccl-form">
               <fieldset className="ccl-fieldset">
@@ -218,6 +309,22 @@ class AreaWidget extends React.Component {
                 <div className="ccl-form-group">
                   <input
                     type="radio"
+                    id="download_area_select_nuts2"
+                    name="downloadAreaSelect"
+                    value="nuts2"
+                    className="ccl-checkbox ccl-required ccl-form-check-input"
+                    onClick={this.nuts2handler.bind(this)}
+                  ></input>
+                  <label
+                    className="ccl-form-radio-label"
+                    htmlFor="download_area_select_nuts2"
+                  >
+                    <span>NUTS 2</span>
+                  </label>
+                </div>
+                <div className="ccl-form-group">
+                  <input
+                    type="radio"
                     id="download_area_select_nuts3"
                     name="downloadAreaSelect"
                     value="nuts3"
@@ -251,6 +358,30 @@ class AreaWidget extends React.Component {
                     </div>
                   </label>
                 </div>
+                <div>
+                  {/* <div class="map-download-resource">
+                    <div class="ccl-form">
+                      <div class="map-download-header">
+                        <label for="download_area_select" class="map-download-header-title">Download resource as</label>
+                        <span class="info-icon" tooltip="Info" direction="up">
+                          <FontAwesomeIcon
+                            className="map-menu-icon"
+                            icon={['fas', 'info-circle']}
+                          />
+                        </span>
+                      </div>
+                      <div class="ccl-select-container">
+                        <div class="ccl-select-container">
+                          <select class="ccl-select" id="download_area_select" name="" >
+                            <option value="option1">GeoTiff</option>
+                            <option value="option2">ESRI Geodatabase</option>
+                            <option value="option3">SQLite Database</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div> */}
+                </div>
               </fieldset>
             </div>
           </div>
@@ -259,5 +390,4 @@ class AreaWidget extends React.Component {
     );
   }
 }
-
 export default AreaWidget;
