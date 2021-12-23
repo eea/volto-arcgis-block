@@ -720,7 +720,6 @@ class MenuWidget extends React.Component {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
-    let layerId = elem.getAttribute('layerid');
     if (elem.checked) {
       this.map.add(this.layers[elem.id]);
       this.visibleLayers[elem.id] = ['fas', 'eye'];
