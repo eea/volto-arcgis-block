@@ -314,6 +314,25 @@ class MenuWidget extends React.Component {
     }
     //to watch the component
     this.setState({});
+    this.checkUrl();
+  }
+
+  checkUrl() {
+    let url = new URL(window.location.href);
+    let product = url.searchParams.get('product');
+    let dataset = url.searchParams.get('dataset');
+    if (product || dataset) {
+      let event = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: false,
+      });
+      let elem = product
+        ? '[productid="' + product + '"]'
+        : '[datasetid="' + dataset + '"]';
+      let node = document.querySelector(elem + ' input');
+      node.dispatchEvent(event);
+    }
   }
 
   /**
@@ -414,6 +433,7 @@ class MenuWidget extends React.Component {
       <div
         className="map-menu-product-dropdown"
         id={'product_' + inheritedIndexProduct}
+        productid={product.ProductId}
         key={'a' + prodIndex}
       >
         <fieldset className="ccl-fieldset" key={'b' + prodIndex}>
@@ -521,8 +541,6 @@ class MenuWidget extends React.Component {
         dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
       );
     }
-    // ./dataset-catalogue/dataset-info.html
-    // ./dataset-catalogue/dataset-download.html
 
     return (
       <div
@@ -636,6 +654,7 @@ class MenuWidget extends React.Component {
               legendUrl: urlWMS + legendRequest + layer.LayerId,
             },
           ],
+          isTimeSeries: isTimeSeries,
         });
       } else if (urlWMS.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
@@ -646,6 +665,7 @@ class MenuWidget extends React.Component {
             id: layer.LayerId,
             title: layer.Title,
           },
+          isTimeSeries: isTimeSeries,
         });
       } else {
         this.layers[
@@ -655,6 +675,7 @@ class MenuWidget extends React.Component {
           id: layer.LayerId,
           title: layer.Title,
           popupEnabled: true,
+          isTimeSeries: isTimeSeries,
         });
       }
     }
@@ -712,7 +733,10 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      if (Object.keys(this.timeLayers).length > 0) {
+      if (
+        this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
+          .length > 0
+      ) {
         if (!document.querySelector('.info-container')) {
           let div = document.createElement('div');
           document.querySelector('.esri-ui-top-right').appendChild(div);
@@ -730,23 +754,15 @@ class MenuWidget extends React.Component {
         }
       }
     } else {
-      let checkboxes = document.getElementsByName('layerCheckbox');
-      let repeatedLayers = [];
-      for (let checkbox = 0; checkbox < checkboxes.length - 1; checkbox++) {
-        if (checkboxes[checkbox].getAttribute('layerid') === layerId) {
-          if (checkboxes[checkbox].checked) repeatedLayers.push(repeatedLayers);
-        }
-      }
-      if (repeatedLayers.length === 0) {
-        this.map.remove(this.layers[elem.id]);
-        delete this.activeLayersJSON[elem.id];
-        delete this.visibleLayers[elem.id];
-        delete this.timeLayers[elem.id];
-      }
+      this.map.remove(this.layers[elem.id]);
+      delete this.activeLayersJSON[elem.id];
+      delete this.visibleLayers[elem.id];
+      delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
     if (
-      Object.keys(this.timeLayers).length === 0 &&
+      this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
+        .length === 0 &&
       document.querySelector('.info-container')
     ) {
       this.props.mapViewer.closeActiveWidget();
