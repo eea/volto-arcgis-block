@@ -918,10 +918,10 @@ class MenuWidget extends React.Component {
     let reorder_elem = document.querySelector('#active_layers').firstChild;
     if (!reorder_elem) return;
     reorder_elem.setAttribute('layer-order', counter++);
-    this.layerReorder(reorder_elem.id, counter);
+    this.layerReorder(reorder_elem.getAttribute('layer-id'), counter);
     while ((reorder_elem = reorder_elem.nextSibling)) {
       reorder_elem.setAttribute('layer-order', counter++);
-      this.layerReorder(this.layers[reorder_elem.id], counter);
+      this.layerReorder(this.layers[reorder_elem.getAttribute('layer-id')], counter);
     }
   }
 
@@ -984,15 +984,15 @@ class MenuWidget extends React.Component {
             document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
         } else {
-          if (this.visibleLayers[elem.id][1] === 'eye') {
-            this.layers[elem.id].visible = false;
-            this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+          if (this.visibleLayers[layerId][1] === 'eye') {
+            this.layers[layerId].visible = false;
+            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
           }
           document
-            .querySelector('.active-layer[layer-id="' + elem.id + '"]')
+            .querySelector('.active-layer[layer-id="' + layerId + '"]')
             .classList.add('locked');
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(
-            document.getElementById(elem.id),
+          this.activeLayersJSON[layerId] = this.addActiveLayer(
+            document.getElementById(layerId),
             order,
           );
         }
@@ -1026,16 +1026,16 @@ class MenuWidget extends React.Component {
               document.querySelector('.esri-ui-bottom-right'),
             );
         } else {
-          if (this.visibleLayers[elem.id][1] === 'eye-slash') {
-            this.layers[elem.id].visible = true;
-            this.visibleLayers[elem.id] = ['fas', 'eye'];
-            this.activeLayersJSON[elem.id] = this.addActiveLayer(
-              document.getElementById(elem.id),
+          if (this.visibleLayers[layerId][1] === 'eye-slash') {
+            this.layers[layerId].visible = true;
+            this.visibleLayers[layerId] = ['fas', 'eye'];
+            this.activeLayersJSON[layerId] = this.addActiveLayer(
+              document.getElementById(layerId),
               order,
             );
           }
           document
-            .querySelector('.active-layer[layer-id="' + elem.id + '"]')
+            .querySelector('.active-layer[layer-id="' + layerId + '"]')
             .classList.remove('locked');
         }
       });
