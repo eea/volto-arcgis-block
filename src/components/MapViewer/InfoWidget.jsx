@@ -71,7 +71,7 @@ class InfoWidget extends React.Component {
     this.props.view.on('click', (e) => {
       if (this.props.mapViewer.activeWidget === this) {
         let timeLayers = this.map.layers.items.filter(
-          (a) => a.timeInfo && a.visible,
+          (a) => a.isTimeSeries && a.visible,
         );
         let layer = timeLayers[timeLayers.length - 1];
         let title;
