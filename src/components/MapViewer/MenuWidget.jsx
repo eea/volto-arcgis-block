@@ -921,7 +921,10 @@ class MenuWidget extends React.Component {
     this.layerReorder(reorder_elem.getAttribute('layer-id'), counter);
     while ((reorder_elem = reorder_elem.nextSibling)) {
       reorder_elem.setAttribute('layer-order', counter++);
-      this.layerReorder(this.layers[reorder_elem.getAttribute('layer-id')], counter);
+      this.layerReorder(
+        this.layers[reorder_elem.getAttribute('layer-id')],
+        counter,
+      );
     }
   }
 
