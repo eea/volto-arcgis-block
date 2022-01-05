@@ -316,6 +316,25 @@ class MenuWidget extends React.Component {
     }
     //to watch the component
     this.setState({});
+    this.checkUrl();
+  }
+
+  checkUrl() {
+    let url = new URL(window.location.href);
+    let product = url.searchParams.get('product');
+    let dataset = url.searchParams.get('dataset');
+    if (product || dataset) {
+      let event = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: false,
+      });
+      let elem = product
+        ? '[productid="' + product + '"]'
+        : '[datasetid="' + dataset + '"]';
+      let node = document.querySelector(elem + ' input');
+      node.dispatchEvent(event);
+    }
   }
 
   /**
@@ -416,6 +435,7 @@ class MenuWidget extends React.Component {
       <div
         className="map-menu-product-dropdown"
         id={'product_' + inheritedIndexProduct}
+        productid={product.ProductId}
         key={'a' + prodIndex}
       >
         <fieldset className="ccl-fieldset" key={'b' + prodIndex}>
@@ -523,8 +543,6 @@ class MenuWidget extends React.Component {
         dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
       );
     }
-    // ./dataset-catalogue/dataset-info.html
-    // ./dataset-catalogue/dataset-download.html
 
     return (
       <div
@@ -638,6 +656,7 @@ class MenuWidget extends React.Component {
               legendUrl: urlWMS + legendRequest + layer.LayerId,
             },
           ],
+          isTimeSeries: isTimeSeries,
         });
       } else if (urlWMS.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
@@ -648,6 +667,7 @@ class MenuWidget extends React.Component {
             id: layer.LayerId,
             title: layer.Title,
           },
+          isTimeSeries: isTimeSeries,
         });
       } else {
         this.layers[
@@ -657,6 +677,7 @@ class MenuWidget extends React.Component {
           id: layer.LayerId,
           title: layer.Title,
           popupEnabled: true,
+          isTimeSeries: isTimeSeries,
         });
       }
     }
@@ -701,7 +722,6 @@ class MenuWidget extends React.Component {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
-    let layerId = elem.getAttribute('layerid');
     if (elem.checked) {
       this.map.add(this.layers[elem.id]);
       this.visibleLayers[elem.id] = ['fas', 'eye'];
@@ -714,7 +734,10 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      if (Object.keys(this.timeLayers).length > 0) {
+      if (
+        this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
+          .length > 0
+      ) {
         if (!document.querySelector('.info-container')) {
           let div = document.createElement('div');
           document.querySelector('.esri-ui-top-right').appendChild(div);
@@ -732,23 +755,15 @@ class MenuWidget extends React.Component {
         }
       }
     } else {
-      let checkboxes = document.getElementsByName('layerCheckbox');
-      let repeatedLayers = [];
-      for (let checkbox = 0; checkbox < checkboxes.length - 1; checkbox++) {
-        if (checkboxes[checkbox].getAttribute('layerid') === layerId) {
-          if (checkboxes[checkbox].checked) repeatedLayers.push(repeatedLayers);
-        }
-      }
-      if (repeatedLayers.length === 0) {
-        this.map.remove(this.layers[elem.id]);
-        delete this.activeLayersJSON[elem.id];
-        delete this.visibleLayers[elem.id];
-        delete this.timeLayers[elem.id];
-      }
+      this.map.remove(this.layers[elem.id]);
+      delete this.activeLayersJSON[elem.id];
+      delete this.visibleLayers[elem.id];
+      delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
     if (
-      Object.keys(this.timeLayers).length === 0 &&
+      this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
+        .length === 0 &&
       document.querySelector('.info-container')
     ) {
       this.props.mapViewer.closeActiveWidget();
@@ -920,10 +935,13 @@ class MenuWidget extends React.Component {
     let reorder_elem = document.querySelector('#active_layers').firstChild;
     if (!reorder_elem) return;
     reorder_elem.setAttribute('layer-order', counter++);
-    this.layerReorder(reorder_elem.id, counter);
+    this.layerReorder(reorder_elem.getAttribute('layer-id'), counter);
     while ((reorder_elem = reorder_elem.nextSibling)) {
       reorder_elem.setAttribute('layer-order', counter++);
-      this.layerReorder(this.layers[reorder_elem.id], counter);
+      this.layerReorder(
+        this.layers[reorder_elem.getAttribute('layer-id')],
+        counter,
+      );
     }
   }
 
@@ -986,15 +1004,15 @@ class MenuWidget extends React.Component {
             document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
         } else {
-          if (this.visibleLayers[elem.id][1] === 'eye') {
-            this.layers[elem.id].visible = false;
-            this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+          if (this.visibleLayers[layerId][1] === 'eye') {
+            this.layers[layerId].visible = false;
+            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
           }
           document
-            .querySelector('.active-layer[layer-id="' + elem.id + '"]')
+            .querySelector('.active-layer[layer-id="' + layerId + '"]')
             .classList.add('locked');
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(
-            document.getElementById(elem.id),
+          this.activeLayersJSON[layerId] = this.addActiveLayer(
+            document.getElementById(layerId),
             order,
           );
         }
@@ -1028,16 +1046,16 @@ class MenuWidget extends React.Component {
               document.querySelector('.esri-ui-bottom-right'),
             );
         } else {
-          if (this.visibleLayers[elem.id][1] === 'eye-slash') {
-            this.layers[elem.id].visible = true;
-            this.visibleLayers[elem.id] = ['fas', 'eye'];
-            this.activeLayersJSON[elem.id] = this.addActiveLayer(
-              document.getElementById(elem.id),
+          if (this.visibleLayers[layerId][1] === 'eye-slash') {
+            this.layers[layerId].visible = true;
+            this.visibleLayers[layerId] = ['fas', 'eye'];
+            this.activeLayersJSON[layerId] = this.addActiveLayer(
+              document.getElementById(layerId),
               order,
             );
           }
           document
-            .querySelector('.active-layer[layer-id="' + elem.id + '"]')
+            .querySelector('.active-layer[layer-id="' + layerId + '"]')
             .classList.remove('locked');
         }
       });
