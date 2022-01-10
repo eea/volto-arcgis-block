@@ -196,7 +196,7 @@ class LayerControl {
         document
           .querySelectorAll('.use-case-element-description .use-case-coverage')
           .forEach((element) => {
-            if (element.innerText == country_code) {
+            if (element.innerText === country_code) {
               element.closest('.use-case-element').classList.add('selected');
             }
           });
