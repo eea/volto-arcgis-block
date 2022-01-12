@@ -13,9 +13,13 @@ class TimesliderWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = {
+      showMapMenu: false,
+      styles: { bottom: '0', right: '0' },
+    };
     this.map = this.props.map;
     this.layer = this.props.layer;
+    this.drag = {};
   }
 
   loader() {
@@ -72,13 +76,54 @@ class TimesliderWidget extends React.Component {
   }
 
   /**
+   * Needed to get the desired drag-and-drop behavior
+   * @param {*} e
+   */
+  onDragStart(e) {
+    this.drag.frame = document.getElementById('slide_frame');
+    this.drag.frame.style.visibility = 'visible';
+    this.drag.x = e.screenX - e.currentTarget.getBoundingClientRect().left;
+    this.drag.y = e.screenY - e.currentTarget.getBoundingClientRect().top;
+  }
+
+  onDragOver(e) {
+    e.preventDefault();
+  }
+
+  onDrop(e) {
+    let left =
+      e.screenX -
+      this.drag.x -
+      e.currentTarget.getBoundingClientRect().left +
+      'px';
+    let top =
+      e.screenY -
+      this.drag.y -
+      e.currentTarget.getBoundingClientRect().top +
+      'px';
+    this.setState({ styles: { left: left, top: top } });
+    this.drag.frame.style.visibility = 'hidden';
+  }
+
+  /**
    * This method renders the component
    * @returns jsx
    */
   render() {
     return (
       <>
-        <div ref={this.container} className="timeslider-container">
+        <div
+          id="slide_frame"
+          onDrop={(e) => this.onDrop(e)}
+          onDragOver={(e) => this.onDragOver(e)}
+        ></div>
+        <div
+          ref={this.container}
+          className="timeslider-container"
+          draggable="true"
+          onDragStart={(e) => this.onDragStart(e)}
+          style={this.state.styles}
+        >
           <div className="timeslider-panel"></div>
         </div>
       </>

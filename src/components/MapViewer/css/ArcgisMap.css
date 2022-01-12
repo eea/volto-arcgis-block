@@ -615,6 +615,31 @@
   margin-bottom: 1rem;
 }
 
+/* Time slider*/
+.esri-ui-bottom-right.esri-ui-corner {
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.timeslider-container {
+  position: absolute;
+  z-index: 1;
+  margin-left: 0 !important;
+}
+
+.timeslider-container .timeslider-panel {
+  cursor: move;
+}
+
+#slide_frame {
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  visibility: hidden;
+}
+
 /* Modal */
 .map-download-modal.ui.modal {
   margin: 0 !important;
