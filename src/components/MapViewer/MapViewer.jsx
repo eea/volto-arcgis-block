@@ -12,6 +12,7 @@ import MenuWidget from './MenuWidget';
 import { MapViewerConfig } from '../../actions';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
+import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom;
@@ -87,7 +88,7 @@ class MapViewer extends React.Component {
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
     // this.props.mapviewer_config
-    this.props.MapViewerConfig(this.props.url);
+    this.props.MapViewerConfig(flattenToAppURL(this.props.url));
 
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
