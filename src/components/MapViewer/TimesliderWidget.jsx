@@ -82,6 +82,9 @@ class TimesliderWidget extends React.Component {
   onDragStart(e) {
     this.drag.frame = document.getElementById('slide_frame');
     this.drag.frame.style.visibility = 'visible';
+    document.querySelector(
+      '.esri-ui-bottom-right.esri-ui-corner',
+    ).style.pointerEvents = 'auto';
     this.drag.x = e.screenX - e.currentTarget.getBoundingClientRect().left;
     this.drag.y = e.screenY - e.currentTarget.getBoundingClientRect().top;
   }
@@ -103,6 +106,9 @@ class TimesliderWidget extends React.Component {
       'px';
     this.setState({ styles: { left: left, top: top } });
     this.drag.frame.style.visibility = 'hidden';
+    document.querySelector(
+      '.esri-ui-bottom-right.esri-ui-corner',
+    ).style.pointerEvents = '';
   }
 
   /**
