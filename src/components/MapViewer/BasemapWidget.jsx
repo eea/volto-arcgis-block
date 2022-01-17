@@ -15,7 +15,7 @@ class BasemapWidget extends React.Component {
     //not be showing the basemap panel
     this.state = { showMapMenu: false };
     this.menuClass =
-      'esri-icon-basemap esri-widget--button esri-widget esri-interactive esri-icon-basemap';
+      'esri-icon-basemap esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
   }
 

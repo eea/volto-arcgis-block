@@ -8,6 +8,7 @@ import PrintWidget from './PrintWidget';
 import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
+import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import { MapViewerConfig } from '../../actions';
 import { compose } from 'redux';
@@ -157,6 +158,11 @@ class MapViewer extends React.Component {
     if (this.view) return <ScaleWidget view={this.view} mapViewer={this} />;
   }
 
+  renderInfo() {
+    if (this.view)
+      return <InfoWidget view={this.view} map={this.map} mapViewer={this} />;
+  }
+
   renderMenu() {
     if (this.view)
       return (
@@ -189,6 +195,7 @@ class MapViewer extends React.Component {
           {this.renderPrint()}
           {this.renderArea()}
           {this.renderScale()}
+          {this.renderInfo()}
           {this.renderMenu()}
         </div>
       </div>

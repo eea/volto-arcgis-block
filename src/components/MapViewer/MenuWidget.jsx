@@ -8,7 +8,6 @@ import { useIntl } from 'react-intl';
 import { Message, Modal } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-import InfoWidget from './InfoWidget';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
 export const AddCartItem = ({
@@ -738,21 +737,7 @@ class MenuWidget extends React.Component {
         this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
           .length > 0
       ) {
-        if (!document.querySelector('.info-container')) {
-          let div = document.createElement('div');
-          document.querySelector('.esri-ui-top-right').appendChild(div);
-          ReactDOM.render(
-            <InfoWidget
-              view={this.props.view}
-              map={this.map}
-              mapViewer={this.props.mapViewer}
-            />,
-            div,
-          );
-          div.remove();
-        } else {
-          document.querySelector('.info-container').style.display = '';
-        }
+        document.querySelector('.info-container').style.display = 'flex';
       }
     } else {
       this.map.remove(this.layers[elem.id]);
