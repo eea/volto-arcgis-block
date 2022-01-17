@@ -191,19 +191,25 @@ class LayerControl {
       ) {
         mapViewer.popupOnce = false;
         document.querySelector('.map').style.cursor = 'pointer';
+        let country_code =
+          response.results[0].graphic.attributes.Spatial_coverage;
         document
-          .querySelector(
-            '#use_case_' + response.results[0].graphic.attributes.OBJECTID,
-          )
-          .classList.add('selected');
+          .querySelectorAll('.use-case-element-description .use-case-coverage')
+          .forEach((element) => {
+            if (element.innerText === country_code) {
+              element.closest('.use-case-element').classList.add('selected');
+            }
+          });
       }
     } else {
       mapViewer.popupOnce = true;
       document.querySelector('.map').style.cursor = '';
       if (document.querySelector('.use-case-element.selected'))
         document
-          .querySelector('.use-case-element.selected')
-          .classList.remove('selected');
+          .querySelectorAll('.use-case-element.selected')
+          .forEach((element) => {
+            element.closest('.use-case-element').classList.remove('selected');
+          });
     }
   }
 

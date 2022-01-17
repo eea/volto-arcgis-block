@@ -8,10 +8,12 @@ import PrintWidget from './PrintWidget';
 import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
+import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import { MapViewerConfig } from '../../actions';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
+import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom;
@@ -87,7 +89,7 @@ class MapViewer extends React.Component {
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
     // this.props.mapviewer_config
-    this.props.MapViewerConfig(this.props.url);
+    this.props.MapViewerConfig(flattenToAppURL(this.props.url));
 
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
@@ -156,6 +158,11 @@ class MapViewer extends React.Component {
     if (this.view) return <ScaleWidget view={this.view} mapViewer={this} />;
   }
 
+  renderInfo() {
+    if (this.view)
+      return <InfoWidget view={this.view} map={this.map} mapViewer={this} />;
+  }
+
   renderMenu() {
     if (this.view)
       return (
@@ -188,6 +195,7 @@ class MapViewer extends React.Component {
           {this.renderPrint()}
           {this.renderArea()}
           {this.renderScale()}
+          {this.renderInfo()}
           {this.renderMenu()}
         </div>
       </div>
