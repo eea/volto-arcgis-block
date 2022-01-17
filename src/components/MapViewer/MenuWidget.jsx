@@ -28,7 +28,7 @@ export const AddCartItem = ({
 
   const checkArea = () => {
     let check = document.querySelector('.area-panel input:checked').value;
-    let area = [];
+    let area = {};
     if (check === 'area') {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
@@ -77,6 +77,8 @@ export const AddCartItem = ({
     let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
     let datasetData = {
       id: id,
+      UID: id,
+      unique_id: `${id}-${new Date().getTime()}`,
       area: area,
     };
     if (

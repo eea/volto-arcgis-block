@@ -5,7 +5,7 @@ let layerControl,
   view,
   mapViewer,
   layerSpatial,
-  layerNUTS,
+  layerHighlight,
   processedData = [];
 class InfoWidget extends React.Component {
   constructor(props) {
@@ -15,7 +15,7 @@ class InfoWidget extends React.Component {
     navigationControl = props.navigationControl;
     layerControl = props.layerControl;
     layerSpatial = props.layerSpatial;
-    layerNUTS = props.layerNUTS;
+    layerHighlight = props.layerHighlight;
     this.container = createRef();
   }
 
@@ -25,13 +25,11 @@ class InfoWidget extends React.Component {
    * @returns lateralMenu DOM
    */
   showUseCase(UseCase) {
-    layerControl.getGeometry(UseCase.Spatial_coverage, layerNUTS);
     let responsibleOrganizationOrPerson = UseCase.Responsible_organisation
       ? UseCase.Responsible_organisation
       : UseCase.Contact_person_name_
       ? UseCase.Contact_person_name_
       : '';
-    layerControl.showLayer(layerNUTS.id);
     return (
       <>
         <div className="use-cases-products-title">Use case detail</div>
@@ -101,20 +99,22 @@ class InfoWidget extends React.Component {
             key={val.Use_case_title}
             className="use-case-element"
             aria-hidden="true"
-            onClick={() =>
+            onClick={() => {
+              layerControl.getGeometry(val.Spatial_coverage, layerHighlight);
+              layerControl.showLayer(layerHighlight.id);
               mapViewer.setState((prevState) => ({
                 useCaseLevel: 4,
                 selectedUseCase: val,
                 previousState: prevState.useCaseLevel,
-              }))
-            }
+              }));
+            }}
             id={`use_case_${val.OBJECTID}`}
           >
             <div className="use-case-element-title">{val.Use_case_title}</div>
             <div className="use-case-element-description">
               <span>{val.Use_case_topics}</span>
               <span>{val.Use_case_submitting_production_year}</span>
-              <span>{val.Spatial_coverage}</span>
+              <span className="use-case-coverage">{val.Spatial_coverage}</span>
               <span>{responsibleOrganizationOrPerson}</span>
             </div>
           </div>
