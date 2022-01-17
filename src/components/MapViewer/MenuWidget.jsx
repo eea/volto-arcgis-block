@@ -572,7 +572,7 @@ class MenuWidget extends React.Component {
           >
             <span>{dataset.DatasetTitle}</span>
           </label>
-          {!this.props.download && (
+          {!this.props.download && dataset.Downloadable && (
             <AddCartItem
               cartData={this.compCfg}
               props={this.props}
