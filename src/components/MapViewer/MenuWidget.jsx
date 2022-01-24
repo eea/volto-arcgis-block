@@ -741,7 +741,6 @@ class MenuWidget extends React.Component {
           .querySelector('[datasetid="' + group + '"]')
           .querySelector('input');
         elem.title = dataset.title;
-        elem.id = elem.id;
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && !this.activeLayersJSON[groupLayers[0]]) {
           elem.hide = true;

@@ -71,7 +71,7 @@ class InfoWidget extends React.Component {
       if (this.props.mapViewer.activeWidget === this) {
         let option = document.querySelector('#info_layer').value;
         let selected = this.props.activeLayers[
-          this.props.activeLayers.findIndex((a) => a.name == option)
+          this.props.activeLayers.findIndex((a) => a.name === option)
         ];
         let layer = selected.layer;
         let title = selected.title;
@@ -302,7 +302,7 @@ class InfoWidget extends React.Component {
         })
         .reverse()[0];
       layers.layer = this.props.activeLayers[
-        this.props.activeLayers.findIndex((a) => a.name == layers.selected)
+        this.props.activeLayers.findIndex((a) => a.name === layers.selected)
       ].layer;
     } else if (
       !this.props.activeLayers
@@ -311,14 +311,13 @@ class InfoWidget extends React.Component {
         })
         .includes(this.state.timeLayers.selected)
     ) {
-      pixelInfo = false;
       layers.selected = this.props.activeLayers
         .map((a) => {
           return a.name;
         })
         .reverse()[0];
       layers.layer = this.props.activeLayers[
-        this.props.activeLayers.findIndex((a) => a.name == layers.selected)
+        this.props.activeLayers.findIndex((a) => a.name === layers.selected)
       ].layer;
     }
     this.setState({
@@ -328,7 +327,7 @@ class InfoWidget extends React.Component {
 
   selectLayer(option) {
     let selected = this.props.activeLayers[
-      this.props.activeLayers.findIndex((a) => a.name == option)
+      this.props.activeLayers.findIndex((a) => a.name === option)
     ];
     let names = this.state.timeLayers.names;
     let name = option;
@@ -347,7 +346,7 @@ class InfoWidget extends React.Component {
     let variable = option;
     let selected = this.props.activeLayers[
       this.props.activeLayers.findIndex(
-        (a) => a.name == this.state.timeLayers.selected,
+        (a) => a.name === this.state.timeLayers.selected,
       )
     ];
     let title = selected.title;
