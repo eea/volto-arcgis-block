@@ -15,7 +15,7 @@ class InfoWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = { showMapMenu: false, timeLayers: {} };
     this.map = this.props.map;
     this.menuClass =
       'esri-icon-description esri-widget--button esri-widget esri-interactive';
@@ -44,7 +44,7 @@ class InfoWidget extends React.Component {
         .classList.replace('esri-icon-right-arrow', 'esri-icon-description');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: false, pixelInfo: false });
+      this.setState({ showMapMenu: false, pixelInfo: false, timeLayers: {} });
       this.props.view.popup.autoOpenEnabled = true;
       this.removeMarker();
     } else {
@@ -69,18 +69,13 @@ class InfoWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.props.view.on('click', (e) => {
       if (this.props.mapViewer.activeWidget === this) {
-        let timeLayers = this.map.layers.items.filter(
-          (a) => a.isTimeSeries && a.visible,
-        );
-        let layer = timeLayers[timeLayers.length - 1];
-        let title;
-        if (layer.sublayers) {
-          title = layer.sublayers.items[0].title;
-        } else if (layer.activeLayer) {
-          title = layer.activeLayer.title;
-        } else {
-          title = layer.title;
-        }
+        let option = document.querySelector('#info_layer').value;
+        let selected = this.props.activeLayers[
+          this.props.activeLayers.findIndex((a) => a.name == option)
+        ];
+        let layer = selected.layer;
+        let title = selected.title;
+        let name = selected.name;
         this.identify(layer, e).then((response) => {
           let variables = response.variables.options;
           let variable = response.variables.selected;
@@ -109,7 +104,8 @@ class InfoWidget extends React.Component {
             pixelInfo: true,
             data: response,
             options: chartData,
-            variables: { options: variables, selected: variable, title: title },
+            variables: { options: variables, selected: variable },
+            timeLayers: { selected: name },
           });
         });
       }
@@ -152,11 +148,6 @@ class InfoWidget extends React.Component {
       });
       this.props.view.graphics.remove(marker);
     }
-
-    let marker = this.props.view.graphics.items.find((a) => {
-      return a.attributes ? a.attributes.id === 'pixel-info' : false;
-    });
-    this.props.view.graphics.remove(marker);
   }
 
   identify(layer, evt) {
@@ -302,10 +293,64 @@ class InfoWidget extends React.Component {
     return chartOptions;
   }
 
+  getActiveLayers() {
+    let layers = {};
+    if (!this.state.timeLayers.hasOwnProperty('selected')) {
+      layers.selected = this.props.activeLayers
+        .map((a) => {
+          return a.name;
+        })
+        .reverse()[0];
+      layers.layer = this.props.activeLayers[
+        this.props.activeLayers.findIndex((a) => a.name == layers.selected)
+      ].layer;
+    } else if (
+      !this.props.activeLayers
+        .map((a) => {
+          return a.name;
+        })
+        .includes(this.state.timeLayers.selected)
+    ) {
+      pixelInfo = false;
+      layers.selected = this.props.activeLayers
+        .map((a) => {
+          return a.name;
+        })
+        .reverse()[0];
+      layers.layer = this.props.activeLayers[
+        this.props.activeLayers.findIndex((a) => a.name == layers.selected)
+      ].layer;
+    }
+    this.setState({
+      timeLayers: layers,
+    });
+  }
+
+  selectLayer(option) {
+    let selected = this.props.activeLayers[
+      this.props.activeLayers.findIndex((a) => a.name == option)
+    ];
+    let names = this.state.timeLayers.names;
+    let name = option;
+    let layer = selected.layer;
+    this.removeMarker();
+    this.setState({
+      timeLayers: { names: names, selected: name, layer: layer },
+      pixelInfo: false,
+      data: {},
+      variables: {},
+    });
+  }
+
   selectVariable(option) {
     let variables = this.state.variables.options;
     let variable = option;
-    let title = this.state.variables.title;
+    let selected = this.props.activeLayers[
+      this.props.activeLayers.findIndex(
+        (a) => a.name == this.state.timeLayers.selected,
+      )
+    ];
+    let title = selected.title;
     let data = {
       x: this.state.data.timeFields.values
         .map((a) => {
@@ -321,7 +366,7 @@ class InfoWidget extends React.Component {
     let chartData = this.createChart(title, variable, data);
     this.setState({
       options: chartData,
-      variables: { options: variables, selected: variable, title: title },
+      variables: { options: variables, selected: variable },
     });
   }
 
@@ -330,12 +375,27 @@ class InfoWidget extends React.Component {
    * @returns jsx
    */
   render() {
-    let isEmpty;
-    if (this.state.data) {
+    let isEmpty = true;
+    let pixelInfo = true;
+    if (this.state.pixelInfo && this.state.data) {
       isEmpty =
         this.state.data.data.values.map((a) => {
           return a[this.state.variables.selected];
         }).length === 0;
+    }
+    if (
+      (this.props.activeLayers &&
+        !this.props.activeLayers
+          .map((a) => {
+            return a.name;
+          })
+          .includes(this.state.timeLayers.selected)) ||
+      (this.props.activeLayers &&
+        document.querySelector('#info_layer').value !==
+          this.state.timeLayers.selected)
+    ) {
+      pixelInfo = false;
+      this.removeMarker();
     }
     return (
       <>
@@ -350,20 +410,42 @@ class InfoWidget extends React.Component {
             role="button"
           ></div>
           <div className="info-panel">
-            {this.state.pixelInfo ? (
-              <>
+            {this.state.showMapMenu && (
+              <label>
+                Layer
                 <select
                   className="esri-select"
-                  value={this.state.variables.selected}
-                  onBlur={(e) => this.selectVariable(e.target.value)}
-                  onChange={(e) => this.selectVariable(e.target.value)}
+                  id="info_layer"
+                  value={this.state.timeLayers.selected}
+                  onBlur={(e) => e.preventDefault()}
+                  onChange={(e) => this.selectLayer(e.target.value)}
                 >
-                  {this.state.variables.options.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
+                  {this.props.activeLayers.map((option) => (
+                    <option key={option.name} value={option.name}>
+                      {option.title}
                     </option>
                   ))}
                 </select>
+              </label>
+            )}
+            {this.state.pixelInfo && pixelInfo ? (
+              <>
+                <label>
+                  Variable
+                  <select
+                    className="esri-select"
+                    id="info_variable"
+                    value={this.state.variables.selected}
+                    onBlur={(e) => e.preventDefault()}
+                    onChange={(e) => this.selectVariable(e.target.value)}
+                  >
+                    {this.state.variables.options.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 {isEmpty ? (
                   <span className="info-panel-empty">No data</span>
                 ) : (

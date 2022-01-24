@@ -171,7 +171,10 @@ class AreaWidget extends React.Component {
           }),
           symbol: fillSymbol,
         });
-        this.props.updateArea({ origin: e.origin, end: { x: e.x, y: e.y } });
+        this.props.updateArea({
+          origin: { x: origin.longitude, y: origin.latitude },
+          end: { x: p.longitude, y: p.latitude },
+        });
         this.props.view.graphics.add(extentGraphic);
       }
     });

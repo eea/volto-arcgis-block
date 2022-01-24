@@ -252,8 +252,8 @@ class MenuWidget extends React.Component {
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
     this.layers = {};
-    this.activeLayers = [];
     this.activeLayersJSON = {};
+    this.layerGroups = {};
   }
 
   loader() {
@@ -516,13 +516,18 @@ class MenuWidget extends React.Component {
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
+    if (dataset.handlingLevel) {
+      this.layerGroups[dataset.DatasetId] = [];
+    }
     for (var i in dataset.Layer) {
       if (dataset.Layer[i].Default_active === true) {
         layer_default.push(
           dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
         );
       }
-
+      if (dataset.handlingLevel) {
+        this.layerGroups[dataset.DatasetId].push(dataset.Layer[i].LayerId);
+      }
       layers.push(
         this.metodProcessLayer(
           dataset.Layer[i],
@@ -532,6 +537,7 @@ class MenuWidget extends React.Component {
           checkIndex,
           dataset.IsTimeSeries,
           layer_default,
+          dataset.handlingLevel,
         ),
       );
       index++;
@@ -557,6 +563,7 @@ class MenuWidget extends React.Component {
             parentid={checkProduct}
             name=""
             value="name"
+            title={dataset.DatasetTitle}
             defcheck={layer_default}
             className="ccl-checkbox ccl-required ccl-form-check-input"
             key={'c' + datIndex}
@@ -604,7 +611,6 @@ class MenuWidget extends React.Component {
     );
 
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
-    //solo tiene que tener alguno length >0
     datasetCheck.checked = trueChecks > 0;
 
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
@@ -626,6 +632,8 @@ class MenuWidget extends React.Component {
     urlWMS,
     parentIndex,
     isTimeSeries,
+    layer_default,
+    handlingLevel,
   ) {
     //For Legend request
     const legendRequest =
@@ -680,13 +688,14 @@ class MenuWidget extends React.Component {
         });
       }
     }
-
+    let style = handlingLevel ? { display: 'none' } : {};
     return (
       <div
         className="ccl-form-group map-menu-layer"
         id={'layer_' + inheritedIndexLayer}
         key={'a' + layerIndex}
         data-timeseries={isTimeSeries}
+        style={style}
       >
         <input
           type="checkbox"
@@ -721,23 +730,36 @@ class MenuWidget extends React.Component {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
+    let group = this.getGroup(elem);
     if (elem.checked) {
       this.map.add(this.layers[elem.id]);
+      this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['fas', 'step-forward'];
-      this.activeLayersJSON[elem.id] = this.addActiveLayer(
-        elem,
-        Object.keys(this.activeLayersJSON).length,
-      );
+      if (group) {
+        let dataset = document
+          .querySelector('[datasetid="' + group + '"]')
+          .querySelector('input');
+        elem.title = dataset.title;
+        elem.id = elem.id;
+        let groupLayers = this.getGroupLayers(group);
+        if (groupLayers.length > 0 && !this.activeLayersJSON[groupLayers[0]]) {
+          elem.hide = true;
+        }
+
+        this.activeLayersJSON[elem.id] = this.addActiveLayer(
+          elem,
+          Object.keys(this.activeLayersJSON).length,
+        );
+      } else {
+        this.activeLayersJSON[elem.id] = this.addActiveLayer(
+          elem,
+          Object.keys(this.activeLayersJSON).length,
+        );
+      }
       let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
-      }
-      if (
-        this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
-          .length > 0
-      ) {
-        document.querySelector('.info-container').style.display = 'flex';
       }
     } else {
       this.map.remove(this.layers[elem.id]);
@@ -746,15 +768,9 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
-    if (
-      this.map.layers.items.filter((a) => a.isTimeSeries && a.visible)
-        .length === 0 &&
-      document.querySelector('.info-container')
-    ) {
-      this.props.mapViewer.closeActiveWidget();
-      document.querySelector('.info-container').style.display = 'none';
-    }
+    this.checkInfoWidget();
     this.setState({});
+    this.layersReorder();
   }
 
   /**
@@ -771,7 +787,8 @@ class MenuWidget extends React.Component {
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
-    return activeLayersArray.reverse();
+    let data = activeLayersArray.sort((a) => a.props['layer-order']).reverse();
+    return data;
   }
 
   /**
@@ -850,6 +867,7 @@ class MenuWidget extends React.Component {
         layer-id={elem.id}
         layer-order={order}
         draggable="true"
+        {...(elem.hide && { style: { display: 'none' } })}
         onDrop={(e) => this.onDrop(e)}
         onDragOver={(e) => this.onDragOver(e)}
         onDragStart={(e) => this.onDragStart(e)}
@@ -901,13 +919,34 @@ class MenuWidget extends React.Component {
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
-    this.draggingElement.parentElement.removeChild(this.draggingElement);
+    let group = this.getGroup(
+      document.getElementById(this.draggingElement.getAttribute('layer-id')),
+    )
+      ? this.getGroup(
+          document.getElementById(
+            this.draggingElement.getAttribute('layer-id'),
+          ),
+        )
+      : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
+    let groupLayers = this.getGroupLayers(group);
     if (init_ord > dst_ord) {
-      dst.parentElement.insertBefore(this.draggingElement, dst);
-    } else {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
+    } else {
+      dst.parentElement.insertBefore(this.draggingElement, dst);
     }
-
+    if (group && groupLayers.length > 1) {
+      groupLayers.forEach((item, index) => {
+        if (
+          this.draggingElement.getAttribute('layer-id') !== item ||
+          dst.getAttribute('layer-id') !== item
+        ) {
+          dst.parentElement.insertBefore(
+            document.getElementById('active_' + item),
+            this.draggingElement.nextSibling,
+          );
+        }
+      });
+    }
     this.layersReorder();
   }
 
@@ -916,18 +955,13 @@ class MenuWidget extends React.Component {
    * @returns
    */
   layersReorder() {
-    let counter = 0;
-    let reorder_elem = document.querySelector('#active_layers').firstChild;
-    if (!reorder_elem) return;
-    reorder_elem.setAttribute('layer-order', counter++);
-    this.layerReorder(reorder_elem.getAttribute('layer-id'), counter);
-    while ((reorder_elem = reorder_elem.nextSibling)) {
-      reorder_elem.setAttribute('layer-order', counter++);
-      this.layerReorder(
-        this.layers[reorder_elem.getAttribute('layer-id')],
-        counter,
-      );
-    }
+    let activeLayers = document.querySelectorAll('.active-layer');
+    let counter = activeLayers.length - 1;
+    activeLayers.forEach((item, index) => {
+      let order = counter - index;
+      item.setAttribute('layer-order', order);
+      this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
+    });
   }
 
   /**
@@ -937,8 +971,7 @@ class MenuWidget extends React.Component {
    * @param {*} index
    */
   layerReorder(layer, index) {
-    let lastNum = Object.keys(this.activeLayersJSON).length - 1;
-    this.map.reorder(layer, lastNum - index);
+    this.map.reorder(layer, index);
   }
 
   /**
@@ -958,16 +991,47 @@ class MenuWidget extends React.Component {
   }
 
   /**
+   * Method for granularity
+   */
+  getGroup(elem) {
+    for (var i in this.layerGroups) {
+      if (
+        this.layerGroups[i].includes(elem.getAttribute('layerid')) &&
+        elem.closest("[datasetid='" + i + "']")
+      )
+        return i;
+    }
+    return null;
+  }
+  getGroupLayers(group) {
+    let layers;
+    if (group) {
+      layers = document
+        .querySelector('[datasetid="' + group + '"] input')
+        .getAttribute('defcheck')
+        .split(',');
+    } else {
+      layers = '';
+    }
+    return layers;
+  }
+
+  /**
    * Method to show/hide time slider
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
   showTimeSlider(elem) {
     let activeLayers = document.querySelectorAll('.active-layer');
+    let group = this.getGroup(elem);
+    let groupLayers = this.getGroupLayers(group);
     if (this.timeLayers[elem.id][1] === 'step-forward') {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
         let order = this.activeLayersJSON[elem.id].props['layer-order'];
+        if (groupLayers.includes(layerId)) {
+          elem = document.getElementById(layerId);
+        }
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'stop'];
           if (this.visibleLayers[elem.id][1] === 'eye-slash') {
@@ -1006,6 +1070,9 @@ class MenuWidget extends React.Component {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
         let order = this.activeLayersJSON[elem.id].props['layer-order'];
+        if (groupLayers.includes(layerId)) {
+          elem = document.getElementById(layerId);
+        }
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'step-forward'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
@@ -1048,23 +1115,91 @@ class MenuWidget extends React.Component {
     this.setState({});
   }
 
+  checkInfoWidget() {
+    let timeLayers = this.map.layers.items.filter(
+      (a) => a.isTimeSeries && a.visible,
+    );
+    if (timeLayers.length === 0 && document.querySelector('.info-container')) {
+      this.props.mapViewer.closeActiveWidget();
+      document.querySelector('.info-container').style.display = 'none';
+    } else if (timeLayers.length > 0) {
+      document.querySelector('.info-container').style.display = 'flex';
+      var result = [];
+      Object.keys(this.activeLayersJSON).forEach((key) => {
+        let layer = this.layers[key];
+        if (layer.isTimeSeries && layer.visible) {
+          result.push({
+            name: key,
+            title: this.getLayerTitle(this.layers[key]),
+            layer: this.layers[key],
+            order: this.activeLayersJSON[key].props['layer-order'],
+          });
+        }
+      });
+      let data = result
+        .map((x) => {
+          return x;
+        })
+        .sort((a, b) => {
+          return b.order - a.order;
+        });
+      this.props.updateActiveLayers(data);
+    }
+  }
+
+  getLayerTitle(layer) {
+    let title;
+    if (layer.sublayers) {
+      title = layer.sublayers.items[0].title;
+    } else if (layer.activeLayer) {
+      title = layer.activeLayer.title;
+    } else {
+      title = layer.title;
+    }
+    return title;
+  }
+
   /**
    * Method to show/hide layer from "Active Layers"
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    // let elementId = elem.getAttribute('layerid');
+    let group = this.getGroup(elem);
+    let groupLayers = this.getGroupLayers(group);
     if (this.visibleLayers[elem.id][1] === 'eye') {
-      this.layers[elem.id].visible = false;
-      this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+      if (group && groupLayers.length > 1) {
+        groupLayers.forEach((item) => {
+          this.layers[item].visible = false;
+          this.visibleLayers[item] = ['fas', 'eye-slash'];
+        });
+      } else {
+        this.layers[elem.id].visible = false;
+        this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+      }
     } else {
-      this.map.add(this.layers[elem.id]);
-      this.layers[elem.id].visible = true;
-      this.visibleLayers[elem.id] = ['fas', 'eye'];
+      if (group && groupLayers.length > 1) {
+        groupLayers.forEach((item) => {
+          this.map.add(this.layers[item]);
+          this.layers[item].visible = true;
+          this.visibleLayers[item] = ['fas', 'eye'];
+        });
+      } else {
+        this.map.add(this.layers[elem.id]);
+        this.layers[elem.id].visible = true;
+        this.visibleLayers[elem.id] = ['fas', 'eye'];
+      }
     }
-    this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+    if (group && groupLayers.length > 1) {
+      groupLayers.forEach((item) => {
+        elem = document.getElementById(item);
+        this.activeLayersJSON[item] = this.addActiveLayer(elem, 0);
+      });
+    } else {
+      this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+    }
     this.layersReorder();
+    this.checkInfoWidget();
     this.setState({});
   }
 
@@ -1074,10 +1209,22 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   deleteCrossEvent(elem) {
-    // elem has to be unchecked
-    elem.checked = false;
-    this.toggleLayer(elem);
-    delete this.activeLayersJSON[elem.id];
+    let group = this.getGroup(elem);
+    let groupLayers = this.getGroupLayers(group);
+    if (group && groupLayers.length > 1) {
+      groupLayers.forEach((item) => {
+        elem = document.getElementById(item);
+        // elem has to be unchecked
+        elem.checked = false;
+        this.toggleLayer(elem);
+        delete this.activeLayersJSON[elem.id];
+      });
+    } else {
+      // elem has to be unchecked
+      elem.checked = false;
+      this.toggleLayer(elem);
+      delete this.activeLayersJSON[elem.id];
+    }
     this.setState({});
   }
 
