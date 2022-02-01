@@ -516,7 +516,7 @@ class MenuWidget extends React.Component {
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
 
-    if (dataset.handlingLevel) {
+    if (dataset.HandlingLevel) {
       this.layerGroups[dataset.DatasetId] = [];
     }
     for (var i in dataset.Layer) {
@@ -525,7 +525,7 @@ class MenuWidget extends React.Component {
           dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
         );
       }
-      if (dataset.handlingLevel) {
+      if (dataset.HandlingLevel) {
         this.layerGroups[dataset.DatasetId].push(dataset.Layer[i].LayerId);
       }
       layers.push(
@@ -537,7 +537,7 @@ class MenuWidget extends React.Component {
           checkIndex,
           dataset.IsTimeSeries,
           layer_default,
-          dataset.handlingLevel,
+          dataset.HandlingLevel,
         ),
       );
       index++;
