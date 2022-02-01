@@ -1091,7 +1091,10 @@ class MenuWidget extends React.Component {
               .querySelector('#download_label')
               .classList.remove('locked');
           if (
-            document.contains(document.querySelector('.timeslider-container'))
+            document.contains(
+              document.querySelector('.timeslider-container'),
+            ) &&
+            !this.props.download
           )
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
