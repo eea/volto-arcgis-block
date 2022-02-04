@@ -20,7 +20,6 @@ class InfoWidget extends React.Component {
     this.menuClass =
       'esri-icon-description esri-widget--button esri-widget esri-interactive';
     this.infoData = {};
-    this.activeLayers;
   }
 
   loader() {
@@ -178,7 +177,7 @@ class InfoWidget extends React.Component {
   loadInfoChart(index) {
     let response = this.infoData[index].data;
     let title = this.infoData[index].title;
-    let variables = response.variables.options;
+    //let variables = response.variables.options;
     let variable = response.variables.selected;
     let data = {
       x: response.timeFields.values
@@ -405,7 +404,7 @@ class InfoWidget extends React.Component {
 
   loadVariableSelector(index) {
     let response = this.infoData[index].data;
-    let title = this.infoData[index].title;
+    //let title = this.infoData[index].title;
     let variables = response.variables.options;
     let variable = response.variables.selected;
     let options = variables.map((option) => {
