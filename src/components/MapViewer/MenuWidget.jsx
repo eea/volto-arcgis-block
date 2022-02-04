@@ -1118,34 +1118,31 @@ class MenuWidget extends React.Component {
   }
 
   checkInfoWidget() {
-    let timeLayers = this.map.layers.items.filter(
-      (a) => a.isTimeSeries && a.visible,
-    );
-    if (timeLayers.length === 0 && document.querySelector('.info-container')) {
+    let layers = [];
+    Object.keys(this.activeLayersJSON).forEach((key) => {
+      let layer = this.layers[key];
+      if (layer.visible) {
+        layers.push({
+          name: key,
+          title: this.getLayerTitle(this.layers[key]),
+          layer: this.layers[key],
+          order: this.activeLayersJSON[key].props['layer-order'],
+        });
+      }
+    });
+    if (layers.length === 0 && document.querySelector('.info-container')) {
       this.props.mapViewer.closeActiveWidget();
       document.querySelector('.info-container').style.display = 'none';
-    } else if (timeLayers.length > 0) {
+    } else if (layers.length > 0) {
       document.querySelector('.info-container').style.display = 'flex';
-      var result = [];
-      Object.keys(this.activeLayersJSON).forEach((key) => {
-        let layer = this.layers[key];
-        if (layer.isTimeSeries && layer.visible) {
-          result.push({
-            name: key,
-            title: this.getLayerTitle(this.layers[key]),
-            layer: this.layers[key],
-            order: this.activeLayersJSON[key].props['layer-order'],
-          });
-        }
-      });
-      let data = result
-        .map((x) => {
-          return x;
-        })
-        .sort((a, b) => {
-          return b.order - a.order;
-        });
-      this.props.updateActiveLayers(data);
+      // let data = layers
+      //   .map((x) => {
+      //     return x;
+      //   })
+      //   .sort((a, b) => {
+      //     return b.order - a.order;
+      //   });
+      // this.props.updateActiveLayers(data);
     }
   }
 

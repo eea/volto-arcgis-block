@@ -611,8 +611,35 @@
   font-size: 1rem;
 }
 
+.info-panel-title {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
 .info-panel select {
   margin-bottom: 1rem;
+}
+
+.info-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.info-table td {
+  width: 50%;
+  padding: 1rem 0.75rem;
+  font-size: 0.875rem;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.info-table tr:nth-child(even) {
+  background-color: #a0b1280f;
+}
+
+.info-table tr:nth-child(odd) {
+  background-color: #a0b12833;
 }
 
 /* Time slider*/

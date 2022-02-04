@@ -19,6 +19,8 @@ class InfoWidget extends React.Component {
     this.map = this.props.map;
     this.menuClass =
       'esri-icon-description esri-widget--button esri-widget esri-interactive';
+    this.infoData = {};
+    this.activeLayers;
   }
 
   loader() {
@@ -44,8 +46,13 @@ class InfoWidget extends React.Component {
         .classList.replace('esri-icon-right-arrow', 'esri-icon-description');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: false, pixelInfo: false, timeLayers: {} });
-      this.props.view.popup.autoOpenEnabled = true;
+      this.setState({
+        showMapMenu: false,
+        pixelInfo: false,
+        popup: false,
+        timeLayers: {},
+      });
+      //this.props.view.popup.autoOpenEnabled = true;
       this.removeMarker();
     } else {
       this.props.mapViewer.setActiveWidget(this);
@@ -58,7 +65,7 @@ class InfoWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
       this.props.mapViewer.view.popup.close();
-      this.props.view.popup.autoOpenEnabled = false;
+      //this.props.view.popup.autoOpenEnabled = false;
     }
   }
   /**
@@ -68,48 +75,124 @@ class InfoWidget extends React.Component {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
     this.props.view.on('click', (e) => {
+      let screenPoint = {
+        x: e.x,
+        y: e.y,
+      };
       if (this.props.mapViewer.activeWidget === this) {
-        let option = document.querySelector('#info_layer').value;
-        let selected = this.props.activeLayers[
-          this.props.activeLayers.findIndex((a) => a.name === option)
-        ];
-        let layer = selected.layer;
-        let title = selected.title;
-        let name = selected.name;
-        this.identify(layer, e).then((response) => {
-          let variables = response.variables.options;
-          let variable = response.variables.selected;
-          if (
-            this.state.variables
-              ? variables.includes(this.state.variables.selected)
-              : false
-          ) {
-            variable = this.state.variables.selected;
+        let layers = this.map.layers.items.filter(
+          (a) => a.visible && a.title !== 'nuts',
+        );
+        let promises = [];
+        this.infoData = {};
+        layers.forEach((layer, index) => {
+          let title = this.getLayerTitle(layer);
+          if (layer.isTimeSeries) {
+            if (layer.url.toLowerCase().includes('wms')) {
+            } else if (layer.url.toLowerCase().includes('wmts')) {
+            } else {
+              promises['p' + index] = this.identify(layer, e).then(
+                (response) => {
+                  this.infoData[index] = {
+                    title: title,
+                    data: response,
+                  };
+                  //this.setState({
+                  //pixelInfo: true,
+                  //});
+                },
+              );
+            }
+          } else {
+            if (layer.url.toLowerCase().includes('wms')) {
+              let coords = '';
+              promises['p' + index] = this.getFeatureInfo(coords, (data) => {
+                if (data.features.length > 0) {
+                  let properties = data.features[0].properties;
+                  this.infoData[index] = {
+                    title: title,
+                    data: Object.entries(properties),
+                  };
+                }
+                // this.setState({
+                //   popup: true,
+                // });
+              });
+            } else if (layer.url.toLowerCase().includes('wmts')) {
+            } else {
+              promises['p' + index] = this.props.view
+                .hitTest(screenPoint)
+                .then((response) => {
+                  if (response.results.length) {
+                    var graphic = response.results.filter((result) => {
+                      return result.graphic.layer === layer;
+                    })[0].graphic;
+                    if (graphic) {
+                      this.infoData[index] = {
+                        title: title,
+                        data: Object.entries(graphic.attributes),
+                      };
+                    }
+                  }
+                  // this.setState({
+                  //   popup: true,
+                  // });
+                });
+            }
           }
-          let data = {
-            x: response.timeFields.values
-              .map((a) => {
-                return a[response.timeFields.start];
-              })
-              .sort((a, b) => {
-                return new Date(a).getTime() - new Date(b).getTime();
-              }),
-            y: response.data.values.map((a) => {
-              return Math.round(a[variable] * 100) / 100;
-            }),
-          };
-          let chartData = this.createChart(title, variable, data);
           this.addMarker(e);
-          this.setState({
-            pixelInfo: true,
-            data: response,
-            options: chartData,
-            variables: { options: variables, selected: variable },
-            timeLayers: { selected: name },
+          Promise.all(promises).then((values) => {
+            this.setState({
+              popup: true,
+            });
           });
         });
       }
     });
+  }
+
+  getLayerTitle(layer) {
+    let title;
+    if (layer.sublayers) {
+      title = layer.sublayers.items[0].title;
+    } else if (layer.activeLayer) {
+      title = layer.activeLayer.title;
+    } else {
+      title = layer.title;
+    }
+    return title;
+  }
+
+  getFeatureInfo(coords, callback) {
+    let xmlhttp = new XMLHttpRequest();
+    const url =
+      'https://geoserveis.icgc.cat/icgc_sentinel2/wms/service?service=WMS&request=GetFeatureInfo&bbox=41,1.8,41.2,2.2&layers=sen2rgb&query_layers=sen2rgb&crs=EPSG:4326&version=1.3.0&width=780&height=330&info_format=application/geojson&time=2018-09';
+    xmlhttp.onreadystatechange = () => {
+      if (xmlhttp.readyState === 4 && xmlhttp.status === 200)
+        callback(JSON.parse(xmlhttp.responseText), this.props.mapViewer);
+    };
+    xmlhttp.open('GET', url, true);
+    xmlhttp.send();
+  }
+
+  loadInfoChart(index) {
+    let response = this.infoData[index].data;
+    let title = this.infoData[index].title;
+    let variables = response.variables.options;
+    let variable = response.variables.selected;
+    let data = {
+      x: response.timeFields.values
+        .map((a) => {
+          return a[response.timeFields.start];
+        })
+        .sort((a, b) => {
+          return new Date(a).getTime() - new Date(b).getTime();
+        }),
+      y: response.data.values.map((a) => {
+        return Math.round(a[variable] * 100) / 100;
+      }),
+    };
+    return this.createChart(title, variable, data);
   }
 
   addMarker(evt) {
@@ -169,7 +252,9 @@ class InfoWidget extends React.Component {
       .map((b) => {
         return b.name;
       });
-    let field = layer.displayField in fields ? layer.displayField : fields[0];
+    let field = fields.includes(layer.displayField)
+      ? layer.displayField
+      : fields[0];
     values.variables = { options: fields, selected: field };
     if (layer.timeInfo.fullTimeExtent.endField) {
       timeQuery.outFields.push(layer.timeInfo.endField);
@@ -293,80 +378,57 @@ class InfoWidget extends React.Component {
     return chartOptions;
   }
 
-  getActiveLayers() {
-    let layers = {};
-    if (!this.state.timeLayers.hasOwnProperty('selected')) {
-      layers.selected = this.props.activeLayers
-        .map((a) => {
-          return a.name;
-        })
-        .reverse()[0];
-      layers.layer = this.props.activeLayers[
-        this.props.activeLayers.findIndex((a) => a.name === layers.selected)
-      ].layer;
-    } else if (
-      !this.props.activeLayers
-        .map((a) => {
-          return a.name;
-        })
-        .includes(this.state.timeLayers.selected)
-    ) {
-      layers.selected = this.props.activeLayers
-        .map((a) => {
-          return a.name;
-        })
-        .reverse()[0];
-      layers.layer = this.props.activeLayers[
-        this.props.activeLayers.findIndex((a) => a.name === layers.selected)
-      ].layer;
-    }
-    this.setState({
-      timeLayers: layers,
-    });
-  }
-
-  selectLayer(option) {
-    let selected = this.props.activeLayers[
-      this.props.activeLayers.findIndex((a) => a.name === option)
-    ];
-    let names = this.state.timeLayers.names;
-    let name = option;
-    let layer = selected.layer;
-    this.removeMarker();
-    this.setState({
-      timeLayers: { names: names, selected: name, layer: layer },
-      pixelInfo: false,
-      data: {},
-      variables: {},
-    });
-  }
-
   selectVariable(option) {
-    let variables = this.state.variables.options;
-    let variable = option;
-    let selected = this.props.activeLayers[
-      this.props.activeLayers.findIndex(
-        (a) => a.name === this.state.timeLayers.selected,
-      )
-    ];
-    let title = selected.title;
-    let data = {
-      x: this.state.data.timeFields.values
-        .map((a) => {
-          return a[this.state.data.timeFields.start];
-        })
-        .sort((a, b) => {
-          return new Date(a).getTime() - new Date(b).getTime();
-        }),
-      y: this.state.data.data.values.map((a) => {
-        return Math.round(a[variable] * 100) / 100;
-      }),
-    };
-    let chartData = this.createChart(title, variable, data);
+    this.infoData[0].data.variables.selected = option;
     this.setState({
-      options: chartData,
-      variables: { options: variables, selected: variable },
+      pixelInfo: true,
     });
+  }
+
+  loadInfoTable(index) {
+    let properties = this.infoData[index].data;
+    let table = properties.map((item) => {
+      return (
+        <tr key={item}>
+          {Object.values(item).map((val) => (
+            <td>{val}</td>
+          ))}
+        </tr>
+      );
+    });
+    return (
+      <table className="info-table">
+        <tbody>{table}</tbody>
+      </table>
+    );
+  }
+
+  loadVariableSelector(index) {
+    let response = this.infoData[index].data;
+    let title = this.infoData[index].title;
+    let variables = response.variables.options;
+    let variable = response.variables.selected;
+    let options = variables.map((option) => {
+      return (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      );
+    });
+    return (
+      <label>
+        Variable
+        <select
+          className="esri-select"
+          id="info_variable"
+          value={variable}
+          onBlur={(e) => e.preventDefault()}
+          onChange={(e) => this.selectVariable(e.target.value)}
+        >
+          {options}
+        </select>
+      </label>
+    );
   }
 
   /**
@@ -374,28 +436,12 @@ class InfoWidget extends React.Component {
    * @returns jsx
    */
   render() {
-    let isEmpty = true;
-    let pixelInfo = true;
-    if (this.state.pixelInfo && this.state.data) {
-      isEmpty =
-        this.state.data.data.values.map((a) => {
-          return a[this.state.variables.selected];
-        }).length === 0;
-    }
-    if (
-      (this.props.activeLayers &&
-        !this.props.activeLayers
-          .map((a) => {
-            return a.name;
-          })
-          .includes(this.state.timeLayers.selected)) ||
-      (this.props.activeLayers &&
-        document.querySelector('#info_layer').value !==
-          this.state.timeLayers.selected)
-    ) {
-      pixelInfo = false;
-      this.removeMarker();
-    }
+    let noData = this.state.pixelInfo
+      ? this.infoData[0].data.data.values.map((a) => {
+          return a[this.infoData[0].data.variables.selected];
+        }).length === 0
+      : Object.keys(this.infoData).length === 0;
+    let layer = 0;
     return (
       <>
         <div ref={this.container} className="info-container">
@@ -409,51 +455,24 @@ class InfoWidget extends React.Component {
             role="button"
           ></div>
           <div className="info-panel">
-            {this.state.showMapMenu && (
-              <label>
-                Layer
-                <select
-                  className="esri-select"
-                  id="info_layer"
-                  value={this.state.timeLayers.selected}
-                  onBlur={(e) => e.preventDefault()}
-                  onChange={(e) => this.selectLayer(e.target.value)}
-                >
-                  {this.props.activeLayers.map((option) => (
-                    <option key={option.name} value={option.name}>
-                      {option.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            {(this.state.pixelInfo || this.state.popup) && (
+              <span className="info-panel-title">
+                {this.infoData[layer].title}
+              </span>
             )}
-            {this.state.pixelInfo && pixelInfo ? (
+            {this.state.pixelInfo && !noData && (
               <>
-                <label>
-                  Variable
-                  <select
-                    className="esri-select"
-                    id="info_variable"
-                    value={this.state.variables.selected}
-                    onBlur={(e) => e.preventDefault()}
-                    onChange={(e) => this.selectVariable(e.target.value)}
-                  >
-                    {this.state.variables.options.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {isEmpty ? (
-                  <span className="info-panel-empty">No data</span>
-                ) : (
-                  <HighchartsReact
-                    highcharts={Highcharts}
-                    options={this.state.options}
-                  />
-                )}
+                {this.loadVariableSelector(0)}
+
+                <HighchartsReact
+                  highcharts={Highcharts}
+                  options={this.loadInfoChart(layer)}
+                />
               </>
+            )}
+            {this.state.popup && !noData && this.loadInfoTable(layer)}
+            {this.state.pixelInfo || this.state.popup ? (
+              noData && <span className="info-panel-empty">No data</span>
             ) : (
               <span className="info-panel-empty">
                 Click on the map to get pixel info

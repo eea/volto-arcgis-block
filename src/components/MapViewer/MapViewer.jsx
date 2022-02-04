@@ -89,7 +89,7 @@ class MapViewer extends React.Component {
     this.view.ui.add(this.zoom, {
       position: 'top-right',
     });
-
+    this.view.popup.autoOpenEnabled = false;
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
     // this.props.mapviewer_config
