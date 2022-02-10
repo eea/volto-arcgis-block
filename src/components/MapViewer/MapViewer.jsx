@@ -46,10 +46,6 @@ class MapViewer extends React.Component {
     this.mapViewer.setState({ area: shared_value });
   }
 
-  updateActiveLayers(shared_value) {
-    this.mapViewer.setState({ activeLayers: shared_value });
-  }
-
   loader() {
     return loadModules([
       'esri/WebMap',
@@ -169,8 +165,6 @@ class MapViewer extends React.Component {
           view={this.view}
           map={this.map}
           mapViewer={this}
-          updateActiveLayers={this.updateActiveLayers}
-          activeLayers={this.state.activeLayers}
         />
       );
   }
@@ -186,7 +180,6 @@ class MapViewer extends React.Component {
           mapViewer={this}
           updateArea={this.updateArea}
           area={this.state.area}
-          updateActiveLayers={this.updateActiveLayers}
         />
       ); //call conf
   }

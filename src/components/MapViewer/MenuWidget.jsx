@@ -137,6 +137,24 @@ export const AddCartItem = ({
     }
   };
 
+  const selectBBox = () => {
+    if (
+      !mapViewer.activeWidget ||
+      !mapViewer.activeWidget.container.current.classList.contains(
+        'area-container',
+      )
+    ) {
+      let event = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: false,
+      });
+      let node = document.getElementById('map_area_button');
+      node.dispatchEvent(event);
+    }
+    closeModal();
+  };
+
   return (
     <>
       {showMessage && (
@@ -171,24 +189,87 @@ export const AddCartItem = ({
         </div>
       ) : (
         <>
-          <Modal size="tiny" open={modal} className="map-download-modal">
+          <Modal
+            size="tiny"
+            onClose={() => closeModal()}
+            onOpen={() => showModal()}
+            open={modal}
+            className="map-download-modal"
+          >
+            <div className="modal-close modal-clms-close">
+              <span
+                className="ccl-icon-close"
+                aria-label="Close"
+                onClick={() => closeModal()}
+                onKeyDown={() => closeModal()}
+                tabIndex="0"
+                role="button"
+              ></span>
+            </div>
             <Modal.Content>
               <p>Do you want to add this dataset to the cart?</p>
+              {!areaData && (
+                <ul>
+                  <li>
+                    <p>
+                      Download full dataset (Note: Dowload process will take
+                      longer).
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      Select bounding box if you would like to download one or
+                      several datasets for area(s) of interest.
+                    </p>
+                  </li>
+                  {dataset.IsTimeSeries && (
+                    <li>
+                      <p>
+                        If you need to select a time period for the dataset go
+                        to{' '}
+                        <a href={dataset.DatasetURL + '/download-by-area'}>
+                          Download by area
+                        </a>
+                        .
+                      </p>
+                    </li>
+                  )}
+                </ul>
+              )}
             </Modal.Content>
             <Modal.Actions>
               <div className="map-download-buttons">
-                <button
-                  className="ccl-button ccl-button-green"
-                  onClick={() => checkArea()}
-                >
-                  Add to cart
-                </button>
-                <button
-                  className="ccl-button ccl-button--default"
-                  onClick={() => closeModal()}
-                >
-                  Cancel
-                </button>
+                {!areaData ? (
+                  <>
+                    <button
+                      className="ccl-button ccl-button-green"
+                      onClick={() => checkArea()}
+                    >
+                      Add full dataset
+                    </button>
+                    <button
+                      className="ccl-button ccl-button--default"
+                      onClick={() => selectBBox()}
+                    >
+                      Select bounding box
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="ccl-button ccl-button-green"
+                      onClick={() => checkArea()}
+                    >
+                      Add to cart
+                    </button>
+                    <button
+                      className="ccl-button ccl-button--default"
+                      onClick={() => closeModal()}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
               </div>
             </Modal.Actions>
           </Modal>
@@ -786,7 +867,16 @@ class MenuWidget extends React.Component {
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
-    let data = activeLayersArray.sort((a) => a.props['layer-order']).reverse();
+    let activeLayers = Array.from(
+      document.querySelectorAll('.active-layer'),
+    ).map((elem) => {
+      return elem.getAttribute('layer-id');
+    });
+    let data = activeLayersArray.sort(
+      (a, b) =>
+        activeLayers.indexOf(a.props['layer-id']) -
+        activeLayers.indexOf(b.props['layer-id']),
+    );
     return data;
   }
 
@@ -1122,27 +1212,14 @@ class MenuWidget extends React.Component {
     Object.keys(this.activeLayersJSON).forEach((key) => {
       let layer = this.layers[key];
       if (layer.visible) {
-        layers.push({
-          name: key,
-          title: this.getLayerTitle(this.layers[key]),
-          layer: this.layers[key],
-          order: this.activeLayersJSON[key].props['layer-order'],
-        });
+        layers.push(layer);
       }
     });
     if (layers.length === 0 && document.querySelector('.info-container')) {
-      this.props.mapViewer.closeActiveWidget();
-      document.querySelector('.info-container').style.display = 'none';
+      //this.props.mapViewer.closeActiveWidget();
+      //document.querySelector('.info-container').style.display = 'none';
     } else if (layers.length > 0) {
-      document.querySelector('.info-container').style.display = 'flex';
-      // let data = layers
-      //   .map((x) => {
-      //     return x;
-      //   })
-      //   .sort((a, b) => {
-      //     return b.order - a.order;
-      //   });
-      // this.props.updateActiveLayers(data);
+      //document.querySelector('.info-container').style.display = 'flex';
     }
   }
 

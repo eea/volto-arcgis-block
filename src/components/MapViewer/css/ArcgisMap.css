@@ -671,7 +671,7 @@
   margin: 0 !important;
 }
 
-.map-download-modal.ui.modal p {
+.map-download-modal.ui.modal li p {
   font-size: 1rem;
 }
 

@@ -82,7 +82,7 @@ class InfoWidget extends React.Component {
         let layers = this.map.layers.items.filter(
           (a) => a.visible && a.title !== 'nuts',
         );
-        let promises = [];
+        //let promises = [];
         this.infoData = {};
         layers.forEach((layer, index) => {
           let title = this.getLayerTitle(layer);
@@ -90,22 +90,22 @@ class InfoWidget extends React.Component {
             if (layer.url.toLowerCase().includes('wms')) {
             } else if (layer.url.toLowerCase().includes('wmts')) {
             } else {
-              promises['p' + index] = this.identify(layer, e).then(
-                (response) => {
-                  this.infoData[index] = {
-                    title: title,
-                    data: response,
-                  };
-                  //this.setState({
-                  //pixelInfo: true,
-                  //});
-                },
-              );
+              //promises['p' + index] =
+              this.identify(layer, e).then((response) => {
+                this.infoData[index] = {
+                  title: title,
+                  data: response,
+                };
+                this.setState({
+                  pixelInfo: true,
+                });
+              });
             }
           } else {
             if (layer.url.toLowerCase().includes('wms')) {
               let coords = '';
-              promises['p' + index] = this.getFeatureInfo(coords, (data) => {
+              //promises['p' + index] =
+              this.getFeatureInfo(coords, (data) => {
                 if (data.features.length > 0) {
                   let properties = data.features[0].properties;
                   this.infoData[index] = {
@@ -113,38 +113,37 @@ class InfoWidget extends React.Component {
                     data: Object.entries(properties),
                   };
                 }
-                // this.setState({
-                //   popup: true,
-                // });
+                this.setState({
+                  popup: true,
+                });
               });
             } else if (layer.url.toLowerCase().includes('wmts')) {
             } else {
-              promises['p' + index] = this.props.view
-                .hitTest(screenPoint)
-                .then((response) => {
-                  if (response.results.length) {
-                    var graphic = response.results.filter((result) => {
-                      return result.graphic.layer === layer;
-                    })[0].graphic;
-                    if (graphic) {
-                      this.infoData[index] = {
-                        title: title,
-                        data: Object.entries(graphic.attributes),
-                      };
-                    }
+              //promises['p' + index] =
+              this.props.view.hitTest(screenPoint).then((response) => {
+                if (response.results.length) {
+                  var graphic = response.results.filter((result) => {
+                    return result.graphic.layer === layer;
+                  })[0].graphic;
+                  if (graphic) {
+                    this.infoData[index] = {
+                      title: title,
+                      data: Object.entries(graphic.attributes),
+                    };
                   }
-                  // this.setState({
-                  //   popup: true,
-                  // });
+                }
+                this.setState({
+                  popup: true,
                 });
+              });
             }
           }
           this.addMarker(e);
-          Promise.all(promises).then((values) => {
-            this.setState({
-              popup: true,
-            });
-          });
+          // Promise.all(promises).then((values) => {
+          //   this.setState({
+          //     popup: true,
+          //   });
+          // });
         });
       }
     });
