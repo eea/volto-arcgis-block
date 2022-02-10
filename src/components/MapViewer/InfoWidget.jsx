@@ -82,7 +82,7 @@ class InfoWidget extends React.Component {
         let layers = this.map.layers.items.filter(
           (a) => a.visible && a.title !== 'nuts',
         );
-        //let promises = [];
+        let promises = [];
         this.infoData = {};
         layers.forEach((layer, index) => {
           let title = this.getLayerTitle(layer);
@@ -104,6 +104,8 @@ class InfoWidget extends React.Component {
           } else {
             if (layer.url.toLowerCase().includes('wms')) {
               let coords = '';
+              promises.push(this.getFeatureInfo(coords));
+              /* -- código de Amanda -- *
               //promises['p' + index] =
               this.getFeatureInfo(coords, (data) => {
                 if (data.features.length > 0) {
@@ -117,8 +119,11 @@ class InfoWidget extends React.Component {
                   popup: true,
                 });
               });
+              /* -- código de Amanda -- */
             } else if (layer.url.toLowerCase().includes('wmts')) {
             } else {
+              promises.push(this.identify(layer, e));
+              /* -- código de Amanda -- * /
               //promises['p' + index] =
               this.props.view.hitTest(screenPoint).then((response) => {
                 if (response.results.length) {
@@ -136,9 +141,14 @@ class InfoWidget extends React.Component {
                   popup: true,
                 });
               });
+              /* -- código de Amanda -- */
             }
           }
           this.addMarker(e);
+          Promise.allSettled(promises).then((values) => {
+            console.log("TODAS LAS PROMESAS CUMPLIDAS");
+            console.log(values);
+          });
           // Promise.all(promises).then((values) => {
           //   this.setState({
           //     popup: true,
@@ -165,12 +175,15 @@ class InfoWidget extends React.Component {
     let xmlhttp = new XMLHttpRequest();
     const url =
       'https://geoserveis.icgc.cat/icgc_sentinel2/wms/service?service=WMS&request=GetFeatureInfo&bbox=41,1.8,41.2,2.2&layers=sen2rgb&query_layers=sen2rgb&crs=EPSG:4326&version=1.3.0&width=780&height=330&info_format=application/geojson&time=2018-09';
+    /* -- codigo de Amanda -- *
     xmlhttp.onreadystatechange = () => {
       if (xmlhttp.readyState === 4 && xmlhttp.status === 200)
         callback(JSON.parse(xmlhttp.responseText), this.props.mapViewer);
     };
     xmlhttp.open('GET', url, true);
     xmlhttp.send();
+    /* -- codigo de Amanda -- */
+    return fetch(url);
   }
 
   loadInfoChart(index) {
