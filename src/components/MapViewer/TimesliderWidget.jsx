@@ -218,6 +218,19 @@ class TimesliderWidget extends React.Component {
           this.TimesliderWidget.stops = {
             interval: this.layer.timeInfo.interval,
           };
+          this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
+            if (!this.container.current ? true : false) {
+              this.TimesliderWidget.stop();
+            }
+            let start = new Date(timeExtent.start).getTime();
+            let end = new Date(timeExtent.end).getTime();
+            this.props.time.elem.setAttribute('time-start', start);
+            this.props.time.elem.setAttribute('time-end', end);
+            if (this.props.download) {
+              this.props.time.dataset.setAttribute('time-start', start);
+              this.props.time.dataset.setAttribute('time-end', end);
+            }
+          });
         } else {
           this.getTime(this.layer, this.layerName).then((v) => {
             // Capabilities have time enabled
@@ -262,25 +275,43 @@ class TimesliderWidget extends React.Component {
                     timeDict[time[i]] = v.array[i];
                   }
 
-                  this.TimesliderWidget.watch(
-                    'timeExtent',
-                    function () {
-                      this.layer.customParameters['TIME'] =
-                        timeDict[this.TimesliderWidget.timeExtent.start];
-                      this.layer.refresh();
-                    }.bind(this),
-                  );
+                  // this.TimesliderWidget.watch(
+                  //   'timeExtent',
+                  //   function () {
+                  //     this.layer.customParameters['TIME'] =
+                  //       timeDict[this.TimesliderWidget.timeExtent.start];
+                  //     this.layer.refresh();
+                  //   }.bind(this),
+                  // );
                 }
               }
+              this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
+                if (!this.container.current ? true : false) {
+                  this.TimesliderWidget.stop();
+                }
+                let start = new Date(timeExtent.start).getTime();
+                let end = new Date(timeExtent.end).getTime();
+                this.props.time.elem.setAttribute('time-start', start);
+                this.props.time.elem.setAttribute('time-end', end);
+                if (this.props.download) {
+                  this.props.time.dataset.setAttribute('time-start', start);
+                  this.props.time.dataset.setAttribute('time-end', end);
+                }
+                if (this.layer.type === 'wmts') {
+                  this.layer.customParameters = {};
+                  this.layer.customParameters['TIME'] =
+                    timeDict[this.TimesliderWidget.timeExtent.end];
+                  this.layer.refresh();
+                }
+              });
             } // if there is dimension time
             else {
-              // eslint-disable-next-line no-alert
-              alert('No time dimension');
+              this.TimesliderWidget.disabled = true;
             }
           }); // GetTime
         } // is feature or WMS/WMTS
       });
-  } //async
+  } //componentDidMount
 
   /**
    * Needed to get the desired drag-and-drop behavior
