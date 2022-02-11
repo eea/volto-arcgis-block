@@ -274,15 +274,6 @@ class TimesliderWidget extends React.Component {
                   for (let i in time) {
                     timeDict[time[i]] = v.array[i];
                   }
-
-                  // this.TimesliderWidget.watch(
-                  //   'timeExtent',
-                  //   function () {
-                  //     this.layer.customParameters['TIME'] =
-                  //       timeDict[this.TimesliderWidget.timeExtent.start];
-                  //     this.layer.refresh();
-                  //   }.bind(this),
-                  // );
                 }
               }
               this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
