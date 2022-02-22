@@ -659,6 +659,13 @@ class MenuWidget extends React.Component {
           >
             <span>{dataset.DatasetTitle}</span>
           </label>
+          <div className="map-menu-icons">
+            <a href={dataset.DownloadURL} target="_blank">
+              <FontAwesomeIcon
+                className="map-menu-icon"
+                icon={['fa', 'info-circle']}
+              />
+            </a>
           {!this.props.download && dataset.Downloadable && (
             <AddCartItem
               cartData={this.compCfg}
@@ -669,6 +676,7 @@ class MenuWidget extends React.Component {
               dataset={dataset}
             />
           )}
+          </div>
         </div>
         <div
           className="ccl-form map-menu-layers-container"
