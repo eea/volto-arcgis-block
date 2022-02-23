@@ -660,22 +660,22 @@ class MenuWidget extends React.Component {
             <span>{dataset.DatasetTitle}</span>
           </label>
           <div className="map-menu-icons">
-            <a href={dataset.DownloadURL} target="_blank">
+            <a href={dataset.DownloadURL} target="_blank" rel="noreferrer">
               <FontAwesomeIcon
                 className="map-menu-icon"
                 icon={['fa', 'info-circle']}
               />
             </a>
-          {!this.props.download && dataset.Downloadable && (
-            <AddCartItem
-              cartData={this.compCfg}
-              props={this.props}
-              mapViewer={this.props.mapViewer}
-              download={this.props.download}
-              areaData={this.props.area}
-              dataset={dataset}
-            />
-          )}
+            {!this.props.download && dataset.Downloadable && (
+              <AddCartItem
+                cartData={this.compCfg}
+                props={this.props}
+                mapViewer={this.props.mapViewer}
+                download={this.props.download}
+                areaData={this.props.area}
+                dataset={dataset}
+              />
+            )}
           </div>
         </div>
         <div
