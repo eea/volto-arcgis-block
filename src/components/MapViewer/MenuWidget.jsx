@@ -660,7 +660,7 @@ class MenuWidget extends React.Component {
             <span>{dataset.DatasetTitle}</span>
           </label>
           <div className="map-menu-icons">
-            <a href={dataset.DownloadURL} target="_blank" rel="noreferrer">
+            <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
               <FontAwesomeIcon
                 className="map-menu-icon"
                 icon={['fa', 'info-circle']}
