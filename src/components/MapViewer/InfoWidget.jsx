@@ -773,7 +773,8 @@ class InfoWidget extends React.Component {
           return a - b;
         });
         var i = data.length / 2;
-        result = i % 1 === 0 ? (data[i - 1] + data[i]) / 2 : data[Math.floor(i)];
+        result =
+          i % 1 === 0 ? (data[i - 1] + data[i]) / 2 : data[Math.floor(i)];
         break;
       case 'Variance':
         result =
