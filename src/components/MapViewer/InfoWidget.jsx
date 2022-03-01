@@ -96,7 +96,6 @@ class InfoWidget extends React.Component {
         let layerTypes = [];
         layers.forEach((layer, index) => {
           let title = this.getLayerTitle(layer);
-          let name = this.getLayerName(layer);
           if (layer.isTimeSeries) {
             if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
@@ -143,7 +142,7 @@ class InfoWidget extends React.Component {
             }
           }
           Promise.allSettled(promises).then((values) => {
-            if (promises.length == values.length) {
+            if (promises.length === values.length) {
               values.forEach((response, index) => {
                 let data = response.value;
                 let layer = layerTypes[index];
@@ -209,6 +208,8 @@ class InfoWidget extends React.Component {
                         time: true,
                       };
                       break;
+                    default:
+                      break;
                   }
                 } else {
                   switch (layer.type) {
@@ -268,6 +269,8 @@ class InfoWidget extends React.Component {
                         title: layer.title,
                         data: Object.entries(properties),
                       };
+                      break;
+                    default:
                       break;
                   }
                 }
@@ -408,7 +411,7 @@ class InfoWidget extends React.Component {
       (v) => v.querySelectorAll('Layer').length === 0,
     );
     let layer = layers.find((a) => {
-      return a.querySelector('Name').innerText == layerId;
+      return a.querySelector('Name').innerText === layerId;
     });
     let times = layer.querySelector('Dimension').innerText.split(',');
     return times;
@@ -759,30 +762,31 @@ class InfoWidget extends React.Component {
     let data = response.data.values.map((a) => {
       return a[variable];
     });
+    let mean = data.reduce((a, b) => a + b) / data.length;
     let result;
     switch (statistic) {
       case 'Mean':
-        result = data.reduce((a, b) => a + b) / data.length;
+        result = mean;
         break;
       case 'Median':
         data = data.sort((a, b) => {
           return a - b;
         });
         var i = data.length / 2;
-        result = i % 1 == 0 ? (data[i - 1] + data[i]) / 2 : data[Math.floor(i)];
+        result = i % 1 === 0 ? (data[i - 1] + data[i]) / 2 : data[Math.floor(i)];
         break;
       case 'Variance':
-        var mean = data.reduce((a, b) => a + b) / data.length;
         result =
           data.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) /
           data.length;
         break;
       case 'Standard deviation':
-        var mean = data.reduce((a, b) => a + b) / data.length;
-        var variance =
+        let variance =
           data.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) /
           data.length;
         result = Math.sqrt(variance);
+        break;
+      default:
         break;
     }
     return result;
@@ -830,7 +834,7 @@ class InfoWidget extends React.Component {
           ></div>
           <div className="info-panel">
             {this.state.loading ? (
-              <Loader active inline inline="centered" size="small" />
+              <Loader active inline="centered" size="small" />
             ) : (
               <>
                 {(this.state.pixelInfo || this.state.popup) && (
