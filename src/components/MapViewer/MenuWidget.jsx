@@ -273,15 +273,13 @@ export const AddCartItem = ({
               </div>
             </Modal.Actions>
           </Modal>
-          <div className={'map-menu-icons' + (isLoggedIn ? '' : ' locked')}>
-            <FontAwesomeIcon
-              className="map-menu-icon"
-              icon={['fas', 'download']}
-              onClick={() => {
-                isLoggedIn && showModal();
-              }}
-            />
-          </div>
+          <FontAwesomeIcon
+            className={'map-menu-icon' + (isLoggedIn ? '' : ' locked')}
+            icon={['fas', 'download']}
+            onClick={() => {
+              isLoggedIn && showModal();
+            }}
+          />
         </>
       )}
     </>
@@ -615,6 +613,7 @@ class MenuWidget extends React.Component {
           index,
           inheritedIndexDataset,
           dataset.ViewService,
+          dataset.TimeSeriesService,
           checkIndex,
           dataset.IsTimeSeries,
           layer_default,
@@ -711,6 +710,7 @@ class MenuWidget extends React.Component {
     layerIndex,
     inheritedIndex,
     urlWMS,
+    featureInfoUrl,
     parentIndex,
     isTimeSeries,
     layer_default,
@@ -742,6 +742,7 @@ class MenuWidget extends React.Component {
               visible: true,
               legendEnabled: true,
               legendUrl: urlWMS + legendRequest + layer.LayerId,
+              featureInfoUrl: featureInfoUrl,
             },
           ],
           isTimeSeries: isTimeSeries,
@@ -754,6 +755,7 @@ class MenuWidget extends React.Component {
           activeLayer: {
             id: layer.LayerId,
             title: layer.Title,
+            featureInfoUrl: featureInfoUrl,
           },
           isTimeSeries: isTimeSeries,
         });
@@ -764,6 +766,7 @@ class MenuWidget extends React.Component {
           url: urlWMS + (urlWMS.endsWith('/') ? '' : '/') + layer.LayerId,
           id: layer.LayerId,
           title: layer.Title,
+          featureInfoUrl: featureInfoUrl,
           popupEnabled: true,
           isTimeSeries: isTimeSeries,
         });
@@ -1216,10 +1219,10 @@ class MenuWidget extends React.Component {
       }
     });
     if (layers.length === 0 && document.querySelector('.info-container')) {
-      //this.props.mapViewer.closeActiveWidget();
-      //document.querySelector('.info-container').style.display = 'none';
+      this.props.mapViewer.closeActiveWidget();
+      document.querySelector('.info-container').style.display = 'none';
     } else if (layers.length > 0) {
-      //document.querySelector('.info-container').style.display = 'flex';
+      document.querySelector('.info-container').style.display = 'flex';
     }
   }
 

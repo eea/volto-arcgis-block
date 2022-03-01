@@ -425,7 +425,7 @@
 .map-menu-dataset > div:first-of-type {
   display: flex;
   width: 100%;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .map-menu .map-menu-layers-container {
@@ -595,7 +595,7 @@
   overflow: auto;
 }
 
-/* Pixel info */
+/* Info widget */
 .info-container {
   display: none;
   box-shadow: none !important;
@@ -609,6 +609,29 @@
   padding: 1rem;
   background-color: white;
   font-size: 1rem;
+}
+
+.info-panel-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-panel-buttons button {
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.info-panel-buttons .info-button-left svg {
+  margin-right: 0.25rem;
+}
+
+.info-panel-buttons .info-button-right svg {
+  margin-left: 0.25rem;
+}
+
+.info-panel-buttons button svg {
+  color: inherit;
 }
 
 .info-panel-title {
@@ -635,11 +658,11 @@
 }
 
 .info-table tr:nth-child(even) {
-  background-color: #a0b1280f;
+  background-color: #ebebeb33;
 }
 
 .info-table tr:nth-child(odd) {
-  background-color: #a0b12833;
+  background-color: #ebebeb;
 }
 
 /* Time slider*/
