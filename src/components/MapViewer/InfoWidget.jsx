@@ -1,8 +1,10 @@
 import React, { createRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-var GeometryEngine, Graphic;
+import { Loader } from 'semantic-ui-react';
+var GeometryEngine, Graphic, esriRequest;
 
 class InfoWidget extends React.Component {
   /**
@@ -15,7 +17,7 @@ class InfoWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false, timeLayers: {} };
+    this.state = { showMapMenu: false };
     this.map = this.props.map;
     this.menuClass =
       'esri-icon-description esri-widget--button esri-widget esri-interactive';
@@ -23,11 +25,17 @@ class InfoWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/geometry/geometryEngine', 'esri/Graphic']).then(
-      ([_GeometryEngine, _Graphic]) => {
-        [GeometryEngine, Graphic] = [_GeometryEngine, _Graphic];
-      },
-    );
+    return loadModules([
+      'esri/geometry/geometryEngine',
+      'esri/Graphic',
+      'esri/request',
+    ]).then(([_GeometryEngine, _Graphic, _esriRequest]) => {
+      [GeometryEngine, Graphic, esriRequest] = [
+        _GeometryEngine,
+        _Graphic,
+        _esriRequest,
+      ];
+    });
   }
 
   /**
@@ -49,7 +57,6 @@ class InfoWidget extends React.Component {
         showMapMenu: false,
         pixelInfo: false,
         popup: false,
-        timeLayers: {},
       });
       //this.props.view.popup.autoOpenEnabled = true;
       this.removeMarker();
@@ -64,13 +71,11 @@ class InfoWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
       this.props.mapViewer.view.popup.close();
-      //this.props.view.popup.autoOpenEnabled = false;
     }
   }
   /**
    * This method is executed after the rener method is executed
-   */
-  async componentDidMount() {
+   */ async componentDidMount() {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
     this.props.view.on('click', (e) => {
@@ -78,72 +83,208 @@ class InfoWidget extends React.Component {
         x: e.x,
         y: e.y,
       };
+      let layers;
       if (this.props.mapViewer.activeWidget === this) {
-        let layers = this.map.layers.items.filter(
+        this.setState({
+          loading: true,
+        });
+        layers = this.map.layers.items.filter(
           (a) => a.visible && a.title !== 'nuts',
         );
-        //let promises = [];
         this.infoData = {};
+        let promises = [];
+        let layerTypes = [];
         layers.forEach((layer, index) => {
           let title = this.getLayerTitle(layer);
           if (layer.isTimeSeries) {
             if (layer.url.toLowerCase().includes('wms')) {
-            } else if (layer.url.toLowerCase().includes('wmts')) {
-            } else {
-              //promises['p' + index] =
-              this.identify(layer, e).then((response) => {
-                this.infoData[index] = {
-                  title: title,
-                  data: response,
-                };
-                this.setState({
-                  pixelInfo: true,
-                });
+              layerTypes.push({
+                isTimeSeries: true,
+                type: 'wms',
+                title: title,
               });
+              promises.push(this.identifyWMS(layer, e));
+            } else if (layer.url.toLowerCase().includes('wmts')) {
+              layerTypes.push({
+                isTimeSeries: true,
+                type: 'wmts',
+                title: title,
+              });
+            } else {
+              layerTypes.push({
+                isTimeSeries: true,
+                type: 'featureLayer',
+                title: title,
+              });
+              promises.push(this.identify(layer, e));
             }
           } else {
             if (layer.url.toLowerCase().includes('wms')) {
-              let coords = '';
-              //promises['p' + index] =
-              this.getFeatureInfo(coords, (data) => {
-                if (data.features.length > 0) {
-                  let properties = data.features[0].properties;
-                  this.infoData[index] = {
-                    title: title,
-                    data: Object.entries(properties),
-                  };
-                }
-                this.setState({
-                  popup: true,
-                });
+              layerTypes.push({
+                isTimeSeries: false,
+                type: 'wms',
+                title: title,
               });
+              promises.push(this.identifyWMS(layer, e));
             } else if (layer.url.toLowerCase().includes('wmts')) {
-            } else {
-              //promises['p' + index] =
-              this.props.view.hitTest(screenPoint).then((response) => {
-                if (response.results.length) {
-                  var graphic = response.results.filter((result) => {
-                    return result.graphic.layer === layer;
-                  })[0].graphic;
-                  if (graphic) {
-                    this.infoData[index] = {
-                      title: title,
-                      data: Object.entries(graphic.attributes),
-                    };
-                  }
-                }
-                this.setState({
-                  popup: true,
-                });
+              layerTypes.push({
+                isTimeSeries: false,
+                type: 'wmts',
+                title: title,
               });
+            } else {
+              layerTypes.push({
+                isTimeSeries: false,
+                type: 'featureLayer',
+                title: title,
+              });
+              promises.push(this.props.view.hitTest(screenPoint));
             }
           }
+          Promise.allSettled(promises).then((values) => {
+            if (promises.length === values.length) {
+              values.forEach((response, index) => {
+                let data = response.value;
+                let layer = layerTypes[index];
+                let properties = [];
+                if (layer.isTimeSeries) {
+                  switch (layer.type) {
+                    case 'wms':
+                      if (data.type === 'FeatureCollection') {
+                        if (data.features.length) {
+                          let obj = data.features.map((a) => {
+                            return a.properties;
+                          });
+                          properties = this.transformWmsData(obj);
+                        }
+                      } else if (data.doctype && data.doctype.name === 'html') {
+                        let th = data.querySelectorAll('tbody th');
+                        let tr = data.querySelectorAll(
+                          'tbody tr:not(:first-of-type)',
+                        );
+                        if (th.length) {
+                          let obj = Array.from(tr).map((a) => {
+                            let x = [];
+                            a.querySelectorAll('td').forEach((td, index) => {
+                              x[th[index].textContent] = td.textContent;
+                            });
+                            return x;
+                          });
+                          properties = this.transformWmsData(obj);
+                        }
+                      } else if (
+                        data.getElementsByTagName('FIELDS').length &&
+                        typeof data !== 'undefined'
+                      ) {
+                        let fields = data.getElementsByTagName('FIELDS');
+                        if (fields.length) {
+                          let obj = Array.from(fields).map((a) => {
+                            let x = [];
+                            Object.entries(a.attributes).forEach((b) => {
+                              x[b[1].name] = b[1].value;
+                            });
+                            return x;
+                          });
+                          properties = this.transformWmsData(obj);
+                        }
+                      }
+                      this.infoData[index] = {
+                        title: layer.title,
+                        data: properties,
+                        time: true,
+                      };
+                      break;
+                    case 'wmts':
+                      this.infoData[index] = {
+                        title: layer.title,
+                        data: properties,
+                        time: true,
+                      };
+                      break;
+                    case 'featureLayer':
+                      this.infoData[index] = {
+                        title: layer.title,
+                        data: data,
+                        time: true,
+                      };
+                      break;
+                    default:
+                      break;
+                  }
+                } else {
+                  switch (layer.type) {
+                    case 'wms':
+                      if (data.type === 'FeatureCollection') {
+                        if (data.features.length) {
+                          properties = data.features[0].properties;
+                          properties = Object.entries(properties);
+                        }
+                      } else if (data.doctype && data.doctype.name === 'html') {
+                        let th = data.querySelectorAll('tbody th');
+                        let td = data.querySelectorAll('tbody td');
+                        if (th.length) {
+                          let fields = [];
+                          th.forEach((item, index) => {
+                            fields.push([
+                              item.textContent,
+                              td[index].textContent,
+                            ]);
+                          });
+                          properties = fields;
+                        }
+                      } else if (
+                        data.getElementsByTagName('FIELDS').length &&
+                        typeof data !== 'undefined'
+                      ) {
+                        let fields = data.getElementsByTagName('FIELDS');
+                        if (fields.length) {
+                          properties = Object.entries(fields[0].attributes).map(
+                            (a) => {
+                              return [a[1].name, a[1].value];
+                            },
+                          );
+                        }
+                      }
+                      this.infoData[index] = {
+                        title: layer.title,
+                        data: properties,
+                      };
+                      break;
+                    case 'wmts':
+                      this.infoData[index] = {
+                        title: layer.title,
+                        data: properties,
+                      };
+                      break;
+                    case 'featureLayer':
+                      if (data.results.length) {
+                        var graphic = data.results.filter((result) => {
+                          return result.graphic.layer === layers[index];
+                        })[0].graphic;
+                        if (graphic) {
+                          properties = graphic.attributes;
+                        }
+                      }
+                      this.infoData[index] = {
+                        title: layer.title,
+                        data: Object.entries(properties),
+                      };
+                      break;
+                    default:
+                      break;
+                  }
+                }
+              });
+              let layerIndex = layers.length - 1;
+              this.setState({
+                layerIndex: layerIndex,
+                pixelInfo: layerTypes[layerIndex].isTimeSeries ? true : false,
+                popup: !layerTypes[layerIndex].isTimeSeries ? true : false,
+                loading: false,
+              });
+            }
+          });
           this.addMarker(e);
-          // Promise.all(promises).then((values) => {
-          //   this.setState({
-          //     popup: true,
-          //   });
-          // });
         });
       }
     });
@@ -161,36 +302,158 @@ class InfoWidget extends React.Component {
     return title;
   }
 
-  getFeatureInfo(coords, callback) {
-    let xmlhttp = new XMLHttpRequest();
-    const url =
-      'https://geoserveis.icgc.cat/icgc_sentinel2/wms/service?service=WMS&request=GetFeatureInfo&bbox=41,1.8,41.2,2.2&layers=sen2rgb&query_layers=sen2rgb&crs=EPSG:4326&version=1.3.0&width=780&height=330&info_format=application/geojson&time=2018-09';
-    xmlhttp.onreadystatechange = () => {
-      if (xmlhttp.readyState === 4 && xmlhttp.status === 200)
-        callback(JSON.parse(xmlhttp.responseText), this.props.mapViewer);
-    };
-    xmlhttp.open('GET', url, true);
-    xmlhttp.send();
+  getLayerName(layer) {
+    let title;
+    if (layer.sublayers) {
+      title = layer.sublayers.items[0].name;
+    } else if (layer.activeLayer) {
+      title = layer.activeLayer.name;
+    } else {
+      title = layer.name;
+    }
+    return title;
   }
 
-  loadInfoChart(index) {
-    let response = this.infoData[index].data;
-    let title = this.infoData[index].title;
-    //let variables = response.variables.options;
-    let variable = response.variables.selected;
-    let data = {
-      x: response.timeFields.values
-        .map((a) => {
-          return a[response.timeFields.start];
+  identifyWMS(layer, event) {
+    let layerId = this.getLayerName(layer);
+    let url = layer.featureInfoUrl ? layer.featureInfoUrl : layer.url;
+    return this.wmsCapabilities(url).then((xml) => {
+      let version = this.parseCapabilities(xml, 'wms_capabilities')[0]
+        .attributes['version'];
+      let format = this.parseFormat(xml, layerId);
+      let times = '';
+      let nTimes = 1;
+      if (layer.isTimeSeries) {
+        times = this.parseTime(xml, layerId);
+        nTimes = times.length;
+      }
+      return esriRequest(url, {
+        responseType: 'html',
+        sync: 'true',
+        query: {
+          request: 'GetFeatureInfo',
+          service: 'WMS',
+          version: version,
+          SRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
+          CRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
+          BBOX:
+            '' +
+            this.props.view.extent.xmin +
+            ', ' +
+            this.props.view.extent.ymin +
+            ', ' +
+            this.props.view.extent.xmax +
+            ', ' +
+            this.props.view.extent.ymax,
+          HEIGHT: this.props.view.height,
+          WIDTH: this.props.view.width,
+          X: event.screenPoint.x,
+          Y: event.screenPoint.y,
+          QUERY_LAYERS: layerId,
+          INFO_FORMAT: format,
+          TIME: times ? times[0] + '/' + times[nTimes - 1] : '',
+          FEATURE_COUNT: '' + nTimes,
+        },
+      })
+        .then((response) => {
+          let format = response.requestOptions.query.INFO_FORMAT;
+          let data;
+          if (format.includes('text')) {
+            data = new window.DOMParser().parseFromString(
+              response.data,
+              'text/html',
+            );
+          } else if (format.includes('json')) {
+            data = JSON.parse(response.data);
+          }
+          return data;
         })
-        .sort((a, b) => {
-          return new Date(a).getTime() - new Date(b).getTime();
-        }),
-      y: response.data.values.map((a) => {
-        return Math.round(a[variable] * 100) / 100;
-      }),
-    };
-    return this.createChart(title, variable, data);
+        .then((data) => {
+          return data;
+        });
+    });
+  }
+
+  wmsCapabilities(url) {
+    return esriRequest(url, {
+      responseType: 'html',
+      sync: 'true',
+      query: {
+        request: 'GetCapabilities',
+        service: 'WMS',
+      },
+    }).then((response) => {
+      let parser = new DOMParser();
+      let xml = parser.parseFromString(response.data, 'text/html');
+      return xml;
+    });
+  }
+
+  parseCapabilities(xml, tag) {
+    return xml.getElementsByTagName(tag);
+  }
+
+  parseFormat(xml) {
+    let formats = Array.from(
+      Array.from(this.parseCapabilities(xml, 'getFeatureInfo')).map(
+        (f) => f.children,
+      )[0],
+    ).map((v) => v.textContent);
+    let format = formats.filter((v) => v.includes('json'))[0];
+    if (!format) format = formats.filter((v) => v.includes('html'))[0];
+    if (!format) format = formats.filter((v) => v.includes('text/xml'))[0];
+    if (!format) format = formats[0];
+    return format;
+  }
+
+  parseTime(xml, layerId) {
+    let layers = Array.from(xml.querySelectorAll('Layer')).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );
+    let layer = layers.find((a) => {
+      return a.querySelector('Name').innerText === layerId;
+    });
+    let times = layer.querySelector('Dimension').innerText.split(',');
+    return times;
+  }
+
+  transformWmsData(obj) {
+    let values = { timeFields: {}, data: {}, variables: {} };
+    let startField = Object.keys(obj[0]).find(
+      (a, i) =>
+        a.toUpperCase().includes('DATE') &&
+        !isNaN(parseInt(Object.values(obj[0])[i])),
+    );
+    values.timeFields['start'] = startField;
+    let fields = Object.keys(obj[0]).filter((a, i) => {
+      return (
+        !isNaN(parseInt(Object.values(obj[0])[i])) &&
+        a.toUpperCase() !== 'OBJECTID' &&
+        !a.toUpperCase().includes('DATE')
+      );
+    });
+    let field = fields[0];
+    values.variables = { options: fields, selected: field };
+    values.timeFields['values'] = obj.map((a, i) => {
+      let date = {};
+      Object.entries(obj[i]).forEach(([key, value]) => {
+        if (key === startField) {
+          date[key] = value;
+        }
+      });
+      return date;
+    });
+    values.data['outFields'] = field;
+    values.data['values'] = obj.map((a, i) => {
+      let x = {};
+      Object.entries(obj[i]).forEach(([key, value]) => {
+        if (fields.includes(key)) {
+          x[key] = parseFloat(value);
+        }
+      });
+      return x;
+    });
+    return values;
   }
 
   addMarker(evt) {
@@ -262,7 +525,9 @@ class InfoWidget extends React.Component {
     let p1 = layer.queryFeatures(timeQuery).then((r) => {
       let timevals = [];
       r.features.forEach((e) => timevals.push(e.attributes));
-      values.timeFields['values'] = timevals;
+      values.timeFields['values'] = timevals.sort((a, b) => {
+        return a[values.timeFields.start] - b[values.timeFields.start];
+      });
     });
 
     //Query for data
@@ -309,13 +574,27 @@ class InfoWidget extends React.Component {
     });
   }
 
-  createChart(title, variable, chartData) {
+  loadInfoChart(index) {
+    let response = this.infoData[index].data;
+    let variable = response.variables.selected;
+    let data = {
+      x: response.timeFields.values.map((a) => {
+        return a[response.timeFields.start];
+      }),
+      y: response.data.values.map((a) => {
+        return Math.round(a[variable] * 100) / 100;
+      }),
+    };
+    return this.createChart(variable, data);
+  }
+
+  createChart(variable, chartData) {
     let chartOptions = {
       chart: {
         height: 208,
       },
       title: {
-        text: title,
+        text: '',
         style: {},
       },
       subtitle: {
@@ -389,7 +668,7 @@ class InfoWidget extends React.Component {
       return (
         <tr key={item}>
           {Object.values(item).map((val) => (
-            <td>{val}</td>
+            <td key={val}>{val}</td>
           ))}
         </tr>
       );
@@ -403,7 +682,6 @@ class InfoWidget extends React.Component {
 
   loadVariableSelector(index) {
     let response = this.infoData[index].data;
-    //let title = this.infoData[index].title;
     let variables = response.variables.options;
     let variable = response.variables.selected;
     let options = variables.map((option) => {
@@ -429,17 +707,120 @@ class InfoWidget extends React.Component {
     );
   }
 
+  loadStatisticsSelector(index) {
+    let statistics = ['Mean', 'Median', 'Variance', 'Standard deviation'];
+    let selected =
+      this.infoData[index].data.statistics &&
+      this.infoData[index].data.statistics.selected
+        ? this.infoData[index].data.statistics.selected
+        : statistics[0];
+    let value =
+      this.infoData[index].data.statistics &&
+      this.infoData[index].data.statistics.value
+        ? this.infoData[index].data.statistics.value
+        : this.calculateStatistics(selected);
+    this.infoData[index].data.statistics = {
+      selected: selected,
+      value: value,
+    };
+    let options = statistics.map((option) => {
+      return (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      );
+    });
+    return (
+      <>
+        <label>
+          Statistics
+          <select
+            className="esri-select"
+            id="info_statistics"
+            value={selected}
+            onBlur={(e) => e.preventDefault()}
+            onChange={(e) => this.selectStatistics(e.target.value)}
+          >
+            {options}
+          </select>
+        </label>
+        <div className="info-statistics-panel">
+          {this.infoData[index].data.statistics.value && (
+            <span className="info-statistics-result">
+              {this.infoData[index].data.statistics.value}
+            </span>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  calculateStatistics(statistic) {
+    let index = this.state.layerIndex;
+    let response = this.infoData[index].data;
+    let variable = response.variables.selected;
+    let data = response.data.values.map((a) => {
+      return a[variable];
+    });
+    let mean = data.reduce((a, b) => a + b) / data.length;
+    let result;
+    switch (statistic) {
+      case 'Mean':
+        result = mean;
+        break;
+      case 'Median':
+        data = data.sort((a, b) => {
+          return a - b;
+        });
+        var i = data.length / 2;
+        result =
+          i % 1 === 0 ? (data[i - 1] + data[i]) / 2 : data[Math.floor(i)];
+        break;
+      case 'Variance':
+        result =
+          data.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) /
+          data.length;
+        break;
+      case 'Standard deviation':
+        let variance =
+          data.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) /
+          data.length;
+        result = Math.sqrt(variance);
+        break;
+      default:
+        break;
+    }
+    return result;
+  }
+
+  selectStatistics(option) {
+    let index = this.state.layerIndex;
+    this.infoData[index].data.statistics = {
+      selected: option,
+      value: this.calculateStatistics(option),
+    };
+    this.setState({
+      pixelInfo: true,
+    });
+  }
+
   /**
    * This method renders the component
    * @returns jsx
    */
   render() {
-    let noData = this.state.pixelInfo
-      ? this.infoData[0].data.data.values.map((a) => {
-          return a[this.infoData[0].data.variables.selected];
-        }).length === 0
-      : Object.keys(this.infoData).length === 0;
-    let layer = 0;
+    let noData = true;
+    if (this.state.pixelInfo) {
+      noData = this.infoData[this.state.layerIndex].data.data
+        ? this.infoData[this.state.layerIndex].data.data.values.map((a) => {
+            return a[
+              this.infoData[this.state.layerIndex].data.variables.selected
+            ];
+          }).length === 0
+        : true;
+    } else if (this.state.popup) {
+      noData = this.infoData[this.state.layerIndex].data.length === 0 && true;
+    }
     return (
       <>
         <div ref={this.container} className="info-container">
@@ -453,28 +834,83 @@ class InfoWidget extends React.Component {
             role="button"
           ></div>
           <div className="info-panel">
-            {(this.state.pixelInfo || this.state.popup) && (
-              <span className="info-panel-title">
-                {this.infoData[layer].title}
-              </span>
-            )}
-            {this.state.pixelInfo && !noData && (
-              <>
-                {this.loadVariableSelector(0)}
-
-                <HighchartsReact
-                  highcharts={Highcharts}
-                  options={this.loadInfoChart(layer)}
-                />
-              </>
-            )}
-            {this.state.popup && !noData && this.loadInfoTable(layer)}
-            {this.state.pixelInfo || this.state.popup ? (
-              noData && <span className="info-panel-empty">No data</span>
+            {this.state.loading ? (
+              <Loader active inline="centered" size="small" />
             ) : (
-              <span className="info-panel-empty">
-                Click on the map to get pixel info
-              </span>
+              <>
+                {(this.state.pixelInfo || this.state.popup) && (
+                  <>
+                    <div className="info-panel-buttons">
+                      <button
+                        className="ccl-button ccl-button--default info-button-left"
+                        onClick={() =>
+                          this.setState({
+                            layerIndex: this.state.layerIndex + 1,
+                            pixelInfo: this.infoData[this.state.layerIndex + 1]
+                              .time
+                              ? true
+                              : false,
+                            popup: !this.infoData[this.state.layerIndex + 1]
+                              .time
+                              ? true
+                              : false,
+                          })
+                        }
+                        disabled={
+                          this.state.layerIndex ===
+                          Object.keys(this.infoData).length - 1
+                        }
+                      >
+                        <FontAwesomeIcon icon={['fas', 'chevron-left']} />
+                        <span>Previous layer</span>
+                      </button>
+                      <button
+                        className="ccl-button ccl-button--default info-button-right"
+                        onClick={() =>
+                          this.setState({
+                            layerIndex: this.state.layerIndex - 1,
+                            pixelInfo: this.infoData[this.state.layerIndex - 1]
+                              .time
+                              ? true
+                              : false,
+                            popup: !this.infoData[this.state.layerIndex - 1]
+                              .time
+                              ? true
+                              : false,
+                          })
+                        }
+                        disabled={this.state.layerIndex === 0}
+                      >
+                        <span>Next layer</span>
+                        <FontAwesomeIcon icon={['fas', 'chevron-right']} />
+                      </button>
+                    </div>
+                    <span className="info-panel-title">
+                      {this.infoData[this.state.layerIndex].title}
+                    </span>
+                  </>
+                )}
+                {this.state.pixelInfo && !noData && (
+                  <>
+                    {this.loadVariableSelector(this.state.layerIndex)}
+                    <HighchartsReact
+                      highcharts={Highcharts}
+                      options={this.loadInfoChart(this.state.layerIndex)}
+                    />
+                    {this.loadStatisticsSelector(this.state.layerIndex)}
+                  </>
+                )}
+                {this.state.popup &&
+                  !noData &&
+                  this.loadInfoTable(this.state.layerIndex)}
+                {this.state.pixelInfo || this.state.popup ? (
+                  noData && <span className="info-panel-empty">No data</span>
+                ) : (
+                  <span className="info-panel-empty">
+                    Click on the map to get pixel info
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>
