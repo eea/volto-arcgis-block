@@ -5,7 +5,7 @@ import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { useHistory } from 'react-router-dom';
 import { useIntl } from 'react-intl';
-import { Message, Modal } from 'semantic-ui-react';
+import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 var WMSLayer, WMTSLayer, FeatureLayer;
@@ -440,6 +440,12 @@ class MenuWidget extends React.Component {
     var products = [];
     var index = 0;
     var inheritedIndexComponent = compIndex;
+    var description =
+      component.ComponentDescription &&
+      component.ComponentDescription.length >= 300
+        ? component.ComponentDescription.substr(0, 300) + '...'
+        : component.ComponentDescription;
+
     for (var i in component.Products) {
       products.push(
         this.metodProcessProduct(
@@ -450,6 +456,7 @@ class MenuWidget extends React.Component {
       );
       index++;
     }
+
     return (
       <div
         className="map-menu-dropdown"
@@ -465,7 +472,17 @@ class MenuWidget extends React.Component {
           tabIndex="0"
           role="button"
         >
-          {component.ComponentTitle}
+          {description ? (
+            <Popup
+              trigger={<span>{component.ComponentTitle}</span>}
+              content={description}
+              basic
+              className="custom"
+              style={{ transform: 'translateX(0.25rem)' }}
+            />
+          ) : (
+            <span>{component.ComponentTitle}</span>
+          )}
         </div>
         <div className="map-menu-components-container">{products}</div>
       </div>
@@ -485,6 +502,10 @@ class MenuWidget extends React.Component {
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
+    var description =
+      product.ProductDescription && product.ProductDescription.length >= 300
+        ? product.ProductDescription.substr(0, 300) + '...'
+        : product.ProductDescription;
 
     //Add only default datasets
     for (var i in product.Datasets) {
@@ -549,7 +570,17 @@ class MenuWidget extends React.Component {
                   key={'f' + prodIndex}
                 >
                   <legend className="ccl-form-legend">
-                    {product.ProductTitle}
+                    {description ? (
+                      <Popup
+                        trigger={<span>{product.ProductTitle}</span>}
+                        content={description}
+                        basic
+                        className="custom"
+                        style={{ transform: 'translateX(-2.5rem)' }}
+                      />
+                    ) : (
+                      <span>{product.ProductTitle}</span>
+                    )}
                   </legend>
                 </label>
               </div>
@@ -594,6 +625,10 @@ class MenuWidget extends React.Component {
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
+    var description =
+      dataset.DatasetDescription && dataset.DatasetDescription.length >= 300
+        ? dataset.DatasetDescription.substr(0, 300) + '...'
+        : dataset.DatasetDescription;
 
     if (dataset.HandlingLevel) {
       this.layerGroups[dataset.DatasetId] = [];
@@ -656,7 +691,17 @@ class MenuWidget extends React.Component {
             htmlFor={checkIndex}
             key={'d' + datIndex}
           >
-            <span>{dataset.DatasetTitle}</span>
+            {description ? (
+              <Popup
+                trigger={<span>{dataset.DatasetTitle}</span>}
+                content={description}
+                basic
+                className="custom"
+                style={{ transform: 'translateX(-3.5rem)' }}
+              />
+            ) : (
+              <span>{dataset.DatasetTitle}</span>
+            )}
           </label>
           <div className="map-menu-icons">
             <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
