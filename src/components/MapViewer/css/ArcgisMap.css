@@ -712,3 +712,15 @@
 .map-download-modal .map-download-buttons {
   margin: 0;
 }
+
+/* Popup */
+.ui.custom.popup {
+  max-width: 400px;
+  font-size: 0.875rem;
+}
+
+@media only screen and (max-width: 767px) {
+  .ui.custom.popup {
+      max-width: 400px;
+  }
+}
