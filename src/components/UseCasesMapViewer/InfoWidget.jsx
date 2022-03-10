@@ -18,7 +18,6 @@ class InfoWidget extends React.Component {
     layerSpatial = props.layerSpatial;
     layerHighlight = props.layerHighlight;
     this.container = createRef();
-    this.countryNames;
     this.loadOnce = true;
   }
 
@@ -342,8 +341,7 @@ class InfoWidget extends React.Component {
         this.getCountryNames(countryCodes)
           .then((response) => response.json())
           .then((data) => {
-            this.countryNames = data.features;
-            features = layerControl.orderFeatures(features, this.countryNames);
+            features = layerControl.orderFeatures(features, data.features);
             this.features = features;
 
             mapViewer.setState((prevState) => ({
@@ -354,7 +352,7 @@ class InfoWidget extends React.Component {
             }));
           });
       })();
-    } else if (this.features !== undefined && this.countryNames) {
+    } else if (this.features !== undefined) {
       if (mapViewer.state.useCaseLevel !== 1) {
         mapViewer.setState((prevState) => ({
           useCaseLevel: 1,
@@ -424,7 +422,7 @@ class InfoWidget extends React.Component {
       <>
         <div className="use-cases-products-block cont-w-50">
           {this.useCasesInformationPanel()}
-          {!this.features && !this.countryNames && (
+          {!this.features && (
             <Loader active inline="centered" indeterminate size="small" />
           )}
         </div>

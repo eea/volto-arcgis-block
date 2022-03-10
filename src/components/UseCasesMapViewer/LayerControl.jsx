@@ -230,6 +230,7 @@ class LayerControl {
       if (country) {
         feature.attributes.Origin_name = country.NAME_ENGL;
       }
+      return feature;
     });
 
     features.sort(function (a, b) {
