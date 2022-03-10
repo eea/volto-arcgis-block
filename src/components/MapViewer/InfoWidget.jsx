@@ -110,6 +110,7 @@ class InfoWidget extends React.Component {
                 type: 'wmts',
                 title: title,
               });
+              promises.push(Promise.reject());
             } else {
               layerTypes.push({
                 isTimeSeries: true,
@@ -132,6 +133,7 @@ class InfoWidget extends React.Component {
                 type: 'wmts',
                 title: title,
               });
+              promises.push(Promise.reject());
             } else {
               layerTypes.push({
                 isTimeSeries: false,
@@ -147,131 +149,144 @@ class InfoWidget extends React.Component {
                 let data = response.value;
                 let layer = layerTypes[index];
                 let properties = [];
-                if (layer.isTimeSeries) {
-                  switch (layer.type) {
-                    case 'wms':
-                      if (data.type === 'FeatureCollection') {
-                        if (data.features.length) {
-                          let obj = data.features.map((a) => {
-                            return a.properties;
-                          });
-                          properties = this.transformWmsData(obj);
-                        }
-                      } else if (data.doctype && data.doctype.name === 'html') {
-                        let th = data.querySelectorAll('tbody th');
-                        let tr = data.querySelectorAll(
-                          'tbody tr:not(:first-of-type)',
-                        );
-                        if (th.length) {
-                          let obj = Array.from(tr).map((a) => {
-                            let x = [];
-                            a.querySelectorAll('td').forEach((td, index) => {
-                              x[th[index].textContent] = td.textContent;
-                            });
-                            return x;
-                          });
-                          properties = this.transformWmsData(obj);
-                        }
-                      } else if (
-                        data.getElementsByTagName('FIELDS').length &&
-                        typeof data !== 'undefined'
-                      ) {
-                        let fields = data.getElementsByTagName('FIELDS');
-                        if (fields.length) {
-                          let obj = Array.from(fields).map((a) => {
-                            let x = [];
-                            Object.entries(a.attributes).forEach((b) => {
-                              x[b[1].name] = b[1].value;
-                            });
-                            return x;
-                          });
-                          properties = this.transformWmsData(obj);
-                        }
-                      }
-                      this.infoData[index] = {
-                        title: layer.title,
-                        data: properties,
-                        time: true,
-                      };
-                      break;
-                    case 'wmts':
-                      this.infoData[index] = {
-                        title: layer.title,
-                        data: properties,
-                        time: true,
-                      };
-                      break;
-                    case 'featureLayer':
-                      this.infoData[index] = {
-                        title: layer.title,
-                        data: data,
-                        time: true,
-                      };
-                      break;
-                    default:
-                      break;
-                  }
+                if (response.status === 'rejected') {
+                  this.infoData[index] = {
+                    title: layer.title,
+                    data: properties,
+                  };
                 } else {
-                  switch (layer.type) {
-                    case 'wms':
-                      if (data.type === 'FeatureCollection') {
-                        if (data.features.length) {
-                          properties = data.features[0].properties;
-                          properties = Object.entries(properties);
-                        }
-                      } else if (data.doctype && data.doctype.name === 'html') {
-                        let th = data.querySelectorAll('tbody th');
-                        let td = data.querySelectorAll('tbody td');
-                        if (th.length) {
-                          let fields = [];
-                          th.forEach((item, index) => {
-                            fields.push([
-                              item.textContent,
-                              td[index].textContent,
-                            ]);
-                          });
-                          properties = fields;
-                        }
-                      } else if (
-                        data.getElementsByTagName('FIELDS').length &&
-                        typeof data !== 'undefined'
-                      ) {
-                        let fields = data.getElementsByTagName('FIELDS');
-                        if (fields.length) {
-                          properties = Object.entries(fields[0].attributes).map(
-                            (a) => {
-                              return [a[1].name, a[1].value];
-                            },
+                  if (layer.isTimeSeries) {
+                    switch (layer.type) {
+                      case 'wms':
+                        if (data.type === 'FeatureCollection') {
+                          if (data.features.length) {
+                            let obj = data.features.map((a) => {
+                              return a.properties;
+                            });
+                            properties = this.transformWmsData(obj);
+                          }
+                        } else if (
+                          data.doctype &&
+                          data.doctype.name === 'html'
+                        ) {
+                          let th = data.querySelectorAll('tbody th');
+                          let tr = data.querySelectorAll(
+                            'tbody tr:not(:first-of-type)',
                           );
+                          if (th.length) {
+                            let obj = Array.from(tr).map((a) => {
+                              let x = [];
+                              a.querySelectorAll('td').forEach((td, index) => {
+                                x[th[index].textContent] = td.textContent;
+                              });
+                              return x;
+                            });
+                            properties = this.transformWmsData(obj);
+                          }
+                        } else if (
+                          data.getElementsByTagName('FIELDS').length &&
+                          typeof data !== 'undefined'
+                        ) {
+                          let fields = data.getElementsByTagName('FIELDS');
+                          if (fields.length) {
+                            let obj = Array.from(fields).map((a) => {
+                              let x = [];
+                              Object.entries(a.attributes).forEach((b) => {
+                                x[b[1].name] = b[1].value;
+                              });
+                              return x;
+                            });
+                            properties = this.transformWmsData(obj);
+                          }
                         }
-                      }
-                      this.infoData[index] = {
-                        title: layer.title,
-                        data: properties,
-                      };
-                      break;
-                    case 'wmts':
-                      this.infoData[index] = {
-                        title: layer.title,
-                        data: properties,
-                      };
-                      break;
-                    case 'featureLayer':
-                      if (data.results.length) {
-                        var graphic = data.results.filter((result) => {
-                          return result.graphic.layer === layers[index];
-                        })[0].graphic;
-                        if (graphic) {
-                          properties = graphic.attributes;
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: properties,
+                          time: true,
+                        };
+                        break;
+                      case 'wmts':
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: properties,
+                          time: true,
+                        };
+                        break;
+                      case 'featureLayer':
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: data,
+                          time: true,
+                        };
+                        break;
+                      default:
+                        break;
+                    }
+                  } else {
+                    switch (layer.type) {
+                      case 'wms':
+                        if (data.type === 'FeatureCollection') {
+                          if (data.features.length) {
+                            properties = data.features[0].properties;
+                            properties = Object.entries(properties);
+                          }
+                        } else if (
+                          data.doctype &&
+                          data.doctype.name === 'html'
+                        ) {
+                          let th = data.querySelectorAll('tbody th');
+                          let td = data.querySelectorAll('tbody td');
+                          if (th.length) {
+                            let fields = [];
+                            th.forEach((item, index) => {
+                              fields.push([
+                                item.textContent,
+                                td[index].textContent,
+                              ]);
+                            });
+                            properties = fields;
+                          }
+                        } else if (
+                          data.getElementsByTagName('FIELDS').length &&
+                          typeof data !== 'undefined'
+                        ) {
+                          let fields = data.getElementsByTagName('FIELDS');
+                          if (fields.length) {
+                            properties = Object.entries(
+                              fields[0].attributes,
+                            ).map((a) => {
+                              return [a[1].name, a[1].value];
+                            });
+                          }
                         }
-                      }
-                      this.infoData[index] = {
-                        title: layer.title,
-                        data: Object.entries(properties),
-                      };
-                      break;
-                    default:
-                      break;
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: properties,
+                        };
+                        break;
+                      case 'wmts':
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: properties,
+                        };
+                        break;
+                      case 'featureLayer':
+                        if (data.results.length) {
+                          var graphic = data.results.filter((result) => {
+                            return result.graphic.layer === layers[index];
+                          })[0].graphic;
+                          if (graphic) {
+                            properties = graphic.attributes;
+                          }
+                        }
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: Object.entries(properties),
+                        };
+                        break;
+                      default:
+                        break;
+                    }
                   }
                 }
               });
