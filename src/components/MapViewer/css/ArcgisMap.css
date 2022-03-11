@@ -638,6 +638,7 @@
   display: block;
   margin-bottom: 1rem;
   font-weight: bold;
+  word-break: break-word;
 }
 
 .info-panel select {
