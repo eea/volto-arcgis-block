@@ -3,6 +3,7 @@ const config = {
     div: 'mapDiv',
     center: [15, 50],
     zoom: 3,
+    minZoom: 3,
   },
   Components: [
     {

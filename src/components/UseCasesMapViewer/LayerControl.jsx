@@ -196,7 +196,7 @@ class LayerControl {
         document
           .querySelectorAll('.use-case-element-description .use-case-coverage')
           .forEach((element) => {
-            if (element.innerText === country_code) {
+            if (element.dataset.countryCode === country_code) {
               element.closest('.use-case-element').classList.add('selected');
             }
           });
@@ -218,21 +218,66 @@ class LayerControl {
    * @param {Object} features
    * @returns features ordered
    */
-  orderFeatures(features) {
+  orderFeatures(features, countries) {
+    features.map((feature) => {
+      let country = countries
+        .map((a) => {
+          return a.attributes;
+        })
+        .find((b) => {
+          return b.CNTR_ID === feature.attributes.Spatial_coverage;
+        });
+      if (country) {
+        feature.attributes.Origin_name = country.NAME_ENGL;
+      }
+      return feature;
+    });
+
     features.sort(function (a, b) {
       if (
         a.attributes.Copernicus_Land_Monitoring_Service_products_used <
         b.attributes.Copernicus_Land_Monitoring_Service_products_used
       )
         return -1;
-
-      if (
+      else if (
         a.attributes.Copernicus_Land_Monitoring_Service_products_used >
         b.attributes.Copernicus_Land_Monitoring_Service_products_used
       )
         return 1;
-
-      return 0;
+      else {
+        if (a.attributes.Use_case_title < b.attributes.Use_case_title)
+          return -1;
+        else if (a.attributes.Use_case_title > b.attributes.Use_case_title)
+          return 1;
+        else {
+          if (
+            a.attributes.Use_case_submitting_production_year >
+            b.attributes.Use_case_submitting_production_year
+          ) {
+            return -1;
+          } else if (
+            a.attributes.Use_case_submitting_production_year <
+            b.attributes.Use_case_submitting_production_year
+          ) {
+            return 1;
+          } else {
+            var sortOrder = ['EEA', 'EU'];
+            if (
+              !sortOrder.includes(a.attributes.Origin_name) &&
+              !sortOrder.includes(b.attributes.Origin_name)
+            ) {
+              return a.attributes.Origin_name.localeCompare(
+                b.attributes.Origin_name,
+              );
+            } else {
+              return (
+                -sortOrder.indexOf(a.attributes.Origin_name) -
+                -sortOrder.indexOf(b.attributes.Origin_name)
+              );
+            }
+          }
+        }
+      }
     });
     return features;
   }

@@ -177,6 +177,7 @@
   margin-bottom: 0;
   color: #656565;
   font-size: 0.875rem;
+  word-break: break-word;
 }
 
 .use-case-element-description span:not(:last-of-type) {
