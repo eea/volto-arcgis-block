@@ -212,8 +212,9 @@ export const AddCartItem = ({
                 <ul>
                   <li>
                     <p>
-                      Download full dataset (Note: Dowload process will take
-                      longer).
+                      Add full dataset (Note: Download process will take longer
+                      and for some very large datasets, a Bounding box for
+                      Europe is selected by default).
                     </p>
                   </li>
                   <li>
