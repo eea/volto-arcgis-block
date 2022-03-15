@@ -14,6 +14,7 @@ import { MapViewerConfig } from '../../actions';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
+import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom;
@@ -145,16 +146,9 @@ class MapViewer extends React.Component {
 
   renderArea() {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view)
-      return (
-        <AreaWidget
-          view={this.view}
-          map={this.map}
-          mapViewer={this}
-          download={this.props.mapviewer_config.Download}
-          updateArea={this.updateArea}
-        />
-      );
+    if (this.view) {
+      return <CheckLogin reference={this} />;
+    }
   }
 
   renderScale() {
@@ -205,6 +199,23 @@ class MapViewer extends React.Component {
     );
   }
 }
+
+export const CheckLogin = ({ reference }) => {
+  let { isLoggedIn } = useCartState();
+  return (
+    <>
+      {isLoggedIn && (
+        <AreaWidget
+          view={reference.view}
+          map={reference.map}
+          mapViewer={reference}
+          download={reference.props.mapviewer_config.Download}
+          updateArea={reference.updateArea}
+        />
+      )}
+    </>
+  );
+};
 
 export default compose(
   connect(
