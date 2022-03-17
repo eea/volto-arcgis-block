@@ -647,6 +647,7 @@
 
 .info-table {
   width: 100%;
+  margin-bottom: 1rem;
   table-layout: fixed;
 }
 
@@ -664,6 +665,10 @@
 
 .info-table tr:nth-child(odd) {
   background-color: #ebebeb;
+}
+
+.info-statistics-panel {
+  margin-bottom: 1rem;
 }
 
 /* Time slider*/

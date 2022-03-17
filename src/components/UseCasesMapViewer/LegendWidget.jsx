@@ -35,14 +35,14 @@ class LegendWidget extends React.Component {
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-right-arrow', 'esri-icon-legend');
+        .classList.replace('esri-icon-close', 'esri-icon-legend');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.mapViewer.setState({ showMapMenu: false });
     } else {
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-legend', 'esri-icon-right-arrow');
+        .classList.replace('esri-icon-legend', 'esri-icon-close');
       this.container.current.querySelector('.legend-panel').style.display =
         'block';
 

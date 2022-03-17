@@ -81,7 +81,7 @@ class AreaWidget extends React.Component {
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-right-arrow', 'esri-icon-cursor-marquee');
+        .classList.replace('esri-icon-close', 'esri-icon-cursor-marquee');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
@@ -95,7 +95,7 @@ class AreaWidget extends React.Component {
         'block';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-cursor-marquee', 'esri-icon-right-arrow');
+        .classList.replace('esri-icon-cursor-marquee', 'esri-icon-close');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
