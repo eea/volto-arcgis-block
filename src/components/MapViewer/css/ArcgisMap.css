@@ -647,8 +647,8 @@
 
 .info-table {
   width: 100%;
-  table-layout: fixed;
   margin-bottom: 1rem;
+  table-layout: fixed;
 }
 
 .info-table td {

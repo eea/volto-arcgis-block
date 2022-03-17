@@ -440,9 +440,10 @@ class InfoWidget extends React.Component {
         !isNaN(parseInt(Object.values(obj[0])[i])),
     );
     values.timeFields['start'] = startField;
-    debugger
     values.tableData['fields'] = Object.keys(obj[0]);
-    values.tableData['values'] = obj.map((a)=>{return Object.entries(a)});
+    values.tableData['values'] = obj.map((a) => {
+      return Object.entries(a);
+    });
     let fields = Object.keys(obj[0]).filter((a, i) => {
       return (
         !isNaN(parseInt(Object.values(obj[0])[i])) &&
@@ -517,7 +518,9 @@ class InfoWidget extends React.Component {
     //Complete time data
     values.timeFields['start'] = layer.timeInfo.startField;
     values.timeFields['end'] = layer.timeInfo.endField;
-    values.tableData['fields'] = layer.fields.map((a)=>{return a.name});
+    values.tableData['fields'] = layer.fields.map((a) => {
+      return a.name;
+    });
     let timeQuery = layer.createQuery();
     timeQuery.outFields = [layer.timeInfo.startField];
     let fields = layer.fields
@@ -588,7 +591,11 @@ class InfoWidget extends React.Component {
       });
       values.data['values'] = info.map((e) => {
         let attributes = e.attributes;
-        return Object.fromEntries(Object.entries(attributes).filter(([key]) => values.data.outFields[0].split(",").includes(key)));
+        return Object.fromEntries(
+          Object.entries(attributes).filter(([key]) =>
+            values.data.outFields[0].split(',').includes(key),
+          ),
+        );
       });
     });
 
@@ -721,11 +728,7 @@ class InfoWidget extends React.Component {
         </table>
       );
     });
-    return (
-      <>
-        {table}
-      </>
-    );
+    return <>{table}</>;
   }
 
   loadVariableSelector(index) {
