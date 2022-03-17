@@ -360,7 +360,7 @@ class MenuWidget extends React.Component {
       this.container.current.querySelector('#paneles').style.display = 'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-left-arrow', 'esri-icon-drag-horizontal');
+        .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
       if (document.contains(document.querySelector('.timeslider-container')))
         document.querySelector('.timeslider-container').style.display = 'none';
 
@@ -373,7 +373,7 @@ class MenuWidget extends React.Component {
       this.container.current.querySelector('#paneles').style.display = 'block';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-drag-horizontal', 'esri-icon-left-arrow');
+        .classList.replace('esri-icon-drag-horizontal', 'esri-icon-close');
       if (document.contains(document.querySelector('.timeslider-container')))
         document.querySelector('.timeslider-container').style.display = 'block';
 

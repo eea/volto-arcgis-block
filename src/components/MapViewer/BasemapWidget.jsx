@@ -65,7 +65,7 @@ class BasemapWidget extends React.Component {
       this.basemapGallery.domNode.style.display = 'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-right-arrow', 'esri-icon-basemap');
+        .classList.replace('esri-icon-close', 'esri-icon-basemap');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
@@ -75,7 +75,7 @@ class BasemapWidget extends React.Component {
       this.basemapGallery.domNode.style.display = 'block';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-basemap', 'esri-icon-right-arrow');
+        .classList.replace('esri-icon-basemap', 'esri-icon-close');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
