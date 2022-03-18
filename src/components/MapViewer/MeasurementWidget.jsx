@@ -38,7 +38,7 @@ class MeasurementWidget extends React.Component {
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-right-arrow', 'esri-icon-measure');
+        .classList.replace('esri-icon-close', 'esri-icon-measure');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
@@ -56,7 +56,7 @@ class MeasurementWidget extends React.Component {
         'block';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-measure', 'esri-icon-right-arrow');
+        .classList.replace('esri-icon-measure', 'esri-icon-close');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
@@ -111,7 +111,7 @@ class MeasurementWidget extends React.Component {
 
   showCoordinates(pt) {
     this.setState({
-      latlong: pt.latitude.toFixed(3) + ' ' + pt.longitude.toFixed(3),
+      latlong: pt.latitude.toFixed(4) + ' ' + pt.longitude.toFixed(4),
     });
   }
 

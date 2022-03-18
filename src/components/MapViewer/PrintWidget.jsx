@@ -43,7 +43,7 @@ class PrintWidget extends React.Component {
       this.print.domNode.style.display = 'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-right-arrow', 'esri-icon-printer');
+        .classList.replace('esri-icon-close', 'esri-icon-printer');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
@@ -52,7 +52,7 @@ class PrintWidget extends React.Component {
       this.print.domNode.style.display = 'block';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-printer', 'esri-icon-right-arrow');
+        .classList.replace('esri-icon-printer', 'esri-icon-close');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });

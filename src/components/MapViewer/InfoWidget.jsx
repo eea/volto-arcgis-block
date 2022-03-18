@@ -50,7 +50,7 @@ class InfoWidget extends React.Component {
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-right-arrow', 'esri-icon-description');
+        .classList.replace('esri-icon-close', 'esri-icon-description');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({
@@ -64,7 +64,7 @@ class InfoWidget extends React.Component {
       this.props.mapViewer.setActiveWidget(this);
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-description', 'esri-icon-right-arrow');
+        .classList.replace('esri-icon-description', 'esri-icon-close');
       this.container.current.querySelector('.info-panel').style.display =
         'block';
       // By invoking the setState, we notify the state we want to reach
@@ -433,13 +433,17 @@ class InfoWidget extends React.Component {
   }
 
   transformWmsData(obj) {
-    let values = { timeFields: {}, data: {}, variables: {} };
+    let values = { timeFields: {}, data: {}, variables: {}, tableData: {} };
     let startField = Object.keys(obj[0]).find(
       (a, i) =>
         a.toUpperCase().includes('DATE') &&
         !isNaN(parseInt(Object.values(obj[0])[i])),
     );
     values.timeFields['start'] = startField;
+    values.tableData['fields'] = Object.keys(obj[0]);
+    values.tableData['values'] = obj.map((a) => {
+      return Object.entries(a);
+    });
     let fields = Object.keys(obj[0]).filter((a, i) => {
       return (
         !isNaN(parseInt(Object.values(obj[0])[i])) &&
@@ -510,10 +514,13 @@ class InfoWidget extends React.Component {
   }
 
   identify(layer, evt) {
-    let values = { timeFields: {}, data: {}, variables: {} };
+    let values = { timeFields: {}, data: {}, variables: {}, tableData: {} };
     //Complete time data
     values.timeFields['start'] = layer.timeInfo.startField;
     values.timeFields['end'] = layer.timeInfo.endField;
+    values.tableData['fields'] = layer.fields.map((a) => {
+      return a.name;
+    });
     let timeQuery = layer.createQuery();
     timeQuery.outFields = [layer.timeInfo.startField];
     let fields = layer.fields
@@ -552,7 +559,7 @@ class InfoWidget extends React.Component {
     query.units = 'meters';
     query.spatialRelationship = 'intersects'; // this is the default
     query.returnGeometry = true;
-    query.outFields = [fields.toString()]; // Information to be returned
+    query.outFields = [values.tableData.fields.toString()]; // Information to be returned
     values.data['outFields'] = [fields.toString()];
 
     let p2 = layer.queryFeatures(query).then((response) => {
@@ -579,8 +586,16 @@ class InfoWidget extends React.Component {
           e.geometry.latitude === point.latitude &&
           e.geometry.longitude === point.longitude,
       );
+      values.tableData['values'] = values.data['values'] = info.map((e) => {
+        return Object.entries(e.attributes);
+      });
       values.data['values'] = info.map((e) => {
-        return e.attributes;
+        let attributes = e.attributes;
+        return Object.fromEntries(
+          Object.entries(attributes).filter(([key]) =>
+            values.data.outFields[0].split(',').includes(key),
+          ),
+        );
       });
     });
 
@@ -693,6 +708,27 @@ class InfoWidget extends React.Component {
         <tbody>{table}</tbody>
       </table>
     );
+  }
+
+  loadTimeInfoTable(index) {
+    let properties = this.infoData[index].data.tableData.values;
+    let table = properties.map((item) => {
+      let rows = item.map((row) => {
+        return (
+          <tr key={row}>
+            {Object.values(row).map((val) => (
+              <td key={val}>{val}</td>
+            ))}
+          </tr>
+        );
+      });
+      return (
+        <table className="info-table">
+          <tbody>{rows}</tbody>
+        </table>
+      );
+    });
+    return <>{table}</>;
   }
 
   loadVariableSelector(index) {
@@ -913,6 +949,7 @@ class InfoWidget extends React.Component {
                       options={this.loadInfoChart(this.state.layerIndex)}
                     />
                     {this.loadStatisticsSelector(this.state.layerIndex)}
+                    {this.loadTimeInfoTable(this.state.layerIndex)}
                   </>
                 )}
                 {this.state.popup &&

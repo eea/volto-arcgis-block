@@ -1,6 +1,6 @@
 {
   "name": "@eeacms/volto-arcgis-block",
-  "version": "0.1.37",
+  "version": "0.1.38",
   "description": "volto-arcgis-block: Volto add-on",
   "main": "src/index.js",
   "author": "European Environment Agency: CodeSyntax",
@@ -40,7 +40,7 @@
     "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
     "@fortawesome/react-fontawesome": "0.1.14",
-    "@eeacms/volto-clms-utils": "0.1.1",
+    "@eeacms/volto-clms-utils": "*",
     "highcharts": "^9.3.2",
     "highcharts-react-official": "^3.1.0"
   },
