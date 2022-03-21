@@ -97,10 +97,26 @@ class InfoWidget extends React.Component {
         : val.Contact_person_name_
         ? val.Contact_person_name_
         : '';
-      if (titles.includes(val.Use_case_title)) {
+      if (
+        titles
+          .map((a) => {
+            return a.title;
+          })
+          .includes(val.Use_case_title) &&
+        titles[
+          titles
+            .map((a) => {
+              return a.title;
+            })
+            .indexOf(val.Use_case_title)
+        ].component == val.Copernicus_Land_Monitoring_Service_products_used
+      ) {
         hideTitle = true;
       } else {
-        titles.push(val.Use_case_title);
+        titles.push({
+          title: val.Use_case_title,
+          component: val.Copernicus_Land_Monitoring_Service_products_used,
+        });
       }
       return (
         <div
