@@ -33,86 +33,88 @@ class TimesliderWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/widgets/TimeSlider', 'esri/TimeExtent', 'esri/request']).then(
+    return loadModules([
+    'esri/widgets/TimeSlider',
+    'esri/TimeExtent',
+    'esri/request']).then(
       ([_TimeSlider, _TimeExtent, _esriRequest]) => {
         [TimeSlider] = [_TimeSlider];
         [TimeExtent] = [_TimeExtent];
         [esriRequest] = [_esriRequest];
-      },
+      }
     );
   }
 
   getCapabilities(url, serviceType) {
     // Get the coordinates of the click on the view
     return esriRequest(url, {
-      responseType: "html",
-      sync: "true",
+      responseType: 'html',
+      sync: 'true',
       query: {
-        request: "GetCapabilities",
+        request: 'GetCapabilities',
         service: serviceType,
       },
     }).then((response) => {
       let parser = new DOMParser();
-      let xml = parser.parseFromString(response.data, "text/html");
+      let xml = parser.parseFromString(response.data, 'text/html');
       return xml;
     });
   }
 
 
   parseTimeWMS(xml) {
-    let layers = Array.from(xml.querySelectorAll("Layer")).filter(
-      (v) => v.querySelectorAll("Layer").length === 0
+    let layers = Array.from(xml.querySelectorAll('Layer')).filter(
+      (v) => v.querySelectorAll('Layer').length === 0
     );
     let times = {};
     for (let i in layers) {
-      if (layers[i].querySelector("Dimension") !== null) {
-        if (layers[i].querySelector("Dimension").innerText.includes("/P")) {    
+      if (layers[i].querySelector('Dimension') !== null) {
+        if (layers[i].querySelector('Dimension').innerText.includes('/P')) {
           // START-END-PERIOD                        
-          const [startDate, endDate, period]  = layers[i]
-              .querySelector("Dimension")
-              .innerText.replace(/\s/g, "")
-              .split("/")              
-        
-          times[layers[i].querySelector("Name").innerText] = {period: period, start: startDate, end: endDate}              
+          const [startDate, endDate, period] = layers[i]
+            .querySelector('Dimension')
+            .innerText.replace(/\s/g, '')
+            .split('/')
+
+          times[layers[i].querySelector('Name').innerText] = { period: period, start: startDate, end: endDate }
         } else {
           // DATES ARRAY          
-          times[layers[i].querySelector("Name").innerText] = {array:layers[i].querySelector("Dimension").innerText.split(",")};
+          times[layers[i].querySelector('Name').innerText] = { array: layers[i].querySelector('Dimension').innerText.split(',') };
         }
       } else {
-        times[layers[i].querySelector("Name").innerText] = {dimension: false}
-      }     
-    }    
+        times[layers[i].querySelector('Name').innerText] = { dimension: false }
+      }
+    }
     return times;
   }
 
 
   parseTimeWMTS(xml) {
-    let layers = Array.from(xml.querySelectorAll("Layer")).filter(
-      (v) => v.querySelectorAll("Layer").length === 0
+    let layers = Array.from(xml.querySelectorAll('Layer')).filter(
+      (v) => v.querySelectorAll('Layer').length === 0
     );
-    let times = {};       
+    let times = {};
     for (let i in layers) {
-      if (layers[i].querySelector("Dimension") !== null) {
-        /* if (layers[i].querySelector("Dimension").innerText.includes("/P")) {     */
-        if (this.parseCapabilities(layers[i], "value")[0].innerText.includes("/P")) { 
+      if (layers[i].querySelector('Dimension') !== null) {        
+        if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')) {
           // START-END-PERIOD
-          const [startDate, endDate, period]  = layers[i]
-              .querySelector("Dimension")
-              .innerText.replace(/\s/g, "")
-              .split("/")                      
-          times[this.parseCapabilities(layers[i], "ows:title")[0].innerText] = {period: period, start: startDate, end: endDate}              
+          const [startDate, endDate, period] = layers[i]
+            .querySelector('Dimension')
+            .innerText.replace(/\s/g, '')
+            .split('/')
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { period: period, start: startDate, end: endDate }
         } else {
           // DATES ARRAY        
           let array = []
-          Array.from(this.parseCapabilities(layers[i], "value")).forEach(function(item) {
+          Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
             array.push(item.innerText.replace(/\s/g, ''));
           });
-          times[this.parseCapabilities(layers[i], "ows:title")[0].innerText] = {array: array};
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { array: array };
         }
       } else {
-        times[this.parseCapabilities(layers[i], "ows:title")[0].innerText] = {dimension: false};
-      }     
-    }        
+        times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { dimension: false };
+      }
+    }
     return times;
   }
 
@@ -187,14 +189,14 @@ class TimesliderWidget extends React.Component {
           }
 
           this.getCapabilities(this.layer.url, serviceType).then((xml) => {
-            let times = {};            
-            if (this.layer.type === 'wms') {                     
+            let times = {};
+            if (this.layer.type === 'wms') {
               times = this.parseTimeWMS(xml);
-            } else if (this.layer.type === 'wmts') {            
+            } else if (this.layer.type === 'wmts') {
               times = this.parseTimeWMTS(xml);
-            }                                   
-             // Capabilities have time enabled
-             if (times[this.layerName].hasOwnProperty('dimension') === false) {
+            }
+            // Capabilities have time enabled
+            if (times[this.layerName].hasOwnProperty('dimension') === false) {
               // Start-End-Period
               if (times[this.layerName].hasOwnProperty('period')) {
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
@@ -308,18 +310,18 @@ class TimesliderWidget extends React.Component {
     return (
       <>
         <div
-          id="slide_frame"
+          id='slide_frame'
           onDrop={(e) => this.onDrop(e)}
           onDragOver={(e) => this.onDragOver(e)}
         ></div>
         <div
           ref={this.container}
-          className="timeslider-container"
-          draggable="true"
+          className='timeslider-container'
+          draggable='true'
           onDragStart={(e) => this.onDragStart(e)}
           style={this.state.styles}
         >
-          <div className="timeslider-panel"></div>
+          <div className='timeslider-panel'></div>
         </div>
       </>
     );
