@@ -109,7 +109,7 @@ class InfoWidget extends React.Component {
               return a.title;
             })
             .indexOf(val.Use_case_title)
-        ].component == val.Copernicus_Land_Monitoring_Service_products_used
+        ].component === val.Copernicus_Land_Monitoring_Service_products_used
       ) {
         hideTitle = true;
       } else {
