@@ -37,13 +37,13 @@ class TimesliderWidget extends React.Component {
       'esri/widgets/TimeSlider',
       'esri/TimeExtent',
       'esri/request'
-    ]).then(
+    ])
+    .then(
       ([_TimeSlider, _TimeExtent, _esriRequest]) => {
-        [TimeSlider] = [_TimeSlider];
-        [TimeExtent] = [_TimeExtent];
-        [esriRequest] = [_esriRequest];
-      }
-    );
+      [TimeSlider] = [_TimeSlider];
+      [TimeExtent] = [_TimeExtent];
+      [esriRequest] = [_esriRequest];
+    });
   }
 
   getCapabilities(url, serviceType) {
