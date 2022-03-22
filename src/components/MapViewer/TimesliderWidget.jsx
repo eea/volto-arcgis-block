@@ -34,9 +34,10 @@ class TimesliderWidget extends React.Component {
 
   loader() {
     return loadModules([
-    'esri/widgets/TimeSlider',
-    'esri/TimeExtent',
-    'esri/request']).then(
+      'esri/widgets/TimeSlider',
+      'esri/TimeExtent',
+      'esri/request'
+    ]).then(
       ([_TimeSlider, _TimeExtent, _esriRequest]) => {
         [TimeSlider] = [_TimeSlider];
         [TimeExtent] = [_TimeExtent];
