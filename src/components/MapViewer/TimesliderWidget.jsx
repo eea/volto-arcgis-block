@@ -100,8 +100,9 @@ class TimesliderWidget extends React.Component {
     let times = {};
     for (let i in layers) {
       if (layers[i].querySelector('Dimension') !== null) {
+        
         if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')
-        ){
+        ) {
           // START-END-PERIOD
           const [startDate, endDate, period] = layers[i]
             .querySelector('Dimension')
@@ -111,18 +112,19 @@ class TimesliderWidget extends React.Component {
             period: period,
             start: startDate,
             end: endDate,
-          }
+          };
         } else {
           // DATES ARRAY
           let array = [];
-                    
-            Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
-              array.push(item.innerText.replace(/\s/g, ''));
-            });
-            times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { array: array };
+          Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
+            array.push(item.innerText.replace(/\s/g, ''));
+          });
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { array: array };
         }
       } else {
-        times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { dimension: false };
+        times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
+          dimension: false
+        };
       }
     }
     return times;
@@ -188,11 +190,11 @@ class TimesliderWidget extends React.Component {
             }
           });
         } else {
-          let serviceType = ''
+          let serviceType = '';
           if (this.layer.type === 'wms') {
-            serviceType = 'wms'
+            serviceType = 'wms';
           } else if (this.layer.type === 'wmts') {
-            serviceType = 'wmts'
+            serviceType = 'wmts';
           }
 
           this.getCapabilities(this.layer.url, serviceType).then((xml) => {
@@ -227,7 +229,7 @@ class TimesliderWidget extends React.Component {
                   },
                 };
               } else if (times[this.layerName].hasOwnProperty('array')) {
-                // Dates array                
+                // Dates array
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
                   start: new Date(times[this.layerName].array[0]),
                   end: new Date(times[this.layerName].array[times[this.layerName].array.length - 1]),
@@ -317,18 +319,18 @@ class TimesliderWidget extends React.Component {
     return (
       <>
         <div
-          id='slide_frame'
+          id="slide_frame"
           onDrop={(e) => this.onDrop(e)}
           onDragOver={(e) => this.onDragOver(e)}
         ></div>
         <div
           ref={this.container}
-          className='timeslider-container'
-          draggable='true'
+          className="timeslider-container"
+          draggable="true"
           onDragStart={(e) => this.onDragStart(e)}
           style={this.state.styles}
         >
-          <div className='timeslider-panel'></div>
+          <div className="timeslider-panel"></div>
         </div>
       </>
     );
