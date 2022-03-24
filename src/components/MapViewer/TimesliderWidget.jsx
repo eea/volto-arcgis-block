@@ -36,10 +36,8 @@ class TimesliderWidget extends React.Component {
     return loadModules([
       'esri/widgets/TimeSlider',
       'esri/TimeExtent',
-      'esri/request'
-    ])
-    .then(
-      ([_TimeSlider, _TimeExtent, _esriRequest]) => {
+      'esri/request',
+    ]).then(([_TimeSlider, _TimeExtent, _esriRequest]) => {
       [TimeSlider] = [_TimeSlider];
       [TimeExtent] = [_TimeExtent];
       [esriRequest] = [_esriRequest];
@@ -62,7 +60,6 @@ class TimesliderWidget extends React.Component {
     });
   }
 
-
   parseTimeWMS(xml) {
     let layers = Array.from(xml.querySelectorAll('Layer')).filter(
       (v) => v.querySelectorAll('Layer').length === 0
@@ -76,19 +73,25 @@ class TimesliderWidget extends React.Component {
             .querySelector('Dimension')
             .innerText.replace(/\s/g, '')
             .split('/')
-
-          times[layers[i].querySelector('Name').innerText] = { period: period, start: startDate, end: endDate }
+          times[layers[i].querySelector('Name').innerText] = {
+            period: period,
+            start: startDate,
+            end: endDate
+          };
         } else {
           // DATES ARRAY          
-          times[layers[i].querySelector('Name').innerText] = { array: layers[i].querySelector('Dimension').innerText.split(',') };
+          times[layers[i].querySelector('Name').innerText] = {
+            array: layers[i].querySelector('Dimension').innerText.split(',')
+          };
         }
       } else {
-        times[layers[i].querySelector('Name').innerText] = { dimension: false }
+        times[layers[i].querySelector('Name').innerText] = {
+          dimension: false
+        };
       }
     }
     return times;
   }
-
 
   parseTimeWMTS(xml) {
     let layers = Array.from(xml.querySelectorAll('Layer')).filter(
@@ -125,9 +128,7 @@ class TimesliderWidget extends React.Component {
 
   parserPeriod(iso8601Duration) {
     var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T?(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
-
     var matches = iso8601Duration.match(iso8601DurationRegex);
-
     return {
       sign: matches[1] === undefined ? '+' : '-',
       years: parseInt(matches[2] === undefined ? 0 : matches[2]),
@@ -159,7 +160,6 @@ class TimesliderWidget extends React.Component {
     });
     this.props.view.ui.add(this.container.current, 'bottom-right');
     this.container.current.style.display = 'block';
-
     this.props.view
       .whenLayerView(this.layer, this.TimesliderWidget)
       .then((lv) => {
