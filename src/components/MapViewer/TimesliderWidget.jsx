@@ -62,31 +62,31 @@ class TimesliderWidget extends React.Component {
 
   parseTimeWMS(xml) {
     let layers = Array.from(xml.querySelectorAll('Layer')).filter(
-      (v) => v.querySelectorAll('Layer').length === 0
+      (v) => v.querySelectorAll('Layer').length === 0,
     );
     let times = {};
     for (let i in layers) {
       if (layers[i].querySelector('Dimension') !== null) {
         if (layers[i].querySelector('Dimension').innerText.includes('/P')) {
-          // START-END-PERIOD                        
+          // START-END-PERIOD
           const [startDate, endDate, period] = layers[i]
             .querySelector('Dimension')
             .innerText.replace(/\s/g, '')
-            .split('/')
+            .split('/');
           times[layers[i].querySelector('Name').innerText] = {
             period: period,
             start: startDate,
-            end: endDate
+            end: endDate,
           };
         } else {
-          // DATES ARRAY          
+          // DATES ARRAY
           times[layers[i].querySelector('Name').innerText] = {
-            array: layers[i].querySelector('Dimension').innerText.split(',')
+            array: layers[i].querySelector('Dimension').innerText.split(','),
           };
         }
       } else {
         times[layers[i].querySelector('Name').innerText] = {
-          dimension: false
+          dimension: false,
         };
       }
     }
@@ -95,12 +95,12 @@ class TimesliderWidget extends React.Component {
 
   parseTimeWMTS(xml) {
     let layers = Array.from(xml.querySelectorAll('Layer')).filter(
-      (v) => v.querySelectorAll('Layer').length === 0
+      (v) => v.querySelectorAll('Layer').length === 0,
     );
     let times = {};
     for (let i in layers) {
-      if (layers[i].querySelector('Dimension') !== null) {        
-        if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')) {
+      if (layers[i].querySelector('Dimension') !== null) {
+        if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')){
           // START-END-PERIOD
           const [startDate, endDate, period] = layers[i]
             .querySelector('Dimension')
