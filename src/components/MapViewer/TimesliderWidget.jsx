@@ -117,13 +117,16 @@ class TimesliderWidget extends React.Component {
           // DATES ARRAY
           let array = [];
           Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
-            array.push(item.innerText.replace(/\s/g, ''));
-          });
-          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { array: array };
+              array.push(item.innerText.replace(/\s/g, ''));
+          },
+          );
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
+            array: array,
+          };
         }
       } else {
         times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
-          dimension: false
+          dimension: false,
         };
       }
     }
@@ -232,7 +235,11 @@ class TimesliderWidget extends React.Component {
                 // Dates array
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
                   start: new Date(times[this.layerName].array[0]),
-                  end: new Date(times[this.layerName].array[times[this.layerName].array.length - 1]),
+                  end: new Date(
+                    times[this.layerName].array[
+                      times[this.layerName].array.length - 1
+                    ]
+                    ),
                 });
                 this.TimesliderWidget.stops = {
                   dates: times[this.layerName].array.map((e) => new Date(e)),
