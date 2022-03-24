@@ -100,20 +100,26 @@ class TimesliderWidget extends React.Component {
     let times = {};
     for (let i in layers) {
       if (layers[i].querySelector('Dimension') !== null) {
-        if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')){
+        if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')
+        ){
           // START-END-PERIOD
           const [startDate, endDate, period] = layers[i]
             .querySelector('Dimension')
             .innerText.replace(/\s/g, '')
-            .split('/')
-          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { period: period, start: startDate, end: endDate }
+            .split('/');
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
+            period: period,
+            start: startDate,
+            end: endDate,
+          }
         } else {
-          // DATES ARRAY        
-          let array = []
-          Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
-            array.push(item.innerText.replace(/\s/g, ''));
-          });
-          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { array: array };
+          // DATES ARRAY
+          let array = [];
+                    
+            Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
+              array.push(item.innerText.replace(/\s/g, ''));
+            });
+            times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { array: array };
         }
       } else {
         times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = { dimension: false };
