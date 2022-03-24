@@ -4,6 +4,7 @@ const config = {
     center: [15, 50],
     zoom: 3,
     minZoom: 3,
+    maxZoom: 20,
   },
   Components: [
     {
