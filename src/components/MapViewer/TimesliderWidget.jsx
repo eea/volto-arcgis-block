@@ -100,8 +100,8 @@ class TimesliderWidget extends React.Component {
     let times = {};
     for (let i in layers) {
       if (layers[i].querySelector('Dimension') !== null) {
-        
-        if (this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')
+        if (
+          this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')
         ) {
           // START-END-PERIOD
           const [startDate, endDate, period] = layers[i]
@@ -116,9 +116,10 @@ class TimesliderWidget extends React.Component {
         } else {
           // DATES ARRAY
           let array = [];
+          
           Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
               array.push(item.innerText.replace(/\s/g, ''));
-          },
+            },
           );
           times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
             array: array,
@@ -238,8 +239,8 @@ class TimesliderWidget extends React.Component {
                   end: new Date(
                     times[this.layerName].array[
                       times[this.layerName].array.length - 1
-                    ]
-                    ),
+                    ],
+                  ),
                 });
                 this.TimesliderWidget.stops = {
                   dates: times[this.layerName].array.map((e) => new Date(e)),
@@ -247,7 +248,9 @@ class TimesliderWidget extends React.Component {
 
                 if (this.layer.type === 'wmts') {
                   this.layer.customParameters = {};
-                  const time = times[this.layerName].array.map((d) => new Date(d));
+                  const time = times[this.layerName].array.map(
+                    (d) => new Date(d),
+                  );
 
                   for (let i in time) {
                     timeDict[time[i]] = times[this.layerName].array[i];
