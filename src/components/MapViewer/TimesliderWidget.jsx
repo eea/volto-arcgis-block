@@ -115,9 +115,9 @@ class TimesliderWidget extends React.Component {
           };
         } else {
           // DATES ARRAY
-          let array = [];
-          
-          Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item) {
+          let array = [];          
+          Array.from(this.parseCapabilities(layers[i], 'value')).forEach(function (item)
+            {
               array.push(item.innerText.replace(/\s/g, ''));
             },
           );
