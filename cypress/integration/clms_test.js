@@ -28,6 +28,7 @@ describe("Clms Test", () => {
     })
 
     it("product dataset map viewer test", () => {
+        cy.wait(2000)
         cy.get('[class="ccl-header-main-menu"]')
             .contains('Product portfolio')
             .click()
@@ -58,7 +59,7 @@ describe("Clms Test", () => {
                                        
      })
     // Widget Legend Test
-    it("map viewer legend widget test", () => {
+    it.skip("map viewer legend widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -83,7 +84,7 @@ describe("Clms Test", () => {
     })
     
     // Widget Area Test
-    it("map viewer area widget test", () => {
+    it.skip("map viewer area widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -120,7 +121,7 @@ describe("Clms Test", () => {
     })
 
     // Widget Measurement Test
-    it("map viewer measurement widget test", () => {
+    it.skip("map viewer measurement widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -149,7 +150,7 @@ describe("Clms Test", () => {
     })
 
     // Widget Print Test
-    it("map viewer Print widget test", () => {
+    it.skip("map viewer Print widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -176,7 +177,7 @@ describe("Clms Test", () => {
     })
 
     // Widget Basemap Gallery Test
-    it("map viewer Basemap Gallery widget test", () => {
+    it.skip("map viewer Basemap Gallery widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -203,7 +204,7 @@ describe("Clms Test", () => {
 
 
     // Widget Info Test
-    it("map viewer Widget Info Test", () => {
+    it.skip("map viewer Widget Info Test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -227,7 +228,7 @@ describe("Clms Test", () => {
     })
 
     // Time series Test
-    it("map viewer Time series Test", () => {
+    it.skip("map viewer Time series Test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
@@ -247,7 +248,7 @@ describe("Clms Test", () => {
     })
 
     // Corine Land Cover 2018 layer test
-    it("map viewer Corine Land Cover 2018 layer test", () => {
+    it.skip("map viewer Corine Land Cover 2018 layer test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         // Panels
