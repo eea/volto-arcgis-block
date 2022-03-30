@@ -313,3 +313,10 @@ Cypress.Commands.add('store', () => {
 Cypress.Commands.add('settings', (key, value) => {
   return cy.window().its('settings');
 });
+Cypress.Commands.add('openClmsPortal',() =>{
+  //login
+  cy.visit('/login')
+  //By ID
+  cy.get('#login').type('admin')
+  cy.get('#password').type('admin{enter}')    
+})
