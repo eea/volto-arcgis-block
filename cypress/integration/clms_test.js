@@ -28,7 +28,7 @@ describe("Clms Test", () => {
     })
 
     it("product dataset map viewer test", () => {
-        cy.wait(2000)
+        cy.wait(20000)
         cy.get('[class="ccl-header-main-menu"]')
             .contains('Product portfolio')
             .click()
