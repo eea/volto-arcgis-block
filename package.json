@@ -32,8 +32,9 @@
     "lint": "../../../node_modules/eslint/bin/eslint.js --max-warnings=0 'src/**/*.{js,jsx}'",
     "lint:fix": "../../../node_modules/eslint/bin/eslint.js --fix 'src/**/*.{js,jsx}'",
     "precommit": "yarn stylelint && yarn prettier && yarn lint",
-    "cypress:run": "../../../node_modules/cypress/bin/cypress run",
-    "cypress:open": "../../../node_modules/cypress/bin/cypress open"
+    "cypress:run": "NODE_ENV=production CYPRESS_API=plone ../../../node_modules/cypress/bin/cypress run",
+    "cypress:open": "NODE_ENV=production CYPRESS_API=plone ../../../node_modules/cypress/bin/cypress open",
+    "test": "docker run -it --rm -v $(pwd):/opt/frontend/my-volto-project/src/addons/volto-arcgis-block -e GIT_NAME=volto-arcgis-block -e NAMESPACE=@eeacms plone/volto-addon-ci"
   },
   "dependencies": {
     "@eeacms/volto-clms-utils": "*",
