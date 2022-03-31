@@ -40,7 +40,6 @@
     "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
     "@fortawesome/react-fontawesome": "0.1.14",
-    "cypress": "^9.5.3",
     "esri-loader": "3.1.0",
     "highcharts": "^9.3.2",
     "highcharts-react-official": "^3.1.0"
