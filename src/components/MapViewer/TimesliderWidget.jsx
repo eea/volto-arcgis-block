@@ -208,7 +208,17 @@ class TimesliderWidget extends React.Component {
         : null,
     });
     this.props.view.ui.add(this.container.current, 'bottom-right');
+    this.container.current.insertAdjacentHTML(
+      'beforeend',
+      '<div class="esri-icon-close" id="timeslider_close" role="button"></div>',
+    );
     this.container.current.style.display = 'block';
+
+    document
+      .querySelector('#timeslider_close')
+      .addEventListener('click', () => {
+        this.props.time.elem.querySelector('.active-layer-time').click();
+      });
 
     this.props.view
       .whenLayerView(this.layer, this.TimesliderWidget)

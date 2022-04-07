@@ -46,11 +46,14 @@ class InfoWidget extends React.Component {
   openMenu() {
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.info-panel').style.display =
+      this.container.current.querySelector('.right-panel').style.display =
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-description');
+        .classList.remove('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({
@@ -62,11 +65,14 @@ class InfoWidget extends React.Component {
       this.removeMarker();
     } else {
       this.props.mapViewer.setActiveWidget(this);
+      this.container.current.querySelector('.right-panel').style.display =
+        'flex';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-description', 'esri-icon-close');
-      this.container.current.querySelector('.info-panel').style.display =
-        'block';
+        .classList.add('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
@@ -876,94 +882,115 @@ class InfoWidget extends React.Component {
       <>
         <div ref={this.container} className="info-container">
           <div
-            className={this.menuClass}
-            id="info_button"
-            title="Info"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
-            tabIndex="0"
-            role="button"
-          ></div>
-          <div className="info-panel">
-            {this.state.loading ? (
-              <Loader active inline="centered" size="small" />
-            ) : (
-              <>
-                {(this.state.pixelInfo || this.state.popup) && (
-                  <>
-                    <div className="info-panel-buttons">
-                      <button
-                        className="ccl-button ccl-button--default info-button-left"
-                        onClick={() =>
-                          this.setState({
-                            layerIndex: this.state.layerIndex + 1,
-                            pixelInfo: this.infoData[this.state.layerIndex + 1]
-                              .time
-                              ? true
-                              : false,
-                            popup: !this.infoData[this.state.layerIndex + 1]
-                              .time
-                              ? true
-                              : false,
-                          })
-                        }
-                        disabled={
-                          this.state.layerIndex ===
-                          Object.keys(this.infoData).length - 1
-                        }
-                      >
-                        <FontAwesomeIcon icon={['fas', 'chevron-left']} />
-                        <span>Previous layer</span>
-                      </button>
-                      <button
-                        className="ccl-button ccl-button--default info-button-right"
-                        onClick={() =>
-                          this.setState({
-                            layerIndex: this.state.layerIndex - 1,
-                            pixelInfo: this.infoData[this.state.layerIndex - 1]
-                              .time
-                              ? true
-                              : false,
-                            popup: !this.infoData[this.state.layerIndex - 1]
-                              .time
-                              ? true
-                              : false,
-                          })
-                        }
-                        disabled={this.state.layerIndex === 0}
-                      >
-                        <span>Next layer</span>
-                        <FontAwesomeIcon icon={['fas', 'chevron-right']} />
-                      </button>
-                    </div>
-                    <span className="info-panel-title">
-                      {this.infoData[this.state.layerIndex].title}
-                    </span>
-                  </>
-                )}
-                {this.state.pixelInfo && !noData && (
-                  <>
-                    {this.loadVariableSelector(this.state.layerIndex)}
-                    <HighchartsReact
-                      highcharts={Highcharts}
-                      options={this.loadInfoChart(this.state.layerIndex)}
-                    />
-                    {this.loadStatisticsSelector(this.state.layerIndex)}
-                    {this.loadTimeInfoTable(this.state.layerIndex)}
-                  </>
-                )}
-                {this.state.popup &&
-                  !noData &&
-                  this.loadInfoTable(this.state.layerIndex)}
-                {this.state.pixelInfo || this.state.popup ? (
-                  noData && <span className="info-panel-empty">No data</span>
+            tooltip="Info"
+            direction="left"
+            type="widget"
+          >
+            <div
+              className={this.menuClass}
+              id="info_button"
+              title="Info"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          </div>
+          <div className="right-panel">
+            <div className="right-panel-header">
+              <span>Layer info</span>
+              <span
+                className="map-menu-icon esri-icon-close"
+                onClick={this.openMenu.bind(this)}
+              ></span>
+            </div>
+            <div className="right-panel-content">
+              <div className="info-panel">
+                {this.state.loading ? (
+                  <Loader active inline="centered" size="small" />
                 ) : (
-                  <span className="info-panel-empty">
-                    Click on the map to get pixel info
-                  </span>
+                  <>
+                    {(this.state.pixelInfo || this.state.popup) && (
+                      <>
+                        <div className="info-panel-buttons">
+                          <button
+                            className="ccl-button ccl-button--default info-button-left"
+                            onClick={() =>
+                              this.setState({
+                                layerIndex: this.state.layerIndex + 1,
+                                pixelInfo: this.infoData[
+                                  this.state.layerIndex + 1
+                                ].time
+                                  ? true
+                                  : false,
+                                popup: !this.infoData[this.state.layerIndex + 1]
+                                  .time
+                                  ? true
+                                  : false,
+                              })
+                            }
+                            disabled={
+                              this.state.layerIndex ===
+                              Object.keys(this.infoData).length - 1
+                            }
+                          >
+                            <FontAwesomeIcon icon={['fas', 'chevron-left']} />
+                            <span>Previous layer</span>
+                          </button>
+                          <button
+                            className="ccl-button ccl-button--default info-button-right"
+                            onClick={() =>
+                              this.setState({
+                                layerIndex: this.state.layerIndex - 1,
+                                pixelInfo: this.infoData[
+                                  this.state.layerIndex - 1
+                                ].time
+                                  ? true
+                                  : false,
+                                popup: !this.infoData[this.state.layerIndex - 1]
+                                  .time
+                                  ? true
+                                  : false,
+                              })
+                            }
+                            disabled={this.state.layerIndex === 0}
+                          >
+                            <span>Next layer</span>
+                            <FontAwesomeIcon icon={['fas', 'chevron-right']} />
+                          </button>
+                        </div>
+                        <span className="info-panel-title">
+                          {this.infoData[this.state.layerIndex].title}
+                        </span>
+                      </>
+                    )}
+                    {this.state.pixelInfo && !noData && (
+                      <>
+                        {this.loadVariableSelector(this.state.layerIndex)}
+                        <HighchartsReact
+                          highcharts={Highcharts}
+                          options={this.loadInfoChart(this.state.layerIndex)}
+                        />
+                        {this.loadStatisticsSelector(this.state.layerIndex)}
+                        {this.loadTimeInfoTable(this.state.layerIndex)}
+                      </>
+                    )}
+                    {this.state.popup &&
+                      !noData &&
+                      this.loadInfoTable(this.state.layerIndex)}
+                    {this.state.pixelInfo || this.state.popup ? (
+                      noData && (
+                        <span className="info-panel-empty">No data</span>
+                      )
+                    ) : (
+                      <span className="info-panel-empty">
+                        Click on the map to get pixel info
+                      </span>
+                    )}
+                  </>
                 )}
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </div>
       </>

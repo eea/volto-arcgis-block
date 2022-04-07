@@ -91,16 +91,6 @@
   box-shadow: none !important;
 }
 
-.basemap-panel.esri-basemap-gallery {
-  width: 300px;
-  max-height: 260px;
-}
-
-.esri-basemap-gallery {
-  display: none;
-  margin: 0 !important;
-}
-
 .esri-basemap-gallery__item:first-child {
   margin-top: 0;
 }
@@ -118,12 +108,6 @@
 .measurement-container .measurement-area.esri-measurement {
   display: block;
   flex-direction: column;
-}
-
-.measurement-panel {
-  display: none;
-  width: 300px;
-  max-height: 260px;
 }
 
 .measurement-buttons {
@@ -172,9 +156,12 @@
   box-shadow: none !important;
 }
 
-.esri-print {
+.print-container .esri-print {
+  padding: 0;
+}
+
+.esri-print__header-title {
   display: none;
-  max-height: 260px;
 }
 
 .esri-print__layout-tab {
@@ -201,15 +188,6 @@
 .area-container {
   display: flex;
   box-shadow: none !important;
-}
-
-.area-panel {
-  display: none;
-  width: 300px;
-  max-height: 260px;
-  padding: 1rem;
-  background-color: white;
-  font-size: 1rem;
 }
 
 .area-panel .ccl-form-group:not(:first-of-type) {
@@ -299,6 +277,15 @@
   height: 440px;
   padding: 0;
   background: #ffffff;
+  overflow-y: auto;
+}
+
+.map-menu .panels {
+  width: 100%;
+  height: 440px;
+  padding: 0;
+  background: #ffffff;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -425,7 +412,7 @@
 .map-menu-dataset > div:first-of-type {
   display: flex;
   width: 100%;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 .map-menu .map-menu-layers-container {
@@ -459,6 +446,10 @@
   background-color: white;
 }
 
+#active_panel {
+  height: 100%;
+}
+
 #active_panel .no-active-datasets {
   display: block;
   margin: 1rem;
@@ -466,6 +457,20 @@
 
 #active_panel .active-layer + .no-active-datasets {
   display: none;
+}
+
+#active_panel #active_layers {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#map_remove_layers {
+  margin-top: auto;
+}
+
+#map_remove_layers svg {
+  margin-right: 0.5rem;
 }
 
 .active-layer {
@@ -586,29 +591,24 @@
   box-shadow: none !important;
 }
 
-.legend-panel {
-  display: none;
-  max-height: 260px;
+.legend-panel.esri-legend.esri-widget {
+  overflow: visible;
 }
 
-.legend-panel.esri-legend {
-  overflow: auto;
+.esri-legend .esri-legend__service,
+.esri-legend .esri-legend__message {
+  padding: 0 !important;
+  margin-bottom: 1rem;
+}
+
+.esri-legend .esri-legend__layer {
+  margin: 0;
 }
 
 /* Info widget */
 .info-container {
   display: none;
   box-shadow: none !important;
-}
-
-.info-panel {
-  display: none;
-  overflow: auto;
-  width: 300px;
-  max-height: 240px;
-  padding: 1rem;
-  background-color: white;
-  font-size: 1rem;
 }
 
 .info-panel-buttons {
@@ -695,6 +695,30 @@
   visibility: hidden;
 }
 
+#timeslider_close {
+  position: absolute;
+  display: none;
+  top: 0;
+  right: 0;
+  margin: 0.5rem;
+  color: #a0b128;
+  cursor: pointer;
+}
+
+.timeslider-panel + #timeslider_close {
+  display: block;
+}
+
+.esri-time-slider__time-extent-date {
+  margin: 0.5rem 0;
+}
+
+.esri-time-slider__time-extent-time,
+.esri-time-slider__min-date + div,
+.esri-time-slider__max-date + div {
+  display: none;
+}
+
 /* Modal */
 .map-download-modal.ui.modal {
   margin: 0 !important;
@@ -729,4 +753,57 @@
   .ui.custom.popup {
     max-width: 400px;
   }
+}
+
+/* Right panel */
+.right-panel {
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: calc(600px - 45px);
+  max-height: calc(600px - 45px);
+  background: white;
+}
+
+.right-panel-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #F5F5F5;
+  font-weight: bold;
+}
+
+.right-panel-content {
+  padding: 1rem;
+  overflow: auto;
+}
+
+.show-panel {
+  width: 336px !important;
+}
+
+.active-widget {
+  background: black;
+}
+
+.esri-component {
+  margin-right: auto;
+}
+
+/* Tooltip */
+[tooltip][type="widget"] {
+  height: 36px;
+}
+
+[tooltip][type="widget"]::after {
+  border: none;
+  background: #ffffffcc;
+}
+
+[tooltip][direction^='left'][type="widget"]::before,
+[tooltip][direction^='right'][type="widget"]::before {
+  border-color: transparent;
 }

@@ -10,6 +10,17 @@ import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
+const popupSettings = {
+  basic: true,
+  inverted: true,
+  size: 'mini',
+  position: 'top center',
+  style: {
+    padding: '0.25rem 0.5rem',
+    fontSize: '0.625rem',
+  },
+};
+
 export const AddCartItem = ({
   cartData,
   mapViewer,
@@ -274,12 +285,22 @@ export const AddCartItem = ({
               </div>
             </Modal.Actions>
           </Modal>
-          <FontAwesomeIcon
-            className={'map-menu-icon' + (isLoggedIn ? '' : ' locked')}
-            icon={['fas', 'download']}
-            onClick={() => {
-              isLoggedIn && showModal();
-            }}
+          <Popup
+            trigger={
+              <span
+                className={'map-menu-icon' + (isLoggedIn ? '' : ' locked')}
+                onClick={() => {
+                  isLoggedIn && showModal();
+                }}
+              >
+                <FontAwesomeIcon
+                  //className={isLoggedIn ? '' : ' locked'}
+                  icon={['fas', 'download']}
+                />
+              </span>
+            }
+            content="Download"
+            {...popupSettings}
           />
         </>
       )}
@@ -331,6 +352,7 @@ class MenuWidget extends React.Component {
     this.map = this.props.map;
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
+    this.loadFirst = true;
     this.layers = {};
     this.activeLayersJSON = {};
     this.layerGroups = {};
@@ -381,6 +403,11 @@ class MenuWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
     }
+    if (this.loadFirst) {
+      this.checkUrl();
+      this.loadFirst = false;
+      this.zoomTooltips();
+    }
   }
   /**
    * This method is executed after the rener method is executed
@@ -390,12 +417,21 @@ class MenuWidget extends React.Component {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
-      document.querySelector('.area-panel').style.display = 'block';
+      // document.querySelector('.area-panel').style.display = 'block';
       document.querySelector('.area-panel input:checked').click();
+      document.querySelector('.map-product-checkbox input').click();
+      let dropdown = document.querySelector(
+        '.map-menu-dropdown .ccl-expandable__button',
+      );
+      dropdown.setAttribute('aria-expanded', 'true');
+      dropdown = document.querySelector(
+        '.map-menu-product-dropdown .ccl-expandable__button',
+      );
+      dropdown.setAttribute('aria-expanded', 'true');
     }
     //to watch the component
     this.setState({});
-    this.checkUrl();
+    this.openMenu();
   }
 
   checkUrl() {
@@ -413,7 +449,53 @@ class MenuWidget extends React.Component {
         : '[datasetid="' + dataset + '"]';
       let node = document.querySelector(elem + ' input');
       node.dispatchEvent(event);
+      let dropdown = document
+        .querySelector(elem + ' input')
+        .closest('.map-menu-dropdown');
+      dropdown
+        .querySelector('.ccl-expandable__button')
+        .setAttribute('aria-expanded', 'true');
+      let scrollPosition = document
+        .querySelector(elem + ' input')
+        .closest('.map-menu-product-dropdown').offsetTop;
+      if (dataset) {
+        dropdown = document
+          .querySelector(elem + ' input')
+          .closest('.map-menu-product-dropdown');
+        dropdown
+          .querySelector('.ccl-expandable__button')
+          .setAttribute('aria-expanded', 'true');
+        scrollPosition = document
+          .querySelector(elem + ' input')
+          .closest('.map-menu-dataset').offsetTop;
+      }
+      document.querySelector('.panels').scrollTop = scrollPosition;
     }
+  }
+
+  zoomTooltips() {
+    var buttons = document.querySelectorAll('.esri-zoom .esri-widget');
+    const attributes = [
+      {
+        tooltip: 'Zoom in',
+        direction: 'Left',
+        type: 'widget',
+      },
+      {
+        tooltip: 'Zoom out',
+        direction: 'Left',
+        type: 'widget',
+      },
+    ];
+    buttons.forEach((element, index) => {
+      var parent = element.parentNode;
+      var tooltip = document.createElement('div');
+      Object.keys(attributes[index]).forEach((attr) => {
+        tooltip.setAttribute(attr, attributes[index][attr]);
+      });
+      parent.replaceChild(tooltip, element);
+      tooltip.appendChild(element);
+    });
   }
 
   /**
@@ -706,9 +788,14 @@ class MenuWidget extends React.Component {
           </label>
           <div className="map-menu-icons">
             <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={['fa', 'info-circle']}
+              <Popup
+                trigger={
+                  <span className="map-menu-icon">
+                    <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                  </span>
+                }
+                content="Info"
+                {...popupSettings}
               />
             </a>
             {!this.props.download && dataset.Downloadable && (
@@ -873,7 +960,7 @@ class MenuWidget extends React.Component {
       this.map.add(this.layers[elem.id]);
       this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
-      this.timeLayers[elem.id] = ['fas', 'step-forward'];
+      this.timeLayers[elem.id] = ['fas', 'clock'];
       if (group) {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
@@ -1023,26 +1110,53 @@ class MenuWidget extends React.Component {
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
           {elem.parentElement.dataset.timeseries === 'true' && (
-            <span className="active-layer-time">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={this.timeLayers[elem.id]}
-                onClick={(e) => this.showTimeSlider(elem)}
+            <span
+              className="map-menu-icon active-layer-time"
+              onClick={(e) => this.showTimeSlider(elem)}
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={this.timeLayers[elem.id]} />}
+                content={
+                  this.timeLayers[elem.id][1] === 'clock'
+                    ? 'Show time slider'
+                    : 'Hide time slider'
+                }
+                {...popupSettings}
               />
             </span>
           )}
-          <span className="active-layer-hide">
-            <FontAwesomeIcon
-              className="map-menu-icon"
-              icon={this.visibleLayers[elem.id]}
-              onClick={(e) => this.eyeLayer(elem)}
+          <span
+            className="map-menu-icon active-layer-opacity"
+            onClick={(e) => this.eyeLayer(elem)}
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={['fas', 'sliders-h']} />}
+              content="Opacity"
+              {...popupSettings}
             />
           </span>
-          <span className="active-layer-delete">
-            <FontAwesomeIcon
-              className="map-menu-icon"
-              icon={['fas', 'times']}
-              onClick={() => this.deleteCrossEvent(elem)}
+          <span
+            className="map-menu-icon active-layer-hide"
+            onClick={(e) => this.eyeLayer(elem)}
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={this.visibleLayers[elem.id]} />}
+              content={
+                this.visibleLayers[elem.id][1] === 'eye'
+                  ? 'Hide layer'
+                  : 'Show layer'
+              }
+              {...popupSettings}
+            />
+          </span>
+          <span
+            className="map-menu-icon active-layer-delete"
+            onClick={() => this.deleteCrossEvent(elem)}
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={['fas', 'times']} />}
+              content="Remove layer"
+              {...popupSettings}
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
@@ -1171,7 +1285,7 @@ class MenuWidget extends React.Component {
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
-    if (this.timeLayers[elem.id][1] === 'step-forward') {
+    if (this.timeLayers[elem.id][1] === 'clock') {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
         let order = this.activeLayersJSON[elem.id].props['layer-order'];
@@ -1185,27 +1299,32 @@ class MenuWidget extends React.Component {
             this.visibleLayers[elem.id] = ['fas', 'eye'];
           }
           document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-hide',
+            .querySelectorAll(
+              '.active-layer[layer-id="' +
+                elem.id +
+                '"] .map-menu-icon:not(.active-layer-time)',
             )
-            .classList.add('locked');
-          document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-delete',
-            )
-            .classList.add('locked');
+            .forEach((item) => {
+              item.classList.add('locked');
+            });
           document.querySelector('#products_label').classList.add('locked');
+          document.querySelector('#map_remove_layers').classList.add('locked');
           if (this.props.download)
             document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
         } else {
-          if (this.visibleLayers[layerId][1] === 'eye') {
-            this.layers[layerId].visible = false;
-            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+          if (
+            document.getElementById(layerId).parentElement.dataset
+              .timeseries === 'true'
+          ) {
+            if (this.visibleLayers[layerId][1] === 'eye') {
+              this.layers[layerId].visible = false;
+              this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+            }
+            document
+              .querySelector('.active-layer[layer-id="' + layerId + '"]')
+              .classList.add('locked');
           }
-          document
-            .querySelector('.active-layer[layer-id="' + layerId + '"]')
-            .classList.add('locked');
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
             order,
@@ -1220,19 +1339,21 @@ class MenuWidget extends React.Component {
           elem = document.getElementById(layerId);
         }
         if (elem.id === layerId) {
-          this.timeLayers[elem.id] = ['fas', 'step-forward'];
+          this.timeLayers[elem.id] = ['far', 'clock'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
           document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-hide',
+            .querySelectorAll(
+              '.active-layer[layer-id="' +
+                elem.id +
+                '"] .map-menu-icon:not(.active-layer-time)',
             )
-            .classList.remove('locked');
-          document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-delete',
-            )
-            .classList.remove('locked');
+            .forEach((item) => {
+              item.classList.remove('locked');
+            });
           document.querySelector('#products_label').classList.remove('locked');
+          document
+            .querySelector('#map_remove_layers')
+            .classList.remove('locked');
           if (this.props.download)
             document
               .querySelector('#download_label')
@@ -1362,6 +1483,18 @@ class MenuWidget extends React.Component {
   }
 
   /**
+   * Method to remove all active layers
+   */
+  removeAllLayers() {
+    let activeLayers = document.querySelectorAll('.active-layer');
+    activeLayers.forEach((layer) => {
+      let layerId = layer.getAttribute('layer-id');
+      let elem = document.getElementById(layerId);
+      this.deleteCrossEvent(elem);
+    });
+  }
+
+  /**
    * Method to change between tabs
    */
   toggleTab(e) {
@@ -1484,6 +1617,19 @@ class MenuWidget extends React.Component {
                   <span className="message" id="nolayers_message">
                     No layers selected
                   </span>
+                  <button
+                    id="map_remove_layers"
+                    className={
+                      'ccl-button ccl-button-green' +
+                      (Object.keys(this.activeLayersJSON).length
+                        ? ''
+                        : ' locked')
+                    }
+                    onClick={() => this.removeAllLayers()}
+                  >
+                    <FontAwesomeIcon icon={['fas', 'trash']} />
+                    Remove all layers
+                  </button>
                 </div>
               </div>
               {this.props.download && this.props.view && (
@@ -1511,15 +1657,17 @@ class MenuWidget extends React.Component {
               )}
             </div>
           </div>
-          <div
-            className={this.menuClass}
-            id="map_manu_button"
-            role="button"
-            title="Menu of products"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
-            tabIndex="0"
-          ></div>
+          <div tooltip="Menu of products" direction="right" type="widget">
+            <div
+              className={this.menuClass}
+              id="map_manu_button"
+              role="button"
+              title="Menu of products"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+            ></div>
+          </div>
         </div>
       </>
     );

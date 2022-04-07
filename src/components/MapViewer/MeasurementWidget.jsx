@@ -34,11 +34,14 @@ class MeasurementWidget extends React.Component {
   openMenu() {
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.measurement-panel').style.display =
+      this.container.current.querySelector('.right-panel').style.display =
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-measure');
+        .classList.remove('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
@@ -52,11 +55,14 @@ class MeasurementWidget extends React.Component {
       this.clearCoordinates();
     } else {
       this.props.mapViewer.setActiveWidget(this);
-      this.container.current.querySelector('.measurement-panel').style.display =
-        'block';
+      this.container.current.querySelector('.right-panel').style.display =
+        'flex';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-measure', 'esri-icon-close');
+        .classList.add('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
@@ -144,46 +150,63 @@ class MeasurementWidget extends React.Component {
       <>
         <div ref={this.container} className="measurement-container">
           <div
-            className={this.menuClass}
-            id="map_measurement_button"
-            title="Measurement"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
-            tabIndex="0"
-            role="button"
-          ></div>
-          <div className="measurement-panel">
-            <div className="measurement-buttons">
-              <div
-                className="esri-icon-measure-area esri-widget--button esri-widget esri-interactive active"
-                onClick={this.areaMeasurementHandler.bind(this)}
-                onKeyDown={this.areaMeasurementHandler.bind(this)}
-                tabIndex="0"
-                role="button"
-              ></div>
-              <div
-                className="esri-icon-measure-line esri-widget--button esri-widget esri-interactive"
-                onClick={this.distanceMeasurementHandler.bind(this)}
-                onKeyDown={this.distanceMeasurementHandler.bind(this)}
-                tabIndex="0"
-                role="button"
-              ></div>
-              <div
-                className="esri-icon-map-pin esri-widget--button esri-widget esri-interactive"
-                onClick={this.coordsMeasurementHandler.bind(this)}
-                onKeyDown={this.coordsMeasurementHandler.bind(this)}
-                tabIndex="0"
-                role="button"
-              ></div>
+            tooltip="Measurement"
+            direction="left"
+            type="widget"
+          >
+            <div
+              className={this.menuClass}
+              id="map_measurement_button"
+              title="Measurement"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          </div>
+          <div className="right-panel">
+            <div className="right-panel-header">
+              <span>Measurement</span>
+              <span
+                className="map-menu-icon esri-icon-close"
+                onClick={this.openMenu.bind(this)}
+              ></span>
             </div>
-            <div className="measurement-area"></div>
-            <div className="measurement-coords">
-              {this.state.latlong ? (
-                <b>Lat/long: </b>
-              ) : (
-                'Hover over the map to get the coordinates'
-              )}
-              {this.state.latlong && this.state.latlong}
+            <div className="right-panel-content">
+              <div className="measurement-panel">
+                <div className="measurement-buttons">
+                  <div
+                    className="esri-icon-measure-area esri-widget--button esri-widget esri-interactive active"
+                    onClick={this.areaMeasurementHandler.bind(this)}
+                    onKeyDown={this.areaMeasurementHandler.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  ></div>
+                  <div
+                    className="esri-icon-measure-line esri-widget--button esri-widget esri-interactive"
+                    onClick={this.distanceMeasurementHandler.bind(this)}
+                    onKeyDown={this.distanceMeasurementHandler.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  ></div>
+                  <div
+                    className="esri-icon-map-pin esri-widget--button esri-widget esri-interactive"
+                    onClick={this.coordsMeasurementHandler.bind(this)}
+                    onKeyDown={this.coordsMeasurementHandler.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  ></div>
+                </div>
+                <div className="measurement-area"></div>
+                <div className="measurement-coords">
+                  {this.state.latlong ? (
+                    <b>Lat/long: </b>
+                  ) : (
+                    'Hover over the map to get the coordinates'
+                  )}
+                  {this.state.latlong && this.state.latlong}
+                </div>
+              </div>
             </div>
           </div>
         </div>
