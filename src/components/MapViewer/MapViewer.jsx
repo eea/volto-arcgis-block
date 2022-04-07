@@ -2,6 +2,12 @@ import React, { createRef } from 'react';
 import './css/ArcgisMap.css';
 import classNames from 'classnames';
 import { loadModules, loadCss } from 'esri-loader';
+import { MapViewerConfig } from '../../actions';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
+import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
+import { useIntl } from 'react-intl';
 import BasemapWidget from './BasemapWidget';
 import MeasurementWidget from './MeasurementWidget';
 import PrintWidget from './PrintWidget';
@@ -10,12 +16,6 @@ import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
-import { MapViewerConfig } from '../../actions';
-import { compose } from 'redux';
-import { connect } from 'react-redux';
-import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
-import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
-import { useIntl } from 'react-intl';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl;
@@ -25,8 +25,8 @@ const CartIconCounter = () => {
     const { locale } = useIntl();
     intl.setLocale(locale);
   }
-  return null
-}
+  return null;
+};
 
 class MapViewer extends React.Component {
   /**
@@ -61,7 +61,7 @@ class MapViewer extends React.Component {
       'esri/WebMap',
       'esri/views/MapView',
       'esri/widgets/Zoom',
-      'esri/intl'
+      'esri/intl',
     ]).then(([_Map, _MapView, _Zoom, _intl]) => {
       [Map, MapView, Zoom, intl] = [_Map, _MapView, _Zoom, _intl];
     });
@@ -184,8 +184,8 @@ class MapViewer extends React.Component {
       ); //call conf
   }
 
-  appLanguage(){
-    return <CartIconCounter/>
+  appLanguage() {
+    return <CartIconCounter />;
   }
 
   /**

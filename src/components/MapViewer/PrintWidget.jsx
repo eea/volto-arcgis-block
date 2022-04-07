@@ -40,7 +40,8 @@ class PrintWidget extends React.Component {
   openMenu() {
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.right-panel').style.display = 'none';
+      this.container.current.querySelector('.right-panel').style.display =
+        'none';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.remove('active-widget');
@@ -215,19 +216,15 @@ class PrintWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="print-container">
-          <div
-            tooltip="Print"
-            direction="left"
-            type="widget"
-          >
+          <div tooltip="Print" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="map_print_button"
-              role="button"
               title="Print"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"
+              role="button"
             ></div>
           </div>
           <div className="right-panel">
@@ -236,10 +233,13 @@ class PrintWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
+                tabIndex="0"
+                role="button"
               ></span>
             </div>
             <div className="right-panel-content">
-            <div className="print-panel"></div>
+              <div className="print-panel"></div>
             </div>
           </div>
         </div>

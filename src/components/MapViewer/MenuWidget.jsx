@@ -292,6 +292,11 @@ export const AddCartItem = ({
                 onClick={() => {
                   isLoggedIn && showModal();
                 }}
+                onKeyDown={() => {
+                  isLoggedIn && showModal();
+                }}
+                tabIndex="0"
+                role="button"
               >
                 <FontAwesomeIcon
                   //className={isLoggedIn ? '' : ' locked'}
@@ -1112,7 +1117,10 @@ class MenuWidget extends React.Component {
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
-              onClick={(e) => this.showTimeSlider(elem)}
+              onClick={() => this.showTimeSlider(elem)}
+              onKeyDown={() => this.showTimeSlider(elem)}
+              tabIndex="0"
+              role="button"
             >
               <Popup
                 trigger={<FontAwesomeIcon icon={this.timeLayers[elem.id]} />}
@@ -1127,7 +1135,10 @@ class MenuWidget extends React.Component {
           )}
           <span
             className="map-menu-icon active-layer-opacity"
-            onClick={(e) => this.eyeLayer(elem)}
+            // onClick={() => this.setOpacity(elem)}
+            // onKeyDown={() => this.setOpacity(elem)}
+            tabIndex="0"
+            role="button"
           >
             <Popup
               trigger={<FontAwesomeIcon icon={['fas', 'sliders-h']} />}
@@ -1137,7 +1148,10 @@ class MenuWidget extends React.Component {
           </span>
           <span
             className="map-menu-icon active-layer-hide"
-            onClick={(e) => this.eyeLayer(elem)}
+            onClick={() => this.eyeLayer(elem)}
+            onKeyDown={() => this.eyeLayer(elem)}
+            tabIndex="0"
+            role="button"
           >
             <Popup
               trigger={<FontAwesomeIcon icon={this.visibleLayers[elem.id]} />}
@@ -1152,6 +1166,9 @@ class MenuWidget extends React.Component {
           <span
             className="map-menu-icon active-layer-delete"
             onClick={() => this.deleteCrossEvent(elem)}
+            onKeyDown={() => this.deleteCrossEvent(elem)}
+            tabIndex="0"
+            role="button"
           >
             <Popup
               trigger={<FontAwesomeIcon icon={['fas', 'times']} />}

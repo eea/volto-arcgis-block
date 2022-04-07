@@ -64,8 +64,9 @@ class BasemapWidget extends React.Component {
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
-      this.container.current.querySelector('.esri-widget--button')
-      .classList.remove('active-widget');
+      this.container.current
+        .querySelector('.esri-widget--button')
+        .classList.remove('active-widget');
       document
         .querySelector('.esri-ui-top-right.esri-ui-corner')
         .classList.remove('show-panel');
@@ -77,8 +78,9 @@ class BasemapWidget extends React.Component {
       this.basemapGallery.domNode.classList.add('basemap-gallery-container');
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
-      this.container.current.querySelector('.esri-widget--button')
-      .classList.add('active-widget');
+      this.container.current
+        .querySelector('.esri-widget--button')
+        .classList.add('active-widget');
       document
         .querySelector('.esri-ui-top-right.esri-ui-corner')
         .classList.add('show-panel');
@@ -107,20 +109,16 @@ class BasemapWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="basemap-container">
-          <div
-            tooltip="Basemap gallery"
-            direction="left"
-            type="widget"
-          >
+          <div tooltip="Basemap gallery" direction="left" type="widget">
             <div
               // ref={this.basemaps}
               className={this.menuClass}
               id="map_basemap_button"
-              role="button"
               title="Basemap gallery"
               onClick={this.openMenu.bind(this)}
-              onKeyDown={() => this.openMenu.bind(this)}
-              tabIndex={0}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
             ></div>
           </div>
           <div className="right-panel">
@@ -129,6 +127,9 @@ class BasemapWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
+                tabIndex="0"
+                role="button"
               ></span>
             </div>
             <div className="right-panel-content">

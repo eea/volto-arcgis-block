@@ -881,11 +881,7 @@ class InfoWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="info-container">
-          <div
-            tooltip="Info"
-            direction="left"
-            type="widget"
-          >
+          <div tooltip="Info" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="info_button"
@@ -902,6 +898,9 @@ class InfoWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
+                tabIndex="0"
+                role="button"
               ></span>
             </div>
             <div className="right-panel-content">

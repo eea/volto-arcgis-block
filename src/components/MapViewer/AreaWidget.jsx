@@ -259,11 +259,7 @@ class AreaWidget extends React.Component {
       <>
         <div ref={this.container} className="area-container">
           {!this.props.download && (
-            <div
-              tooltip="Area selection"
-              direction="left"
-              type="widget"
-            >
+            <div tooltip="Area selection" direction="left" type="widget">
               <div
                 className={this.menuClass}
                 id="map_area_button"
@@ -275,34 +271,23 @@ class AreaWidget extends React.Component {
               ></div>
             </div>
           )}
-          <div className={this.props.download ? "" : "right-panel"}>
-            {!this.props.download &&
+          <div className={this.props.download ? '' : 'right-panel'}>
+            {!this.props.download && (
               <div className="right-panel-header">
                 <span>Area selection</span>
                 <span
                   className="map-menu-icon esri-icon-close"
                   onClick={this.openMenu.bind(this)}
+                  onKeyDown={this.openMenu.bind(this)}
+                  tabIndex="0"
+                  role="button"
                 ></span>
               </div>
-            }
+            )}
             <div className="right-panel-content">
               <div className="area-panel">
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
-                    {/* <div className="map-download-header">
-                      <legend className="ccl-form-legend">
-                        <span className="map-download-header-title">
-                          Select area
-                        </span>
-                        <span
-                          className="info-icon"
-                          tooltip="Info"
-                          direction="up"
-                        >
-                          <i className="fas fa-info-circle"></i>
-                        </span>
-                      </legend>
-                    </div> */}
                     <div className="ccl-form-group">
                       <input
                         type="radio"

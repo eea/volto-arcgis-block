@@ -79,11 +79,7 @@ class LegendWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="legend-container">
-          <div
-            tooltip="Legend"
-            direction="left"
-            type="widget"
-          >
+          <div tooltip="Legend" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="legend_button"
@@ -100,6 +96,9 @@ class LegendWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
+                tabIndex="0"
+                role="button"
               ></span>
             </div>
             <div className="right-panel-content">
