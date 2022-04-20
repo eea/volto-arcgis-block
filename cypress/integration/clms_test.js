@@ -12,8 +12,15 @@ describe("Clms Test", () => {
     //before('Open CLMS Portal',()=>{
         cy.openClmsPortal()
     })
+    it.only("map viewer legend widget test", () => {
+        // Map viewer
+        cy.get('[href="/en/map-viewer"]').contains('a','Map viewer')
+        //cy.get('[href="/en/map-viewer"]').click()
+        //Wait to render
+        cy.wait(2000)
+    })
 
-    it("product dataset map viewer test", () => {
+    it.skip("product dataset map viewer test", () => {
         cy.get('[class="ccl-header-main-menu"]')
             .contains('Product portfolio')
             .click()
@@ -44,7 +51,7 @@ describe("Clms Test", () => {
                                        
      })
     // Widget Legend Test
-    it("map viewer legend widget test", () => {
+    it.skip("map viewer legend widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -71,7 +78,7 @@ describe("Clms Test", () => {
     })
     
     // Widget Area Test
-    it("map viewer area widget test", () => {
+    it.skip("map viewer area widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -103,7 +110,7 @@ describe("Clms Test", () => {
     })
 
     // Widget Measurement Test
-    it("map viewer measurement widget test", () => {
+    it.skip("map viewer measurement widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -134,7 +141,7 @@ describe("Clms Test", () => {
     })
 
     // Widget Print Test
-    it("map viewer Print widget test", () => {
+    it.skip("map viewer Print widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -163,7 +170,7 @@ describe("Clms Test", () => {
     })
 
     // Widget Basemap Gallery Test
-    it("map viewer Basemap Gallery widget test", () => {      
+    it.skip("map viewer Basemap Gallery widget test", () => {      
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -193,7 +200,7 @@ describe("Clms Test", () => {
 
 
     // Widget Info Test
-    it("map viewer Basemap Gallery widget test", () => {
+    it.skip("map viewer Basemap Gallery widget test", () => {
         // Map viewer
         cy.get('.ccl-header-main-menu').find('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -218,7 +225,7 @@ describe("Clms Test", () => {
     })
 
     // Time series Test
-    it("map viewer Basemap Gallery widget test", () => {
+    it.skip("map viewer Basemap Gallery widget test", () => {
         // Map viewer
         cy.get('[href="/en/map-viewer"]').click()
         //Wait to render
@@ -241,7 +248,7 @@ describe("Clms Test", () => {
 
 
     // CLMS-680
-    it("map viewer Handling level check is on test", () => {
+    it.skip("map viewer Handling level check is on test", () => {
         cy.get('[class="ccl-header-main-menu"]')
             .contains('Product portfolio')
             .click()
