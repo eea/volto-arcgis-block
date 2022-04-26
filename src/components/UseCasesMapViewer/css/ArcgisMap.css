@@ -34,6 +34,7 @@
 
 .use-cases-products-map {
   height: 100%;
+  margin-top: auto;
 }
 
 .use-cases-products-map .map {
@@ -91,7 +92,6 @@
   position: relative;
   display: -webkit-flex;
   display: flex;
-  align-items: center;
   padding: 1rem 0;
   padding-right: 2.5rem;
   border-bottom: solid 2px #a0b128;
@@ -205,6 +205,10 @@
 }
 
 .use-case-button-back {
+  border-bottom: solid 1px #a0b12833;
+}
+
+.use-case-button-back button {
   display: inline-flex;
   align-items: center;
   border: none;
@@ -245,6 +249,7 @@
 
 .use-case-detail-image {
   height: 15rem;
+  border: solid 1px #a0b12833;
 }
 
 .use-case-detail-image img {
@@ -258,8 +263,10 @@
 }
 
 .use-case-detail-product {
+  padding-bottom: 0.5rem;
+  border-bottom: solid 1px #a0b12833;
   margin-bottom: 0.5rem;
-  color: #a0b128;
+  color: #7c8921;
   font-size: 0.875rem;
 }
 

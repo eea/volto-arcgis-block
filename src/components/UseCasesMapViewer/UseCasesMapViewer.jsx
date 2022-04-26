@@ -452,7 +452,6 @@ class UseCasesMapViewer extends React.Component {
           {this.renderInfo()}
           {this.renderLegend()}
           <div className="use-cases-products-map cont-w-50">
-            <div className="use-cases-products-title">{this.mapCfg.title}</div>
             <div className={this.mapClass}>
               <div ref={this.mapdiv} className="map"></div>
             </div>
