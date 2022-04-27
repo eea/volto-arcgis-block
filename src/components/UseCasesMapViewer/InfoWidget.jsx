@@ -296,6 +296,14 @@ class InfoWidget extends React.Component {
   toggleDropdownContent(e) {
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+    if (aria === 'false') {
+      document.querySelector('.use-cases-products-list').scrollTo({
+        top:
+          e.currentTarget.offsetTop -
+          document.querySelector('.use-cases-products-list').offsetTop,
+        behavior: 'smooth',
+      });
+    }
   }
 
   /**
