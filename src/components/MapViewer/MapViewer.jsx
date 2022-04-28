@@ -183,10 +183,7 @@ class MapViewer extends React.Component {
   }
 
   appLanguage() {
-    return (
-      intl &&
-      <CheckLanguage />
-    )
+    return intl && <CheckLanguage />;
   }
 
   /**
