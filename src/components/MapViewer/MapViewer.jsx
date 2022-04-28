@@ -2,6 +2,12 @@ import React, { createRef } from 'react';
 import './css/ArcgisMap.css';
 import classNames from 'classnames';
 import { loadModules, loadCss } from 'esri-loader';
+import { MapViewerConfig } from '../../actions';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
+import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
+import { useIntl } from 'react-intl';
 import BasemapWidget from './BasemapWidget';
 import MeasurementWidget from './MeasurementWidget';
 import PrintWidget from './PrintWidget';
@@ -10,14 +16,15 @@ import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
-import { MapViewerConfig } from '../../actions';
-import { compose } from 'redux';
-import { connect } from 'react-redux';
-import { flattenToAppURL } from '@plone/volto/helpers/Url/Url';
-import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom;
+var Map, MapView, Zoom, intl;
+
+const CheckLanguage = () => {
+  const { locale } = useIntl();
+  intl.setLocale(locale);
+  return null;
+};
 
 class MapViewer extends React.Component {
   /**
@@ -52,8 +59,9 @@ class MapViewer extends React.Component {
       'esri/WebMap',
       'esri/views/MapView',
       'esri/widgets/Zoom',
-    ]).then(([_Map, _MapView, _Zoom]) => {
-      [Map, MapView, Zoom] = [_Map, _MapView, _Zoom];
+      'esri/intl',
+    ]).then(([_Map, _MapView, _Zoom, _intl]) => {
+      [Map, MapView, Zoom, intl] = [_Map, _MapView, _Zoom, _intl];
     });
   }
 
@@ -95,7 +103,6 @@ class MapViewer extends React.Component {
     // we will have stored the json response here:
     // this.props.mapviewer_config
     this.props.MapViewerConfig(flattenToAppURL(this.props.url));
-
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
     //trigger the renderization again, and to trigger the renderization
@@ -176,6 +183,10 @@ class MapViewer extends React.Component {
       ); //call conf
   }
 
+  appLanguage() {
+    return intl && <CheckLanguage />;
+  }
+
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -187,6 +198,7 @@ class MapViewer extends React.Component {
     return (
       <div className={this.mapClass}>
         <div ref={this.mapdiv} className="map">
+          {this.appLanguage()}
           {this.renderBasemap()}
           {this.renderLegend()}
           {this.renderMeasurement()}

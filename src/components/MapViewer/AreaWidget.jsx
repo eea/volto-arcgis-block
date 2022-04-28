@@ -77,11 +77,14 @@ class AreaWidget extends React.Component {
   openMenu() {
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.area-panel').style.display =
+      this.container.current.querySelector('.right-panel').style.display =
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-cursor-marquee');
+        .classList.remove('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
@@ -91,11 +94,14 @@ class AreaWidget extends React.Component {
       ).checked = true;
     } else {
       this.props.mapViewer.setActiveWidget(this);
-      this.container.current.querySelector('.area-panel').style.display =
-        'block';
+      this.container.current.querySelector('.right-panel').style.display =
+        'flex';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-cursor-marquee', 'esri-icon-close');
+        .classList.add('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
@@ -253,139 +259,147 @@ class AreaWidget extends React.Component {
       <>
         <div ref={this.container} className="area-container">
           {!this.props.download && (
-            <div
-              className={this.menuClass}
-              id="map_area_button"
-              title="Area"
-              onClick={this.openMenu.bind(this)}
-              onKeyDown={this.openMenu.bind(this)}
-              tabIndex="0"
-              role="button"
-            ></div>
+            <div tooltip="Area selection" direction="left" type="widget">
+              <div
+                className={this.menuClass}
+                id="map_area_button"
+                title="Area"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
+                tabIndex="0"
+                role="button"
+              ></div>
+            </div>
           )}
-          <div className="area-panel">
-            <div className="ccl-form">
-              <fieldset className="ccl-fieldset">
-                <div className="map-download-header">
-                  <legend className="ccl-form-legend">
-                    <span className="map-download-header-title">
-                      Select area
-                    </span>
-                    <span className="info-icon" tooltip="Info" direction="up">
-                      <i className="fas fa-info-circle"></i>
-                    </span>
-                  </legend>
-                </div>
-                <div className="ccl-form-group">
-                  <input
-                    type="radio"
-                    id="download_area_select_nuts0"
-                    name="downloadAreaSelect"
-                    value="nuts0"
-                    className="ccl-checkbox cl-required ccl-form-check-input"
-                    defaultChecked
-                    onClick={this.nuts0handler.bind(this)}
-                  ></input>
-                  <label
-                    className="ccl-form-radio-label"
-                    htmlFor="download_area_select_nuts0"
-                  >
-                    <span>NUTS 0</span>
-                  </label>
-                </div>
-                <div className="ccl-form-group">
-                  <input
-                    type="radio"
-                    id="download_area_select_nuts1"
-                    name="downloadAreaSelect"
-                    value="nuts1"
-                    className="ccl-checkbox ccl-required ccl-form-check-input"
-                    onClick={this.nuts1handler.bind(this)}
-                  ></input>
-                  <label
-                    className="ccl-form-radio-label"
-                    htmlFor="download_area_select_nuts1"
-                  >
-                    <span>NUTS 1</span>
-                  </label>
-                </div>
-                <div className="ccl-form-group">
-                  <input
-                    type="radio"
-                    id="download_area_select_nuts2"
-                    name="downloadAreaSelect"
-                    value="nuts2"
-                    className="ccl-checkbox ccl-required ccl-form-check-input"
-                    onClick={this.nuts2handler.bind(this)}
-                  ></input>
-                  <label
-                    className="ccl-form-radio-label"
-                    htmlFor="download_area_select_nuts2"
-                  >
-                    <span>NUTS 2</span>
-                  </label>
-                </div>
-                <div className="ccl-form-group">
-                  <input
-                    type="radio"
-                    id="download_area_select_nuts3"
-                    name="downloadAreaSelect"
-                    value="nuts3"
-                    className="ccl-radio ccl-required ccl-form-check-input"
-                    onClick={this.nuts3handler.bind(this)}
-                  ></input>
-                  <label
-                    className="ccl-form-radio-label"
-                    htmlFor="download_area_select_nuts3"
-                  >
-                    <span>NUTS 3</span>
-                  </label>
-                </div>
-                <div className="ccl-form-group">
-                  <input
-                    type="radio"
-                    id="download_area_select_rectangle"
-                    name="downloadAreaSelect"
-                    value="area"
-                    className="ccl-radio ccl-required ccl-form-check-input"
-                    onClick={this.rectanglehandler.bind(this)}
-                  ></input>
-                  <label
-                    className="ccl-form-radio-label"
-                    htmlFor="download_area_select_rectangle"
-                  >
-                    <span>By rectangle</span>
-                    <div>
-                      (Mantain the left button of the mouse clicked and draw a
-                      rectangle in the map)
+          <div className={this.props.download ? '' : 'right-panel'}>
+            {!this.props.download && (
+              <div className="right-panel-header">
+                <span>Area selection</span>
+                <span
+                  className="map-menu-icon esri-icon-close"
+                  onClick={this.openMenu.bind(this)}
+                  onKeyDown={this.openMenu.bind(this)}
+                  tabIndex="0"
+                  role="button"
+                ></span>
+              </div>
+            )}
+            <div className="right-panel-content">
+              <div className="area-panel">
+                <div className="ccl-form">
+                  <fieldset className="ccl-fieldset">
+                    <div className="ccl-form-group">
+                      <input
+                        type="radio"
+                        id="download_area_select_nuts0"
+                        name="downloadAreaSelect"
+                        value="nuts0"
+                        className="ccl-checkbox cl-required ccl-form-check-input"
+                        defaultChecked
+                        onClick={this.nuts0handler.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_area_select_nuts0"
+                      >
+                        <span>NUTS 0</span>
+                      </label>
                     </div>
-                  </label>
-                </div>
-                <div>
-                  {/* <div class="map-download-resource">
-                    <div class="ccl-form">
-                      <div class="map-download-header">
-                        <label for="download_area_select" class="map-download-header-title">Download resource as</label>
-                        <span class="info-icon" tooltip="Info" direction="up">
-                          <FontAwesomeIcon
-                            className="map-menu-icon"
-                            icon={['fas', 'info-circle']}
-                          />
-                        </span>
-                      </div>
-                      <div class="ccl-select-container">
-                        <div class="ccl-select-container">
-                          <select class="ccl-select" id="download_area_select" name="" >
-                            <option value="option1">GeoTiff</option>
-                            <option value="option2">ESRI Geodatabase</option>
-                            <option value="option3">SQLite Database</option>
-                          </select>
+                    <div className="ccl-form-group">
+                      <input
+                        type="radio"
+                        id="download_area_select_nuts1"
+                        name="downloadAreaSelect"
+                        value="nuts1"
+                        className="ccl-checkbox ccl-required ccl-form-check-input"
+                        onClick={this.nuts1handler.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_area_select_nuts1"
+                      >
+                        <span>NUTS 1</span>
+                      </label>
+                    </div>
+                    <div className="ccl-form-group">
+                      <input
+                        type="radio"
+                        id="download_area_select_nuts2"
+                        name="downloadAreaSelect"
+                        value="nuts2"
+                        className="ccl-checkbox ccl-required ccl-form-check-input"
+                        onClick={this.nuts2handler.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_area_select_nuts2"
+                      >
+                        <span>NUTS 2</span>
+                      </label>
+                    </div>
+                    <div className="ccl-form-group">
+                      <input
+                        type="radio"
+                        id="download_area_select_nuts3"
+                        name="downloadAreaSelect"
+                        value="nuts3"
+                        className="ccl-radio ccl-required ccl-form-check-input"
+                        onClick={this.nuts3handler.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_area_select_nuts3"
+                      >
+                        <span>NUTS 3</span>
+                      </label>
+                    </div>
+                    <div className="ccl-form-group">
+                      <input
+                        type="radio"
+                        id="download_area_select_rectangle"
+                        name="downloadAreaSelect"
+                        value="area"
+                        className="ccl-radio ccl-required ccl-form-check-input"
+                        onClick={this.rectanglehandler.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_area_select_rectangle"
+                      >
+                        <span>By rectangle</span>
+                        <div>
+                          (Mantain the left button of the mouse clicked and draw
+                          a rectangle in the map)
                         </div>
-                      </div>
+                      </label>
                     </div>
-                  </div> */}
+                    <div>
+                      {/* <div class="map-download-resource">
+                        <div class="ccl-form">
+                          <div class="map-download-header">
+                            <label for="download_area_select" class="map-download-header-title">Download resource as</label>
+                            <span class="info-icon" tooltip="Info" direction="up">
+                              <FontAwesomeIcon
+                                className="map-menu-icon"
+                                icon={['fas', 'info-circle']}
+                              />
+                            </span>
+                          </div>
+                          <div class="ccl-select-container">
+                            <div class="ccl-select-container">
+                              <select class="ccl-select" id="download_area_select" name="" >
+                                <option value="option1">GeoTiff</option>
+                                <option value="option2">ESRI Geodatabase</option>
+                                <option value="option3">SQLite Database</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div> */}
+                    </div>
+                  </fieldset>
                 </div>
-              </fieldset>
+              </div>
             </div>
           </div>
         </div>

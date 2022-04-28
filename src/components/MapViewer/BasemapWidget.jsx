@@ -62,20 +62,28 @@ class BasemapWidget extends React.Component {
 
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
-      this.basemapGallery.domNode.style.display = 'none';
+      this.container.current.querySelector('.right-panel').style.display =
+        'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-basemap');
+        .classList.remove('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
       this.props.mapViewer.setActiveWidget(this);
       this.basemapGallery.domNode.classList.add('basemap-gallery-container');
-      this.basemapGallery.domNode.style.display = 'block';
+      this.container.current.querySelector('.right-panel').style.display =
+        'flex';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-basemap', 'esri-icon-close');
+        .classList.add('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
@@ -101,17 +109,33 @@ class BasemapWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="basemap-container">
-          <div
-            // ref={this.basemaps}
-            className={this.menuClass}
-            id="map_basemap_button"
-            role="button"
-            title="Basemap gallery"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={() => this.openMenu.bind(this)}
-            tabIndex={0}
-          ></div>
-          <div className="basemap-panel"></div>
+          <div tooltip="Basemap gallery" direction="left" type="widget">
+            <div
+              // ref={this.basemaps}
+              className={this.menuClass}
+              id="map_basemap_button"
+              title="Basemap gallery"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          </div>
+          <div className="right-panel">
+            <div className="right-panel-header">
+              <span>Basemap gallery</span>
+              <span
+                className="map-menu-icon esri-icon-close"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
+                tabIndex="0"
+                role="button"
+              ></span>
+            </div>
+            <div className="right-panel-content">
+              <div className="basemap-panel"></div>
+            </div>
+          </div>
         </div>
       </>
     );
