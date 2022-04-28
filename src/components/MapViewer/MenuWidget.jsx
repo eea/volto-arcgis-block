@@ -868,6 +868,7 @@ class MenuWidget extends React.Component {
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
       if (urlWMS.toLowerCase().includes('wms')) {
+        urlWMS = urlWMS.endsWith('?') ? urlWMS : urlWMS + '?';
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMSLayer({
           url: urlWMS,
           featureInfoFormat: 'text/html',
@@ -891,7 +892,7 @@ class MenuWidget extends React.Component {
         });
       } else if (urlWMS.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
-          url: urlWMS,
+          url: urlWMS.endsWith('?') ? urlWMS : urlWMS + '?',
           //id: layer.LayerId,
           title: '',
           activeLayer: {
