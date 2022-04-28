@@ -50,12 +50,12 @@
 .esri-widget--button {
   width: 36px;
   height: 36px;
+  overflow: visible;
   border: none !important;
   box-shadow: none !important;
   font-size: 18px;
   line-height: 1.1rem;
   outline: none;
-  overflow: visible;
 }
 
 .esri-zoom {
@@ -762,8 +762,8 @@
   top: 0;
   right: 0;
   display: none;
-  flex-direction: column;
   width: 300px;
+  flex-direction: column;
   height: calc(600px - 45px);
   max-height: calc(600px - 45px);
   background: white;

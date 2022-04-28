@@ -20,11 +20,9 @@ import MenuWidget from './MenuWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl;
 
-const CartIconCounter = () => {
-  if (intl) {
-    const { locale } = useIntl();
-    intl.setLocale(locale);
-  }
+const CheckLanguage = () => {
+  const { locale } = useIntl();
+  intl.setLocale(locale);
   return null;
 };
 
@@ -185,7 +183,10 @@ class MapViewer extends React.Component {
   }
 
   appLanguage() {
-    return <CartIconCounter />;
+    return (
+      intl &&
+      <CheckLanguage />
+    )
   }
 
   /**
