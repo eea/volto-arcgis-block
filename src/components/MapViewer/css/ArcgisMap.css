@@ -55,6 +55,7 @@
   font-size: 18px;
   line-height: 1.1rem;
   outline: none;
+  overflow: visible;
 }
 
 .esri-zoom {

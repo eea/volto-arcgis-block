@@ -483,23 +483,19 @@ class MenuWidget extends React.Component {
     const attributes = [
       {
         tooltip: 'Zoom in',
-        direction: 'Left',
+        direction: 'left',
         type: 'widget',
       },
       {
         tooltip: 'Zoom out',
-        direction: 'Left',
+        direction: 'left',
         type: 'widget',
       },
     ];
     buttons.forEach((element, index) => {
-      var parent = element.parentNode;
-      var tooltip = document.createElement('div');
       Object.keys(attributes[index]).forEach((attr) => {
-        tooltip.setAttribute(attr, attributes[index][attr]);
+        element.setAttribute(attr, attributes[index][attr]);
       });
-      parent.replaceChild(tooltip, element);
-      tooltip.appendChild(element);
     });
   }
 
