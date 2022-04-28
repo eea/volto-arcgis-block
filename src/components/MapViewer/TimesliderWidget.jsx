@@ -2,6 +2,7 @@ import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var TimeSlider;
 var TimeExtent;
+var esriRequest;
 var timeDict = {};
 
 class TimesliderWidget extends React.Component {
@@ -32,152 +33,114 @@ class TimesliderWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/widgets/TimeSlider', 'esri/TimeExtent']).then(
-      ([_TimeSlider, _TimeExtent]) => {
-        [TimeSlider] = [_TimeSlider];
-        [TimeExtent] = [_TimeExtent];
+    return loadModules([
+      'esri/widgets/TimeSlider',
+      'esri/TimeExtent',
+      'esri/request',
+    ]).then(([_TimeSlider, _TimeExtent, _esriRequest]) => {
+      [TimeSlider] = [_TimeSlider];
+      [TimeExtent] = [_TimeExtent];
+      [esriRequest] = [_esriRequest];
+    });
+  }
+
+  getCapabilities(url, serviceType) {
+    // Get the coordinates of the click on the view
+    return esriRequest(url, {
+      responseType: 'html',
+      sync: 'true',
+      query: {
+        request: 'GetCapabilities',
+        service: serviceType,
       },
+    }).then((response) => {
+      let parser = new DOMParser();
+      let xml = parser.parseFromString(response.data, 'text/html');
+      return xml;
+    });
+  }
+
+  parseTimeWMS(xml) {
+    let layers = Array.from(xml.querySelectorAll('Layer')).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
     );
-  }
-
-  xmlToJson(xml) {
-    // Create the return object
-    var obj = {};
-
-    if (xml.nodeType === 1) {
-      // element
-      // do attributes
-      if (xml.attributes.length > 0) {
-        obj['@attributes'] = {};
-        for (var j = 0; j < xml.attributes.length; j++) {
-          var attribute = xml.attributes.item(j);
-          obj['@attributes'][attribute.nodeName] = attribute.nodeValue;
-        }
-      }
-    } else if (xml.nodeType === 3) {
-      // text
-      obj = xml.nodeValue;
-    }
-
-    // do children
-    if (xml.hasChildNodes()) {
-      for (var i = 0; i < xml.childNodes.length; i++) {
-        var item = xml.childNodes.item(i);
-        var nodeName = item.nodeName;
-        if (typeof obj[nodeName] == 'undefined') {
-          obj[nodeName] = this.xmlToJson(item);
+    let times = {};
+    for (let i in layers) {
+      if (layers[i].querySelector('Dimension') !== null) {
+        if (layers[i].querySelector('Dimension').innerText.includes('/P')) {
+          // START-END-PERIOD
+          const [startDate, endDate, period] = layers[i]
+            .querySelector('Dimension')
+            .innerText.replace(/\s/g, '')
+            .split('/');
+          times[layers[i].querySelector('Name').innerText] = {
+            period: period,
+            start: startDate,
+            end: endDate,
+          };
         } else {
-          if (typeof obj[nodeName].push == 'undefined') {
-            var old = obj[nodeName];
-            obj[nodeName] = [];
-            obj[nodeName].push(old);
-          }
-          obj[nodeName].push(this.xmlToJson(item));
+          // DATES ARRAY
+          times[layers[i].querySelector('Name').innerText] = {
+            array: layers[i].querySelector('Dimension').innerText.split(','),
+          };
         }
+      } else {
+        times[layers[i].querySelector('Name').innerText] = {
+          dimension: false,
+        };
       }
     }
-    return obj;
+    return times;
   }
 
-  getTime(esriLayer, layerName) {
-    let getCapabilitiesUrl = '';
-
-    if (esriLayer.type === 'wms') {
-      // WMS
-      getCapabilitiesUrl =
-        esriLayer.url + '?request=GetCapabilities&service=WMS';
-      return fetch(getCapabilitiesUrl)
-        .then((response) => response.text())
-        .then((str) => new window.DOMParser().parseFromString(str, 'text/xml'))
-        .then((data) => {
-          let cap = this.xmlToJson(data);
-          let layers = cap.WMS_Capabilities.Capability.Layer.Layer;
-
-          let layerMetadata = {};
-          if (Array.isArray(layers)) {
-            layerMetadata = layers.filter(
-              (l) => l['Name']['#text'] === layerName,
-            )[0];
-          } else {
-            layerMetadata = layers;
-          }
-
-          if (layerMetadata.hasOwnProperty('Dimension')) {
-            const timeString = layerMetadata.Dimension['#text'];
-            return this.parserTimeDimensionWMS(timeString);
-          } else {
-            return false;
-          }
-        });
-    } else if (esriLayer.type === 'wmts') {
-      // WMTS
-      getCapabilitiesUrl =
-        esriLayer.url + '?request=GetCapabilities&service=WMTS';
-
-      return fetch(getCapabilitiesUrl)
-        .then((response) => response.text())
-        .then((str) => new window.DOMParser().parseFromString(str, 'text/xml'))
-        .then((data) => {
-          let cap = this.xmlToJson(data);
-          let layers = cap.Capabilities.Contents.Layer;
-          let layerMetadata = {};
-
-          if (Array.isArray(layers)) {
-            layerMetadata = layers.filter(
-              (l) => l['ows:Identifier']['#text'] === layerName,
-            )[0];
-          } else {
-            layerMetadata = layers;
-          }
-          if (layerMetadata.hasOwnProperty('Dimension')) {
-            return this.parserTimeDimensionWMTileS(
-              layerMetadata.Dimension.Value,
-            );
-          } else {
-            return false;
-          }
-        });
+  parseTimeWMTS(xml) {
+    let layers = Array.from(xml.querySelectorAll('Layer')).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );
+    let times = {};
+    for (let i in layers) {
+      if (layers[i].querySelector('Dimension') !== null) {
+        if (
+          this.parseCapabilities(layers[i], 'value')[0].innerText.includes('/P')
+        ) {
+          // START-END-PERIOD
+          const [startDate, endDate, period] = layers[i]
+            .querySelector('Dimension')
+            .innerText.replace(/\s/g, '')
+            .split('/');
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
+            period: period,
+            start: startDate,
+            end: endDate,
+          };
+        } else {
+          // DATES ARRAY
+          let array = [];
+          Array.from(this.parseCapabilities(layers[i], 'value')).forEach(
+            function (item) {
+              array.push(item.innerText.replace(/\s/g, ''));
+            },
+          );
+          times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
+            array: array,
+          };
+        }
+      } else {
+        times[this.parseCapabilities(layers[i], 'ows:title')[0].innerText] = {
+          dimension: false,
+        };
+      }
     }
-  } // getTime
+    return times;
+  }
 
-  parserTimeDimensionWMS(timeString) {
-    if (timeString.includes('/P')) {
-      const [startDate, endDate, period] = timeString
-        .replace(/\s/g, '')
-        .split('/');
-      return {
-        start: startDate,
-        end: endDate,
-        period: period,
-      };
-    } else if (timeString.includes(',')) {
-      const datesArray = timeString.replace(/\s/g, '').split(',');
-      return { array: datesArray.map((e) => e) };
-    }
-  } // parserTimeDimensionWMS
-
-  parserTimeDimensionWMTileS(timeString) {
-    // [ TO CHECK ] cambiar timeString por un nombre de variable mas entendible
-    if (timeString.includes('/P')) {
-      const [startDate, endDate, period] = timeString
-        .replace(/\s/g, '')
-        .split('/');
-      return {
-        start: startDate,
-        end: endDate,
-        period: period,
-      };
-    } else if (Array.isArray(timeString)) {
-      const datesArray = timeString.map((e) => e['#text'].replace(/\s/g, ''));
-      return { array: datesArray };
-    }
-  } // parserTimeDimensionWMTS
+  parseCapabilities(xml, tag) {
+    return xml.getElementsByTagName(tag);
+  }
 
   parserPeriod(iso8601Duration) {
     var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T?(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
-
     var matches = iso8601Duration.match(iso8601DurationRegex);
-
     return {
       sign: matches[1] === undefined ? '+' : '-',
       years: parseInt(matches[2] === undefined ? 0 : matches[2]),
@@ -242,17 +205,30 @@ class TimesliderWidget extends React.Component {
             }
           });
         } else {
-          this.getTime(this.layer, this.layerName).then((v) => {
+          let serviceType = '';
+          if (this.layer.type === 'wms') {
+            serviceType = 'wms';
+          } else if (this.layer.type === 'wmts') {
+            serviceType = 'wmts';
+          }
+
+          this.getCapabilities(this.layer.url, serviceType).then((xml) => {
+            let times = {};
+            if (this.layer.type === 'wms') {
+              times = this.parseTimeWMS(xml);
+            } else if (this.layer.type === 'wmts') {
+              times = this.parseTimeWMTS(xml);
+            }
             // Capabilities have time enabled
-            if (v !== false) {
+            if (times[this.layerName].hasOwnProperty('dimension') === false) {
               // Start-End-Period
-              if (v.hasOwnProperty('period')) {
+              if (times[this.layerName].hasOwnProperty('period')) {
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
-                  start: new Date(v.start),
-                  end: new Date(v.end),
+                  start: new Date(times[this.layerName].start),
+                  end: new Date(times[this.layerName].end),
                 });
 
-                const period = this.parserPeriod(v.period);
+                const period = this.parserPeriod(times[this.layerName].period);
 
                 this.TimesliderWidget.stops = {
                   interval: {
@@ -267,22 +243,28 @@ class TimesliderWidget extends React.Component {
                     unit: 'minutes',
                   },
                 };
-              } else if (v.hasOwnProperty('array')) {
+              } else if (times[this.layerName].hasOwnProperty('array')) {
                 // Dates array
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
-                  start: new Date(v.array[0]),
-                  end: new Date(v.array[v.array.length - 1]),
+                  start: new Date(times[this.layerName].array[0]),
+                  end: new Date(
+                    times[this.layerName].array[
+                      times[this.layerName].array.length - 1
+                    ],
+                  ),
                 });
                 this.TimesliderWidget.stops = {
-                  dates: v.array.map((e) => new Date(e)),
+                  dates: times[this.layerName].array.map((e) => new Date(e)),
                 };
 
                 if (this.layer.type === 'wmts') {
                   this.layer.customParameters = {};
-                  const time = v.array.map((d) => new Date(d));
+                  const time = times[this.layerName].array.map(
+                    (d) => new Date(d),
+                  );
 
                   for (let i in time) {
-                    timeDict[time[i]] = v.array[i];
+                    timeDict[time[i]] = times[this.layerName].array[i];
                   }
                 }
               }
@@ -309,7 +291,7 @@ class TimesliderWidget extends React.Component {
             else {
               this.TimesliderWidget.disabled = true;
             }
-          }); // GetTime
+          });
         } // is feature or WMS/WMTS
       });
   } //componentDidMount

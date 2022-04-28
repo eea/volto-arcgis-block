@@ -448,16 +448,10 @@ class UseCasesMapViewer extends React.Component {
     // DOM element to be mounted (but not yet mounted)
     return (
       <div className="use-cases-container">
-        <div className="ccl-container">
-          <div className="use-cases-block">
-            <h2>See use cases by product</h2>
-          </div>
-        </div>
         <div className="ccl-container ccl-container-flex">
           {this.renderInfo()}
           {this.renderLegend()}
           <div className="use-cases-products-map cont-w-50">
-            <div className="use-cases-products-title">{this.mapCfg.title}</div>
             <div className={this.mapClass}>
               <div ref={this.mapdiv} className="map"></div>
             </div>

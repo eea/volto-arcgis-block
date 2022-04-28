@@ -41,7 +41,7 @@ const config = {
       'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/UseCasesSpatialCoverage/MapServer/0',
   },
   Thumbnail:
-    'https://eu-copernicus.github.io/copernicus-component-library/assets/images/image_placeholder.jpg',
+    'https://clmsdemo.devel6cph.eea.europa.eu/static/media/ccl-thumbnail-placeholder.2ccfd334.jpg',
 
   Codes: {
     EU: [

@@ -73,7 +73,15 @@ class InfoWidget extends React.Component {
               {UseCase.Links_to_web_sites && (
                 <p>
                   For further information
-                  <a href={UseCase.Links_to_web_sites.split(' ')[0]}> here</a>.
+                  <a
+                    href={UseCase.Links_to_web_sites.split(' ')[0]}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {' '}
+                    here
+                  </a>
+                  .
                 </p>
               )}
             </div>
@@ -97,10 +105,26 @@ class InfoWidget extends React.Component {
         : val.Contact_person_name_
         ? val.Contact_person_name_
         : '';
-      if (titles.includes(val.Use_case_title)) {
+      if (
+        titles
+          .map((a) => {
+            return a.title;
+          })
+          .includes(val.Use_case_title) &&
+        titles[
+          titles
+            .map((a) => {
+              return a.title;
+            })
+            .indexOf(val.Use_case_title)
+        ].component === val.Copernicus_Land_Monitoring_Service_products_used
+      ) {
         hideTitle = true;
       } else {
-        titles.push(val.Use_case_title);
+        titles.push({
+          title: val.Use_case_title,
+          component: val.Copernicus_Land_Monitoring_Service_products_used,
+        });
       }
       return (
         <div
@@ -160,18 +184,19 @@ class InfoWidget extends React.Component {
             <span>{regionFeatures.length} </span>
             use cases
           </div>
+          <div className="use-case-button-back">
+            <button
+              tabIndex="0"
+              onClick={() => {
+                navigationControl.showWorld();
+              }}
+            >
+              <span className="esri-icon-left-arrow"></span>
+              See all use cases
+            </button>
+          </div>
           <div className="use-cases-products-list">
             <div key={selectedRegion} className="use-cases-dropdown">
-              <button
-                className="use-case-button-back"
-                tabIndex="0"
-                onClick={() => {
-                  navigationControl.showWorld();
-                }}
-              >
-                <span className="esri-icon-left-arrow"></span>
-                Back
-              </button>
               {this.getDataBrief(regionFeatures)}
             </div>
           </div>

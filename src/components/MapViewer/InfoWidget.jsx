@@ -313,10 +313,10 @@ class InfoWidget extends React.Component {
 
   getLayerTitle(layer) {
     let title;
-    if (layer.sublayers) {
-      title = layer.sublayers.items[0].title;
-    } else if (layer.activeLayer) {
+    if (layer.activeLayer) {
       title = layer.activeLayer.title;
+    } else if (layer.sublayers) {
+      title = layer.sublayers.items[0].title;
     } else {
       title = layer.title;
     }

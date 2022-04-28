@@ -86,6 +86,7 @@ class MapViewer extends React.Component {
       zoom: this.mapCfg.zoom,
       constraints: {
         minZoom: this.mapCfg.minZoom,
+        maxZoom: this.mapCfg.maxZoom,
       },
       ui: {
         components: ['attribution'],
