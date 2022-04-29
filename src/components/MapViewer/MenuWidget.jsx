@@ -962,7 +962,7 @@ class MenuWidget extends React.Component {
       this.map.add(this.layers[elem.id]);
       this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
-      this.timeLayers[elem.id] = ['fas', 'clock'];
+      this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
