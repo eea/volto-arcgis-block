@@ -1129,7 +1129,7 @@ class MenuWidget extends React.Component {
               />
             </span>
           )}
-          <span
+          {/* <span
             className="map-menu-icon active-layer-opacity"
             // onClick={() => this.setOpacity(elem)}
             // onKeyDown={() => this.setOpacity(elem)}
@@ -1141,7 +1141,7 @@ class MenuWidget extends React.Component {
               content="Opacity"
               {...popupSettings}
             />
-          </span>
+          </span> */}
           <span
             className="map-menu-icon active-layer-hide"
             onClick={() => this.eyeLayer(elem)}
