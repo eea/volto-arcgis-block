@@ -177,6 +177,13 @@ class MapViewer extends React.Component {
   }
 
   /**
+   * Testing method
+   */
+  saveState(){
+    sessionStorage.setItem('activeLayer', 'activada');
+  }
+
+  /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
    * @returns jsx

@@ -865,10 +865,6 @@ class MenuWidget extends React.Component {
    * @param {*} elem Is the checkbox
    */
   toggleLayer(elem) {
-    console.log("en toggleLayer");
-    console.log("elem:");
-    console.log(elem);
-    console.log("----------------------------------");
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
@@ -878,8 +874,7 @@ class MenuWidget extends React.Component {
       this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['fas', 'step-forward'];
-      console.log("**Activando capa**");
-      sessionStorage.setItem('activeLayer', 'activada');
+      this.props.mapViewer.saveState();
       if (group) {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
@@ -1108,9 +1103,6 @@ class MenuWidget extends React.Component {
    */
   layersReorder() {
     let activeLayers = document.querySelectorAll('.active-layer');
-    console.log("layersReorder");
-    console.log(activeLayers);
-    console.log(this.map);
     let counter = activeLayers.length - 1;
     activeLayers.forEach((item, index) => {
       let order = counter - index;
