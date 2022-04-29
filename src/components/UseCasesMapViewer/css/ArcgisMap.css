@@ -163,11 +163,6 @@
   background: #a0b1280d;
 }
 
-.use-case-element:last-of-type {
-  border: none;
-  margin-bottom: 0;
-}
-
 .use-case-element-title {
   margin-bottom: 0.5rem;
   font-weight: bold;
