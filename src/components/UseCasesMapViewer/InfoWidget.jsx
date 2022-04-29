@@ -73,7 +73,15 @@ class InfoWidget extends React.Component {
               {UseCase.Links_to_web_sites && (
                 <p>
                   For further information
-                  <a href={UseCase.Links_to_web_sites.split(' ')[0]}> here</a>.
+                  <a
+                    href={UseCase.Links_to_web_sites.split(' ')[0]}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {' '}
+                    here
+                  </a>
+                  .
                 </p>
               )}
             </div>
@@ -176,18 +184,19 @@ class InfoWidget extends React.Component {
             <span>{regionFeatures.length} </span>
             use cases
           </div>
+          <div className="use-case-button-back">
+            <button
+              tabIndex="0"
+              onClick={() => {
+                navigationControl.showWorld();
+              }}
+            >
+              <span className="esri-icon-left-arrow"></span>
+              See all use cases
+            </button>
+          </div>
           <div className="use-cases-products-list">
             <div key={selectedRegion} className="use-cases-dropdown">
-              <button
-                className="use-case-button-back"
-                tabIndex="0"
-                onClick={() => {
-                  navigationControl.showWorld();
-                }}
-              >
-                <span className="esri-icon-left-arrow"></span>
-                Back
-              </button>
               {this.getDataBrief(regionFeatures)}
             </div>
           </div>
@@ -287,6 +296,14 @@ class InfoWidget extends React.Component {
   toggleDropdownContent(e) {
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+    if (aria === 'false') {
+      document.querySelector('.use-cases-products-list').scrollTo({
+        top:
+          e.currentTarget.offsetTop -
+          document.querySelector('.use-cases-products-list').offsetTop,
+        behavior: 'smooth',
+      });
+    }
   }
 
   /**
