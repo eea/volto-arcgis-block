@@ -72,7 +72,7 @@ class InfoWidget extends React.Component {
             <div className="use-case-detail-description">
               <p>{UseCase.Use_case_summary}</p>
               {UseCase.Links_to_web_sites && (
-                <div className='use-case-detail-link'>
+                <div className="use-case-detail-link">
                   <p>
                     For further information
                     <a
