@@ -306,7 +306,7 @@ export const AddCartItem = ({
                 onClick={(e) => {
                   isLoggedIn ? showModal() : showLogin(e);
                 }}
-                onKeyDown={() => {
+                onKeyDown={(e) => {
                   isLoggedIn ? showModal() : showLogin(e);
                 }}
                 tabIndex="0"
@@ -1798,6 +1798,7 @@ class MenuWidget extends React.Component {
             role="button"
             onClick={() => this.closeOpacity()}
             onKeyDown={() => this.closeOpacity()}
+            tabIndex="0"
           ></div>
           <div className="opacity-title">Opacity</div>
           <div className="opacity-slider">
@@ -1819,6 +1820,7 @@ class MenuWidget extends React.Component {
             role="button"
             onClick={() => this.closeLogin()}
             onKeyDown={() => this.closeLogin()}
+            tabIndex="0"
           ></div>
           {!this.props.download && <CheckLogin />}
         </div>

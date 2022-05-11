@@ -125,7 +125,9 @@
   color: black;
 }
 
-.measurement-dropdown .ccl-expandable__button[aria-expanded='true'] .dropdown-icon {
+.measurement-dropdown
+  .ccl-expandable__button[aria-expanded='true']
+  .dropdown-icon {
   transform: rotate(-180deg);
 }
 
@@ -380,8 +382,8 @@
 
 .map-menu-icon-login .fa-lock {
   position: absolute;
-  bottom: 0.75rem;
   right: 0.75rem;
+  bottom: 0.75rem;
   font-size: 0.85rem;
 }
 
@@ -922,8 +924,8 @@ input[type='range'] {
 input[type='range']::-webkit-slider-thumb,
 input[type='range']::-moz-range-thumb,
 input[type='range']::-ms-thumb {
-  height: 16px;
   width: 16px;
+  height: 16px;
   border: solid 3px black;
   -webkit-appearance: none;
   background: white;
