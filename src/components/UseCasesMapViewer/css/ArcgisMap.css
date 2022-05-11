@@ -37,6 +37,10 @@
   margin-top: auto;
 }
 
+.use-cases-products-map .map-container {
+  background-color: #cfd3d4;
+}
+
 .use-cases-products-map .map {
   height: 25rem;
 }
@@ -76,6 +80,15 @@
 
 .use-cases-products-map .esri-widget .esri-popup__footer {
   display: none;
+}
+
+.use-cases-products-map .legend-panel {
+  display: none;
+}
+
+.use-cases-products-map .esri-legend .esri-legend__service {
+  padding: 1rem;
+  margin-bottom: -1rem;
 }
 
 .use-cases-products-list {
@@ -289,6 +302,8 @@
   font-size: 0.875rem;
 }
 
-.use-cases-products-map .map-container {
-  background-color: #cfd3d4;
+.use-case-detail-link svg {
+  margin-left: 0.5rem;
+  color: #a0b128;
+  font-size: 0.875rem;
 }

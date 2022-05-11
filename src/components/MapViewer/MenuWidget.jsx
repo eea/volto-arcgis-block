@@ -166,6 +166,20 @@ export const AddCartItem = ({
     closeModal();
   };
 
+  const showLogin = (e) => {
+    e.stopPropagation();
+    document.querySelector('.login-panel').style.display = 'block';
+    let left = e.currentTarget.offsetLeft + 48;
+    document.querySelector('.login-panel').style.left = left + 'px';
+    let top =
+      document.querySelector('.tabs').offsetHeight +
+      15 +
+      e.currentTarget.closest('.ccl-expandable__button').offsetTop +
+      e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
+      document.querySelector('.login-panel').offsetHeight / 2;
+    document.querySelector('.login-panel').style.top = top + 'px';
+  };
+
   return (
     <>
       {showMessage && (
@@ -288,20 +302,21 @@ export const AddCartItem = ({
           <Popup
             trigger={
               <span
-                className={'map-menu-icon' + (isLoggedIn ? '' : ' locked')}
-                onClick={() => {
-                  isLoggedIn && showModal();
+                className={'map-menu-icon map-menu-icon-login'}
+                onClick={(e) => {
+                  isLoggedIn ? showModal() : showLogin(e);
                 }}
-                onKeyDown={() => {
-                  isLoggedIn && showModal();
+                onKeyDown={(e) => {
+                  isLoggedIn ? showModal() : showLogin(e);
                 }}
                 tabIndex="0"
                 role="button"
               >
                 <FontAwesomeIcon
-                  //className={isLoggedIn ? '' : ' locked'}
+                  className={isLoggedIn ? '' : ' locked'}
                   icon={['fas', 'download']}
                 />
+                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
               </span>
             }
             content="Download"
@@ -556,13 +571,16 @@ class MenuWidget extends React.Component {
           tabIndex="0"
           role="button"
         >
+          <div className="dropdown-icon">
+            <FontAwesomeIcon icon={['fas', 'caret-right']} />
+          </div>
           {description ? (
             <Popup
               trigger={<span>{component.ComponentTitle}</span>}
               content={description}
               basic
               className="custom"
-              style={{ transform: 'translateX(0.25rem)' }}
+              style={{ transform: 'translateX(-0.5rem)' }}
             />
           ) : (
             <span>{component.ComponentTitle}</span>
@@ -631,6 +649,9 @@ class MenuWidget extends React.Component {
             tabIndex="0"
             role="button"
           >
+            <div className="dropdown-icon">
+              <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            </div>
             <div
               className="ccl-form map-product-checkbox"
               key={'d' + prodIndex}
@@ -660,7 +681,7 @@ class MenuWidget extends React.Component {
                         content={description}
                         basic
                         className="custom"
-                        style={{ transform: 'translateX(-2.5rem)' }}
+                        style={{ transform: 'translateX(-4rem)' }}
                       />
                     ) : (
                       <span>{product.ProductTitle}</span>
@@ -750,73 +771,93 @@ class MenuWidget extends React.Component {
 
     return (
       <div
-        className="ccl-form-group map-menu-dataset"
+        className="map-menu-dataset-dropdown"
         id={'dataset_' + inheritedIndexDataset}
         datasetid={dataset.DatasetId}
         key={'a' + datIndex}
       >
-        <div className="map-dataset-checkbox" key={'b' + datIndex}>
-          <input
-            type="checkbox"
-            id={checkIndex}
-            parentid={checkProduct}
-            name=""
-            value="name"
-            title={dataset.DatasetTitle}
-            defcheck={layer_default}
-            className="ccl-checkbox ccl-required ccl-form-check-input"
+        <fieldset className="ccl-fieldset" key={'b' + datIndex}>
+          <div
+            className="ccl-expandable__button"
+            aria-expanded="false"
             key={'c' + datIndex}
-            onChange={(e) => {
-              this.toggleDataset(e.target.checked, checkIndex, e.target);
-            }}
-          ></input>
-          <label
-            className="ccl-form-check-label"
-            htmlFor={checkIndex}
-            key={'d' + datIndex}
+            onClick={this.toggleDropdownContent.bind(this)}
+            onKeyDown={this.toggleDropdownContent.bind(this)}
+            tabIndex="0"
+            role="button"
           >
-            {description ? (
-              <Popup
-                trigger={<span>{dataset.DatasetTitle}</span>}
-                content={description}
-                basic
-                className="custom"
-                style={{ transform: 'translateX(-3.5rem)' }}
-              />
-            ) : (
-              <span>{dataset.DatasetTitle}</span>
-            )}
-          </label>
-          <div className="map-menu-icons">
-            <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
-              <Popup
-                trigger={
-                  <span className="map-menu-icon">
-                    <FontAwesomeIcon icon={['fa', 'info-circle']} />
-                  </span>
-                }
-                content="Info"
-                {...popupSettings}
-              />
-            </a>
-            {!this.props.download && dataset.Downloadable && (
-              <AddCartItem
-                cartData={this.compCfg}
-                props={this.props}
-                mapViewer={this.props.mapViewer}
-                download={this.props.download}
-                areaData={this.props.area}
-                dataset={dataset}
-              />
-            )}
+            <div
+              className="dropdown-icon"
+              style={dataset.HandlingLevel ? { visibility: 'hidden' } : {}}
+            >
+              <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            </div>
+            <div className="ccl-form map-dataset-checkbox" key={'a' + datIndex}>
+              <div className="ccl-form-group" key={'b' + datIndex}>
+                <input
+                  type="checkbox"
+                  id={checkIndex}
+                  parentid={checkProduct}
+                  name=""
+                  value="name"
+                  title={dataset.DatasetTitle}
+                  defcheck={layer_default}
+                  className="ccl-checkbox ccl-required ccl-form-check-input"
+                  key={'c' + datIndex}
+                  onChange={(e) => {
+                    this.toggleDataset(e.target.checked, checkIndex, e.target);
+                  }}
+                ></input>
+                <label
+                  className="ccl-form-check-label"
+                  htmlFor={checkIndex}
+                  key={'d' + datIndex}
+                >
+                  {description ? (
+                    <Popup
+                      trigger={<span>{dataset.DatasetTitle}</span>}
+                      content={description}
+                      basic
+                      className="custom"
+                      style={{ transform: 'translateX(-5.5rem)' }}
+                    />
+                  ) : (
+                    <span>{dataset.DatasetTitle}</span>
+                  )}
+                </label>
+                <div className="map-menu-icons">
+                  <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
+                    <Popup
+                      trigger={
+                        <span className="map-menu-icon">
+                          <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                        </span>
+                      }
+                      content="Info"
+                      {...popupSettings}
+                    />
+                  </a>
+                  {!this.props.download && dataset.Downloadable && (
+                    <AddCartItem
+                      cartData={this.compCfg}
+                      props={this.props}
+                      mapViewer={this.props.mapViewer}
+                      download={this.props.download}
+                      areaData={this.props.area}
+                      dataset={dataset}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div
-          className="ccl-form map-menu-layers-container"
-          id={'layer_container_' + dataset.DatasetId}
-        >
-          {layers}
-        </div>
+          <div
+            className="ccl-form map-menu-layers-container"
+            id={'layer_container_' + dataset.DatasetId}
+          >
+            {layers}
+          </div>
+        </fieldset>
       </div>
     );
   }
@@ -988,6 +1029,7 @@ class MenuWidget extends React.Component {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
+      this.layers[elem.id].opacity = 1;
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -1085,8 +1127,11 @@ class MenuWidget extends React.Component {
    */
 
   toggleDropdownContent(e) {
-    var aria = e.target.getAttribute('aria-expanded');
-    e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+    var aria = e.currentTarget.getAttribute('aria-expanded');
+    e.currentTarget.setAttribute(
+      'aria-expanded',
+      aria === 'true' ? 'false' : 'true',
+    );
   }
 
   /**
@@ -1130,19 +1175,20 @@ class MenuWidget extends React.Component {
               />
             </span>
           )}
-          {/* <span
+          <span
             className="map-menu-icon active-layer-opacity"
-            // onClick={() => this.setOpacity(elem)}
-            // onKeyDown={() => this.setOpacity(elem)}
+            onClick={(e) => this.showOpacity(elem, e)}
+            onKeyDown={(e) => this.showOpacity(elem, e)}
             tabIndex="0"
             role="button"
+            data-opacity="100"
           >
             <Popup
               trigger={<FontAwesomeIcon icon={['fas', 'sliders-h']} />}
               content="Opacity"
               {...popupSettings}
             />
-          </span> */}
+          </span>
           <span
             className="map-menu-icon active-layer-hide"
             onClick={() => this.eyeLayer(elem)}
@@ -1345,6 +1391,9 @@ class MenuWidget extends React.Component {
           );
         }
       });
+      if (document.querySelector('.opacity-panel').style.display === 'block') {
+        this.closeOpacity();
+      }
     } else {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
@@ -1425,6 +1474,60 @@ class MenuWidget extends React.Component {
       title = layer.title;
     }
     return title;
+  }
+
+  /**
+   * Method to set layer opacity
+   * @param {*} elem From the input
+   * @param {*} e From the click event
+   */
+  showOpacity(elem, e) {
+    if (
+      document.querySelector('.opacity-slider input').dataset.layer !== elem.id
+    ) {
+      let opacity = e.currentTarget.dataset.opacity;
+      document.querySelector('.opacity-slider input').value = opacity;
+      document.querySelector('.opacity-panel').style.display = 'block';
+      let left = e.currentTarget.offsetLeft + 48;
+      document.querySelector('.opacity-panel').style.left = left + 'px';
+      let top =
+        document.querySelector('.tabs').offsetHeight +
+        15 +
+        e.currentTarget.closest('.active-layer').offsetTop +
+        e.currentTarget.closest('.active-layer').offsetHeight / 2 -
+        document.querySelector('.opacity-panel').offsetHeight / 2;
+      document.querySelector('.opacity-panel').style.top = top + 'px';
+      document.querySelector('.opacity-slider input').dataset.layer = elem.id;
+    }
+  }
+
+  setOpacity() {
+    let layer = document.querySelector('.opacity-slider input').dataset.layer;
+    let value = document.querySelector('.opacity-panel input').value;
+    let group = this.getGroup(document.getElementById(layer));
+    let groupLayers = this.getGroupLayers(group);
+    if (group && groupLayers.length > 1) {
+      groupLayers.forEach((item) => {
+        this.layers[item].opacity = value / 100;
+        document.querySelector(
+          '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
+        ).dataset.opacity = value;
+      });
+    } else {
+      this.layers[layer].opacity = value / 100;
+      document.querySelector(
+        '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
+      ).dataset.opacity = value;
+    }
+  }
+
+  closeOpacity() {
+    document.querySelector('.opacity-panel').style.display = '';
+    document.querySelector('.opacity-panel input').dataset.layer = '';
+  }
+
+  closeLogin() {
+    document.querySelector('.login-panel').style.display = '';
   }
 
   /**
@@ -1530,6 +1633,13 @@ class MenuWidget extends React.Component {
       if (tab.id === 'active_label') {
         this.layersReorder();
       }
+
+      if (document.querySelector('.opacity-panel').style.display === 'block') {
+        this.closeOpacity();
+      }
+      if (document.querySelector('.login-panel').style.display === 'block') {
+        document.querySelector('#login_close').click();
+      }
     }
   }
 
@@ -1617,7 +1727,6 @@ class MenuWidget extends React.Component {
                 role="tabpanel"
                 aria-hidden="false"
               >
-                {!this.props.download && <CheckLogin />}
                 {this.metodprocessJSON()}
               </div>
               <div
@@ -1682,6 +1791,39 @@ class MenuWidget extends React.Component {
               tabIndex="0"
             ></div>
           </div>
+        </div>
+        <div className="opacity-panel">
+          <div
+            className="esri-icon-close"
+            id="opacity_close"
+            role="button"
+            onClick={() => this.closeOpacity()}
+            onKeyDown={() => this.closeOpacity()}
+            tabIndex="0"
+          ></div>
+          <div className="opacity-title">Opacity</div>
+          <div className="opacity-slider">
+            <input
+              type="range"
+              defaultValue="100"
+              min="0"
+              max="100"
+              onChange={() => this.setOpacity()}
+            />
+            <span className="opacity-label left">0 %</span>
+            <span className="opacity-label right">100 %</span>
+          </div>
+        </div>
+        <div className="login-panel">
+          <div
+            className="esri-icon-close"
+            id="login_close"
+            role="button"
+            onClick={() => this.closeLogin()}
+            onKeyDown={() => this.closeLogin()}
+            tabIndex="0"
+          ></div>
+          {!this.props.download && <CheckLogin />}
         </div>
       </>
     );

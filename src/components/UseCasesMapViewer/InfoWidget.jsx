@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 import { Loader } from 'semantic-ui-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 let layerControl,
   navigationControl,
@@ -71,18 +72,24 @@ class InfoWidget extends React.Component {
             <div className="use-case-detail-description">
               <p>{UseCase.Use_case_summary}</p>
               {UseCase.Links_to_web_sites && (
-                <p>
-                  For further information
-                  <a
-                    href={UseCase.Links_to_web_sites.split(' ')[0]}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {' '}
-                    here
-                  </a>
-                  .
-                </p>
+                <div className="use-case-detail-link">
+                  <p>
+                    For further information
+                    <a
+                      href={UseCase.Links_to_web_sites.split(' ')[0]}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {' '}
+                      here
+                      <FontAwesomeIcon
+                        className="map-menu-icon"
+                        icon={['fas', 'external-link-alt']}
+                      />
+                    </a>
+                    .
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -132,6 +139,7 @@ class InfoWidget extends React.Component {
           className="use-case-element"
           aria-hidden="true"
           onClick={() => {
+            view.popup.close();
             layerControl.getGeometry(val.Spatial_coverage, layerHighlight);
             layerControl.showLayer(layerHighlight.id);
             mapViewer.setState((prevState) => ({
