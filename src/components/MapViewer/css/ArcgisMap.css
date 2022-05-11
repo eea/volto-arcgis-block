@@ -101,6 +101,60 @@
 }
 
 /* Measure */
+.measurement-panel {
+  margin-top: -1rem;
+}
+
+.measurement-dropdown .ccl-expandable__button {
+  position: relative;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #dadada;
+  background-color: white;
+  color: #212529;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.measurement-dropdown .ccl-expandable__button .dropdown-icon {
+  margin-left: auto;
+  color: black;
+}
+
+.measurement-dropdown
+  .ccl-expandable__button[aria-expanded='true']
+  .dropdown-icon {
+  transform: rotate(-180deg);
+}
+
+.measurement-dropdown .ccl-expandable__button[aria-expanded='false'] + * {
+  display: none;
+}
+
+.measurement-dropdown .ccl-expandable__button[aria-expanded='true'] + * {
+  display: block;
+}
+
+.measurement-dropdown .map-menu-icon {
+  margin-right: 1rem;
+  margin-left: 0 !important;
+  font-size: 1.25rem;
+}
+
+.esri-area-measurement-2d,
+.esri-distance-measurement-2d {
+  border-bottom: solid 1px #dadada;
+}
+
+.measurement-dropdown-container .esri-area-measurement-2d__measurement,
+.measurement-dropdown-container .esri-distance-measurement-2d__measurement {
+  background: white;
+}
+
 .measurement-container {
   display: flex;
   box-shadow: none !important;
@@ -147,8 +201,22 @@
 
 .measurement-coords {
   display: none;
-  padding: 1rem;
+  padding: 1rem 2rem;
   background-color: white;
+}
+
+.measurement-coords-text {
+  font-size: 1rem;
+}
+
+.measurement-coords-title {
+  line-height: 1.3rem;
+  text-transform: capitalize;
+}
+
+.measurement-coords-title + b {
+  display: inline-block;
+  padding-bottom: 0.75rem;
 }
 
 /* Print */
@@ -262,28 +330,9 @@
   word-break: break-word;
 }
 
-.map-menu .ccl-expandable__button::after {
-  font-family: 'ccl-icons';
-}
-
-.map-menu .ccl-expandable__button[aria-expanded='true']::after {
-  content: '\e914';
-  transform: rotate(-180deg);
-  -webkit-transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
-}
-
-.map-menu.tab-container .panels {
-  width: 100%;
-  height: 440px;
-  padding: 0;
-  background: #ffffff;
-  overflow-y: auto;
-}
-
 .map-menu .panels {
   width: 100%;
-  height: 440px;
+  height: 450px;
   padding: 0;
   background: #ffffff;
   overflow-x: hidden;
@@ -305,11 +354,36 @@
   }
 }
 
-.map-menu .login-block {
+/* Login */
+.login-panel {
+  position: absolute;
+  display: none;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0px 0px 4px 0px #dadada;
+}
+
+.login-panel .login-block {
   width: 100%;
   margin: 0;
   background: none;
   float: none;
+  font-size: 0.85rem;
+}
+
+#login_close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0.5rem;
+  color: black;
+  cursor: pointer;
+}
+
+.map-menu-icon-login .fa-lock {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
   font-size: 0.85rem;
 }
 
@@ -323,9 +397,8 @@
   display: flex;
   align-items: center;
   padding: 0.5rem 0;
-  padding-right: 2.5rem;
+  padding-left: 1rem;
   border: none;
-  margin: 0.5rem 0;
   background-color: white;
   color: #212529;
   cursor: pointer;
@@ -334,26 +407,27 @@
   text-decoration: none;
 }
 
-.map-menu-dropdown .ccl-expandable__button::after {
-  position: absolute;
-  right: 0;
-  font-family: 'ccl-icons';
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  -webkit-transition: all 0.3s ease-in-out;
-  transition: all 0.3s ease-in-out;
+.map-menu-dropdown > .ccl-expandable__button:hover {
+  background-color: #dadada40;
 }
 
-.map-menu-dropdown .ccl-expandable__button[aria-expanded='false']::after {
-  content: '\e914';
+.map-menu-dropdown .ccl-expandable__button .dropdown-icon {
+  margin-right: 1rem;
+  color: black;
+}
+
+.map-menu-dropdown
+  .ccl-expandable__button[aria-expanded='false']
+  .dropdown-icon {
   transform: rotate(0deg);
   -webkit-transition: transform 0.3s ease-out;
   transition: transform 0.3s ease-out;
 }
 
-.map-menu-dropdown .ccl-expandable__button[aria-expanded='true']::after {
-  content: '\e914';
-  transform: rotate(-180deg);
+.map-menu-dropdown
+  .ccl-expandable__button[aria-expanded='true']
+  .dropdown-icon {
+  transform: rotate(90deg);
   -webkit-transition: transform 0.3s ease-out;
   transition: transform 0.3s ease-out;
 }
@@ -379,11 +453,6 @@
   margin-bottom: 0;
 }
 
-.map-menu-dropdown,
-.map-menu-product-dropdown {
-  margin: 0 1rem;
-}
-
 .map-menu-product-dropdown .ccl-expandable__button {
   margin-top: 0;
 }
@@ -391,10 +460,6 @@
 .map-menu-dropdown .map-menu-products-container {
   padding-right: 0 !important;
   background-color: white;
-}
-
-.map-menu-dropdown .ccl-expandable__button + .ccl-form {
-  padding: 0 1rem 0 1rem;
 }
 
 .map-menu-dropdown .ccl-form .ccl-form-group {
@@ -418,8 +483,10 @@
 
 .map-menu .map-menu-layers-container {
   width: 100%;
-  margin-top: 0.5rem;
-  margin-left: 1rem;
+}
+
+.map-menu-layer:hover {
+  background-color: #dadada40;
 }
 
 .map-menu-icons {
@@ -437,14 +504,6 @@
 
 .map-menu-dropdown i:hover {
   color: black;
-}
-
-.map-menu-product-dropdown {
-  margin-right: 0;
-}
-
-.map-menu-product-dropdown .map-product-checkbox {
-  background-color: white;
 }
 
 #active_panel {
@@ -602,6 +661,10 @@
   margin-bottom: 1rem;
 }
 
+.esri-legend .esri-legend__service {
+  border-bottom: solid 1px #dadada;
+}
+
 .esri-legend .esri-legend__layer {
   margin: 0;
 }
@@ -702,7 +765,7 @@
   right: 0;
   display: none;
   margin: 0.5rem;
-  color: #a0b128;
+  color: black;
   cursor: pointer;
 }
 
@@ -807,4 +870,82 @@
 [tooltip][direction^='left'][type='widget']::before,
 [tooltip][direction^='right'][type='widget']::before {
   border-color: transparent;
+}
+
+/* Opacity */
+.opacity-panel {
+  position: absolute;
+  display: none;
+  width: 200px;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0px 0px 4px 0px #dadada;
+}
+
+#opacity_close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0.5rem;
+  color: black;
+  cursor: pointer;
+}
+
+.opacity-title {
+  color: black;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.opacity-label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.opacity-label.left {
+  float: left;
+}
+
+.opacity-label.right {
+  float: right;
+}
+
+input[type='range'] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: #c5c5c5;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-thumb,
+input[type='range']::-moz-range-thumb,
+input[type='range']::-ms-thumb {
+  width: 16px;
+  height: 16px;
+  border: solid 3px black;
+  -webkit-appearance: none;
+  background: white;
+  border-radius: 50%;
+  cursor: move;
+  transition: all 0.3s ease-in-out;
+}
+
+input[type='range']::-webkit-slider-thumb:hover,
+input[type='range']::-moz-range-thumb:hover,
+input[type='range']::-ms-thumb:hover {
+  border-color: black;
+  transform: scale(1.2);
+}
+
+input[type='range']::-webkit-slider-runnable-track,
+input[type='range']::-moz-range-track,
+input[type='range']::-ms-track {
+  border: none;
+  -webkit-appearance: none;
+  background: transparent;
+  box-shadow: none;
 }
