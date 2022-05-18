@@ -174,7 +174,7 @@ export const AddCartItem = ({
     let top =
       document.querySelector('.tabs').offsetHeight +
       15 -
-      document.querySelector(".panels").scrollTop +
+      document.querySelector('.panels').scrollTop +
       e.currentTarget.closest('.ccl-expandable__button').offsetTop +
       e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
       document.querySelector('.login-panel').offsetHeight / 2;
@@ -1507,7 +1507,7 @@ class MenuWidget extends React.Component {
       let top =
         document.querySelector('.tabs').offsetHeight +
         15 -
-        document.querySelector(".panels").scrollTop +
+        document.querySelector('.panels').scrollTop +
         e.currentTarget.closest('.active-layer').offsetTop +
         e.currentTarget.closest('.active-layer').offsetHeight / 2 -
         document.querySelector('.opacity-panel').offsetHeight / 2;
