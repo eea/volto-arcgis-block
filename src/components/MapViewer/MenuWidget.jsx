@@ -173,7 +173,8 @@ export const AddCartItem = ({
     document.querySelector('.login-panel').style.left = left + 'px';
     let top =
       document.querySelector('.tabs').offsetHeight +
-      15 +
+      15 -
+      document.querySelector('.panels').scrollTop +
       e.currentTarget.closest('.ccl-expandable__button').offsetTop +
       e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
       document.querySelector('.login-panel').offsetHeight / 2;
@@ -403,8 +404,15 @@ class MenuWidget extends React.Component {
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
-      if (document.contains(document.querySelector('.timeslider-container')))
+      if (document.contains(document.querySelector('.timeslider-container'))) {
         document.querySelector('.timeslider-container').style.display = 'none';
+      }
+      if (document.querySelector('.opacity-panel').style.display === 'block') {
+        this.closeOpacity();
+      }
+      if (document.querySelector('.login-panel').style.display === 'block') {
+        this.closeLogin();
+      }
 
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
@@ -837,7 +845,7 @@ class MenuWidget extends React.Component {
                       {...popupSettings}
                     />
                   </a>
-                  {!this.props.download && dataset.Downloadable && (
+                  {!this.props.download && dataset.Downloadable ? (
                     <AddCartItem
                       cartData={this.compCfg}
                       props={this.props}
@@ -846,6 +854,13 @@ class MenuWidget extends React.Component {
                       areaData={this.props.area}
                       dataset={dataset}
                     />
+                  ) : (
+                    <span
+                      className={'map-menu-icon map-menu-icon-login'}
+                      style={{ visibility: 'hidden' }}
+                    >
+                      <FontAwesomeIcon icon={['fas', 'download']} />
+                    </span>
                   )}
                 </div>
               </div>
@@ -1492,7 +1507,8 @@ class MenuWidget extends React.Component {
       document.querySelector('.opacity-panel').style.left = left + 'px';
       let top =
         document.querySelector('.tabs').offsetHeight +
-        15 +
+        15 -
+        document.querySelector('.panels').scrollTop +
         e.currentTarget.closest('.active-layer').offsetTop +
         e.currentTarget.closest('.active-layer').offsetHeight / 2 -
         document.querySelector('.opacity-panel').offsetHeight / 2;
@@ -1638,7 +1654,7 @@ class MenuWidget extends React.Component {
         this.closeOpacity();
       }
       if (document.querySelector('.login-panel').style.display === 'block') {
-        document.querySelector('#login_close').click();
+        this.closeLogin();
       }
     }
   }
