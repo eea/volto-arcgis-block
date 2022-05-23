@@ -263,7 +263,7 @@ class AreaWidget extends React.Component {
               <div
                 className={this.menuClass}
                 id="map_area_button"
-                title="Area"
+                aria-label="Area selection"
                 onClick={this.openMenu.bind(this)}
                 onKeyDown={this.openMenu.bind(this)}
                 tabIndex="0"
