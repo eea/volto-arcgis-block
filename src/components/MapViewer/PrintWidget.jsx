@@ -220,7 +220,7 @@ class PrintWidget extends React.Component {
             <div
               className={this.menuClass}
               id="map_print_button"
-              title="Print"
+              aria-label="Print"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"

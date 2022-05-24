@@ -516,6 +516,8 @@ class MenuWidget extends React.Component {
       },
     ];
     buttons.forEach((element, index) => {
+      element.setAttribute('aria-label', element.getAttribute('title'));
+      element.removeAttribute('title');
       Object.keys(attributes[index]).forEach((attr) => {
         element.setAttribute(attr, attributes[index][attr]);
       });
@@ -1801,7 +1803,7 @@ class MenuWidget extends React.Component {
               className={this.menuClass}
               id="map_manu_button"
               role="button"
-              title="Menu of products"
+              aria-label="Menu of products"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"
