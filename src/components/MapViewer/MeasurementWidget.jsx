@@ -198,7 +198,7 @@ class MeasurementWidget extends React.Component {
             <div
               className={this.menuClass}
               id="map_measurement_button"
-              title="Measurement"
+              aria-label="Measurement"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"

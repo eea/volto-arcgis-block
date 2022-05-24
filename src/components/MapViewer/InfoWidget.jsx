@@ -885,7 +885,7 @@ class InfoWidget extends React.Component {
             <div
               className={this.menuClass}
               id="info_button"
-              title="Info"
+              aria-label="Info"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"

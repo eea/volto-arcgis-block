@@ -83,7 +83,7 @@ class LegendWidget extends React.Component {
             <div
               className={this.menuClass}
               id="legend_button"
-              title="Legend"
+              aria-label="Legend"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"
