@@ -331,7 +331,6 @@ export const AddCartItem = ({
 
 export const CheckLogin = () => {
   const { isLoggedIn } = useCartState();
-  const { locale } = useIntl();
   return (
     <>
       {!isLoggedIn && (
