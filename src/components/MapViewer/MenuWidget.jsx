@@ -331,7 +331,6 @@ export const AddCartItem = ({
 
 export const CheckLogin = () => {
   const { isLoggedIn } = useCartState();
-  const { locale } = useIntl();
   return (
     <>
       {!isLoggedIn && (
@@ -339,13 +338,17 @@ export const CheckLogin = () => {
           <div className="login-content">
             <a
               className="ccl-button ccl-button--default"
-              href={'/' + locale + '/login'}
+              href={'https://ecas.acceptance.ec.europa.eu/cas/'}
             >
               Login to download the data
             </a>
             <p className="login-block-new">
               New user?{' '}
-              <a href={'/' + locale + '/register'}>
+              <a
+                href={
+                  'https://ecas.acceptance.ec.europa.eu/cas/eim/external/register.cgi'
+                }
+              >
                 Follow this link to register
               </a>
             </p>
