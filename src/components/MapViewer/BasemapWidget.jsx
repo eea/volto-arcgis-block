@@ -114,7 +114,7 @@ class BasemapWidget extends React.Component {
               // ref={this.basemaps}
               className={this.menuClass}
               id="map_basemap_button"
-              title="Basemap gallery"
+              aria-label="Basemap gallery"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"
