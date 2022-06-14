@@ -320,9 +320,3 @@ Cypress.Commands.add('openClmsPortal',() =>{
   cy.get('#login').type('admin')
   cy.get('#password').type('admin{enter}')    
 })
-
-Cypress.Commands.add("dragTo", { prevSubject: "element" }, (subject, targetEl) => {
-  cy.wrap(subject).trigger("dragstart")
-  cy.get(targetEl).trigger("drop")
-  
-})
