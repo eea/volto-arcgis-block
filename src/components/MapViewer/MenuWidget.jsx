@@ -84,7 +84,7 @@ export const AddCartItem = ({
       dataset = cartData[0].Products[0].Datasets[0];
     }
     let id = dataset.DatasetId;
-    let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
+    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
     let datasetData = {
       id: id,
       UID: id,
@@ -133,9 +133,7 @@ export const AddCartItem = ({
 
   const checkScrollPosition = () => {
     let dt = document.querySelector(
-      '.map-menu-dataset[datasetid="' +
-        dataset.DatasetId +
-        '"] .map-dataset-checkbox',
+      '[datasetid="' + dataset.DatasetId + '"] .map-dataset-checkbox',
     );
     if (
       dt.offsetTop + dt.offsetHeight + 4 * 16 >
