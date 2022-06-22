@@ -10,6 +10,17 @@ import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
+const popupSettings = {
+  basic: true,
+  inverted: true,
+  size: 'mini',
+  position: 'top center',
+  style: {
+    padding: '0.25rem 0.5rem',
+    fontSize: '0.625rem',
+  },
+};
+
 export const AddCartItem = ({
   cartData,
   mapViewer,
@@ -73,7 +84,7 @@ export const AddCartItem = ({
       dataset = cartData[0].Products[0].Datasets[0];
     }
     let id = dataset.DatasetId;
-    let datasetElem = document.querySelector('div[datasetid="' + id + '"]');
+    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
     let datasetData = {
       id: id,
       UID: id,
@@ -122,9 +133,7 @@ export const AddCartItem = ({
 
   const checkScrollPosition = () => {
     let dt = document.querySelector(
-      '.map-menu-dataset[datasetid="' +
-        dataset.DatasetId +
-        '"] .map-dataset-checkbox',
+      '[datasetid="' + dataset.DatasetId + '"] .map-dataset-checkbox',
     );
     if (
       dt.offsetTop + dt.offsetHeight + 4 * 16 >
@@ -153,6 +162,21 @@ export const AddCartItem = ({
       node.dispatchEvent(event);
     }
     closeModal();
+  };
+
+  const showLogin = (e) => {
+    e.stopPropagation();
+    document.querySelector('.login-panel').style.display = 'block';
+    let left = e.currentTarget.offsetLeft + 48;
+    document.querySelector('.login-panel').style.left = left + 'px';
+    let top =
+      document.querySelector('.tabs').offsetHeight +
+      15 -
+      document.querySelector('.panels').scrollTop +
+      e.currentTarget.closest('.ccl-expandable__button').offsetTop +
+      e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
+      document.querySelector('.login-panel').offsetHeight / 2;
+    document.querySelector('.login-panel').style.top = top + 'px';
   };
 
   return (
@@ -274,12 +298,28 @@ export const AddCartItem = ({
               </div>
             </Modal.Actions>
           </Modal>
-          <FontAwesomeIcon
-            className={'map-menu-icon' + (isLoggedIn ? '' : ' locked')}
-            icon={['fas', 'download']}
-            onClick={() => {
-              isLoggedIn && showModal();
-            }}
+          <Popup
+            trigger={
+              <span
+                className={'map-menu-icon map-menu-icon-login'}
+                onClick={(e) => {
+                  isLoggedIn ? showModal() : showLogin(e);
+                }}
+                onKeyDown={(e) => {
+                  isLoggedIn ? showModal() : showLogin(e);
+                }}
+                tabIndex="0"
+                role="button"
+              >
+                <FontAwesomeIcon
+                  className={isLoggedIn ? '' : ' locked'}
+                  icon={['fas', 'download']}
+                />
+                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+              </span>
+            }
+            content="Download"
+            {...popupSettings}
           />
         </>
       )}
@@ -289,7 +329,6 @@ export const AddCartItem = ({
 
 export const CheckLogin = () => {
   const { isLoggedIn } = useCartState();
-  const { locale } = useIntl();
   return (
     <>
       {!isLoggedIn && (
@@ -297,13 +336,17 @@ export const CheckLogin = () => {
           <div className="login-content">
             <a
               className="ccl-button ccl-button--default"
-              href={'/' + locale + '/login'}
+              href={'https://ecas.acceptance.ec.europa.eu/cas/'}
             >
               Login to download the data
             </a>
             <p className="login-block-new">
               New user?{' '}
-              <a href={'/' + locale + '/register'}>
+              <a
+                href={
+                  'https://ecas.acceptance.ec.europa.eu/cas/eim/external/register.cgi'
+                }
+              >
                 Follow this link to register
               </a>
             </p>
@@ -331,6 +374,7 @@ class MenuWidget extends React.Component {
     this.map = this.props.map;
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
+    this.loadFirst = true;
     this.layers = {};
     this.activeLayersJSON = {};
     this.layerGroups = {};
@@ -361,8 +405,15 @@ class MenuWidget extends React.Component {
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
-      if (document.contains(document.querySelector('.timeslider-container')))
+      if (document.contains(document.querySelector('.timeslider-container'))) {
         document.querySelector('.timeslider-container').style.display = 'none';
+      }
+      if (document.querySelector('.opacity-panel').style.display === 'block') {
+        this.closeOpacity();
+      }
+      if (document.querySelector('.login-panel').style.display === 'block') {
+        this.closeLogin();
+      }
 
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
@@ -381,6 +432,11 @@ class MenuWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
     }
+    if (this.loadFirst) {
+      this.checkUrl();
+      this.loadFirst = false;
+      this.zoomTooltips();
+    }
   }
   /**
    * This method is executed after the rener method is executed
@@ -390,12 +446,21 @@ class MenuWidget extends React.Component {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
-      document.querySelector('.area-panel').style.display = 'block';
+      // document.querySelector('.area-panel').style.display = 'block';
       document.querySelector('.area-panel input:checked').click();
+      document.querySelector('.map-product-checkbox input').click();
+      let dropdown = document.querySelector(
+        '.map-menu-dropdown .ccl-expandable__button',
+      );
+      dropdown.setAttribute('aria-expanded', 'true');
+      dropdown = document.querySelector(
+        '.map-menu-product-dropdown .ccl-expandable__button',
+      );
+      dropdown.setAttribute('aria-expanded', 'true');
     }
     //to watch the component
     this.setState({});
-    this.checkUrl();
+    this.openMenu();
   }
 
   checkUrl() {
@@ -413,7 +478,51 @@ class MenuWidget extends React.Component {
         : '[datasetid="' + dataset + '"]';
       let node = document.querySelector(elem + ' input');
       node.dispatchEvent(event);
+      let dropdown = document
+        .querySelector(elem + ' input')
+        .closest('.map-menu-dropdown');
+      dropdown
+        .querySelector('.ccl-expandable__button')
+        .setAttribute('aria-expanded', 'true');
+      let scrollPosition = document
+        .querySelector(elem + ' input')
+        .closest('.map-menu-product-dropdown').offsetTop;
+      if (dataset) {
+        dropdown = document
+          .querySelector(elem + ' input')
+          .closest('.map-menu-product-dropdown');
+        dropdown
+          .querySelector('.ccl-expandable__button')
+          .setAttribute('aria-expanded', 'true');
+        scrollPosition = document
+          .querySelector(elem + ' input')
+          .closest('.map-menu-dataset').offsetTop;
+      }
+      document.querySelector('.panels').scrollTop = scrollPosition;
     }
+  }
+
+  zoomTooltips() {
+    var buttons = document.querySelectorAll('.esri-zoom .esri-widget');
+    const attributes = [
+      {
+        tooltip: 'Zoom in',
+        direction: 'left',
+        type: 'widget',
+      },
+      {
+        tooltip: 'Zoom out',
+        direction: 'left',
+        type: 'widget',
+      },
+    ];
+    buttons.forEach((element, index) => {
+      element.setAttribute('aria-label', element.getAttribute('title'));
+      element.removeAttribute('title');
+      Object.keys(attributes[index]).forEach((attr) => {
+        element.setAttribute(attr, attributes[index][attr]);
+      });
+    });
   }
 
   /**
@@ -473,13 +582,16 @@ class MenuWidget extends React.Component {
           tabIndex="0"
           role="button"
         >
+          <div className="dropdown-icon">
+            <FontAwesomeIcon icon={['fas', 'caret-right']} />
+          </div>
           {description ? (
             <Popup
               trigger={<span>{component.ComponentTitle}</span>}
               content={description}
               basic
               className="custom"
-              style={{ transform: 'translateX(0.25rem)' }}
+              style={{ transform: 'translateX(-0.5rem)' }}
             />
           ) : (
             <span>{component.ComponentTitle}</span>
@@ -548,6 +660,9 @@ class MenuWidget extends React.Component {
             tabIndex="0"
             role="button"
           >
+            <div className="dropdown-icon">
+              <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            </div>
             <div
               className="ccl-form map-product-checkbox"
               key={'d' + prodIndex}
@@ -577,7 +692,7 @@ class MenuWidget extends React.Component {
                         content={description}
                         basic
                         className="custom"
-                        style={{ transform: 'translateX(-2.5rem)' }}
+                        style={{ transform: 'translateX(-4rem)' }}
                       />
                     ) : (
                       <span>{product.ProductTitle}</span>
@@ -667,60 +782,100 @@ class MenuWidget extends React.Component {
 
     return (
       <div
-        className="ccl-form-group map-menu-dataset"
+        className="map-menu-dataset-dropdown"
         id={'dataset_' + inheritedIndexDataset}
         datasetid={dataset.DatasetId}
         key={'a' + datIndex}
       >
-        <div className="map-dataset-checkbox" key={'b' + datIndex}>
-          <input
-            type="checkbox"
-            id={checkIndex}
-            parentid={checkProduct}
-            name=""
-            value="name"
-            title={dataset.DatasetTitle}
-            defcheck={layer_default}
-            className="ccl-checkbox ccl-required ccl-form-check-input"
+        <fieldset className="ccl-fieldset" key={'b' + datIndex}>
+          <div
+            className="ccl-expandable__button"
+            aria-expanded="false"
             key={'c' + datIndex}
-            onChange={(e) => {
-              this.toggleDataset(e.target.checked, checkIndex, e.target);
-            }}
-          ></input>
-          <label
-            className="ccl-form-check-label"
-            htmlFor={checkIndex}
-            key={'d' + datIndex}
+            onClick={this.toggleDropdownContent.bind(this)}
+            onKeyDown={this.toggleDropdownContent.bind(this)}
+            tabIndex="0"
+            role="button"
           >
-            {description ? (
-              <Popup
-                trigger={<span>{dataset.DatasetTitle}</span>}
-                content={description}
-                basic
-                className="custom"
-                style={{ transform: 'translateX(-3.5rem)' }}
-              />
-            ) : (
-              <span>{dataset.DatasetTitle}</span>
-            )}
-          </label>
-          {!this.props.download && dataset.Downloadable && (
-            <AddCartItem
-              cartData={this.compCfg}
-              props={this.props}
-              mapViewer={this.props.mapViewer}
-              download={this.props.download}
-              areaData={this.props.area}
-              dataset={dataset}
-            />
-          )}
-        </div>
-        <div
-          className="ccl-form map-menu-layers-container"
-          id={'layer_container_' + dataset.DatasetId}
-        >
-          {layers}
-        </div>
+            <div
+              className="dropdown-icon"
+              style={dataset.HandlingLevel ? { visibility: 'hidden' } : {}}
+            >
+              <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            </div>
+            <div className="ccl-form map-dataset-checkbox" key={'a' + datIndex}>
+              <div className="ccl-form-group" key={'b' + datIndex}>
+                <input
+                  type="checkbox"
+                  id={checkIndex}
+                  parentid={checkProduct}
+                  name=""
+                  value="name"
+                  title={dataset.DatasetTitle}
+                  defcheck={layer_default}
+                  className="ccl-checkbox ccl-required ccl-form-check-input"
+                  key={'c' + datIndex}
+                  onChange={(e) => {
+                    this.toggleDataset(e.target.checked, checkIndex, e.target);
+                  }}
+                ></input>
+                <label
+                  className="ccl-form-check-label"
+                  htmlFor={checkIndex}
+                  key={'d' + datIndex}
+                >
+                  {description ? (
+                    <Popup
+                      trigger={<span>{dataset.DatasetTitle}</span>}
+                      content={description}
+                      basic
+                      className="custom"
+                      style={{ transform: 'translateX(-5.5rem)' }}
+                    />
+                  ) : (
+                    <span>{dataset.DatasetTitle}</span>
+                  )}
+                </label>
+                <div className="map-menu-icons">
+                  <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
+                    <Popup
+                      trigger={
+                        <span className="map-menu-icon">
+                          <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                        </span>
+                      }
+                      content="Info"
+                      {...popupSettings}
+                    />
+                  </a>
+                  {!this.props.download && dataset.Downloadable ? (
+                    <AddCartItem
+                      cartData={this.compCfg}
+                      props={this.props}
+                      mapViewer={this.props.mapViewer}
+                      download={this.props.download}
+                      areaData={this.props.area}
+                      dataset={dataset}
+                    />
+                  ) : (
+                    <span
+                      className={'map-menu-icon map-menu-icon-login'}
+                      style={{ visibility: 'hidden' }}
+                    >
+                      <FontAwesomeIcon icon={['fas', 'download']} />
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ccl-form map-menu-layers-container"
+            id={'layer_container_' + dataset.DatasetId}
+          >
+            {layers}
+          </div>
+        </fieldset>
       </div>
     );
   }
@@ -866,7 +1021,7 @@ class MenuWidget extends React.Component {
       this.map.add(this.layers[elem.id]);
       this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
-      this.timeLayers[elem.id] = ['fas', 'step-forward'];
+      this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
@@ -892,6 +1047,7 @@ class MenuWidget extends React.Component {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
+      this.layers[elem.id].opacity = 1;
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -989,8 +1145,11 @@ class MenuWidget extends React.Component {
    */
 
   toggleDropdownContent(e) {
-    var aria = e.target.getAttribute('aria-expanded');
-    e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+    var aria = e.currentTarget.getAttribute('aria-expanded');
+    e.currentTarget.setAttribute(
+      'aria-expanded',
+      aria === 'true' ? 'false' : 'true',
+    );
   }
 
   /**
@@ -1016,26 +1175,66 @@ class MenuWidget extends React.Component {
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
           {elem.parentElement.dataset.timeseries === 'true' && (
-            <span className="active-layer-time">
-              <FontAwesomeIcon
-                className="map-menu-icon"
-                icon={this.timeLayers[elem.id]}
-                onClick={(e) => this.showTimeSlider(elem)}
+            <span
+              className="map-menu-icon active-layer-time"
+              onClick={() => this.showTimeSlider(elem)}
+              onKeyDown={() => this.showTimeSlider(elem)}
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={this.timeLayers[elem.id]} />}
+                content={
+                  this.timeLayers[elem.id][1] === 'clock'
+                    ? 'Show time slider'
+                    : 'Hide time slider'
+                }
+                {...popupSettings}
               />
             </span>
           )}
-          <span className="active-layer-hide">
-            <FontAwesomeIcon
-              className="map-menu-icon"
-              icon={this.visibleLayers[elem.id]}
-              onClick={(e) => this.eyeLayer(elem)}
+          <span
+            className="map-menu-icon active-layer-opacity"
+            onClick={(e) => this.showOpacity(elem, e)}
+            onKeyDown={(e) => this.showOpacity(elem, e)}
+            tabIndex="0"
+            role="button"
+            data-opacity="100"
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={['fas', 'sliders-h']} />}
+              content="Opacity"
+              {...popupSettings}
             />
           </span>
-          <span className="active-layer-delete">
-            <FontAwesomeIcon
-              className="map-menu-icon"
-              icon={['fas', 'times']}
-              onClick={() => this.deleteCrossEvent(elem)}
+          <span
+            className="map-menu-icon active-layer-hide"
+            onClick={() => this.eyeLayer(elem)}
+            onKeyDown={() => this.eyeLayer(elem)}
+            tabIndex="0"
+            role="button"
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={this.visibleLayers[elem.id]} />}
+              content={
+                this.visibleLayers[elem.id][1] === 'eye'
+                  ? 'Hide layer'
+                  : 'Show layer'
+              }
+              {...popupSettings}
+            />
+          </span>
+          <span
+            className="map-menu-icon active-layer-delete"
+            onClick={() => this.deleteCrossEvent(elem)}
+            onKeyDown={() => this.deleteCrossEvent(elem)}
+            tabIndex="0"
+            role="button"
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={['fas', 'times']} />}
+              content="Remove layer"
+              {...popupSettings}
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
@@ -1164,7 +1363,7 @@ class MenuWidget extends React.Component {
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
-    if (this.timeLayers[elem.id][1] === 'step-forward') {
+    if (this.timeLayers[elem.id][1] === 'clock') {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
         let order = this.activeLayersJSON[elem.id].props['layer-order'];
@@ -1178,33 +1377,41 @@ class MenuWidget extends React.Component {
             this.visibleLayers[elem.id] = ['fas', 'eye'];
           }
           document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-hide',
+            .querySelectorAll(
+              '.active-layer[layer-id="' +
+                elem.id +
+                '"] .map-menu-icon:not(.active-layer-time)',
             )
-            .classList.add('locked');
-          document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-delete',
-            )
-            .classList.add('locked');
+            .forEach((item) => {
+              item.classList.add('locked');
+            });
           document.querySelector('#products_label').classList.add('locked');
+          document.querySelector('#map_remove_layers').classList.add('locked');
           if (this.props.download)
             document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
         } else {
-          if (this.visibleLayers[layerId][1] === 'eye') {
-            this.layers[layerId].visible = false;
-            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+          if (
+            document.getElementById(layerId).parentElement.dataset
+              .timeseries === 'true'
+          ) {
+            if (this.visibleLayers[layerId][1] === 'eye') {
+              this.layers[layerId].visible = false;
+              this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+            }
+            document
+              .querySelector('.active-layer[layer-id="' + layerId + '"]')
+              .classList.add('locked');
           }
-          document
-            .querySelector('.active-layer[layer-id="' + layerId + '"]')
-            .classList.add('locked');
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
             order,
           );
         }
       });
+      if (document.querySelector('.opacity-panel').style.display === 'block') {
+        this.closeOpacity();
+      }
     } else {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
@@ -1213,19 +1420,21 @@ class MenuWidget extends React.Component {
           elem = document.getElementById(layerId);
         }
         if (elem.id === layerId) {
-          this.timeLayers[elem.id] = ['fas', 'step-forward'];
+          this.timeLayers[elem.id] = ['far', 'clock'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
           document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-hide',
+            .querySelectorAll(
+              '.active-layer[layer-id="' +
+                elem.id +
+                '"] .map-menu-icon:not(.active-layer-time)',
             )
-            .classList.remove('locked');
-          document
-            .querySelector(
-              '.active-layer[layer-id="' + elem.id + '"] .active-layer-delete',
-            )
-            .classList.remove('locked');
+            .forEach((item) => {
+              item.classList.remove('locked');
+            });
           document.querySelector('#products_label').classList.remove('locked');
+          document
+            .querySelector('#map_remove_layers')
+            .classList.remove('locked');
           if (this.props.download)
             document
               .querySelector('#download_label')
@@ -1283,6 +1492,61 @@ class MenuWidget extends React.Component {
       title = layer.title;
     }
     return title;
+  }
+
+  /**
+   * Method to set layer opacity
+   * @param {*} elem From the input
+   * @param {*} e From the click event
+   */
+  showOpacity(elem, e) {
+    if (
+      document.querySelector('.opacity-slider input').dataset.layer !== elem.id
+    ) {
+      let opacity = e.currentTarget.dataset.opacity;
+      document.querySelector('.opacity-slider input').value = opacity;
+      document.querySelector('.opacity-panel').style.display = 'block';
+      let left = e.currentTarget.offsetLeft + 48;
+      document.querySelector('.opacity-panel').style.left = left + 'px';
+      let top =
+        document.querySelector('.tabs').offsetHeight +
+        15 -
+        document.querySelector('.panels').scrollTop +
+        e.currentTarget.closest('.active-layer').offsetTop +
+        e.currentTarget.closest('.active-layer').offsetHeight / 2 -
+        document.querySelector('.opacity-panel').offsetHeight / 2;
+      document.querySelector('.opacity-panel').style.top = top + 'px';
+      document.querySelector('.opacity-slider input').dataset.layer = elem.id;
+    }
+  }
+
+  setOpacity() {
+    let layer = document.querySelector('.opacity-slider input').dataset.layer;
+    let value = document.querySelector('.opacity-panel input').value;
+    let group = this.getGroup(document.getElementById(layer));
+    let groupLayers = this.getGroupLayers(group);
+    if (group && groupLayers.length > 1) {
+      groupLayers.forEach((item) => {
+        this.layers[item].opacity = value / 100;
+        document.querySelector(
+          '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
+        ).dataset.opacity = value;
+      });
+    } else {
+      this.layers[layer].opacity = value / 100;
+      document.querySelector(
+        '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
+      ).dataset.opacity = value;
+    }
+  }
+
+  closeOpacity() {
+    document.querySelector('.opacity-panel').style.display = '';
+    document.querySelector('.opacity-panel input').dataset.layer = '';
+  }
+
+  closeLogin() {
+    document.querySelector('.login-panel').style.display = '';
   }
 
   /**
@@ -1355,6 +1619,18 @@ class MenuWidget extends React.Component {
   }
 
   /**
+   * Method to remove all active layers
+   */
+  removeAllLayers() {
+    let activeLayers = document.querySelectorAll('.active-layer');
+    activeLayers.forEach((layer) => {
+      let layerId = layer.getAttribute('layer-id');
+      let elem = document.getElementById(layerId);
+      this.deleteCrossEvent(elem);
+    });
+  }
+
+  /**
    * Method to change between tabs
    */
   toggleTab(e) {
@@ -1375,6 +1651,13 @@ class MenuWidget extends React.Component {
       panel.setAttribute('aria-hidden', 'true');
       if (tab.id === 'active_label') {
         this.layersReorder();
+      }
+
+      if (document.querySelector('.opacity-panel').style.display === 'block') {
+        this.closeOpacity();
+      }
+      if (document.querySelector('.login-panel').style.display === 'block') {
+        this.closeLogin();
       }
     }
   }
@@ -1463,7 +1746,6 @@ class MenuWidget extends React.Component {
                 role="tabpanel"
                 aria-hidden="false"
               >
-                {!this.props.download && <CheckLogin />}
                 {this.metodprocessJSON()}
               </div>
               <div
@@ -1477,6 +1759,19 @@ class MenuWidget extends React.Component {
                   <span className="message" id="nolayers_message">
                     No layers selected
                   </span>
+                  <button
+                    id="map_remove_layers"
+                    className={
+                      'ccl-button ccl-button-green' +
+                      (Object.keys(this.activeLayersJSON).length
+                        ? ''
+                        : ' locked')
+                    }
+                    onClick={() => this.removeAllLayers()}
+                  >
+                    <FontAwesomeIcon icon={['fas', 'trash']} />
+                    Remove all layers
+                  </button>
                 </div>
               </div>
               {this.props.download && this.props.view && (
@@ -1504,15 +1799,50 @@ class MenuWidget extends React.Component {
               )}
             </div>
           </div>
+          <div tooltip="Menu of products" direction="right" type="widget">
+            <div
+              className={this.menuClass}
+              id="map_manu_button"
+              role="button"
+              aria-label="Menu of products"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+            ></div>
+          </div>
+        </div>
+        <div className="opacity-panel">
           <div
-            className={this.menuClass}
-            id="map_manu_button"
+            className="esri-icon-close"
+            id="opacity_close"
             role="button"
-            title="Menu of products"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
+            onClick={() => this.closeOpacity()}
+            onKeyDown={() => this.closeOpacity()}
             tabIndex="0"
           ></div>
+          <div className="opacity-title">Opacity</div>
+          <div className="opacity-slider">
+            <input
+              type="range"
+              defaultValue="100"
+              min="0"
+              max="100"
+              onChange={() => this.setOpacity()}
+            />
+            <span className="opacity-label left">0 %</span>
+            <span className="opacity-label right">100 %</span>
+          </div>
+        </div>
+        <div className="login-panel">
+          <div
+            className="esri-icon-close"
+            id="login_close"
+            role="button"
+            onClick={() => this.closeLogin()}
+            onKeyDown={() => this.closeLogin()}
+            tabIndex="0"
+          ></div>
+          {!this.props.download && <CheckLogin />}
         </div>
       </>
     );

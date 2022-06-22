@@ -34,57 +34,108 @@ class MeasurementWidget extends React.Component {
   openMenu() {
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.measurement-panel').style.display =
+      this.container.current.querySelector('.right-panel').style.display =
         'none';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-measure');
+        .classList.remove('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
-      this.container.current
-        .querySelector('.active')
-        .classList.remove('active');
-      this.container.current
-        .querySelector('.esri-icon-measure-area')
-        .classList.add('active');
+      this.toggleDropdownContent();
       this.clearMeasurements();
       this.clearCoordinates();
     } else {
       this.props.mapViewer.setActiveWidget(this);
-      this.container.current.querySelector('.measurement-panel').style.display =
-        'block';
+      this.container.current.querySelector('.right-panel').style.display =
+        'flex';
       this.container.current
         .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-measure', 'esri-icon-close');
+        .classList.add('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
       this.areaMeasurement();
+      document
+        .querySelector('#measurement_area .ccl-expandable__button')
+        .nextElementSibling.appendChild(
+          document.querySelector('.measurement-area'),
+        );
+      document
+        .querySelector('.measurement-dropdown .ccl-expandable__button')
+        .setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  toggleDropdownContent(e) {
+    if (e) {
+      if (
+        document.querySelector(
+          '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
+        ) &&
+        document.querySelector(
+          '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
+        ) !== e.currentTarget
+      ) {
+        document
+          .querySelector(
+            '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
+          )
+          .setAttribute('aria-expanded', 'false');
+      }
+      var aria = e.currentTarget.getAttribute('aria-expanded');
+      e.currentTarget.setAttribute(
+        'aria-expanded',
+        aria === 'true' ? 'false' : 'true',
+      );
+    } else {
+      if (
+        document.querySelector(
+          '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
+        )
+      ) {
+        document
+          .querySelector(
+            '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
+          )
+          .setAttribute('aria-expanded', 'false');
+      }
     }
   }
 
   areaMeasurementHandler(e) {
+    e.currentTarget.nextElementSibling.appendChild(
+      document.querySelector('.measurement-area'),
+    );
+    this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
-    this.areaMeasurement();
-    this.container.current.querySelector('.active').classList.remove('active');
-    e.target.classList.add('active');
+    if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
+      this.areaMeasurement();
+    }
   }
 
   distanceMeasurementHandler(e) {
+    e.currentTarget.nextElementSibling.appendChild(
+      document.querySelector('.measurement-area'),
+    );
+    this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
-    this.distanceMeasurement();
-    this.container.current.querySelector('.active').classList.remove('active');
-    e.target.classList.add('active');
+    if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
+      this.distanceMeasurement();
+    }
   }
 
   coordsMeasurementHandler(e) {
+    this.toggleDropdownContent(e);
     this.clearMeasurements();
-    this.container.current.querySelector('.active').classList.remove('active');
-    e.target.classList.add('active');
-
     //*** Add event to show mouse coordinates on click and move ***//
     var getCoordinates = this.props.view.on(
       ['pointer-down', 'pointer-move'],
@@ -111,7 +162,7 @@ class MeasurementWidget extends React.Component {
 
   showCoordinates(pt) {
     this.setState({
-      latlong: pt.latitude.toFixed(4) + ' ' + pt.longitude.toFixed(4),
+      latlong: { x: pt.latitude.toFixed(4), y: pt.longitude.toFixed(4) },
     });
   }
 
@@ -143,47 +194,97 @@ class MeasurementWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="measurement-container">
-          <div
-            className={this.menuClass}
-            id="map_measurement_button"
-            title="Measurement"
-            onClick={this.openMenu.bind(this)}
-            onKeyDown={this.openMenu.bind(this)}
-            tabIndex="0"
-            role="button"
-          ></div>
-          <div className="measurement-panel">
-            <div className="measurement-buttons">
-              <div
-                className="esri-icon-measure-area esri-widget--button esri-widget esri-interactive active"
-                onClick={this.areaMeasurementHandler.bind(this)}
-                onKeyDown={this.areaMeasurementHandler.bind(this)}
+          <div tooltip="Measurement" direction="left" type="widget">
+            <div
+              className={this.menuClass}
+              id="map_measurement_button"
+              aria-label="Measurement"
+              onClick={this.openMenu.bind(this)}
+              onKeyDown={this.openMenu.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          </div>
+          <div className="right-panel">
+            <div className="right-panel-header">
+              <span>Measurement</span>
+              <span
+                className="map-menu-icon esri-icon-close"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={this.openMenu.bind(this)}
                 tabIndex="0"
                 role="button"
-              ></div>
-              <div
-                className="esri-icon-measure-line esri-widget--button esri-widget esri-interactive"
-                onClick={this.distanceMeasurementHandler.bind(this)}
-                onKeyDown={this.distanceMeasurementHandler.bind(this)}
-                tabIndex="0"
-                role="button"
-              ></div>
-              <div
-                className="esri-icon-map-pin esri-widget--button esri-widget esri-interactive"
-                onClick={this.coordsMeasurementHandler.bind(this)}
-                onKeyDown={this.coordsMeasurementHandler.bind(this)}
-                tabIndex="0"
-                role="button"
-              ></div>
+              ></span>
             </div>
-            <div className="measurement-area"></div>
-            <div className="measurement-coords">
-              {this.state.latlong ? (
-                <b>Lat/long: </b>
-              ) : (
-                'Hover over the map to get the coordinates'
-              )}
-              {this.state.latlong && this.state.latlong}
+            <div className="right-panel-content">
+              <div className="measurement-panel">
+                <div className="measurement-dropdown" id="measurement_area">
+                  <div
+                    className="ccl-expandable__button"
+                    aria-expanded="false"
+                    onClick={this.areaMeasurementHandler.bind(this)}
+                    onKeyDown={this.areaMeasurementHandler.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  >
+                    <span className="map-menu-icon esri-icon-measure-area"></span>
+                    <span>Area measurement</span>
+                    <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
+                  </div>
+                  <div className="measurement-dropdown-container">
+                    <div className="measurement-area"></div>
+                  </div>
+                </div>
+                <div className="measurement-dropdown" id="measurement_distance">
+                  <div
+                    className="ccl-expandable__button"
+                    aria-expanded="false"
+                    onClick={this.distanceMeasurementHandler.bind(this)}
+                    onKeyDown={this.distanceMeasurementHandler.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  >
+                    <span className="map-menu-icon esri-icon-measure-line"></span>
+                    <span>Distance measurement</span>
+                    <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
+                  </div>
+                  <div className="measurement-dropdown-container"></div>
+                </div>
+                <div className="measurement-dropdown" id="measurement_distance">
+                  <div
+                    className="ccl-expandable__button"
+                    aria-expanded="false"
+                    onClick={this.coordsMeasurementHandler.bind(this)}
+                    onKeyDown={this.coordsMeasurementHandler.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  >
+                    <span className="map-menu-icon esri-icon-map-pin"></span>
+                    <span>Get coordinates</span>
+                    <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
+                  </div>
+                  <div className="measurement-dropdown-container">
+                    <div className="measurement-coords">
+                      {this.state.latlong ? (
+                        <>
+                          <div className="measurement-coords-title">
+                            Latitude
+                          </div>
+                          <b>{this.state.latlong.x}</b>
+                          <div className="measurement-coords-title">
+                            Longitude
+                          </div>
+                          <b>{this.state.latlong.y}</b>
+                        </>
+                      ) : (
+                        <div className="measurement-coords-text">
+                          Hover over the map to get the coordinates
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
