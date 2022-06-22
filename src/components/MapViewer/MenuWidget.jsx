@@ -943,7 +943,9 @@ class MenuWidget extends React.Component {
               queryable: true,
               visible: true,
               legendEnabled: true,
-              legendUrl: layer.StaticImageLegend ? layer.StaticImageLegend : (urlWMS + legendRequest + layer.LayerId),
+              legendUrl: layer.StaticImageLegend
+                ? layer.StaticImageLegend
+                : (urlWMS + legendRequest + layer.LayerId),
               featureInfoUrl: featureInfoUrl,
             },
           ],
