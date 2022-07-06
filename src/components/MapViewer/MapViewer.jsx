@@ -1,4 +1,4 @@
-import React, { createRef, useEffect } from 'react';
+import React, { createRef } from 'react';
 import './css/ArcgisMap.css';
 import classNames from 'classnames';
 import { loadModules, loadCss } from 'esri-loader';
@@ -18,7 +18,7 @@ import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl;;
+var Map, MapView, Zoom, intl;
 let mapStatus = {};
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -27,7 +27,6 @@ const CheckLanguage = () => {
 };
 
 class MapViewer extends React.Component {
-  
   /**
    * This method does the creation of the main component
    * @param {*} props
@@ -51,17 +50,17 @@ class MapViewer extends React.Component {
     this.state = {};
   }
 
-  setCenterState(centerStatus){
+  setCenterState(centerStatus) {
     mapStatus.center = centerStatus;
     sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
   }
-  
-  setZoomState(zoomStatus){
+
+  setZoomState(zoomStatus) {
     mapStatus.zoom = zoomStatus;
     sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
   }
 
-  recoverState(){
+  recoverState() {
     return JSON.parse(sessionStorage.getItem('mapStatus'));
   }
 
@@ -95,12 +94,12 @@ class MapViewer extends React.Component {
       basemap: 'topo',
     });
 
-    if(mapStatus === null || !mapStatus.zoom || !mapStatus.center){
+    if (mapStatus === null || !mapStatus.zoom || !mapStatus.center) {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
     } else {
-      mapStatus == this.recoverState();    
+      mapStatus = this.recoverState();
     }
 
     this.view = new MapView({
@@ -123,11 +122,11 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
-    this.view.watch("center", (newValue, oldValue, property, object) => {
+    this.view.watch('center', (newValue, oldValue, property, object) => {
       this.setCenterState(newValue);
     });
 
-    this.view.watch("zoom", (newValue, oldValue, property, object) => {
+    this.view.watch('zoom', (newValue, oldValue, property, object) => {
       this.setZoomState(newValue);
     });
     this.view.popup.autoOpenEnabled = false;
@@ -143,12 +142,9 @@ class MapViewer extends React.Component {
     //this.setState({});
   }
 
-  setWidgetState(){
-  }
-  
-  setSaveMapChange(){
-    
-  }
+  setWidgetState() {}
+
+  setSaveMapChange() {}
 
   setActiveWidget(widget) {
     if (!widget) {
@@ -225,7 +221,7 @@ class MapViewer extends React.Component {
   appLanguage() {
     return intl && <CheckLanguage />;
   }
-  
+
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display

@@ -485,7 +485,7 @@ class MenuWidget extends React.Component {
         .querySelector(elem + ' input')
         .closest('.map-menu-dropdown');
       dropdown
-        .querySelector('.ccl-expandable__button') 
+        .querySelector('.ccl-expandable__button')
         .setAttribute('aria-expanded', 'true');
       let scrollPosition = document
         .querySelector(elem + ' input')
@@ -1034,7 +1034,7 @@ class MenuWidget extends React.Component {
         if (groupLayers.length > 0 && !this.activeLayersJSON[groupLayers[0]]) {
           elem.hide = true;
         }
-        
+
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
           Object.keys(this.activeLayersJSON).length,
@@ -1635,15 +1635,15 @@ class MenuWidget extends React.Component {
   }
 
   /**
-   * Method to save checked layers 
+   * Method to save checked layers
    */
-  saveLayer(layer){
+  saveLayer(layer) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (checkedLayers === null){
+    if (checkedLayers === null) {
       checkedLayers = [layer];
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     } else {
-      if (!checkedLayers.includes(layer)){
+      if (!checkedLayers.includes(layer)) {
         checkedLayers.push(layer);
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
@@ -1653,19 +1653,19 @@ class MenuWidget extends React.Component {
   /**
    * Method to delete checked layers
    */
-  deleteLayer(layer){
+  deleteLayer(layer) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    for( var i = 0; i < checkedLayers.length; i++){ 
-      if ( checkedLayers[i] == layer) { 
-        checkedLayers.splice(i, 1); 
-        }
+    for (var i = 0; i < checkedLayers.length; i++) {
+      if (checkedLayers[i] == layer) {
+        checkedLayers.splice(i, 1);
       }
+    }
     sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
-   }
+  }
   /**
    * Method to load previously checked layers
    */
-  loadLayers(){
+  loadLayers() {
     let event = new MouseEvent('click', {
       view: window,
       bubbles: true,
@@ -1673,8 +1673,8 @@ class MenuWidget extends React.Component {
     });
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (layers){
-      for (let i = 0; i<layers.length; i++){
+    if (layers) {
+      for (let i = 0; i < layers.length; i++) {
         let elem = layers[i];
         let node = document.getElementById(elem);
         node.dispatchEvent(event);
@@ -1682,7 +1682,7 @@ class MenuWidget extends React.Component {
           .getElementById(elem)
           .closest('.map-menu-dropdown');
         dropdown
-          .querySelector('.ccl-expandable__button') 
+          .querySelector('.ccl-expandable__button')
           .setAttribute('aria-expanded', 'true');
         let scrollPosition = document
           .getElementById(elem)
@@ -1690,7 +1690,6 @@ class MenuWidget extends React.Component {
         document.querySelector('.panels').scrollTop = scrollPosition;
       }
     }
-    
   }
   /**
    * Method to change between tabs
