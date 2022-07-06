@@ -1016,7 +1016,6 @@ class MenuWidget extends React.Component {
    * @param {*} elem Is the checkbox
    */
   toggleLayer(elem) {
-    console.log(elem.id);
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
@@ -1059,7 +1058,6 @@ class MenuWidget extends React.Component {
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
     }
-    console.log(this.activeLayersJSON)
     this.updateCheckDataset(parentId);
     this.checkInfoWidget();
     this.setState({});
@@ -1641,13 +1639,10 @@ class MenuWidget extends React.Component {
    */
   saveLayer(layer){
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-
     if (checkedLayers === null){
       checkedLayers = [layer];
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     } else {
-      console.log(layer);
-      console.log(typeof(layer));
       if (!checkedLayers.includes(layer)){
         checkedLayers.push(layer);
       }
@@ -1659,7 +1654,6 @@ class MenuWidget extends React.Component {
    * Method to delete checked layers
    */
   deleteLayer(layer){
-    console.log(layer)
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     for( var i = 0; i < checkedLayers.length; i++){ 
       if ( checkedLayers[i] == layer) { 
@@ -1667,9 +1661,7 @@ class MenuWidget extends React.Component {
         }
       }
     sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
- 
-    console.log(sessionStorage);
-  }
+   }
   /**
    * Method to load previously checked layers
    */
@@ -1684,10 +1676,7 @@ class MenuWidget extends React.Component {
     if (layers){
       for (let i = 0; i<layers.length; i++){
         let elem = layers[i];
-        console.log(layers);
-        console.log(elem);
         let node = document.getElementById(elem);
-        console.log(node)
         node.dispatchEvent(event);
         let dropdown = document
           .getElementById(elem)
