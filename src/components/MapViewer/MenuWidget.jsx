@@ -1656,7 +1656,7 @@ class MenuWidget extends React.Component {
   deleteLayer(layer) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     for (var i = 0; i < checkedLayers.length; i++) {
-      if (checkedLayers[i] == layer) {
+      if (checkedLayers[i] === layer) {
         checkedLayers.splice(i, 1);
       }
     }
