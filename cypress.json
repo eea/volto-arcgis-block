@@ -11,7 +11,7 @@
   },
   "chromeWebSecurity": false,
   "retries": {
-    "runMode": 0,
+    "runMode": 8,
     "OpenMode": 0
   }
 }
