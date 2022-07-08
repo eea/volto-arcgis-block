@@ -19,7 +19,7 @@ import MenuWidget from './MenuWidget';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl;
-let mapStatus = {};
+
 const CheckLanguage = () => {
   const { locale } = useIntl();
   intl.setLocale(locale);
@@ -50,20 +50,6 @@ class MapViewer extends React.Component {
     this.state = {};
   }
 
-  setCenterState(centerStatus) {
-    mapStatus.center = centerStatus;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
-  }
-
-  setZoomState(zoomStatus) {
-    mapStatus.zoom = zoomStatus;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
-  }
-
-  recoverState() {
-    return JSON.parse(sessionStorage.getItem('mapStatus'));
-  }
-
   updateArea(shared_value) {
     this.mapViewer.setState({ area: shared_value });
   }
@@ -87,26 +73,17 @@ class MapViewer extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
-
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
       basemap: 'topo',
     });
 
-    if (mapStatus === null || !mapStatus.zoom || !mapStatus.center) {
-      mapStatus = {};
-      mapStatus.zoom = this.mapCfg.zoom;
-      mapStatus.center = this.mapCfg.center;
-    } else {
-      mapStatus = this.recoverState();
-    }
-
     this.view = new MapView({
       container: this.mapdiv.current,
       map: this.map,
-      center: mapStatus.center,
-      zoom: mapStatus.zoom,
+      center: this.mapCfg.center,
+      zoom: this.mapCfg.zoom,
       constraints: {
         minZoom: this.mapCfg.minZoom,
         maxZoom: this.mapCfg.maxZoom,
@@ -121,14 +98,6 @@ class MapViewer extends React.Component {
     this.view.ui.add(this.zoom, {
       position: 'top-right',
     });
-
-    this.view.watch('center', (newValue, oldValue, property, object) => {
-      this.setCenterState(newValue);
-    });
-
-    this.view.watch('zoom', (newValue, oldValue, property, object) => {
-      this.setZoomState(newValue);
-    });
     this.view.popup.autoOpenEnabled = false;
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
@@ -141,10 +110,6 @@ class MapViewer extends React.Component {
     //react component to render itself again
     //this.setState({});
   }
-
-  setWidgetState() {}
-
-  setSaveMapChange() {}
 
   setActiveWidget(widget) {
     if (!widget) {
