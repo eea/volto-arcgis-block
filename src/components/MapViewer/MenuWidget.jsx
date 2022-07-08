@@ -461,6 +461,7 @@ class MenuWidget extends React.Component {
     //to watch the component
     this.setState({});
     this.openMenu();
+    this.loadLayers();
   }
 
   checkUrl() {
@@ -1021,7 +1022,7 @@ class MenuWidget extends React.Component {
     let group = this.getGroup(elem);
     if (elem.checked) {
       this.map.add(this.layers[elem.id]);
-      this.layers[elem.id].visible = true;
+      this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
@@ -1043,12 +1044,14 @@ class MenuWidget extends React.Component {
           elem,
           Object.keys(this.activeLayersJSON).length,
         );
+        this.saveLayer(elem.id);
       }
       let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
+      this.deleteLayer(elem.id);
       this.layers[elem.id].opacity = 1;
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
@@ -1097,7 +1100,6 @@ class MenuWidget extends React.Component {
   toggleDataset(value, id, e) {
     let layerdef = e.getAttribute('defcheck');
     let splitdefCheck = layerdef.split(',');
-
     let layerChecks = [];
     let selector = [];
     if (value) {
@@ -1632,6 +1634,63 @@ class MenuWidget extends React.Component {
     });
   }
 
+  /**
+   * Method to save checked layers
+   */
+  saveLayer(layer) {
+    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    if (checkedLayers === null) {
+      checkedLayers = [layer];
+      sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+    } else {
+      if (!checkedLayers.includes(layer)) {
+        checkedLayers.push(layer);
+      }
+      sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+    }
+  }
+
+  /**
+   * Method to delete checked layers
+   */
+  deleteLayer(layer) {
+    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    for (var i = 0; i < checkedLayers.length; i++) {
+      if (checkedLayers[i] === layer) {
+        checkedLayers.splice(i, 1);
+      }
+    }
+    sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+  }
+  /**
+   * Method to load previously checked layers
+   */
+  loadLayers() {
+    let event = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: false,
+    });
+
+    let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    if (layers) {
+      for (let i = 0; i < layers.length; i++) {
+        let elem = layers[i];
+        let node = document.getElementById(elem);
+        node.dispatchEvent(event);
+        let dropdown = document
+          .getElementById(elem)
+          .closest('.map-menu-dropdown');
+        dropdown
+          .querySelector('.ccl-expandable__button')
+          .setAttribute('aria-expanded', 'true');
+        let scrollPosition = document
+          .getElementById(elem)
+          .closest('.map-menu-product-dropdown').offsetTop;
+        document.querySelector('.panels').scrollTop = scrollPosition;
+      }
+    }
+  }
   /**
    * Method to change between tabs
    */
