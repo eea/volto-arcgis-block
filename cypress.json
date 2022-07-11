@@ -3,7 +3,7 @@
   "viewportWidth": 1280,
   "defaultCommandTimeout": 15000,
   "reporter": "junit",
-  "video": false,
+  "video": true,
   "reporterOptions": {
     "mochaFile": "cypress/reports/cypress-[hash].xml",
     "jenkinsMode": true,
