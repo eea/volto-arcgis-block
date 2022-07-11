@@ -123,22 +123,16 @@
   font-family: 'ccl-icons';
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  -webkit-transition: all 0.3s ease-in-out;
-  transition: all 0.3s ease-in-out;
 }
 
 .use-cases-dropdown .ccl-expandable__button[aria-expanded='false']::after {
   content: '\e914';
   transform: rotate(0deg);
-  -webkit-transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
 }
 
 .use-cases-dropdown .ccl-expandable__button[aria-expanded='true']::after {
   content: '\e914';
   transform: rotate(-180deg);
-  -webkit-transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
 }
 
 .use-cases-dropdown .ccl-expandable__button::after {

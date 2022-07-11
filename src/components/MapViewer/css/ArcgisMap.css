@@ -411,6 +411,7 @@
 }
 
 .map-menu-dropdown .ccl-expandable__button .dropdown-icon {
+  height: 1.25rem;
   margin-right: 1rem;
   color: black;
 }
@@ -419,16 +420,12 @@
   .ccl-expandable__button[aria-expanded='false']
   .dropdown-icon {
   transform: rotate(0deg);
-  -webkit-transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
 }
 
 .map-menu-dropdown
   .ccl-expandable__button[aria-expanded='true']
   .dropdown-icon {
   transform: rotate(90deg);
-  -webkit-transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
 }
 
 .map-menu-dropdown .ccl-expandable__button::after {
@@ -840,6 +837,7 @@
 
 .right-panel-content {
   overflow: auto;
+  height: 100%;
   padding: 1rem;
 }
 
