@@ -382,7 +382,9 @@ class UseCasesMapViewer extends React.Component {
                 if (data_country > 0) {
                   string += `<div>${data_country} Use cases with one or multi-country coverage</div>`;
                 }
-
+                if (data.features.length === 0) {
+                  string += `<div>0 Use cases</div>`;
+                }
                 view.popup.open({
                   location: {
                     latitude: response.results[0].graphic.geometry.latitude,
