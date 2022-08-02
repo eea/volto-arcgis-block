@@ -1,8 +1,8 @@
 const config = {
   Map: {
     div: 'mapDiv',
-    center: [15, 50],
-    zoom: 3,
+    center: [5, 52],
+    zoom: 4,
     minZoom: 3,
     maxZoom: 20,
   },
