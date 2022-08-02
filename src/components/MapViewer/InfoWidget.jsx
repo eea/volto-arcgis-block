@@ -155,12 +155,12 @@ class InfoWidget extends React.Component {
                 let data = response.value;
                 let layer = layerTypes[index];
                 let properties = [];
-                let message = "No data available for this point in this layer";
+                let message = 'No data available for this point in this layer';
                 if (response.status === 'rejected') {
                   this.infoData[index] = {
                     title: layer.title,
                     data: properties,
-                    message: "No data avaliable for this layer"
+                    message: 'No data avaliable for this layer',
                   };
                 } else {
                   if (layer.isTimeSeries) {
