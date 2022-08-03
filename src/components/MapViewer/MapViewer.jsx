@@ -102,8 +102,8 @@ class MapViewer extends React.Component {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
-      this.setCenterState(this.mapCfg.zoom);
-      this.setZoomState(this.mapCfg.center);
+      this.setCenterState(this.mapCfg.center);
+      this.setZoomState(this.mapCfg.zoom);
     } else {
       mapStatus = this.recoverState();
     }

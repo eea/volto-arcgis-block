@@ -1031,7 +1031,7 @@ class MenuWidget extends React.Component {
           .querySelector('input');
         elem.title = dataset.title;
         let groupLayers = this.getGroupLayers(group);
-        if (groupLayers.length > 0 && !this.activeLayersJSON[groupLayers[0]]) {
+        if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
         }
 
@@ -1044,8 +1044,8 @@ class MenuWidget extends React.Component {
           elem,
           Object.keys(this.activeLayersJSON).length,
         );
-        this.saveLayer(elem.id);
       }
+      this.saveLayer(elem.id);
       let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);

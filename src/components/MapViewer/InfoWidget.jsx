@@ -155,10 +155,12 @@ class InfoWidget extends React.Component {
                 let data = response.value;
                 let layer = layerTypes[index];
                 let properties = [];
+                let message = 'No data available for this point in this layer';
                 if (response.status === 'rejected') {
                   this.infoData[index] = {
                     title: layer.title,
                     data: properties,
+                    message: 'No data avaliable for this layer',
                   };
                 } else {
                   if (layer.isTimeSeries) {
@@ -209,6 +211,7 @@ class InfoWidget extends React.Component {
                           title: layer.title,
                           data: properties,
                           time: true,
+                          message: message,
                         };
                         break;
                       case 'wmts':
@@ -216,6 +219,7 @@ class InfoWidget extends React.Component {
                           title: layer.title,
                           data: properties,
                           time: true,
+                          message: message,
                         };
                         break;
                       case 'featureLayer':
@@ -223,6 +227,7 @@ class InfoWidget extends React.Component {
                           title: layer.title,
                           data: data,
                           time: true,
+                          message: message,
                         };
                         break;
                       default:
@@ -268,12 +273,14 @@ class InfoWidget extends React.Component {
                         this.infoData[index] = {
                           title: layer.title,
                           data: properties,
+                          message: message,
                         };
                         break;
                       case 'wmts':
                         this.infoData[index] = {
                           title: layer.title,
                           data: properties,
+                          message: message,
                         };
                         break;
                       case 'featureLayer':
@@ -288,6 +295,7 @@ class InfoWidget extends React.Component {
                         this.infoData[index] = {
                           title: layer.title,
                           data: Object.entries(properties),
+                          message: message,
                         };
                         break;
                       default:
@@ -881,11 +889,11 @@ class InfoWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="info-container">
-          <div tooltip="Info" direction="left" type="widget">
+          <div tooltip="Layer info" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="info_button"
-              aria-label="Info"
+              aria-label="Layer info"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
               tabIndex="0"
@@ -979,7 +987,9 @@ class InfoWidget extends React.Component {
                       this.loadInfoTable(this.state.layerIndex)}
                     {this.state.pixelInfo || this.state.popup ? (
                       noData && (
-                        <span className="info-panel-empty">No data</span>
+                        <span className="info-panel-empty">
+                          {this.infoData[this.state.layerIndex].message}
+                        </span>
                       )
                     ) : (
                       <span className="info-panel-empty">
