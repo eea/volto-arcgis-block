@@ -226,18 +226,19 @@ class InfoWidget extends React.Component {
             <span>{regionFeatures.length} </span>
             use cases
           </div>
+          <div className="use-case-button-back">
+            <button
+              tabIndex="0"
+              onClick={() => {
+                navigationControl.returnToPrevious();
+              }}
+            >
+              <span className="esri-icon-left-arrow"></span>
+              Back
+            </button>
+          </div>
           <div className="use-cases-products-list">
             <div key={selectedRegion} className="use-cases-dropdown">
-              <button
-                className="use-case-button-back"
-                tabIndex="0"
-                onClick={() => {
-                  navigationControl.returnToPrevious();
-                }}
-              >
-                <span className="esri-icon-left-arrow"></span>
-                Back
-              </button>
               {this.getDataBrief(regionFeatures)}
             </div>
           </div>
