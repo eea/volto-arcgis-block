@@ -286,6 +286,10 @@ class AreaWidget extends React.Component {
             )}
             <div className="right-panel-content">
               <div className="area-panel">
+                <div className="area-header">
+                  Chose one of the above area selection modes from the list and
+                  select the desired area on the map to download the dataset
+                </div>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
                     <div className="ccl-form-group">

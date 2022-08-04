@@ -196,7 +196,8 @@
 }
 
 .esri-measurement p {
-  font-size: 1rem;
+  font-size: 0.875rem;
+  line-height: inherit;
 }
 
 .measurement-coords {
@@ -257,6 +258,7 @@
 .area-container {
   display: flex;
   box-shadow: none !important;
+  font-size: 0.875rem;
 }
 
 .area-panel .ccl-form-group:not(:first-of-type) {
@@ -267,6 +269,10 @@
   padding: 0;
   border: none;
   margin: 0;
+}
+
+.area-container .area-header {
+  margin-bottom: 1rem;
 }
 
 /* Left menu */
