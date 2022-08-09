@@ -1,4 +1,4 @@
-# [WIP] Volto Arcgis Block
+# Volto Arcgis Block for Copernicus site
 
 [![Releases](https://img.shields.io/github/v/release/eea/volto-arcgis-block)](https://github.com/eea/volto-arcgis-block/releases)
 
