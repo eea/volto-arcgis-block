@@ -15,7 +15,15 @@
 [![Duplicated Lines (%)](https://sonarqube.eea.europa.eu/api/project_badges/measure?project=volto-arcgis-block-develop&metric=duplicated_lines_density)](https://sonarqube.eea.europa.eu/dashboard?id=volto-arcgis-block-develop)
 
 ## ArcGIS Map integration for Volto blocks
-****This product is in development, at this time it is not recommended to use it.***
+
+This Volto block allows adding a map block into your site but it has several dependencies.
+
+This block has been implemented to fit the needs of the Copernicus Land Monitoring Service, and as such,
+it requires an specific endpoint on the Plone site to retrieve the information to be shown in the map.
+
+This endpoint is called `@mapviewer` and an example implementation is in the [clms.types](https://github.com/eea/clms.types/blob/master/clms/types/restapi/mapviewer_service/lrf_get.py) product.
+
+This means that the product is not generic enough to show any ArcGIS map.
 
 ![Demo example volto-arcgis-block](docs/demo.gif)
 
