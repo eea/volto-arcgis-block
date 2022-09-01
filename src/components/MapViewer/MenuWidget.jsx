@@ -339,7 +339,9 @@ export const CheckLogin = () => {
             </div>
             <button
               className="ccl-button ccl-button-green"
-              onClick={() => document.querySelector('.header-login-link').click()}
+              onClick={() =>
+                document.querySelector('.header-login-link').click()
+              }
             >
               Register/Login
             </button>
