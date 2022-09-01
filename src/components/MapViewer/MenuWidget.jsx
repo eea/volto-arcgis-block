@@ -8,6 +8,7 @@ import { useIntl } from 'react-intl';
 import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
+import CclLoginModal from '@eeacms/volto-clms-theme/components/CclLoginModal/CclLoginModal';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
 const popupSettings = {
@@ -334,22 +335,10 @@ export const CheckLogin = () => {
       {!isLoggedIn && (
         <div className="login-block">
           <div className="login-content">
-            <a
-              className="ccl-button ccl-button--default"
-              href={'https://ecas.acceptance.ec.europa.eu/cas/'}
-            >
-              Login to download the data
-            </a>
-            <p className="login-block-new">
-              New user?{' '}
-              <a
-                href={
-                  'https://ecas.acceptance.ec.europa.eu/cas/eim/external/register.cgi'
-                }
-              >
-                Follow this link to register
-              </a>
-            </p>
+            <div className="login-text">
+              <p>Register/Login to download the data</p>
+            </div>
+            <CclLoginModal classname="ccl-button ccl-button-green"/>
           </div>
         </div>
       )}
