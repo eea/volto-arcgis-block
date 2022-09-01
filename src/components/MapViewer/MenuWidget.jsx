@@ -8,7 +8,6 @@ import { useIntl } from 'react-intl';
 import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-import CclLoginModal from '@eeacms/volto-clms-theme/components/CclLoginModal/CclLoginModal';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
 const popupSettings = {
@@ -338,7 +337,12 @@ export const CheckLogin = () => {
             <div className="login-text">
               <p>Register/Login to download the data</p>
             </div>
-            <CclLoginModal classname="ccl-button ccl-button-green"/>
+            <button
+              className="ccl-button ccl-button-green"
+              onClick={() => document.querySelector('.header-login-link').click()}
+            >
+              Register/Login
+            </button>
           </div>
         </div>
       )}
