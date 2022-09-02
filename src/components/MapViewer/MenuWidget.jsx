@@ -3,8 +3,6 @@ import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
-import { useHistory } from 'react-router-dom';
-import { useIntl } from 'react-intl';
 import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
@@ -33,8 +31,6 @@ export const AddCartItem = ({
   const [message, setMessage] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
   const [modal, setModal] = useState(false);
-  const history = useHistory();
-  const { locale } = useIntl();
 
   const checkArea = () => {
     let check = document.querySelector('.area-panel input:checked').value;
