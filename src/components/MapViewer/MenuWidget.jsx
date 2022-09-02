@@ -334,22 +334,17 @@ export const CheckLogin = () => {
       {!isLoggedIn && (
         <div className="login-block">
           <div className="login-content">
-            <a
-              className="ccl-button ccl-button--default"
-              href={'https://ecas.acceptance.ec.europa.eu/cas/'}
+            <div className="login-text">
+              <p>Register/Login to download the data</p>
+            </div>
+            <button
+              className="ccl-button ccl-button-green"
+              onClick={() =>
+                document.querySelector('.header-login-link').click()
+              }
             >
-              Login to download the data
-            </a>
-            <p className="login-block-new">
-              New user?{' '}
-              <a
-                href={
-                  'https://ecas.acceptance.ec.europa.eu/cas/eim/external/register.cgi'
-                }
-              >
-                Follow this link to register
-              </a>
-            </p>
+              Register/Login
+            </button>
           </div>
         </div>
       )}
