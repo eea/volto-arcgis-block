@@ -61,13 +61,15 @@ export const AddCartItem = ({
       }
     }
     if (download) {
-      setMessage(area ? 'Added to cart' : 'Select an area');
-      showMessageTimer();
       if (area) {
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
-          history.push('/' + locale + '/cart');
+          setMessage('Added to cart');
+          showMessageTimer();
         });
+      } else {
+        setMessage('Select an area');
+        showMessageTimer();
       }
     } else {
       setModal(false);
@@ -561,6 +563,7 @@ class MenuWidget extends React.Component {
       );
       index++;
     }
+    let style = this.props.download ? { display: 'none' } : {};
 
     return (
       <div
@@ -576,6 +579,7 @@ class MenuWidget extends React.Component {
           onKeyDown={this.toggleDropdownContent.bind(this)}
           tabIndex="0"
           role="button"
+          style={style}
         >
           <div className="dropdown-icon">
             <FontAwesomeIcon icon={['fas', 'caret-right']} />
@@ -638,6 +642,8 @@ class MenuWidget extends React.Component {
       var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
       dataset_def.push(idDatasetB);
     }
+    let style = this.props.download ? { display: 'none' } : {};
+
     return (
       <div
         className="map-menu-product-dropdown"
@@ -654,6 +660,7 @@ class MenuWidget extends React.Component {
             onKeyDown={this.toggleDropdownContent.bind(this)}
             tabIndex="0"
             role="button"
+            style={style}
           >
             <div className="dropdown-icon">
               <FontAwesomeIcon icon={['fas', 'caret-right']} />
@@ -774,6 +781,9 @@ class MenuWidget extends React.Component {
         dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
       );
     }
+    let style = this.props.download
+      ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
+      : {};
 
     return (
       <div
@@ -791,6 +801,7 @@ class MenuWidget extends React.Component {
             onKeyDown={this.toggleDropdownContent.bind(this)}
             tabIndex="0"
             role="button"
+            style={style}
           >
             <div
               className="dropdown-icon"
@@ -832,17 +843,23 @@ class MenuWidget extends React.Component {
                   )}
                 </label>
                 <div className="map-menu-icons">
-                  <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
-                    <Popup
-                      trigger={
-                        <span className="map-menu-icon">
-                          <FontAwesomeIcon icon={['fa', 'info-circle']} />
-                        </span>
-                      }
-                      content="Info"
-                      {...popupSettings}
-                    />
-                  </a>
+                  {!this.props.download && (
+                    <a
+                      href={dataset.DatasetURL}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Popup
+                        trigger={
+                          <span className="map-menu-icon">
+                            <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                          </span>
+                        }
+                        content="Info"
+                        {...popupSettings}
+                      />
+                    </a>
+                  )}
                   {!this.props.download && dataset.Downloadable ? (
                     <AddCartItem
                       cartData={this.compCfg}
@@ -971,7 +988,11 @@ class MenuWidget extends React.Component {
         });
       }
     }
-    let style = handlingLevel ? { display: 'none' } : {};
+    let style = handlingLevel
+      ? { display: 'none' }
+      : this.props.download
+      ? { paddingLeft: '4rem' }
+      : {};
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -1753,7 +1774,7 @@ class MenuWidget extends React.Component {
           <div className="map-menu tab-container" id="tabcontainer">
             <div className="tabs" role="tablist">
               <span
-                className="tab tab-selected"
+                className={!this.props.download ? 'tab tab-selected' : 'tab'}
                 id="products_label"
                 role="tab"
                 aria-controls="products_panel"
@@ -1780,7 +1801,7 @@ class MenuWidget extends React.Component {
               </span>
               {this.props.download && (
                 <span
-                  className="tab"
+                  className={this.props.download ? 'tab tab-selected' : 'tab'}
                   id="download_label"
                   role="tab"
                   aria-controls="download_panel"
@@ -1796,7 +1817,9 @@ class MenuWidget extends React.Component {
             </div>
             <div className="panels" id="paneles">
               <div
-                className="panel panel-selected"
+                className={
+                  !this.props.download ? 'panel panel-selected' : 'panel'
+                }
                 id="products_panel"
                 role="tabpanel"
                 aria-hidden="false"
@@ -1831,7 +1854,9 @@ class MenuWidget extends React.Component {
               </div>
               {this.props.download && this.props.view && (
                 <div
-                  className="panel"
+                  className={
+                    this.props.download ? 'panel panel-selected' : 'panel'
+                  }
                   id="download_panel"
                   role="tabpanel"
                   aria-hidden="true"
