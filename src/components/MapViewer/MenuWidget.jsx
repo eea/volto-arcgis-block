@@ -441,7 +441,6 @@ class MenuWidget extends React.Component {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
-      // document.querySelector('.area-panel').style.display = 'block';
       document.querySelector('.area-panel input:checked').click();
       document.querySelector('.map-product-checkbox input').click();
       let dropdown = document.querySelector(
@@ -1668,7 +1667,7 @@ class MenuWidget extends React.Component {
     });
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (layers) {
+    if (layers && !this.props.download) {
       for (let i = 0; i < layers.length; i++) {
         let elem = layers[i];
         let node = document.getElementById(elem);
