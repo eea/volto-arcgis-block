@@ -377,30 +377,6 @@ class AreaWidget extends React.Component {
                         </div>
                       </label>
                     </div>
-                    <div>
-                      {/* <div class="map-download-resource">
-                        <div class="ccl-form">
-                          <div class="map-download-header">
-                            <label for="download_area_select" class="map-download-header-title">Download resource as</label>
-                            <span class="info-icon" tooltip="Info" direction="up">
-                              <FontAwesomeIcon
-                                className="map-menu-icon"
-                                icon={['fas', 'info-circle']}
-                              />
-                            </span>
-                          </div>
-                          <div class="ccl-select-container">
-                            <div class="ccl-select-container">
-                              <select class="ccl-select" id="download_area_select" name="" >
-                                <option value="option1">GeoTiff</option>
-                                <option value="option2">ESRI Geodatabase</option>
-                                <option value="option3">SQLite Database</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      </div> */}
-                    </div>
                   </fieldset>
                 </div>
               </div>
