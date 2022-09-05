@@ -3,8 +3,6 @@ import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
-import { useHistory } from 'react-router-dom';
-import { useIntl } from 'react-intl';
 import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
@@ -33,8 +31,6 @@ export const AddCartItem = ({
   const [message, setMessage] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
   const [modal, setModal] = useState(false);
-  const history = useHistory();
-  const { locale } = useIntl();
 
   const checkArea = () => {
     let check = document.querySelector('.area-panel input:checked').value;
@@ -61,13 +57,15 @@ export const AddCartItem = ({
       }
     }
     if (download) {
-      setMessage(area ? 'Added to cart' : 'Select an area');
-      showMessageTimer();
       if (area) {
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
-          history.push('/' + locale + '/cart');
+          setMessage('Added to cart');
+          showMessageTimer();
         });
+      } else {
+        setMessage('Select an area');
+        showMessageTimer();
       }
     } else {
       setModal(false);
@@ -334,22 +332,17 @@ export const CheckLogin = () => {
       {!isLoggedIn && (
         <div className="login-block">
           <div className="login-content">
-            <a
-              className="ccl-button ccl-button--default"
-              href={'https://ecas.acceptance.ec.europa.eu/cas/'}
+            <div className="login-text">
+              <p>Register/Login to download the data</p>
+            </div>
+            <button
+              className="ccl-button ccl-button-green"
+              onClick={() =>
+                document.querySelector('.header-login-link').click()
+              }
             >
-              Login to download the data
-            </a>
-            <p className="login-block-new">
-              New user?{' '}
-              <a
-                href={
-                  'https://ecas.acceptance.ec.europa.eu/cas/eim/external/register.cgi'
-                }
-              >
-                Follow this link to register
-              </a>
-            </p>
+              Register/Login
+            </button>
           </div>
         </div>
       )}
@@ -446,7 +439,6 @@ class MenuWidget extends React.Component {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
-      // document.querySelector('.area-panel').style.display = 'block';
       document.querySelector('.area-panel input:checked').click();
       document.querySelector('.map-product-checkbox input').click();
       let dropdown = document.querySelector(
@@ -567,6 +559,7 @@ class MenuWidget extends React.Component {
       );
       index++;
     }
+    let style = this.props.download ? { display: 'none' } : {};
 
     return (
       <div
@@ -582,6 +575,7 @@ class MenuWidget extends React.Component {
           onKeyDown={this.toggleDropdownContent.bind(this)}
           tabIndex="0"
           role="button"
+          style={style}
         >
           <div className="dropdown-icon">
             <FontAwesomeIcon icon={['fas', 'caret-right']} />
@@ -644,6 +638,8 @@ class MenuWidget extends React.Component {
       var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
       dataset_def.push(idDatasetB);
     }
+    let style = this.props.download ? { display: 'none' } : {};
+
     return (
       <div
         className="map-menu-product-dropdown"
@@ -660,6 +656,7 @@ class MenuWidget extends React.Component {
             onKeyDown={this.toggleDropdownContent.bind(this)}
             tabIndex="0"
             role="button"
+            style={style}
           >
             <div className="dropdown-icon">
               <FontAwesomeIcon icon={['fas', 'caret-right']} />
@@ -780,6 +777,9 @@ class MenuWidget extends React.Component {
         dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
       );
     }
+    let style = this.props.download
+      ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
+      : {};
 
     return (
       <div
@@ -797,6 +797,7 @@ class MenuWidget extends React.Component {
             onKeyDown={this.toggleDropdownContent.bind(this)}
             tabIndex="0"
             role="button"
+            style={style}
           >
             <div
               className="dropdown-icon"
@@ -838,17 +839,23 @@ class MenuWidget extends React.Component {
                   )}
                 </label>
                 <div className="map-menu-icons">
-                  <a href={dataset.DatasetURL} target="_blank" rel="noreferrer">
-                    <Popup
-                      trigger={
-                        <span className="map-menu-icon">
-                          <FontAwesomeIcon icon={['fa', 'info-circle']} />
-                        </span>
-                      }
-                      content="Info"
-                      {...popupSettings}
-                    />
-                  </a>
+                  {!this.props.download && (
+                    <a
+                      href={dataset.DatasetURL}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Popup
+                        trigger={
+                          <span className="map-menu-icon">
+                            <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                          </span>
+                        }
+                        content="Info"
+                        {...popupSettings}
+                      />
+                    </a>
+                  )}
                   {!this.props.download && dataset.Downloadable ? (
                     <AddCartItem
                       cartData={this.compCfg}
@@ -977,7 +984,11 @@ class MenuWidget extends React.Component {
         });
       }
     }
-    let style = handlingLevel ? { display: 'none' } : {};
+    let style = handlingLevel
+      ? { display: 'none' }
+      : this.props.download
+      ? { paddingLeft: '4rem' }
+      : {};
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -1673,7 +1684,7 @@ class MenuWidget extends React.Component {
     });
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (layers) {
+    if (layers && !this.props.download) {
       for (let i = 0; i < layers.length; i++) {
         let elem = layers[i];
         let node = document.getElementById(elem);
@@ -1759,7 +1770,7 @@ class MenuWidget extends React.Component {
           <div className="map-menu tab-container" id="tabcontainer">
             <div className="tabs" role="tablist">
               <span
-                className="tab tab-selected"
+                className={!this.props.download ? 'tab tab-selected' : 'tab'}
                 id="products_label"
                 role="tab"
                 aria-controls="products_panel"
@@ -1786,7 +1797,7 @@ class MenuWidget extends React.Component {
               </span>
               {this.props.download && (
                 <span
-                  className="tab"
+                  className={this.props.download ? 'tab tab-selected' : 'tab'}
                   id="download_label"
                   role="tab"
                   aria-controls="download_panel"
@@ -1802,7 +1813,9 @@ class MenuWidget extends React.Component {
             </div>
             <div className="panels" id="paneles">
               <div
-                className="panel panel-selected"
+                className={
+                  !this.props.download ? 'panel panel-selected' : 'panel'
+                }
                 id="products_panel"
                 role="tabpanel"
                 aria-hidden="false"
@@ -1837,7 +1850,9 @@ class MenuWidget extends React.Component {
               </div>
               {this.props.download && this.props.view && (
                 <div
-                  className="panel"
+                  className={
+                    this.props.download ? 'panel panel-selected' : 'panel'
+                  }
                   id="download_panel"
                   role="tabpanel"
                   aria-hidden="true"
