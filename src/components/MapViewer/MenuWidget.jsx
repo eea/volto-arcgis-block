@@ -32,7 +32,7 @@ export const AddCartItem = ({
   const [showMessage, setShowMessage] = useState(false);
   const [modal, setModal] = useState(false);
 
-  const checkArea = () => {
+  const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
     let area = {};
     if (check === 'area') {
@@ -68,7 +68,7 @@ export const AddCartItem = ({
         showMessageTimer();
       }
     } else {
-      setModal(false);
+      closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
         setMessage('Added to cart');
@@ -121,11 +121,13 @@ export const AddCartItem = ({
     }, 4000);
   };
 
-  const showModal = () => {
+  const showModal = (e) => {
+    if (e) e.stopPropagation();
     setModal(true);
   };
 
-  const closeModal = () => {
+  const closeModal = (e) => {
+    if (e) e.stopPropagation();
     setModal(false);
   };
 
@@ -144,7 +146,7 @@ export const AddCartItem = ({
     }
   };
 
-  const selectBBox = () => {
+  const selectBBox = (e) => {
     if (
       !mapViewer.activeWidget ||
       !mapViewer.activeWidget.container.current.classList.contains(
@@ -159,7 +161,7 @@ export const AddCartItem = ({
       let node = document.getElementById('map_area_button');
       node.dispatchEvent(event);
     }
-    closeModal();
+    closeModal(e);
   };
 
   const showLogin = (e) => {
@@ -184,6 +186,7 @@ export const AddCartItem = ({
           floating
           size="small"
           style={{
+            zIndex: 2,
             transform: download
               ? 'translate(1rem, 4rem)'
               : checkScrollPosition(),
@@ -222,8 +225,8 @@ export const AddCartItem = ({
               <span
                 className="ccl-icon-close"
                 aria-label="Close"
-                onClick={() => closeModal()}
-                onKeyDown={() => closeModal()}
+                onClick={(e) => closeModal(e)}
+                onKeyDown={(e) => closeModal(e)}
                 tabIndex="0"
                 role="button"
               ></span>
@@ -234,26 +237,44 @@ export const AddCartItem = ({
                 <ul>
                   <li>
                     <p>
-                      Add full dataset (Note: Download process will take longer
-                      and for some very large datasets, a Bounding box for
-                      Europe is selected by default).
+                      If you would like to download entire dataset select Add
+                      entire dataset (Note: download will take longer for large
+                      datasets, and the bounding box for Europe is selected by
+                      default).
                     </p>
                   </li>
-                  <li>
-                    <p>
-                      Select bounding box if you would like to download one or
-                      several datasets for area(s) of interest.
-                    </p>
-                  </li>
-                  {dataset.IsTimeSeries && (
+                  <br />
+                  {dataset.IsTimeSeries ? (
+                    <>
+                      <li>
+                        <p>
+                          if you would like to download data for your area of
+                          interest select first area of interest and then click
+                          download button next to the dataset (Note: the time
+                          range to download will be the first date of the
+                          dataset but if it is not informed in the metadata it
+                          will be the last 10 days).
+                        </p>
+                      </li>
+                      <br />
+                      <li>
+                        <p>
+                          If you would like to download data for your area of
+                          interest and for the selected time interval, please
+                          follow this{' '}
+                          <a href={dataset.DatasetURL + '/download-by-area'}>
+                            link
+                          </a>
+                          .
+                        </p>
+                      </li>
+                    </>
+                  ) : (
                     <li>
                       <p>
-                        If you need to select a time period for the dataset go
-                        to{' '}
-                        <a href={dataset.DatasetURL + '/download-by-area'}>
-                          Download by area
-                        </a>
-                        .
+                        if you would like to download data for your area of
+                        interest select first area of interest and then click
+                        download button next to the dataset.
                       </p>
                     </li>
                   )}
@@ -266,28 +287,28 @@ export const AddCartItem = ({
                   <>
                     <button
                       className="ccl-button ccl-button-green"
-                      onClick={() => checkArea()}
+                      onClick={(e) => checkArea(e)}
                     >
-                      Add full dataset
+                      Add entire dataset
                     </button>
                     <button
                       className="ccl-button ccl-button--default"
-                      onClick={() => selectBBox()}
+                      onClick={(e) => selectBBox(e)}
                     >
-                      Select bounding box
+                      Area of interest
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       className="ccl-button ccl-button-green"
-                      onClick={() => checkArea()}
+                      onClick={(e) => checkArea(e)}
                     >
                       Add to cart
                     </button>
                     <button
                       className="ccl-button ccl-button--default"
-                      onClick={() => closeModal()}
+                      onClick={(e) => closeModal(e)}
                     >
                       Cancel
                     </button>
@@ -301,10 +322,10 @@ export const AddCartItem = ({
               <span
                 className={'map-menu-icon map-menu-icon-login'}
                 onClick={(e) => {
-                  isLoggedIn ? showModal() : showLogin(e);
+                  isLoggedIn ? showModal(e) : showLogin(e);
                 }}
                 onKeyDown={(e) => {
-                  isLoggedIn ? showModal() : showLogin(e);
+                  isLoggedIn ? showModal(e) : showLogin(e);
                 }}
                 tabIndex="0"
                 role="button"
@@ -844,6 +865,8 @@ class MenuWidget extends React.Component {
                       href={dataset.DatasetURL}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
                     >
                       <Popup
                         trigger={

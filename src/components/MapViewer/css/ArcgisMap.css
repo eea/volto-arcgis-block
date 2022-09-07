@@ -643,6 +643,7 @@
 #download_panel .area-panel {
   width: 100%;
   height: 100%;
+  font-size: 1rem;
 }
 
 .ui.floating.message {
@@ -789,6 +790,11 @@
 .esri-time-slider__min-date + div,
 .esri-time-slider__max-date + div {
   display: none;
+}
+
+/* Scale */
+.esri-scale-bar {
+  z-index: 0;
 }
 
 /* Modal */
