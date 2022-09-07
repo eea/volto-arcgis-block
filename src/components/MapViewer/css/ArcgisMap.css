@@ -792,6 +792,11 @@
   display: none;
 }
 
+/* Scale */
+.esri-scale-bar {
+  z-index: 0;
+}
+
 /* Modal */
 .map-download-modal.ui.modal {
   margin: 0 !important;

@@ -246,7 +246,7 @@ class AreaWidget extends React.Component {
     });
 
     this.props.download
-      ? this.props.view.ui.add(this.container)
+      ? this.container !== null && this.props.view.ui.add(this.container)
       : this.props.view.ui.add(this.container.current, 'top-right');
   }
 
