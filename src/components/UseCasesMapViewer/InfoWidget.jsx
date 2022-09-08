@@ -259,7 +259,6 @@ class InfoWidget extends React.Component {
    */
   proccessDataSummary() {
     let topicProducts = this.getDifferentTopicUsed(this.features);
-    let elements = [];
 
     for (let topicProduct in topicProducts) {
       processedData[topicProducts[topicProduct]] = [];
@@ -349,7 +348,6 @@ class InfoWidget extends React.Component {
     let topicProducts = [];
 
     for (let feature in features) {
-      debugger;
       let topics = features[feature].attributes.Use_case_topics.split(',');
 
       for (let topic in topics) {
