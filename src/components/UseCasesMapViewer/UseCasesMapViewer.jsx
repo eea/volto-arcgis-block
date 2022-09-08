@@ -353,21 +353,10 @@ class UseCasesMapViewer extends React.Component {
               let region = response.results[0].graphic.attributes.Region;
 
               layerControl.getRegionInfo(region, (data) => {
-                let data_eu = data.features.filter(
-                  (a) => a.attributes.Spatial_coverage === 'EU',
-                ).length;
-                let data_eea = data.features.filter(
-                  (a) => a.attributes.Spatial_coverage === 'EEA',
-                ).length;
-                let data_global = data.features.filter(
-                  (a) => a.attributes.Spatial_coverage === 'GLOBAL',
-                ).length;
-                let data_country = data.features.filter(
-                  (a) =>
-                    a.attributes.Spatial_coverage !== 'EU' &&
-                    a.attributes.Spatial_coverage !== 'EEA' &&
-                    a.attributes.Spatial_coverage !== 'GLOBAL',
-                ).length;
+                let data_eu = [...new Set(data.features.filter((a) => a.attributes.Spatial_coverage === 'EU').map(item => item.attributes.Use_case_id))].length;
+                let data_eea = [...new Set(data.features.filter((a) => a.attributes.Spatial_coverage === 'EEA').map(item => item.attributes.Use_case_id))].length;
+                let data_global = [...new Set(data.features.filter((a) => a.attributes.Spatial_coverage === 'GLOBAL').map(item => item.attributes.Use_case_id))].length;
+                let data_country = [...new Set(data.features.filter((a) => a.attributes.Spatial_coverage !== 'EU' && a.attributes.Spatial_coverage !== 'EEA' && a.attributes.Spatial_coverage !== 'GLOBAL').map(item => item.attributes.Use_case_id))].length;
 
                 let string = '';
                 if (data_eu > 0) {

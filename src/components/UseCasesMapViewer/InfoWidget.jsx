@@ -58,16 +58,18 @@ class InfoWidget extends React.Component {
           </div>
           <div className="use-case-detail-content">
             <div className="use-case-detail-product">
-              {UseCase.Copernicus_Land_Monitoring_Service_products_used}
+              {UseCase.Use_case_topics}
             </div>
             <div className="use-case-detail-title">
               <h3>{UseCase.Use_case_title}</h3>
             </div>
             <div className="use-case-detail-info">
-              <span>{UseCase.Use_case_topics}</span>
               <span>{UseCase.Use_case_submitting_production_year}</span>
               <span>{UseCase.Origin_name}</span>
               <span>{responsibleOrganizationOrPerson}</span>
+            </div>
+            <div className="use-case-detail-info">
+              <b>{UseCase.Copernicus_Land_Monitoring_Service_products_used}</b>
             </div>
             <div className="use-case-detail-description">
               <p>{UseCase.Use_case_summary}</p>
@@ -186,10 +188,12 @@ class InfoWidget extends React.Component {
           regionFeatures.push(this.features[feature].attributes);
         }
       }
+      let count = [...new Set(regionFeatures.map(item => item.Use_case_id))].length;
+      
       return (
         <div>
           <div className="use-cases-products-title">
-            <span>{regionFeatures.length} </span>
+            <span>{count} </span>
             use cases
           </div>
           <div className="use-case-button-back">
@@ -220,10 +224,11 @@ class InfoWidget extends React.Component {
           mapViewer.state.selectedUseCases[feature].attributes,
         );
       }
+      let count = [...new Set(regionFeatures.map(item => item.Use_case_id))].length;
       return (
         <>
           <div className="use-cases-products-title">
-            <span>{regionFeatures.length} </span>
+            <span>{count} </span>
             use cases
           </div>
           <div className="use-case-button-back">
@@ -248,39 +253,37 @@ class InfoWidget extends React.Component {
   }
 
   /**
-   * Transfrom raw data to ordered data by Service products
+   * Transfrom raw data to ordered data by environmental topics
    */
   proccessDataSummary() {
-    let serviceProducts = this.getDifferentproductUsed(this.features);
+    let topicProducts = this.getDifferentTopicUsed(this.features);
     let elements = [];
 
-    for (let serviceProduct in serviceProducts) {
-      processedData[serviceProducts[serviceProduct]] = [];
+    for (let topicProduct in topicProducts) {
+      processedData[topicProducts[topicProduct]] = [];
     }
 
     for (let feature in this.features) {
-      elements.push(this.features[feature].attributes);
-    }
+      let topics = this.features[feature].attributes.Use_case_topics.split(',');
 
-    for (let element in elements) {
-      processedData[
-        elements[element].Copernicus_Land_Monitoring_Service_products_used
-      ].push(elements[element]);
+      for (let topic in topics) {
+        processedData[topics[topic]].push(this.features[feature].attributes);
+      }
     }
   }
 
   /**
-   * Creates lateral menu ordered by specified ServiceProduct
+   * Creates lateral menu ordered by specified environmental topic
    * @param {Object} data
-   * @param {String} Copernicus_Land_Monitoring_Service_products_used
+   * @param {String} topic_name
    * @returns lateralMenuDOM
    */
-  getDataSummary(data, Copernicus_Land_Monitoring_Service_products_used) {
+  getDataSummary(data, topic_name) {
     let children = this.getDataBrief(data);
 
     return (
       <div
-        key={Copernicus_Land_Monitoring_Service_products_used}
+        key={topic_name}
         className="use-cases-dropdown"
       >
         <div
@@ -291,7 +294,7 @@ class InfoWidget extends React.Component {
           tabIndex="0"
           role="button"
         >
-          {Copernicus_Land_Monitoring_Service_products_used}
+          {topic_name}
         </div>
         <div className="use-cases-element-container">{children}</div>
       </div>
@@ -322,9 +325,9 @@ class InfoWidget extends React.Component {
   setDOMSummary() {
     this.proccessDataSummary();
     let DOMElements = [];
-    for (let product_use_name in processedData)
+    for (let topic_name in processedData)
       DOMElements.push(
-        this.getDataSummary(processedData[product_use_name], product_use_name),
+        this.getDataSummary(processedData[topic_name], topic_name),
       );
     return <>{DOMElements}</>;
   }
@@ -339,27 +342,24 @@ class InfoWidget extends React.Component {
   }
 
   /**
-   * Returns all different service product names
+   * Returns all different Environmental Topic names
    * @param {Array} features
-   * @returns allServiceProductNames
+   * @returns allTopicNames
    */
-  getDifferentproductUsed(features) {
-    let serviceProducts = [],
-      oldFeatureName = '';
+  getDifferentTopicUsed(features) {
+    let topicProducts = [];
 
     for (let feature in features) {
-      let currentCLMS =
-        features[feature].attributes
-          .Copernicus_Land_Monitoring_Service_products_used;
-      if (
-        currentCLMS !== oldFeatureName &&
-        !serviceProducts.includes(currentCLMS)
-      ) {
-        serviceProducts.push(currentCLMS);
-        oldFeatureName = currentCLMS;
+      debugger
+      let topics = features[feature].attributes.Use_case_topics.split(',');
+
+      for (let topic in topics) {
+        if (!topicProducts.includes(topics[topic])) {
+          topicProducts.push(topics[topic]);
+        }
       }
     }
-    return serviceProducts;
+    return topicProducts.sort();
   }
 
   /**
@@ -406,7 +406,7 @@ class InfoWidget extends React.Component {
         return (
           <>
             <div className="use-cases-products-title">
-              <span>{this.features.length} </span>
+              <span>{[...new Set(this.features.map(item => item.attributes.Use_case_id))].length} </span>
               use cases
             </div>
             <div className="use-cases-products-list">
