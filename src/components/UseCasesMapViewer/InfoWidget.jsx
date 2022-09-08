@@ -188,8 +188,9 @@ class InfoWidget extends React.Component {
           regionFeatures.push(this.features[feature].attributes);
         }
       }
-      let count = [...new Set(regionFeatures.map(item => item.Use_case_id))].length;
-      
+      let count = [...new Set(regionFeatures.map((item) => item.Use_case_id))]
+        .length;
+
       return (
         <div>
           <div className="use-cases-products-title">
@@ -224,7 +225,8 @@ class InfoWidget extends React.Component {
           mapViewer.state.selectedUseCases[feature].attributes,
         );
       }
-      let count = [...new Set(regionFeatures.map(item => item.Use_case_id))].length;
+      let count = [...new Set(regionFeatures.map((item) => item.Use_case_id))]
+        .length;
       return (
         <>
           <div className="use-cases-products-title">
@@ -282,10 +284,7 @@ class InfoWidget extends React.Component {
     let children = this.getDataBrief(data);
 
     return (
-      <div
-        key={topic_name}
-        className="use-cases-dropdown"
-      >
+      <div key={topic_name} className="use-cases-dropdown">
         <div
           className="ccl-expandable__button"
           aria-expanded="false"
@@ -350,7 +349,7 @@ class InfoWidget extends React.Component {
     let topicProducts = [];
 
     for (let feature in features) {
-      debugger
+      debugger;
       let topics = features[feature].attributes.Use_case_topics.split(',');
 
       for (let topic in topics) {
@@ -406,7 +405,15 @@ class InfoWidget extends React.Component {
         return (
           <>
             <div className="use-cases-products-title">
-              <span>{[...new Set(this.features.map(item => item.attributes.Use_case_id))].length} </span>
+              <span>
+                {
+                  [
+                    ...new Set(
+                      this.features.map((item) => item.attributes.Use_case_id),
+                    ),
+                  ].length
+                }{' '}
+              </span>
               use cases
             </div>
             <div className="use-cases-products-list">
