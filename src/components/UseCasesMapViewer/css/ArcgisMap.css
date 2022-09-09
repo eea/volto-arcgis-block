@@ -87,7 +87,7 @@
 }
 
 .use-cases-products-map .esri-legend .esri-legend__service {
-  padding: 1rem;
+  padding: 1rem !important;
   margin-bottom: -1rem;
 }
 
