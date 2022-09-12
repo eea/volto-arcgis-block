@@ -508,9 +508,13 @@ class MenuWidget extends React.Component {
         dropdown
           .querySelector('.ccl-expandable__button')
           .setAttribute('aria-expanded', 'true');
-        scrollPosition = document
+        let mapMenu = document
           .querySelector(elem + ' input')
-          .closest('.map-menu-dataset').offsetTop;
+          .closest('.map-menu-dataset');
+        if (mapMenu) {
+          // mapMenu is null for Corine and was blocking.
+          scrollPosition = mapMenu.offsetTop;
+        }
       }
       document.querySelector('.panels').scrollTop = scrollPosition;
     }
@@ -1711,17 +1715,23 @@ class MenuWidget extends React.Component {
       for (let i = 0; i < layers.length; i++) {
         let elem = layers[i];
         let node = document.getElementById(elem);
-        node.dispatchEvent(event);
-        let dropdown = document
-          .getElementById(elem)
-          .closest('.map-menu-dropdown');
-        dropdown
-          .querySelector('.ccl-expandable__button')
-          .setAttribute('aria-expanded', 'true');
-        let scrollPosition = document
-          .getElementById(elem)
-          .closest('.map-menu-product-dropdown').offsetTop;
-        document.querySelector('.panels').scrollTop = scrollPosition;
+
+        if (node) {
+          if (!node.checked) {
+            // dont uncheck layers checked from URL param
+            node.dispatchEvent(event);
+          }
+          let dropdown = document
+            .getElementById(elem)
+            .closest('.map-menu-dropdown');
+          dropdown
+            .querySelector('.ccl-expandable__button')
+            .setAttribute('aria-expanded', 'true');
+          let scrollPosition = document
+            .getElementById(elem)
+            .closest('.map-menu-product-dropdown').offsetTop;
+          document.querySelector('.panels').scrollTop = scrollPosition;
+        }
       }
     }
   }
