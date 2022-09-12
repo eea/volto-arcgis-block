@@ -1721,16 +1721,17 @@ class MenuWidget extends React.Component {
             // dont uncheck layers checked from URL param
             node.dispatchEvent(event);
           }
-          let dropdown = document
-            .getElementById(elem)
+          let dropdown = node
             .closest('.map-menu-dropdown');
           dropdown
             .querySelector('.ccl-expandable__button')
             .setAttribute('aria-expanded', 'true');
-          let scrollPosition = document
-            .getElementById(elem)
-            .closest('.map-menu-product-dropdown').offsetTop;
-          document.querySelector('.panels').scrollTop = scrollPosition;
+          let productDropdown = node.closest('.map-menu-product-dropdown')
+          let scrollPosition = productDropdown ? productDropdown.offsetTop : dropdown.offsetTop ;
+          let panelsElem = document.querySelector('.panels');
+          if (panelsElem) {
+            panelsElem.scrollTop = scrollPosition;
+          }
         }
       }
     }
