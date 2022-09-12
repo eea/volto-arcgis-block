@@ -1615,8 +1615,6 @@ class MenuWidget extends React.Component {
           let value = layerOpacities[layer];
           // set map
           this.layers[layer].opacity = value;
-          let mapLayer = this.map.layers.items.find((l) => l.id === layer);
-          console.log(mapLayer);
           // set slider
           let node = document.querySelector('.active-layer[layer-id="' + layer + '"] .active-layer-opacity');
           if (node) {
@@ -1987,7 +1985,7 @@ class MenuWidget extends React.Component {
           <div className="opacity-slider">
             <input
               type="range"
-              defaultValue="10"
+              defaultValue="100"
               min="0"
               max="100"
               onChange={() => this.setOpacity()}
