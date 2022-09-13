@@ -159,7 +159,9 @@ export const AddCartItem = ({
         cancelable: false,
       });
       let node = document.getElementById('map_area_button');
-      node.dispatchEvent(event);
+      if (node) {
+        node.dispatchEvent(event);
+      }
     }
     closeModal(e);
   };
@@ -492,32 +494,34 @@ class MenuWidget extends React.Component {
         ? '[productid="' + product + '"]'
         : '[datasetid="' + dataset + '"]';
       let node = document.querySelector(elem + ' input');
-      node.dispatchEvent(event);
-      let dropdown = document
-        .querySelector(elem + ' input')
-        .closest('.map-menu-dropdown');
-      dropdown
-        .querySelector('.ccl-expandable__button')
-        .setAttribute('aria-expanded', 'true');
-      let scrollPosition = document
-        .querySelector(elem + ' input')
-        .closest('.map-menu-product-dropdown').offsetTop;
-      if (dataset) {
-        dropdown = document
+      if (node) {
+        node.dispatchEvent(event);
+        let dropdown = document
           .querySelector(elem + ' input')
-          .closest('.map-menu-product-dropdown');
+          .closest('.map-menu-dropdown');
         dropdown
           .querySelector('.ccl-expandable__button')
           .setAttribute('aria-expanded', 'true');
-        let mapMenu = document
+        let scrollPosition = document
           .querySelector(elem + ' input')
-          .closest('.map-menu-dataset');
-        if (mapMenu) {
-          // mapMenu is null for Corine and was blocking.
-          scrollPosition = mapMenu.offsetTop;
+          .closest('.map-menu-product-dropdown').offsetTop;
+        if (dataset) {
+          dropdown = document
+            .querySelector(elem + ' input')
+            .closest('.map-menu-product-dropdown');
+          dropdown
+            .querySelector('.ccl-expandable__button')
+            .setAttribute('aria-expanded', 'true');
+          let mapMenu = document
+            .querySelector(elem + ' input')
+            .closest('.map-menu-dataset');
+          if (mapMenu) {
+            // mapMenu is null for Corine and was blocking.
+            scrollPosition = mapMenu.offsetTop;
+          }
         }
+        document.querySelector('.panels').scrollTop = scrollPosition;
       }
-      document.querySelector('.panels').scrollTop = scrollPosition;
     }
   }
 
