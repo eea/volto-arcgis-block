@@ -360,10 +360,17 @@ class UseCasesMapViewer extends React.Component {
                       .map((item) => item.attributes.Use_case_id),
                   ),
                 ].length;
+                let data_eu_uk = [
+                  ...new Set(
+                    data.features
+                      .filter((a) => a.attributes.Spatial_coverage === 'EU 27+UK')
+                      .map((item) => item.attributes.Use_case_id),
+                  ),
+                ].length;
                 let data_eea = [
                   ...new Set(
                     data.features
-                      .filter((a) => a.attributes.Spatial_coverage === 'EEA')
+                      .filter((a) => a.attributes.Spatial_coverage === 'EEA38+UK')
                       .map((item) => item.attributes.Use_case_id),
                   ),
                 ].length;
@@ -380,7 +387,8 @@ class UseCasesMapViewer extends React.Component {
                       .filter(
                         (a) =>
                           a.attributes.Spatial_coverage !== 'EU' &&
-                          a.attributes.Spatial_coverage !== 'EEA' &&
+                          a.attributes.Spatial_coverage !== 'EU 27+UK' &&
+                          a.attributes.Spatial_coverage !== 'EEA38+UK' &&
                           a.attributes.Spatial_coverage !== 'GLOBAL',
                       )
                       .map((item) => item.attributes.Use_case_id),
@@ -389,7 +397,10 @@ class UseCasesMapViewer extends React.Component {
 
                 let string = '';
                 if (data_eu > 0) {
-                  string += `<div>${data_eu} Use cases with EU27+UK coverage</div>`;
+                  string += `<div>${data_eu} Use cases with EU coverage</div>`;
+                }
+                if (data_eu_uk > 0) {
+                  string += `<div>${data_eu_uk} Use cases with EU27+UK coverage</div>`;
                 }
                 if (data_eea > 0) {
                   string += `<div>${data_eea} Use cases with EEA38+UK coverage</div>`;

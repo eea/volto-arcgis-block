@@ -3,6 +3,7 @@ const markerType = 'simple-marker';
 const spatialMarkerSize = '8px';
 const yellow = '#fcec00';
 const blue = '#243f9c';
+const orange = '#ffa500';
 const greenSpatial = '#a2b32e';
 const black = '#000000';
 
@@ -44,7 +45,36 @@ const config = {
     'https://clmsdemo.devel6cph.eea.europa.eu/static/media/ccl-thumbnail-placeholder.2ccfd334.jpg',
 
   Codes: {
-    EU: [
+    "EU": [
+      'BE',
+      'EL',
+      'LT',
+      'PT',
+      'BG',
+      'ES',
+      'LU',
+      'RO',
+      'CZ',
+      'FR',
+      'HU',
+      'SI',
+      'DK',
+      'HR',
+      'MT',
+      'SK',
+      'DE',
+      'IT',
+      'NL',
+      'FI',
+      'EE',
+      'CY',
+      'AT',
+      'SE',
+      'IE',
+      'LV',
+      'PL'
+    ],
+    "EU 27+UK": [
       'BE',
       'EL',
       'LT',
@@ -72,9 +102,9 @@ const config = {
       'IE',
       'LV',
       'PL',
-      'UK',
+      'UK'
     ],
-    EEA: [
+    "EEA38+UK": [
       'AT',
       'BE',
       'BG',
@@ -115,7 +145,7 @@ const config = {
       'MK',
       'RS',
       //FORMER MEMBER COUNTRY
-      'UK',
+      'UK'
     ],
   },
 
@@ -152,7 +182,16 @@ const config = {
         },
       },
       {
-        value: 'EEA',
+        value: 'EU 27+UK',
+        symbol: {
+          type: markerType,
+          size: spatialMarkerSize,
+          outline: null,
+          color: orange,
+        },
+      },
+      {
+        value: 'EEA38+UK',
         symbol: {
           type: markerType,
           size: spatialMarkerSize,
