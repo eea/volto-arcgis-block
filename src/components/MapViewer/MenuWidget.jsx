@@ -1226,7 +1226,7 @@ class MenuWidget extends React.Component {
         expandedDropdowns = expandedDropdowns.filter((e) => e !== elem.id);
       }
       sessionStorage.setItem(
-        'expandedDropdowns', 
+        'expandedDropdowns',
         JSON.stringify(expandedDropdowns),
       );
     }
