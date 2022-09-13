@@ -1329,6 +1329,7 @@ class MenuWidget extends React.Component {
       });
     }
     this.layersReorder();
+    this.saveLayerOrder();
   }
 
   /**
@@ -1344,6 +1345,20 @@ class MenuWidget extends React.Component {
       this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
     });
   }
+
+  /**
+   * Saves the order of the active layers to sessionStorage
+   */
+  saveLayerOrder() {
+    if (this.props.download) return;
+    let activeLayers = document.querySelectorAll('.active-layer');
+    let newLayerOrder = [];
+    for (let i = 0; i < activeLayers.length; i++) {
+      newLayerOrder.push(activeLayers[i].getAttribute('layer-id'));
+    }
+    sessionStorage.setItem('checkedLayers', JSON.stringify(newLayerOrder));
+  }
+
 
   /**
    * Assigns an index to a layer
@@ -1591,7 +1606,7 @@ class MenuWidget extends React.Component {
    * @param {*} value The opacity value retrieved from the input
    */
   saveOpacity(layer, value) {
-    if (this.props.mapviewer_config.Download) return;
+    if (this.props.download) return;
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
       layerOpacities = {};
@@ -1722,14 +1737,14 @@ class MenuWidget extends React.Component {
    * Method to save checked layers
    */
   saveLayer(layer) {
-    if (this.props.mapviewer_config.Download) return;
+    if (this.props.download) return;
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (checkedLayers === null) {
       checkedLayers = [layer];
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     } else {
       if (!checkedLayers.includes(layer)) {
-        checkedLayers.push(layer);
+        checkedLayers.unshift(layer);
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     }
@@ -1759,7 +1774,7 @@ class MenuWidget extends React.Component {
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
-      for (let i = 0; i < layers.length; i++) {
+      for (var i = layers.length - 1; i >= 0; i--) {
         let elem = layers[i];
         let node = document.getElementById(elem);
 
