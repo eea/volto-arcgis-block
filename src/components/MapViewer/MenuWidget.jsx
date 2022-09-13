@@ -1591,6 +1591,7 @@ class MenuWidget extends React.Component {
    * @param {*} value The opacity value retrieved from the input
    */
   saveOpacity(layer, value) {
+    if (this.props.mapviewer_config.Download) return;
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
       layerOpacities = {};
@@ -1721,6 +1722,7 @@ class MenuWidget extends React.Component {
    * Method to save checked layers
    */
   saveLayer(layer) {
+    if (this.props.mapviewer_config.Download) return;
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (checkedLayers === null) {
       checkedLayers = [layer];
