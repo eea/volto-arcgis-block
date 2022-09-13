@@ -1359,7 +1359,6 @@ class MenuWidget extends React.Component {
     sessionStorage.setItem('checkedLayers', JSON.stringify(newLayerOrder));
   }
 
-
   /**
    * Assigns an index to a layer
    * (depending on its position on active layers panel)
