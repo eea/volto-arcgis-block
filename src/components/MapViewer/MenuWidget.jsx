@@ -822,7 +822,7 @@ class MenuWidget extends React.Component {
       >
         <fieldset className="ccl-fieldset" key={'b' + datIndex}>
           <div
-          id={'dropdown_' + inheritedIndexDataset}
+            id={'dropdown_' + inheritedIndexDataset}
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + datIndex}
@@ -1209,18 +1209,20 @@ class MenuWidget extends React.Component {
    */
   saveDropdownState(elem) {
     if (this.props.download) return;
-    let expandedDropdowns = JSON.parse(sessionStorage.getItem('expandedDropdowns'));
+    let expandedDropdowns = JSON.parse(
+      sessionStorage.getItem('expandedDropdowns'),
+      );
     if (expandedDropdowns === null) {
       expandedDropdowns = [elem.id];
-      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns));
+      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns),);
     } else {
       if (!expandedDropdowns.includes(elem.id)) {
         expandedDropdowns.push(elem.id);
       } else {
         // remove
-        expandedDropdowns = expandedDropdowns.filter(e => e !== elem.id);
+        expandedDropdowns = expandedDropdowns.filter((e) => e !== elem.id);
       }
-      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns));
+      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns),);
     }
   }
 
@@ -1813,15 +1815,16 @@ class MenuWidget extends React.Component {
           }
 
           // expand dropdowns according to sessionStorage
-          let expandedDropdowns = JSON.parse(sessionStorage.getItem('expandedDropdowns'));
+          let expandedDropdowns = JSON.parse(
+            sessionStorage.getItem('expandedDropdowns'),
+            );
           if (expandedDropdowns) {
-            expandedDropdowns.forEach((id)=>{
+            expandedDropdowns.forEach((id) => {
               let dd = document.getElementById(id);
               if (dd) {
-                dd              
-                .setAttribute('aria-expanded', 'true');
+                dd.setAttribute('aria-expanded', 'true');
               }
-            })
+            });
           }
 
           // set scroll position
