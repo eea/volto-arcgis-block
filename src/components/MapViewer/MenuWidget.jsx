@@ -598,6 +598,7 @@ class MenuWidget extends React.Component {
         key={'a' + compIndex}
       >
         <div
+          id={'dropdown_' + inheritedIndexComponent}
           className="ccl-expandable__button"
           aria-expanded="false"
           key={'b' + compIndex}
@@ -679,6 +680,7 @@ class MenuWidget extends React.Component {
       >
         <fieldset className="ccl-fieldset" key={'b' + prodIndex}>
           <div
+            id={'dropdown_' + inheritedIndexProduct}
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + prodIndex}
@@ -820,6 +822,7 @@ class MenuWidget extends React.Component {
       >
         <fieldset className="ccl-fieldset" key={'b' + datIndex}>
           <div
+          id={'dropdown_' + inheritedIndexDataset}
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + datIndex}
@@ -1197,6 +1200,28 @@ class MenuWidget extends React.Component {
       'aria-expanded',
       aria === 'true' ? 'false' : 'true',
     );
+    this.saveDropdownState(e.currentTarget);
+  }
+
+  /**
+   * Method to save which dropdowns have been expanded to sessionStorage
+   * @param {*} elem From the click event
+   */
+  saveDropdownState(elem) {
+    if (this.props.download) return;
+    let expandedDropdowns = JSON.parse(sessionStorage.getItem('expandedDropdowns'));
+    if (expandedDropdowns === null) {
+      expandedDropdowns = [elem.id];
+      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns));
+    } else {
+      if (!expandedDropdowns.includes(elem.id)) {
+        expandedDropdowns.push(elem.id);
+      } else {
+        // remove
+        expandedDropdowns = expandedDropdowns.filter(e => e !== elem.id);
+      }
+      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns));
+    }
   }
 
   /**
@@ -1783,23 +1808,25 @@ class MenuWidget extends React.Component {
 
         if (node) {
           if (!node.checked) {
-            // dont uncheck layers checked from URL param
+            // dont uncheck layers already checked from URL param
             node.dispatchEvent(event);
           }
-          // TODO: expand dropdowns according to sessionStorage
+
+          // expand dropdowns according to sessionStorage
+          let expandedDropdowns = JSON.parse(sessionStorage.getItem('expandedDropdowns'));
+          if (expandedDropdowns) {
+            expandedDropdowns.forEach((id)=>{
+              let dd = document.getElementById(id);
+              if (dd) {
+                dd              
+                .setAttribute('aria-expanded', 'true');
+              }
+            })
+          }
+
+          // set scroll position
           let dropdown = node.closest('.map-menu-dropdown');
           let productDropdown = node.closest('.map-menu-product-dropdown');
-          let datasetDropdown = node.closest('.map-menu-dataset-dropdown');
-          dropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'true');
-          productDropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'true');
-          datasetDropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'true');
-
           let scrollPosition = productDropdown
             ? productDropdown.offsetTop
             : dropdown.offsetTop;
