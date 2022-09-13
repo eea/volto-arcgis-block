@@ -1571,14 +1571,14 @@ class MenuWidget extends React.Component {
     if (group && groupLayers.length > 1) {
       groupLayers.forEach((item) => {
         this.layers[item].opacity = value / 100;
-        this.saveOpacity(item, value/100);
+        this.saveOpacity(item, value / 100);
         document.querySelector(
           '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
         ).dataset.opacity = value;
       });
     } else {
       this.layers[layer].opacity = value / 100;
-      this.saveOpacity(layer, value/100);
+      this.saveOpacity(layer, value / 100);
       document.querySelector(
         '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
       ).dataset.opacity = value;
@@ -1586,10 +1586,10 @@ class MenuWidget extends React.Component {
   }
 
   /**
-    * Saves the layer opacity to sessionStorage
-    * @param {*} layer The layer in question
-    * @param {*} value The opacity value retrieved from the input
-    */
+  * Saves the layer opacity to sessionStorage
+  * @param {*} layer The layer in question
+  * @param {*} value The opacity value retrieved from the input
+  */
   saveOpacity(layer, value) {
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
@@ -1602,11 +1602,11 @@ class MenuWidget extends React.Component {
     }
   }
 
-    /**
-    * Loads a previously configured layer opacity from sessionStorage and applies it to the map and input element
-    * @param {*} layer The layer in question
-    * @param {*} value The opacity value retrieved from the input
-    */
+  /**
+  * Loads a previously configured layer opacity from sessionStorage and applies it to the map and input element
+  * @param {*} layer The layer in question
+  * @param {*} value The opacity value retrieved from the input
+  */
   loadOpacity() {
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities) {
@@ -1616,9 +1616,9 @@ class MenuWidget extends React.Component {
           // set map
           this.layers[layer].opacity = value;
           // set slider
-          let node = document.querySelector('.active-layer[layer-id="' + layer + '"] .active-layer-opacity');
+          let node = document.querySelector('.active-layer[layer-id="' + layer + '"] .active-layer-opacity',);
           if (node) {
-            node.dataset.opacity = value*100;
+            node.dataset.opacity = value * 100;
           }
         }
       }
@@ -1778,7 +1778,7 @@ class MenuWidget extends React.Component {
             .querySelector('.ccl-expandable__button')
             .setAttribute('aria-expanded', 'true');
 
-          let scrollPosition = productDropdown ? productDropdown.offsetTop : dropdown.offsetTop ;
+          let scrollPosition = productDropdown ? productDropdown.offsetTop : dropdown.offsetTop;
           let panelsElem = document.querySelector('.panels');
           if (panelsElem) {
             panelsElem.scrollTop = scrollPosition;
