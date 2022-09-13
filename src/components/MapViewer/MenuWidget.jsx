@@ -1618,7 +1618,7 @@ class MenuWidget extends React.Component {
           // set slider
           let node = document.querySelector(
             '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
-            );
+          );
           if (node) {
             node.dataset.opacity = value * 100;
           }
@@ -1781,8 +1781,8 @@ class MenuWidget extends React.Component {
             .setAttribute('aria-expanded', 'true');
 
           let scrollPosition = productDropdown
-           ? productDropdown.offsetTop
-           : dropdown.offsetTop;
+            ? productDropdown.offsetTop
+            : dropdown.offsetTop;
           let panelsElem = document.querySelector('.panels');
           if (panelsElem) {
             panelsElem.scrollTop = scrollPosition;
