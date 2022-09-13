@@ -63,9 +63,12 @@ class LegendWidget extends React.Component {
         let currentValue = legendCells[i].textContent;
         switch (currentValue.toLowerCase()) {
           case 'eu':
+            legendCells[i].textContent = 'EU coverage';
+            break;
+          case 'eu 27+uk':
             legendCells[i].textContent = 'EU27+UK coverage';
             break;
-          case 'eea':
+          case 'eea38+uk':
             legendCells[i].textContent = 'EEA38+UK coverage';
             break;
           case 'others':
