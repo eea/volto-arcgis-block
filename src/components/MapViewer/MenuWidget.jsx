@@ -1211,10 +1211,13 @@ class MenuWidget extends React.Component {
     if (this.props.download) return;
     let expandedDropdowns = JSON.parse(
       sessionStorage.getItem('expandedDropdowns'),
-      );
+    );
     if (expandedDropdowns === null) {
       expandedDropdowns = [elem.id];
-      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns),);
+      sessionStorage.setItem(
+        'expandedDropdowns',
+        JSON.stringify(expandedDropdowns),
+      );
     } else {
       if (!expandedDropdowns.includes(elem.id)) {
         expandedDropdowns.push(elem.id);
@@ -1222,7 +1225,10 @@ class MenuWidget extends React.Component {
         // remove
         expandedDropdowns = expandedDropdowns.filter((e) => e !== elem.id);
       }
-      sessionStorage.setItem('expandedDropdowns', JSON.stringify(expandedDropdowns),);
+      sessionStorage.setItem(
+        'expandedDropdowns', 
+        JSON.stringify(expandedDropdowns),
+      );
     }
   }
 
@@ -1817,7 +1823,7 @@ class MenuWidget extends React.Component {
           // expand dropdowns according to sessionStorage
           let expandedDropdowns = JSON.parse(
             sessionStorage.getItem('expandedDropdowns'),
-            );
+          );
           if (expandedDropdowns) {
             expandedDropdowns.forEach((id) => {
               let dd = document.getElementById(id);
