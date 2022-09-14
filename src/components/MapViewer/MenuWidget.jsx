@@ -1853,7 +1853,7 @@ class MenuWidget extends React.Component {
       }
     }
   }
-  
+
   /**
    * Method to change between tabs
    */
