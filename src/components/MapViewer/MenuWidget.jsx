@@ -1537,8 +1537,7 @@ class MenuWidget extends React.Component {
           if (
             document.contains(
               document.querySelector('.timeslider-container'),
-            ) &&
-            !this.props.download
+            )
           )
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
@@ -1804,6 +1803,7 @@ class MenuWidget extends React.Component {
    * Method to load previously expanded dropdowns according to sessionStorage
    */
   expandDropdowns() {
+    if (this.props.download) return;
     let expandedDropdowns = JSON.parse(
       sessionStorage.getItem('expandedDropdowns'),
     );
