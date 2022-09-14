@@ -159,7 +159,9 @@ export const AddCartItem = ({
         cancelable: false,
       });
       let node = document.getElementById('map_area_button');
-      node.dispatchEvent(event);
+      if (node) {
+        node.dispatchEvent(event);
+      }
     }
     closeModal(e);
   };
@@ -492,32 +494,34 @@ class MenuWidget extends React.Component {
         ? '[productid="' + product + '"]'
         : '[datasetid="' + dataset + '"]';
       let node = document.querySelector(elem + ' input');
-      node.dispatchEvent(event);
-      let dropdown = document
-        .querySelector(elem + ' input')
-        .closest('.map-menu-dropdown');
-      dropdown
-        .querySelector('.ccl-expandable__button')
-        .setAttribute('aria-expanded', 'true');
-      let scrollPosition = document
-        .querySelector(elem + ' input')
-        .closest('.map-menu-product-dropdown').offsetTop;
-      if (dataset) {
-        dropdown = document
+      if (node) {
+        node.dispatchEvent(event);
+        let dropdown = document
           .querySelector(elem + ' input')
-          .closest('.map-menu-product-dropdown');
+          .closest('.map-menu-dropdown');
         dropdown
           .querySelector('.ccl-expandable__button')
           .setAttribute('aria-expanded', 'true');
-        let mapMenu = document
+        let scrollPosition = document
           .querySelector(elem + ' input')
-          .closest('.map-menu-dataset');
-        if (mapMenu) {
-          // mapMenu is null for Corine and was blocking.
-          scrollPosition = mapMenu.offsetTop;
+          .closest('.map-menu-product-dropdown').offsetTop;
+        if (dataset) {
+          dropdown = document
+            .querySelector(elem + ' input')
+            .closest('.map-menu-product-dropdown');
+          dropdown
+            .querySelector('.ccl-expandable__button')
+            .setAttribute('aria-expanded', 'true');
+          let mapMenu = document
+            .querySelector(elem + ' input')
+            .closest('.map-menu-dataset');
+          if (mapMenu) {
+            // mapMenu is null for Corine and was blocking.
+            scrollPosition = mapMenu.offsetTop;
+          }
         }
+        document.querySelector('.panels').scrollTop = scrollPosition;
       }
-      document.querySelector('.panels').scrollTop = scrollPosition;
     }
   }
 
@@ -594,6 +598,7 @@ class MenuWidget extends React.Component {
         key={'a' + compIndex}
       >
         <div
+          id={'dropdown_' + inheritedIndexComponent}
           className="ccl-expandable__button"
           aria-expanded="false"
           key={'b' + compIndex}
@@ -675,6 +680,7 @@ class MenuWidget extends React.Component {
       >
         <fieldset className="ccl-fieldset" key={'b' + prodIndex}>
           <div
+            id={'dropdown_' + inheritedIndexProduct}
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + prodIndex}
@@ -816,6 +822,7 @@ class MenuWidget extends React.Component {
       >
         <fieldset className="ccl-fieldset" key={'b' + datIndex}>
           <div
+            id={'dropdown_' + inheritedIndexDataset}
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + datIndex}
@@ -1193,6 +1200,36 @@ class MenuWidget extends React.Component {
       'aria-expanded',
       aria === 'true' ? 'false' : 'true',
     );
+    this.saveDropdownState(e.currentTarget);
+  }
+
+  /**
+   * Method to save which dropdowns have been expanded to sessionStorage
+   * @param {*} elem From the click event
+   */
+  saveDropdownState(elem) {
+    if (this.props.download) return;
+    let expandedDropdowns = JSON.parse(
+      sessionStorage.getItem('expandedDropdowns'),
+    );
+    if (expandedDropdowns === null) {
+      expandedDropdowns = [elem.id];
+      sessionStorage.setItem(
+        'expandedDropdowns',
+        JSON.stringify(expandedDropdowns),
+      );
+    } else {
+      if (!expandedDropdowns.includes(elem.id)) {
+        expandedDropdowns.push(elem.id);
+      } else {
+        // remove
+        expandedDropdowns = expandedDropdowns.filter((e) => e !== elem.id);
+      }
+      sessionStorage.setItem(
+        'expandedDropdowns',
+        JSON.stringify(expandedDropdowns),
+      );
+    }
   }
 
   /**
@@ -1329,6 +1366,7 @@ class MenuWidget extends React.Component {
       });
     }
     this.layersReorder();
+    this.saveLayerOrder();
   }
 
   /**
@@ -1343,6 +1381,19 @@ class MenuWidget extends React.Component {
       item.setAttribute('layer-order', order);
       this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
     });
+  }
+
+  /**
+   * Saves the order of the active layers to sessionStorage
+   */
+  saveLayerOrder() {
+    if (this.props.download) return;
+    let activeLayers = document.querySelectorAll('.active-layer');
+    let newLayerOrder = [];
+    for (let i = 0; i < activeLayers.length; i++) {
+      newLayerOrder.push(activeLayers[i].getAttribute('layer-id'));
+    }
+    sessionStorage.setItem('checkedLayers', JSON.stringify(newLayerOrder));
   }
 
   /**
@@ -1591,7 +1642,7 @@ class MenuWidget extends React.Component {
    * @param {*} value The opacity value retrieved from the input
    */
   saveOpacity(layer, value) {
-    if (this.props.mapviewer_config.Download) return;
+    if (this.props.download) return;
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
       layerOpacities = {};
@@ -1722,14 +1773,14 @@ class MenuWidget extends React.Component {
    * Method to save checked layers
    */
   saveLayer(layer) {
-    if (this.props.mapviewer_config.Download) return;
+    if (this.props.download) return;
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (checkedLayers === null) {
       checkedLayers = [layer];
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     } else {
       if (!checkedLayers.includes(layer)) {
-        checkedLayers.push(layer);
+        checkedLayers.unshift(layer);
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     }
@@ -1759,29 +1810,32 @@ class MenuWidget extends React.Component {
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
-      for (let i = 0; i < layers.length; i++) {
+      for (var i = layers.length - 1; i >= 0; i--) {
         let elem = layers[i];
         let node = document.getElementById(elem);
 
         if (node) {
           if (!node.checked) {
-            // dont uncheck layers checked from URL param
+            // dont uncheck layers already checked from URL param
             node.dispatchEvent(event);
           }
-          // TODO: expand dropdowns according to sessionStorage
+
+          // expand dropdowns according to sessionStorage
+          let expandedDropdowns = JSON.parse(
+            sessionStorage.getItem('expandedDropdowns'),
+          );
+          if (expandedDropdowns) {
+            expandedDropdowns.forEach((id) => {
+              let dd = document.getElementById(id);
+              if (dd) {
+                dd.setAttribute('aria-expanded', 'true');
+              }
+            });
+          }
+
+          // set scroll position
           let dropdown = node.closest('.map-menu-dropdown');
           let productDropdown = node.closest('.map-menu-product-dropdown');
-          let datasetDropdown = node.closest('.map-menu-dataset-dropdown');
-          dropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'true');
-          productDropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'true');
-          datasetDropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'true');
-
           let scrollPosition = productDropdown
             ? productDropdown.offsetTop
             : dropdown.offsetTop;
