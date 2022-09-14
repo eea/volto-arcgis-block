@@ -476,6 +476,7 @@ class MenuWidget extends React.Component {
     //to watch the component
     this.setState({});
     this.openMenu();
+    this.expandDropdowns();
     this.loadLayers();
     this.loadOpacity();
   }
@@ -1798,6 +1799,24 @@ class MenuWidget extends React.Component {
     }
     sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
   }
+
+  /**
+   * Method to load previously expanded dropdowns according to sessionStorage
+   */
+  expandDropdowns() {
+    let expandedDropdowns = JSON.parse(
+      sessionStorage.getItem('expandedDropdowns'),
+    );
+    if (expandedDropdowns) {
+      expandedDropdowns.forEach((id) => {
+        let dd = document.getElementById(id);
+        if (dd) {
+          dd.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+  }
+
   /**
    * Method to load previously checked layers
    */
@@ -1820,19 +1839,6 @@ class MenuWidget extends React.Component {
             node.dispatchEvent(event);
           }
 
-          // expand dropdowns according to sessionStorage
-          let expandedDropdowns = JSON.parse(
-            sessionStorage.getItem('expandedDropdowns'),
-          );
-          if (expandedDropdowns) {
-            expandedDropdowns.forEach((id) => {
-              let dd = document.getElementById(id);
-              if (dd) {
-                dd.setAttribute('aria-expanded', 'true');
-              }
-            });
-          }
-
           // set scroll position
           let dropdown = node.closest('.map-menu-dropdown');
           let productDropdown = node.closest('.map-menu-product-dropdown');
@@ -1847,6 +1853,7 @@ class MenuWidget extends React.Component {
       }
     }
   }
+
   /**
    * Method to change between tabs
    */
