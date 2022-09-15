@@ -234,15 +234,15 @@ export const AddCartItem = ({
               ></span>
             </div>
             <Modal.Content>
-              <p>Do you want to add this dataset to the cart?</p>
+              <p>Would you like to add this dataset to the cart?</p>
               {!areaData && (
                 <ul>
                   <li>
                     <p>
-                      If you would like to download entire dataset select Add
-                      entire dataset (Note: download will take longer for large
-                      datasets, and the bounding box for Europe is selected by
-                      default).
+                      If you would like to download an entire dataset select
+                      &#39;Add entire dataset&#39; (Note: the download will take
+                      longer for large datasets and Europe is selected as the
+                      area of interest by default).
                     </p>
                   </li>
                   <br />
@@ -250,12 +250,12 @@ export const AddCartItem = ({
                     <>
                       <li>
                         <p>
-                          if you would like to download data for your area of
-                          interest select first area of interest and then click
-                          download button next to the dataset (Note: the time
-                          range to download will be the first date of the
-                          dataset but if it is not informed in the metadata it
-                          will be the last 10 days).
+                          If you would like to download data for your area of
+                          interest: first select an area of interest and then
+                          click the download button next to the dataset (Note:
+                          the time range to download will be the first date of
+                          the dataset but if it is not included in the dataset's
+                          metadata then it will be the last 10 days).
                         </p>
                       </li>
                       <br />
@@ -274,9 +274,9 @@ export const AddCartItem = ({
                   ) : (
                     <li>
                       <p>
-                        if you would like to download data for your area of
-                        interest select first area of interest and then click
-                        download button next to the dataset.
+                        If you would like to download data for your area of
+                        interest: first select an area of interest and then
+                        click the download button next to the dataset.
                       </p>
                     </li>
                   )}
@@ -1020,11 +1020,7 @@ class MenuWidget extends React.Component {
         });
       }
     }
-    let style = handlingLevel
-      ? { display: 'none' }
-      : this.props.download
-      ? { paddingLeft: '4rem' }
-      : {};
+    let style = this.props.download ? { paddingLeft: '4rem' } : {};
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -1076,7 +1072,7 @@ class MenuWidget extends React.Component {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
           .querySelector('input');
-        elem.title = dataset.title;
+        elem.title = dataset.title + ' - ' + elem.getAttribute('layerid');
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
@@ -1158,8 +1154,10 @@ class MenuWidget extends React.Component {
       layerChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
     layerChecks.forEach((element) => {
-      element.checked = value;
-      this.toggleLayer(element);
+      if (element) {
+        element.checked = value;
+        this.toggleLayer(element);
+      }
     });
   }
 
@@ -1246,7 +1244,7 @@ class MenuWidget extends React.Component {
         layer-id={elem.id}
         layer-order={order}
         draggable="true"
-        {...(elem.hide && { style: { display: 'none' } })}
+        // {...(elem.hide && { style: { display: 'none' } })}
         onDrop={(e) => this.onDrop(e)}
         onDragOver={(e) => this.onDragOver(e)}
         onDragStart={(e) => this.onDragStart(e)}
@@ -1338,34 +1336,34 @@ class MenuWidget extends React.Component {
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
-    let group = this.getGroup(
-      document.getElementById(this.draggingElement.getAttribute('layer-id')),
-    )
-      ? this.getGroup(
-          document.getElementById(
-            this.draggingElement.getAttribute('layer-id'),
-          ),
-        )
-      : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
-    let groupLayers = this.getGroupLayers(group);
+    // let group = this.getGroup(
+    //   document.getElementById(this.draggingElement.getAttribute('layer-id')),
+    // )
+    //   ? this.getGroup(
+    //       document.getElementById(
+    //         this.draggingElement.getAttribute('layer-id'),
+    //       ),
+    //     )
+    //   : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
+    //let groupLayers = this.getGroupLayers(group);
     if (init_ord > dst_ord) {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
     } else {
       dst.parentElement.insertBefore(this.draggingElement, dst);
     }
-    if (group && groupLayers.length > 1) {
-      groupLayers.forEach((item, index) => {
-        if (
-          this.draggingElement.getAttribute('layer-id') !== item ||
-          dst.getAttribute('layer-id') !== item
-        ) {
-          dst.parentElement.insertBefore(
-            document.getElementById('active_' + item),
-            this.draggingElement.nextSibling,
-          );
-        }
-      });
-    }
+    // if (group && groupLayers.length > 1) {
+    //   groupLayers.forEach((item, index) => {
+    //     if (
+    //       this.draggingElement.getAttribute('layer-id') !== item ||
+    //       dst.getAttribute('layer-id') !== item
+    //     ) {
+    //       dst.parentElement.insertBefore(
+    //         document.getElementById('active_' + item),
+    //         this.draggingElement.nextSibling,
+    //       );
+    //     }
+    //   });
+    // }
     this.layersReorder();
     this.saveLayerOrder();
   }
@@ -1535,10 +1533,7 @@ class MenuWidget extends React.Component {
               .querySelector('#download_label')
               .classList.remove('locked');
           if (
-            document.contains(
-              document.querySelector('.timeslider-container'),
-            ) &&
-            !this.props.download
+            document.contains(document.querySelector('.timeslider-container'))
           )
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
@@ -1804,6 +1799,7 @@ class MenuWidget extends React.Component {
    * Method to load previously expanded dropdowns according to sessionStorage
    */
   expandDropdowns() {
+    if (this.props.download) return;
     let expandedDropdowns = JSON.parse(
       sessionStorage.getItem('expandedDropdowns'),
     );
