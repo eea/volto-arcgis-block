@@ -1336,15 +1336,15 @@ class MenuWidget extends React.Component {
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
-    let group = this.getGroup(
-      document.getElementById(this.draggingElement.getAttribute('layer-id')),
-    )
-      ? this.getGroup(
-          document.getElementById(
-            this.draggingElement.getAttribute('layer-id'),
-          ),
-        )
-      : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
+    // let group = this.getGroup(
+    //   document.getElementById(this.draggingElement.getAttribute('layer-id')),
+    // )
+    //   ? this.getGroup(
+    //       document.getElementById(
+    //         this.draggingElement.getAttribute('layer-id'),
+    //       ),
+    //     )
+    //   : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
     //let groupLayers = this.getGroupLayers(group);
     if (init_ord > dst_ord) {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
