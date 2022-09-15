@@ -239,9 +239,9 @@ export const AddCartItem = ({
                 <ul>
                   <li>
                     <p>
-                      If you would like to download an entire dataset select 'Add
-                      entire dataset' (Note: the download will take longer for large
-                      datasets and Europe is selected as the area of interest by
+                      If you would like to download an entire dataset select
+                      &#39;Add entire dataset&#39; (Note: the download will take longer
+                      for large datasets and Europe is selected as the area of interest by
                       default).
                     </p>
                   </li>
@@ -252,10 +252,10 @@ export const AddCartItem = ({
                         <p>
                           If you would like to download data for your area of
                           interest: first select an area of interest and then click
-                          the download button next to the dataset (Note: the time
-                          range to download will be the first date of the
-                          dataset but if it is not included in the dataset's metadata then it
-                          will be the last 10 days).
+                          the download button next to the dataset (Note:
+                          the time range to download will be the first date of the
+                          dataset but if it is not included in the dataset's
+                          metadata then it will be the last 10 days).
                         </p>
                       </li>
                       <br />
@@ -275,8 +275,8 @@ export const AddCartItem = ({
                     <li>
                       <p>
                         If you would like to download data for your area of
-                        interest: first select an area of interest and then click
-                        the download button next to the dataset.
+                        interest: first select an area of interest and then
+                        click the download button next to the dataset.
                       </p>
                     </li>
                   )}
@@ -1021,8 +1021,7 @@ class MenuWidget extends React.Component {
       }
     }
     let style = this.props.download
-      ? { paddingLeft: '4rem' }
-      : {};
+      ? { paddingLeft: '4rem' } : {};
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -1347,7 +1346,7 @@ class MenuWidget extends React.Component {
           ),
         )
       : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
-    let groupLayers = this.getGroupLayers(group);
+    //let groupLayers = this.getGroupLayers(group);
     if (init_ord > dst_ord) {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
     } else {
