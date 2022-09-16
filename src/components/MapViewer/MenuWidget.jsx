@@ -486,6 +486,21 @@ class MenuWidget extends React.Component {
     let product = url.searchParams.get('product');
     let dataset = url.searchParams.get('dataset');
     if (product || dataset) {
+      // CLMS-1261 - clear any previously checked layers when navigating using 'view in the map viewer'
+      let expandedDropdowns = sessionStorage.getItem('expandedDropdowns');
+      let checkedLayers = sessionStorage.getItem('checkedLayers');
+      if (expandedDropdowns) {
+        sessionStorage.setItem(
+          'expandedDropdowns',
+          JSON.stringify([]),
+        );
+      }
+      if (checkedLayers) {
+        sessionStorage.setItem(
+          'checkedLayers',
+          JSON.stringify([]),
+        );
+      }
       let event = new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -1736,20 +1751,21 @@ class MenuWidget extends React.Component {
   deleteCrossEvent(elem) {
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
-    if (group && groupLayers.length > 1) {
-      groupLayers.forEach((item) => {
-        elem = document.getElementById(item);
-        // elem has to be unchecked
-        elem.checked = false;
-        this.toggleLayer(elem);
-        delete this.activeLayersJSON[elem.id];
-      });
-    } else {
+    // if (group && groupLayers.length > 1) {
+    //   // are we sure we want to delete all sublayers when one is deleted?
+    //   groupLayers.forEach((item) => {
+    //     elem = document.getElementById(item);
+    //     // elem has to be unchecked
+    //     elem.checked = false;
+    //     this.toggleLayer(elem);
+    //     delete this.activeLayersJSON[elem.id];
+    //   });
+    // } else {
       // elem has to be unchecked
       elem.checked = false;
       this.toggleLayer(elem);
       delete this.activeLayersJSON[elem.id];
-    }
+    // }
     this.setState({});
   }
 
