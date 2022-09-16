@@ -234,12 +234,12 @@ export const AddCartItem = ({
               ></span>
             </div>
             <Modal.Content>
-              <p>Would you like to add this dataset to the cart?</p>
+              <p>Do you want to add this dataset to the cart?</p>
               {!areaData && (
                 <ul>
                   <li>
                     <p>
-                      If you would like to download an entire dataset select
+                      If you would like to download an entire dataset then select
                       &#39;Add entire dataset&#39; (Note: the download will take
                       longer for large datasets and Europe is selected as the
                       area of interest by default).
@@ -1072,7 +1072,7 @@ class MenuWidget extends React.Component {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
           .querySelector('input');
-        elem.title = dataset.title + ' - ' + elem.getAttribute('layerid');
+        elem.title = dataset.title + ' - ' + this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
