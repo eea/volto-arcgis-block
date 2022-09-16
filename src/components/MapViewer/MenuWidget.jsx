@@ -1744,8 +1744,8 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   deleteCrossEvent(elem) {
-    let group = this.getGroup(elem);
-    let groupLayers = this.getGroupLayers(group);
+    // let group = this.getGroup(elem);
+    // let groupLayers = this.getGroupLayers(group);
     // if (group && groupLayers.length > 1) {
     //   // are we sure we want to delete all sublayers when one is deleted?
     //   groupLayers.forEach((item) => {
