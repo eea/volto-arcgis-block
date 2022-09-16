@@ -239,10 +239,10 @@ export const AddCartItem = ({
                 <ul>
                   <li>
                     <p>
-                      If you would like to download an entire dataset then select
-                      &#39;Add entire dataset&#39; (Note: the download will take
-                      longer for large datasets and Europe is selected as the
-                      area of interest by default).
+                      If you would like to download an entire dataset then
+                      select &#39;Add entire dataset&#39; (Note: the download
+                      will take longer for large datasets and Europe is selected
+                      as the area of interest by default).
                     </p>
                   </li>
                   <br />
@@ -490,16 +490,10 @@ class MenuWidget extends React.Component {
       let expandedDropdowns = sessionStorage.getItem('expandedDropdowns');
       let checkedLayers = sessionStorage.getItem('checkedLayers');
       if (expandedDropdowns) {
-        sessionStorage.setItem(
-          'expandedDropdowns',
-          JSON.stringify([]),
-        );
+        sessionStorage.setItem('expandedDropdowns', JSON.stringify([]));
       }
       if (checkedLayers) {
-        sessionStorage.setItem(
-          'checkedLayers',
-          JSON.stringify([]),
-        );
+        sessionStorage.setItem('checkedLayers', JSON.stringify([]));
       }
       let event = new MouseEvent('click', {
         view: window,
@@ -1087,7 +1081,8 @@ class MenuWidget extends React.Component {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
           .querySelector('input');
-        elem.title = dataset.title + ' - ' + this.getLayerTitle(this.layers[elem.id]);
+        elem.title =
+          dataset.title + ' - ' + this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
@@ -1761,10 +1756,10 @@ class MenuWidget extends React.Component {
     //     delete this.activeLayersJSON[elem.id];
     //   });
     // } else {
-      // elem has to be unchecked
-      elem.checked = false;
-      this.toggleLayer(elem);
-      delete this.activeLayersJSON[elem.id];
+    // elem has to be unchecked
+    elem.checked = false;
+    this.toggleLayer(elem);
+    delete this.activeLayersJSON[elem.id];
     // }
     this.setState({});
   }
