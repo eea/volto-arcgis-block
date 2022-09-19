@@ -234,15 +234,15 @@ export const AddCartItem = ({
               ></span>
             </div>
             <Modal.Content>
-              <p>Would you like to add this dataset to the cart?</p>
+              <p>Do you want to add this dataset to the cart?</p>
               {!areaData && (
                 <ul>
                   <li>
                     <p>
-                      If you would like to download an entire dataset select
-                      &#39;Add entire dataset&#39; (Note: the download will take
-                      longer for large datasets and Europe is selected as the
-                      area of interest by default).
+                      If you would like to download an entire dataset then
+                      select &#39;Add entire dataset&#39; (Note: the download
+                      will take longer for large datasets and Europe is selected
+                      as the area of interest by default).
                     </p>
                   </li>
                   <br />
@@ -486,6 +486,15 @@ class MenuWidget extends React.Component {
     let product = url.searchParams.get('product');
     let dataset = url.searchParams.get('dataset');
     if (product || dataset) {
+      // CLMS-1261 - clear any previously checked layers when navigating using 'view in the map viewer'
+      let expandedDropdowns = sessionStorage.getItem('expandedDropdowns');
+      let checkedLayers = sessionStorage.getItem('checkedLayers');
+      if (expandedDropdowns) {
+        sessionStorage.setItem('expandedDropdowns', JSON.stringify([]));
+      }
+      if (checkedLayers) {
+        sessionStorage.setItem('checkedLayers', JSON.stringify([]));
+      }
       let event = new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -1072,7 +1081,8 @@ class MenuWidget extends React.Component {
         let dataset = document
           .querySelector('[datasetid="' + group + '"]')
           .querySelector('input');
-        elem.title = dataset.title + ' - ' + elem.getAttribute('layerid');
+        elem.title =
+          dataset.title + ' - ' + this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
@@ -1734,22 +1744,23 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   deleteCrossEvent(elem) {
-    let group = this.getGroup(elem);
-    let groupLayers = this.getGroupLayers(group);
-    if (group && groupLayers.length > 1) {
-      groupLayers.forEach((item) => {
-        elem = document.getElementById(item);
-        // elem has to be unchecked
-        elem.checked = false;
-        this.toggleLayer(elem);
-        delete this.activeLayersJSON[elem.id];
-      });
-    } else {
-      // elem has to be unchecked
-      elem.checked = false;
-      this.toggleLayer(elem);
-      delete this.activeLayersJSON[elem.id];
-    }
+    // let group = this.getGroup(elem);
+    // let groupLayers = this.getGroupLayers(group);
+    // if (group && groupLayers.length > 1) {
+    //   // are we sure we want to delete all sublayers when one is deleted?
+    //   groupLayers.forEach((item) => {
+    //     elem = document.getElementById(item);
+    //     // elem has to be unchecked
+    //     elem.checked = false;
+    //     this.toggleLayer(elem);
+    //     delete this.activeLayersJSON[elem.id];
+    //   });
+    // } else {
+    // elem has to be unchecked
+    elem.checked = false;
+    this.toggleLayer(elem);
+    delete this.activeLayersJSON[elem.id];
+    // }
     this.setState({});
   }
 
