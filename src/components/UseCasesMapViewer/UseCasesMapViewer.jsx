@@ -373,6 +373,15 @@ class UseCasesMapViewer extends React.Component {
                   ...new Set(
                     data.features
                       .filter(
+                        (a) => a.attributes.Spatial_coverage === 'EEA38',
+                      )
+                      .map((item) => item.attributes.Use_case_id),
+                  ),
+                ].length;
+                let data_eea_uk = [
+                  ...new Set(
+                    data.features
+                      .filter(
                         (a) => a.attributes.Spatial_coverage === 'EEA38+UK',
                       )
                       .map((item) => item.attributes.Use_case_id),
@@ -392,6 +401,7 @@ class UseCasesMapViewer extends React.Component {
                         (a) =>
                           a.attributes.Spatial_coverage !== 'EU' &&
                           a.attributes.Spatial_coverage !== 'EU 27+UK' &&
+                          a.attributes.Spatial_coverage !== 'EEA38' &&
                           a.attributes.Spatial_coverage !== 'EEA38+UK' &&
                           a.attributes.Spatial_coverage !== 'GLOBAL',
                       )
@@ -407,6 +417,9 @@ class UseCasesMapViewer extends React.Component {
                   string += `<div>${data_eu_uk} Use cases with EU27+UK coverage</div>`;
                 }
                 if (data_eea > 0) {
+                  string += `<div>${data_eea} Use cases with EEA38 coverage</div>`;
+                }
+                if (data_eea_uk > 0) {
                   string += `<div>${data_eea} Use cases with EEA38+UK coverage</div>`;
                 }
                 if (data_global > 0) {
