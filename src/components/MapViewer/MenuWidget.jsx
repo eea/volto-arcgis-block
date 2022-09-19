@@ -1633,11 +1633,11 @@ class MenuWidget extends React.Component {
     //     ).dataset.opacity = value;
     //   });
     // } else {
-      this.layers[layer].opacity = value / 100;
-      this.saveOpacity(layer, value / 100);
-      document.querySelector(
-        '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
-      ).dataset.opacity = value;
+    this.layers[layer].opacity = value / 100;
+    this.saveOpacity(layer, value / 100);
+    document.querySelector(
+      '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
+    ).dataset.opacity = value;
     // }
   }
 
@@ -1708,8 +1708,8 @@ class MenuWidget extends React.Component {
       //     this.visibleLayers[item] = ['fas', 'eye-slash'];
       //   });
       // } else {
-        this.layers[elem.id].visible = false;
-        this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+      this.layers[elem.id].visible = false;
+      this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
       // }
     } else {
       // if (group && groupLayers.length > 1) {
@@ -1719,9 +1719,9 @@ class MenuWidget extends React.Component {
       //     this.visibleLayers[item] = ['fas', 'eye'];
       //   });
       // } else {
-        this.map.add(this.layers[elem.id]);
-        this.layers[elem.id].visible = true;
-        this.visibleLayers[elem.id] = ['fas', 'eye'];
+      this.map.add(this.layers[elem.id]);
+      this.layers[elem.id].visible = true;
+      this.visibleLayers[elem.id] = ['fas', 'eye'];
       // }
     }
     // if (group && groupLayers.length > 1) {
@@ -1730,7 +1730,7 @@ class MenuWidget extends React.Component {
     //     this.activeLayersJSON[item] = this.addActiveLayer(elem, 0);
     //   });
     // } else {
-      this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+    this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     // }
     this.layersReorder();
     this.checkInfoWidget();
