@@ -373,8 +373,7 @@ class UseCasesMapViewer extends React.Component {
                   ...new Set(
                     data.features
                       .filter(
-                        (a) => a.attributes.Spatial_coverage === 'EEA38',
-                      )
+                        (a) => a.attributes.Spatial_coverage === 'EEA38',)
                       .map((item) => item.attributes.Use_case_id),
                   ),
                 ].length;
