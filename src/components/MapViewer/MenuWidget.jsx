@@ -1078,9 +1078,9 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
-        let dataset = document
-          .querySelector('[datasetid="' + group + '"]')
-          .querySelector('input');
+        // let dataset = document
+        //   .querySelector('[datasetid="' + group + '"]')
+        //   .querySelector('input');
         elem.title = this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
