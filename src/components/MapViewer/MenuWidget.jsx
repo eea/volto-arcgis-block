@@ -1622,23 +1622,23 @@ class MenuWidget extends React.Component {
   setOpacity() {
     let layer = document.querySelector('.opacity-slider input').dataset.layer;
     let value = document.querySelector('.opacity-panel input').value;
-    let group = this.getGroup(document.getElementById(layer));
-    let groupLayers = this.getGroupLayers(group);
-    if (group && groupLayers.length > 1) {
-      groupLayers.forEach((item) => {
-        this.layers[item].opacity = value / 100;
-        this.saveOpacity(item, value / 100);
-        document.querySelector(
-          '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
-        ).dataset.opacity = value;
-      });
-    } else {
-      this.layers[layer].opacity = value / 100;
-      this.saveOpacity(layer, value / 100);
-      document.querySelector(
-        '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
-      ).dataset.opacity = value;
-    }
+    // let group = this.getGroup(document.getElementById(layer));
+    // let groupLayers = this.getGroupLayers(group);
+    // if (group && groupLayers.length > 1) {
+    //   groupLayers.forEach((item) => {
+    //     this.layers[item].opacity = value / 100;
+    //     this.saveOpacity(item, value / 100);
+    //     document.querySelector(
+    //       '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
+    //     ).dataset.opacity = value;
+    //   });
+    // } else {
+    this.layers[layer].opacity = value / 100;
+    this.saveOpacity(layer, value / 100);
+    document.querySelector(
+      '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
+    ).dataset.opacity = value;
+    // }
   }
 
   /**
@@ -1699,39 +1699,39 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    let group = this.getGroup(elem);
-    let groupLayers = this.getGroupLayers(group);
+    // let group = this.getGroup(elem);
+    // let groupLayers = this.getGroupLayers(group);
     if (this.visibleLayers[elem.id][1] === 'eye') {
-      if (group && groupLayers.length > 1) {
-        groupLayers.forEach((item) => {
-          this.layers[item].visible = false;
-          this.visibleLayers[item] = ['fas', 'eye-slash'];
-        });
-      } else {
-        this.layers[elem.id].visible = false;
-        this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
-      }
+      // if (group && groupLayers.length > 1) {
+      //   groupLayers.forEach((item) => {
+      //     this.layers[item].visible = false;
+      //     this.visibleLayers[item] = ['fas', 'eye-slash'];
+      //   });
+      // } else {
+      this.layers[elem.id].visible = false;
+      this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+      // }
     } else {
-      if (group && groupLayers.length > 1) {
-        groupLayers.forEach((item) => {
-          this.map.add(this.layers[item]);
-          this.layers[item].visible = true;
-          this.visibleLayers[item] = ['fas', 'eye'];
-        });
-      } else {
-        this.map.add(this.layers[elem.id]);
-        this.layers[elem.id].visible = true;
-        this.visibleLayers[elem.id] = ['fas', 'eye'];
-      }
+      // if (group && groupLayers.length > 1) {
+      //   groupLayers.forEach((item) => {
+      //     this.map.add(this.layers[item]);
+      //     this.layers[item].visible = true;
+      //     this.visibleLayers[item] = ['fas', 'eye'];
+      //   });
+      // } else {
+      this.map.add(this.layers[elem.id]);
+      this.layers[elem.id].visible = true;
+      this.visibleLayers[elem.id] = ['fas', 'eye'];
+      // }
     }
-    if (group && groupLayers.length > 1) {
-      groupLayers.forEach((item) => {
-        elem = document.getElementById(item);
-        this.activeLayersJSON[item] = this.addActiveLayer(elem, 0);
-      });
-    } else {
-      this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
-    }
+    // if (group && groupLayers.length > 1) {
+    //   groupLayers.forEach((item) => {
+    //     elem = document.getElementById(item);
+    //     this.activeLayersJSON[item] = this.addActiveLayer(elem, 0);
+    //   });
+    // } else {
+    this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+    // }
     this.layersReorder();
     this.checkInfoWidget();
     this.setState({});
