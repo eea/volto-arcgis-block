@@ -418,7 +418,7 @@ class UseCasesMapViewer extends React.Component {
                   string += `<div>${data_eea} Use cases with EEA38 coverage</div>`;
                 }
                 if (data_eea_uk > 0) {
-                  string += `<div>${data_eea} Use cases with EEA38+UK coverage</div>`;
+                  string += `<div>${data_eea_uk} Use cases with EEA38+UK coverage</div>`;
                 }
                 if (data_global > 0) {
                   string += `<div>Global use cases: ${data_global}</div>`;
