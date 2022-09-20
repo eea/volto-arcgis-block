@@ -94,6 +94,8 @@ class MapViewer extends React.Component {
       basemap: 'topo',
     });
 
+    mapStatus = this.recoverState();
+
     if (
       mapStatus === null ||
       (mapStatus.zoom === null && mapStatus.center === null) ||
@@ -104,8 +106,6 @@ class MapViewer extends React.Component {
       mapStatus.center = this.mapCfg.center;
       this.setCenterState(this.mapCfg.center);
       this.setZoomState(this.mapCfg.zoom);
-    } else {
-      mapStatus = this.recoverState();
     }
 
     this.view = new MapView({
