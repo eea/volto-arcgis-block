@@ -479,6 +479,8 @@ class MenuWidget extends React.Component {
     this.expandDropdowns();
     this.loadLayers();
     this.loadOpacity();
+
+    this.loadVisibility();
   }
 
   checkUrl() {
@@ -1699,42 +1701,59 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    // let group = this.getGroup(elem);
-    // let groupLayers = this.getGroupLayers(group);
     if (this.visibleLayers[elem.id][1] === 'eye') {
-      // if (group && groupLayers.length > 1) {
-      //   groupLayers.forEach((item) => {
-      //     this.layers[item].visible = false;
-      //     this.visibleLayers[item] = ['fas', 'eye-slash'];
-      //   });
-      // } else {
       this.layers[elem.id].visible = false;
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
-      // }
     } else {
-      // if (group && groupLayers.length > 1) {
-      //   groupLayers.forEach((item) => {
-      //     this.map.add(this.layers[item]);
-      //     this.layers[item].visible = true;
-      //     this.visibleLayers[item] = ['fas', 'eye'];
-      //   });
-      // } else {
       this.map.add(this.layers[elem.id]);
       this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
-      // }
     }
-    // if (group && groupLayers.length > 1) {
-    //   groupLayers.forEach((item) => {
-    //     elem = document.getElementById(item);
-    //     this.activeLayersJSON[item] = this.addActiveLayer(elem, 0);
-    //   });
-    // } else {
+
+    this.saveVisibility();
+
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
-    // }
     this.layersReorder();
     this.checkInfoWidget();
     this.setState({});
+  }
+
+  /**
+   * Saves the layer visibility (eye icon state) to sessionStorage
+   */
+  saveVisibility() {
+    if (this.props.download) return;
+    sessionStorage.setItem('visibleLayers', JSON.stringify(this.visibleLayers));
+  }
+
+  /**
+   * Loads the layer visibility (eye icon state) from sessionStorage
+   */
+  loadVisibility() {
+    if (this.props.download) return;
+    let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
+    if (vl) {
+      this.visibleLayers = vl;
+
+      for (const key in this.visibleLayers) {
+        if (this.visibleLayers[key][1] === 'eye') {
+          this.layers[key].visible = true;
+        } else {
+          this.layers[key].visible = false;
+        }
+
+        let elem = document.getElementById(key);
+        if (this.activeLayersJSON[elem.id]) {
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+        }
+
+        //this.layersReorder();
+        //this.checkInfoWidget();
+      }
+
+      // update DOM
+      this.setState({});
+    }
   }
 
   /**
@@ -1797,12 +1816,14 @@ class MenuWidget extends React.Component {
    */
   deleteLayer(layer) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    for (var i = 0; i < checkedLayers.length; i++) {
-      if (checkedLayers[i] === layer) {
-        checkedLayers.splice(i, 1);
+    if (checkedLayers) {
+      for (var i = 0; i < checkedLayers.length; i++) {
+        if (checkedLayers[i] === layer) {
+          checkedLayers.splice(i, 1);
+        }
       }
+      sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     }
-    sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
   }
 
   /**
