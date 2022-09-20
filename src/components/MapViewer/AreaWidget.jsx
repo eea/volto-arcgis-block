@@ -287,8 +287,11 @@ class AreaWidget extends React.Component {
             <div className="right-panel-content">
               <div className="area-panel">
                 <div className="area-header">
-                  Chose one of the above area selection modes from the list and
-                  select the desired area on the map to download the dataset
+                  For areas of interest in the EU, EFTA, candidate countries or
+                  the United Kingdom: choose NUTS classification or draw a
+                  rectangle on the map. For areas of interest outside the EU,
+                  EFTA, candidate countries and the United Kingdom: draw a
+                  rectangle on the map.
                 </div>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
@@ -372,8 +375,10 @@ class AreaWidget extends React.Component {
                       >
                         <span>By rectangle</span>
                         <div>
-                          (Mantain the left button of the mouse clicked and draw
-                          a rectangle in the map)
+                          (Click and drag your mouse on the map. As you move
+                          your mouse, you’ll see the area of the rectangle next
+                          to your cursor. Finish the rectangle by releasing your
+                          mouse.)
                         </div>
                       </label>
                     </div>
