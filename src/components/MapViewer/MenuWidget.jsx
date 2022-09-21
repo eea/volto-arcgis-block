@@ -998,7 +998,7 @@ class MenuWidget extends React.Component {
               queryable: true,
               visible: true,
               legendEnabled: true,
-              legendUrl: layer.StaticImageLegend
+              legendUrl: layer.StaticImageLegendaddActiveLayer
                 ? layer.StaticImageLegend
                 : urlWMS + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
@@ -1099,14 +1099,13 @@ class MenuWidget extends React.Component {
           Object.keys(this.activeLayersJSON).length,
         );
       }
-      this.saveLayer(elem.id);
+      this.saveCheckedLayer(elem.id);
       let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
-      this.deleteLayer(elem.id);
-      this.layers[elem.id].opacity = 1;
+      this.deleteCheckedLayer(elem.id);
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -1114,8 +1113,10 @@ class MenuWidget extends React.Component {
     }
     this.updateCheckDataset(parentId);
     this.checkInfoWidget();
-    this.setState({});
-    this.layersReorder();
+    // update DOM then reorder
+    this.setState({}, () => {
+      this.layersReorder();
+    });
   }
 
   /**
@@ -1376,7 +1377,6 @@ class MenuWidget extends React.Component {
     //   });
     // }
     this.layersReorder();
-    this.saveLayerOrder();
   }
 
   /**
@@ -1391,6 +1391,7 @@ class MenuWidget extends React.Component {
       item.setAttribute('layer-order', order);
       this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
     });
+    this.saveLayerOrder();
   }
 
   /**
@@ -1744,15 +1745,16 @@ class MenuWidget extends React.Component {
 
         let elem = document.getElementById(key);
         if (this.activeLayersJSON[elem.id]) {
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+          let order = this.activeLayersJSON[elem.id].props['layer-order'];
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          // reorder layers
+          this.layersReorder();
+          // show/hide info widget
+          this.checkInfoWidget();
+          // update menu DOM
+          this.setState({});
         }
-
-        //this.layersReorder();
-        //this.checkInfoWidget();
       }
-
-      // update DOM
-      this.setState({});
     }
   }
 
@@ -1797,7 +1799,7 @@ class MenuWidget extends React.Component {
   /**
    * Method to save checked layers
    */
-  saveLayer(layer) {
+  saveCheckedLayer(layer) {
     if (this.props.download) return;
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (checkedLayers === null) {
@@ -1812,9 +1814,10 @@ class MenuWidget extends React.Component {
   }
 
   /**
-   * Method to delete checked layers
+   * Method to delete checked layers from sessionStorage
+   * @param {String} layer the layer id
    */
-  deleteLayer(layer) {
+  deleteCheckedLayer(layer) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (checkedLayers) {
       for (var i = 0; i < checkedLayers.length; i++) {
@@ -1823,6 +1826,27 @@ class MenuWidget extends React.Component {
         }
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+    }
+
+    // delete layer opacity
+    let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
+    if (layerOpacities) {
+      if (layerOpacities[layer]) {
+        delete layerOpacities[layer];
+        sessionStorage.setItem(
+          'layerOpacities',
+          JSON.stringify(layerOpacities),
+        );
+      }
+    }
+
+    // delete layer visibility
+    let visibleLayers = JSON.parse(sessionStorage.getItem('visibleLayers'));
+    if (visibleLayers) {
+      if (visibleLayers[layer]) {
+        delete visibleLayers[layer];
+        sessionStorage.setItem('visibleLayers', JSON.stringify(visibleLayers));
+      }
     }
   }
 
@@ -1863,6 +1887,7 @@ class MenuWidget extends React.Component {
         if (node) {
           if (!node.checked) {
             // dont uncheck layers already checked from URL param
+            // click event fires checkLayer()
             node.dispatchEvent(event);
           }
 

@@ -128,24 +128,39 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
-    this.view.watch('center', (newValue, oldValue, property, object) => {
-      this.setCenterState(newValue);
-    });
+    this.view.when(()=>{
 
-    this.view.watch('zoom', (newValue, oldValue, property, object) => {
-      this.setZoomState(newValue);
-    });
-    this.view.popup.autoOpenEnabled = false;
-    // After launching the MapViewerConfig action
-    // we will have stored the json response here:
-    // this.props.mapviewer_config
-    this.props.MapViewerConfig(flattenToAppURL(this.props.url));
-    //Once we have created the MapView, we need to ensure that the map div
-    //is refreshed in order to show the map on it. To do so, we need to
-    //trigger the renderization again, and to trigger the renderization
-    //we invoke the setState method, that changes the state and forces a
-    //react component to render itself again
-    //this.setState({});
+      this.view.watch('center', (newValue, oldValue, property, object) => {
+        this.setCenterState(newValue);
+      });
+  
+      this.view.watch('zoom', (newValue, oldValue, property, object) => {
+          this.setZoomState(newValue);
+      });
+
+      this.view.popup.autoOpenEnabled = false;
+      // After launching the MapViewerConfig action
+      // we will have stored the json response here:
+      // this.props.mapviewer_config
+      this.props.MapViewerConfig(flattenToAppURL(this.props.url));
+      //Once we have created the MapView, we need to ensure that the map div
+      //is refreshed in order to show the map on it. To do so, we need to
+      //trigger the renderization again, and to trigger the renderization
+      //we invoke the setState method, that changes the state and forces a
+      //react component to render itself again
+      //this.setState({});
+    })
+
+  }
+
+  componentWillUnmount() {
+    // clean up
+    if (this.view) {
+      this.view.container = null;
+      this.view.destroy();
+      delete this.view;
+    }
+
   }
 
   setWidgetState() {}
