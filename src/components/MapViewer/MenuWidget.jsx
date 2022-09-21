@@ -998,7 +998,7 @@ class MenuWidget extends React.Component {
               queryable: true,
               visible: true,
               legendEnabled: true,
-              legendUrl: layer.StaticImageLegendaddActiveLayer
+              legendUrl: layer.StaticImageLegend
                 ? layer.StaticImageLegend
                 : urlWMS + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
@@ -1106,6 +1106,7 @@ class MenuWidget extends React.Component {
       }
     } else {
       this.deleteCheckedLayer(elem.id);
+      this.layers[elem.id].opacity = 1;
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -1887,7 +1888,7 @@ class MenuWidget extends React.Component {
         if (node) {
           if (!node.checked) {
             // dont uncheck layers already checked from URL param
-            // click event fires checkLayer()
+            // click event fires toggleLayer()
             node.dispatchEvent(event);
           }
 
