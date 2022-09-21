@@ -1005,7 +1005,7 @@ class MenuWidget extends React.Component {
             },
           ],
           isTimeSeries: isTimeSeries,
-          fields: layer.Fields
+          fields: layer.Fields,
         });
       } else if (urlWMS.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
@@ -1018,7 +1018,7 @@ class MenuWidget extends React.Component {
             featureInfoUrl: featureInfoUrl,
           },
           isTimeSeries: isTimeSeries,
-          fields: layer.Fields
+          fields: layer.Fields,
         });
       } else {
         this.layers[
@@ -1030,7 +1030,7 @@ class MenuWidget extends React.Component {
           featureInfoUrl: featureInfoUrl,
           popupEnabled: true,
           isTimeSeries: isTimeSeries,
-          fields: layer.Fields
+          fields: layer.Fields,
         });
       }
     }

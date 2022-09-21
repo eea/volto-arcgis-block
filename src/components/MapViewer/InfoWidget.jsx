@@ -728,9 +728,9 @@ class InfoWidget extends React.Component {
         let data = this.infoData[index].data;
         if (data) {
           properties = [];
-          data.map((row) => {
+          data.forEach((row) => {
             for (const field in f) {
-              if (row[0] == f[field].name) {
+              if (row[0] === f[field].name) {
                 // alias, value
                 properties.push([f[field].alias, row[1]]);
               }
