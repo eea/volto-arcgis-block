@@ -108,6 +108,7 @@ class InfoWidget extends React.Component {
                 isTimeSeries: true,
                 type: 'wms',
                 title: title,
+                fields: layer.fields,
               });
               promises.push(this.identifyWMS(layer, e));
             } else if (layer.url.toLowerCase().includes('wmts')) {
@@ -115,6 +116,7 @@ class InfoWidget extends React.Component {
                 isTimeSeries: true,
                 type: 'wmts',
                 title: title,
+                fields: layer.fields,
               });
               promises.push(Promise.reject());
             } else {
@@ -122,6 +124,7 @@ class InfoWidget extends React.Component {
                 isTimeSeries: true,
                 type: 'featureLayer',
                 title: title,
+                fields: layer.fields,
               });
               promises.push(this.identify(layer, e));
             }
@@ -131,6 +134,7 @@ class InfoWidget extends React.Component {
                 isTimeSeries: false,
                 type: 'wms',
                 title: title,
+                fields: layer.fields,
               });
               promises.push(this.identifyWMS(layer, e));
             } else if (layer.url.toLowerCase().includes('wmts')) {
@@ -138,6 +142,7 @@ class InfoWidget extends React.Component {
                 isTimeSeries: false,
                 type: 'wmts',
                 title: title,
+                fields: layer.fields,
               });
               promises.push(Promise.reject());
             } else {
@@ -145,6 +150,7 @@ class InfoWidget extends React.Component {
                 isTimeSeries: false,
                 type: 'featureLayer',
                 title: title,
+                fields: layer.fields,
               });
               promises.push(this.props.view.hitTest(screenPoint));
             }
@@ -161,6 +167,7 @@ class InfoWidget extends React.Component {
                     title: layer.title,
                     data: properties,
                     message: 'No data avaliable for this layer',
+                    fields: layer.fields,
                   };
                 } else {
                   if (layer.isTimeSeries) {
@@ -212,6 +219,7 @@ class InfoWidget extends React.Component {
                           data: properties,
                           time: true,
                           message: message,
+                          fields: layer.fields,
                         };
                         break;
                       case 'wmts':
@@ -220,6 +228,7 @@ class InfoWidget extends React.Component {
                           data: properties,
                           time: true,
                           message: message,
+                          fields: layer.fields,
                         };
                         break;
                       case 'featureLayer':
@@ -228,6 +237,7 @@ class InfoWidget extends React.Component {
                           data: data,
                           time: true,
                           message: message,
+                          fields: layer.fields,
                         };
                         break;
                       default:
@@ -274,6 +284,7 @@ class InfoWidget extends React.Component {
                           title: layer.title,
                           data: properties,
                           message: message,
+                          fields: layer.fields,
                         };
                         break;
                       case 'wmts':
@@ -281,6 +292,7 @@ class InfoWidget extends React.Component {
                           title: layer.title,
                           data: properties,
                           message: message,
+                          fields: layer.fields,
                         };
                         break;
                       case 'featureLayer':
@@ -296,6 +308,7 @@ class InfoWidget extends React.Component {
                           title: layer.title,
                           data: Object.entries(properties),
                           message: message,
+                          fields: layer.fields,
                         };
                         break;
                       default:
@@ -707,7 +720,29 @@ class InfoWidget extends React.Component {
   }
 
   loadInfoTable(index) {
-    let properties = this.infoData[index].data;
+    let properties;
+    // set aliases using fields configured in the CMS
+    if (this.infoData[index].fields) {
+      let f = JSON.parse(this.infoData[index].fields);
+      if (f && f.length > 0) {
+        let data = this.infoData[index].data;
+        if (data) {
+          properties = [];
+          data.forEach((row) => {
+            for (const field in f) {
+              if (row[0] === f[field].name) {
+                // alias, value
+                properties.push([f[field].alias, row[1]]);
+              }
+            }
+          });
+        }
+      } else {
+        properties = this.infoData[index].data;
+      }
+    } else {
+      properties = this.infoData[index].data;
+    }
     let table = properties.map((item) => {
       return (
         <tr key={item}>
