@@ -128,14 +128,13 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
-    this.view.when(()=>{
-
+    this.view.when(() => {
       this.view.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);
       });
-  
+
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
-          this.setZoomState(newValue);
+        this.setZoomState(newValue);
       });
 
       this.view.popup.autoOpenEnabled = false;
@@ -149,8 +148,7 @@ class MapViewer extends React.Component {
       //we invoke the setState method, that changes the state and forces a
       //react component to render itself again
       //this.setState({});
-    })
-
+    });
   }
 
   componentWillUnmount() {
@@ -160,7 +158,6 @@ class MapViewer extends React.Component {
       this.view.destroy();
       delete this.view;
     }
-
   }
 
   setWidgetState() {}
