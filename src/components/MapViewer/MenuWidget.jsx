@@ -1899,11 +1899,11 @@ class MenuWidget extends React.Component {
    * Method to load previously checked layers
    */
   loadLayers() {
-    let event = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: false,
-    });
+    // let event = new MouseEvent('click', {
+    //   view: window,
+    //   bubbles: true,
+    //   cancelable: false,
+    // });
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
