@@ -1125,6 +1125,7 @@ class MenuWidget extends React.Component {
         );
       }
       this.saveCheckedLayer(elem.id);
+
       let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
@@ -1742,6 +1743,7 @@ class MenuWidget extends React.Component {
 
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
+    this.saveLayerOrder();
     this.checkInfoWidget();
     this.setState({});
   }
@@ -1773,12 +1775,13 @@ class MenuWidget extends React.Component {
         let elem = document.getElementById(key);
         if (this.activeLayersJSON[elem.id]) {
           let order = this.activeLayersJSON[elem.id].props['layer-order'];
+          // add active layer to DOM
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
           // reorder layers
           this.layersReorder();
           // show/hide info widget
           this.checkInfoWidget();
-          // update menu DOM
+          // update
           this.setState({});
         }
       }
