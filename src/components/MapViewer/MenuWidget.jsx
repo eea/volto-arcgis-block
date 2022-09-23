@@ -479,8 +479,30 @@ class MenuWidget extends React.Component {
     this.expandDropdowns();
     this.loadLayers();
     this.loadOpacity();
-
     this.loadVisibility();
+  }
+
+  /**
+   * Close opacity panel if user clicks outside
+   */
+  hideOnClickOutsideOpacity() {
+    const isVisible = (elem) =>
+      !!elem &&
+      !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+    let element = document.querySelector('.opacity-panel');
+    const outsideClickListener = (event) => {
+      if (!element.contains(event.target) && isVisible(element)) {
+        // or use: event.target.closest(selector) === null
+        this.closeOpacity();
+        removeClickListener();
+      }
+    };
+
+    const removeClickListener = () => {
+      document.removeEventListener('click', outsideClickListener);
+    };
+
+    document.addEventListener('click', outsideClickListener);
   }
 
   checkUrl() {
@@ -1005,6 +1027,7 @@ class MenuWidget extends React.Component {
             },
           ],
           isTimeSeries: isTimeSeries,
+          fields: layer.Fields,
         });
       } else if (urlWMS.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
@@ -1017,6 +1040,7 @@ class MenuWidget extends React.Component {
             featureInfoUrl: featureInfoUrl,
           },
           isTimeSeries: isTimeSeries,
+          fields: layer.Fields,
         });
       } else {
         this.layers[
@@ -1028,6 +1052,7 @@ class MenuWidget extends React.Component {
           featureInfoUrl: featureInfoUrl,
           popupEnabled: true,
           isTimeSeries: isTimeSeries,
+          fields: layer.Fields,
         });
       }
     }
@@ -1100,6 +1125,7 @@ class MenuWidget extends React.Component {
         );
       }
       this.saveCheckedLayer(elem.id);
+
       let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
@@ -1113,11 +1139,10 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
+    this.layersReorder();
     this.checkInfoWidget();
-    // update DOM then reorder
-    this.setState({}, () => {
-      this.layersReorder();
-    });
+    // update DOM
+    this.setState({});
   }
 
   /**
@@ -1378,6 +1403,7 @@ class MenuWidget extends React.Component {
     //   });
     // }
     this.layersReorder();
+    this.saveLayerOrder();
   }
 
   /**
@@ -1392,7 +1418,6 @@ class MenuWidget extends React.Component {
       item.setAttribute('layer-order', order);
       this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
     });
-    this.saveLayerOrder();
   }
 
   /**
@@ -1621,6 +1646,8 @@ class MenuWidget extends React.Component {
       document.querySelector('.opacity-panel').style.top = top + 'px';
       document.querySelector('.opacity-slider input').dataset.layer = elem.id;
     }
+    e.stopPropagation();
+    this.hideOnClickOutsideOpacity();
   }
 
   setOpacity() {
@@ -1716,6 +1743,7 @@ class MenuWidget extends React.Component {
 
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
+    this.saveLayerOrder();
     this.checkInfoWidget();
     this.setState({});
   }
@@ -1747,12 +1775,13 @@ class MenuWidget extends React.Component {
         let elem = document.getElementById(key);
         if (this.activeLayersJSON[elem.id]) {
           let order = this.activeLayersJSON[elem.id].props['layer-order'];
+          // add active layer to DOM
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
           // reorder layers
           this.layersReorder();
           // show/hide info widget
           this.checkInfoWidget();
-          // update menu DOM
+          // update
           this.setState({});
         }
       }
@@ -1873,23 +1902,25 @@ class MenuWidget extends React.Component {
    * Method to load previously checked layers
    */
   loadLayers() {
-    let event = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: false,
-    });
+    // let event = new MouseEvent('click', {
+    //   view: window,
+    //   bubbles: true,
+    //   cancelable: false,
+    // });
 
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
       for (var i = layers.length - 1; i >= 0; i--) {
-        let elem = layers[i];
-        let node = document.getElementById(elem);
+        let layer = layers[i];
+        let node = document.getElementById(layer);
 
         if (node) {
           if (!node.checked) {
             // dont uncheck layers already checked from URL param
             // click event fires toggleLayer()
-            node.dispatchEvent(event);
+            //node.dispatchEvent(event);
+            node.checked = true;
+            this.toggleLayer(node);
           }
 
           // set scroll position
