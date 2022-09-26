@@ -334,12 +334,17 @@ class InfoWidget extends React.Component {
 
   getLayerTitle(layer) {
     let title;
-    if (layer.activeLayer) {
-      title = layer.activeLayer.title;
-    } else if (layer.sublayers) {
-      title = layer.sublayers.items[0].title;
+    if (layer.url.toLowerCase().includes('wmts')) {
+      // CLMS-1105
+      title = layer._wmtsTitle;
     } else {
-      title = layer.title;
+      if (layer.sublayers) {
+        title = layer.sublayers.items[0].title;
+      } else if (layer.activeLayer) {
+        title = layer.activeLayer.title;
+      } else {
+        title = layer.title;
+      }
     }
     return title;
   }
