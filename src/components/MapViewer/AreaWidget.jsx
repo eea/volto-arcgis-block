@@ -289,9 +289,11 @@ class AreaWidget extends React.Component {
                 <div className="area-header">
                   For areas of interest in the EU, EFTA, candidate countries or
                   the United Kingdom: choose NUTS classification or draw a
-                  rectangle on the map. For areas of interest outside the EU,
-                  EFTA, candidate countries and the United Kingdom: draw a
                   rectangle on the map.
+                  <br></br>
+                  <br></br>
+                  For areas of interest outside the EU, EFTA, candidate
+                  countries and the United Kingdom: draw a rectangle on the map.
                 </div>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
@@ -373,7 +375,7 @@ class AreaWidget extends React.Component {
                         className="ccl-form-radio-label"
                         htmlFor="download_area_select_rectangle"
                       >
-                        <span>By rectangle</span>
+                        <span>Draw by rectangle</span>
                         <div>
                           (Click and drag your mouse on the map. As you move
                           your mouse, you’ll see the area of the rectangle next
