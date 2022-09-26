@@ -1034,6 +1034,7 @@ class MenuWidget extends React.Component {
           url: urlWMS.endsWith('?') ? urlWMS : urlWMS + '?',
           //id: layer.LayerId,
           title: '',
+          _wmtsTitle: layer.Title, // CLMS-1105
           activeLayer: {
             id: layer.LayerId,
             title: layer.Title,
@@ -1612,12 +1613,17 @@ class MenuWidget extends React.Component {
 
   getLayerTitle(layer) {
     let title;
-    if (layer.sublayers) {
-      title = layer.sublayers.items[0].title;
-    } else if (layer.activeLayer) {
-      title = layer.activeLayer.title;
+    if (layer.url.toLowerCase().includes('wmts')) {
+      // CLMS-1105
+      title = layer._wmtsTitle;
     } else {
-      title = layer.title;
+      if (layer.sublayers) {
+        title = layer.sublayers.items[0].title;
+      } else if (layer.activeLayer) {
+        title = layer.activeLayer.title;
+      } else {
+        title = layer.title;
+      }
     }
     return title;
   }
