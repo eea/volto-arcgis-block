@@ -58,7 +58,7 @@ class InfoWidget extends React.Component {
           </div>
           <div className="use-case-detail-content">
             <div className="use-case-detail-product">
-              {UseCase.Use_case_topics.replaceAll(',', ', ')}
+              {/* {UseCase.Use_case_topics.replaceAll(',', ', ')} */}
             </div>
             <div className="use-case-detail-title">
               <h3>{UseCase.Use_case_title}</h3>
