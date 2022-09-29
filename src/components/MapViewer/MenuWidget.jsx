@@ -453,7 +453,29 @@ class MenuWidget extends React.Component {
       this.loadFirst = false;
       this.zoomTooltips();
     }
+
+    // CLMS-1389
+    // "Active on map" section and the time slider opened by default if download and timeseries == true
+    if (this.props.download && this.layers) {
+      let layerid = Object.keys(this.layers)[0];
+
+      if (this.layers[layerid].isTimeSeries) {
+        // select active on map tab
+        let event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: false,
+        });
+        let el = document.getElementById('active_label');
+        el.dispatchEvent(event);
+
+        //open time slider
+        let layerElem = document.getElementById(layerid);
+        this.showTimeSlider(layerElem);
+      }
+    }
   }
+
   /**
    * This method is executed after the rener method is executed
    */
