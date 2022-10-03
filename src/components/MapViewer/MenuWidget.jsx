@@ -31,7 +31,7 @@ export const AddCartItem = ({
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
   const [message, setMessage] = useState(0);
-  const [showMessage, setShowMessage] = useState(false);
+  const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
 
   const checkArea = (e) => {
