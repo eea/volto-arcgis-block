@@ -77,7 +77,7 @@ export const AddCartItem = ({
         setMessage('Added to cart');
         showMessageTimer('Added to cart', 'success');
       });
-    }-
+    }
   };
 
   const checkCartData = (cartData, area, dataset) => {
@@ -279,9 +279,12 @@ export const AddCartItem = ({
                         <p>
                           If you would like to download data for your area of
                           interest and for the selected time interval, please
-                          follow this{' '}<UniversalLink href={dataset.DatasetURL + '/download-by-area'}>
-                          link.
-                </UniversalLink>
+                          follow this{' '}
+                          <UniversalLink
+                            href={dataset.DatasetURL + '/download-by-area'}
+                          >
+                            link.
+                          </UniversalLink>
                         </p>
                       </li>
                     </>
@@ -300,9 +303,12 @@ export const AddCartItem = ({
                 <p>
                   If you would like to download data for your area of interest
                   and for the selected time interval, please follow this{' '}
-                  <UniversalLink href={dataset.DatasetURL + '/download-by-area'}>
-                          link.
-                </UniversalLink>.
+                  <UniversalLink
+                    href={dataset.DatasetURL + '/download-by-area'}
+                  >
+                    link.
+                  </UniversalLink>
+                  .
                 </p>
               )}
             </Modal.Content>
