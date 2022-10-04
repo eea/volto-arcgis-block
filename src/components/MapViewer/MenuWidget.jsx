@@ -66,8 +66,8 @@ export const AddCartItem = ({
           showMessageTimer('Added to cart', 'success');
         });
       } else {
-        setMessage('Select an area');
-        showMessageTimer('Select an area', 'warning');
+        setMessage('Please select an area');
+        showMessageTimer('Please select an area', 'warning');
       }
     } else {
       closeModal(e);
