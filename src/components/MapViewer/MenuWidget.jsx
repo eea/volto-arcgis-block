@@ -6,6 +6,9 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
+import { Toast } from '@plone/volto/components';
+import { toast } from 'react-toastify';
+import { UniversalLink } from '@plone/volto/components';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
 const popupSettings = {
@@ -29,7 +32,7 @@ export const AddCartItem = ({
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
   const [message, setMessage] = useState(0);
-  const [showMessage, setShowMessage] = useState(false);
+  const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
 
   const checkArea = (e) => {
@@ -61,18 +64,18 @@ export const AddCartItem = ({
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
           setMessage('Added to cart');
-          showMessageTimer();
+          showMessageTimer('Added to cart', 'success');
         });
       } else {
-        setMessage('Select an area');
-        showMessageTimer();
+        setMessage('Please select an area');
+        showMessageTimer('Please select an area', 'warning');
       }
     } else {
       closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
         setMessage('Added to cart');
-        showMessageTimer();
+        showMessageTimer('Added to cart', 'success');
       });
     }
   };
@@ -114,11 +117,24 @@ export const AddCartItem = ({
     props.updateArea('');
   };
 
-  const showMessageTimer = () => {
-    setShowMessage(true);
-    setTimeout(() => {
-      setShowMessage(false);
-    }, 4000);
+  const showMessageTimer = (msg, type) => {
+    toast[type](
+      <Toast
+        info
+        autoClose={4000}
+        // title={'test'}
+        content={msg}
+      />,
+      {
+        position: 'top-center',
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+      },
+    );
   };
 
   const showModal = (e) => {
@@ -264,10 +280,11 @@ export const AddCartItem = ({
                           If you would like to download data for your area of
                           interest and for the selected time interval, please
                           follow this{' '}
-                          <a href={dataset.DatasetURL + '/download-by-area'}>
-                            link
-                          </a>
-                          .
+                          <UniversalLink
+                            href={dataset.DatasetURL + '/download-by-area'}
+                          >
+                            link.
+                          </UniversalLink>
                         </p>
                       </li>
                     </>
@@ -281,6 +298,18 @@ export const AddCartItem = ({
                     </li>
                   )}
                 </ul>
+              )}
+              {areaData && dataset.IsTimeSeries && (
+                <p>
+                  If you would like to download data for your area of interest
+                  and for the selected time interval, please follow this{' '}
+                  <UniversalLink
+                    href={dataset.DatasetURL + '/download-by-area'}
+                  >
+                    link.
+                  </UniversalLink>
+                  .
+                </p>
               )}
             </Modal.Content>
             <Modal.Actions>
