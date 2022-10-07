@@ -308,7 +308,6 @@ export const AddCartItem = ({
                   >
                     link.
                   </UniversalLink>
-                  .
                 </p>
               )}
             </Modal.Content>
