@@ -8,6 +8,7 @@ import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
+import { UniversalLink } from '@plone/volto/components';
 var WMSLayer, WMTSLayer, FeatureLayer;
 
 const popupSettings = {
@@ -66,8 +67,8 @@ export const AddCartItem = ({
           showMessageTimer('Added to cart', 'success');
         });
       } else {
-        setMessage('Select an area');
-        showMessageTimer('Select an area', 'warning');
+        setMessage('Please select an area');
+        showMessageTimer('Please select an area', 'warning');
       }
     } else {
       closeModal(e);
@@ -279,10 +280,11 @@ export const AddCartItem = ({
                           If you would like to download data for your area of
                           interest and for the selected time interval, please
                           follow this{' '}
-                          <a href={dataset.DatasetURL + '/download-by-area'}>
-                            link
-                          </a>
-                          .
+                          <UniversalLink
+                            href={dataset.DatasetURL + '/download-by-area'}
+                          >
+                            link.
+                          </UniversalLink>
                         </p>
                       </li>
                     </>
@@ -301,7 +303,11 @@ export const AddCartItem = ({
                 <p>
                   If you would like to download data for your area of interest
                   and for the selected time interval, please follow this{' '}
-                  <a href={dataset.DatasetURL + '/download-by-area'}>link</a>.
+                  <UniversalLink
+                    href={dataset.DatasetURL + '/download-by-area'}
+                  >
+                    link.
+                  </UniversalLink>
                 </p>
               )}
             </Modal.Content>
