@@ -126,16 +126,16 @@
 }
 
 .measurement-dropdown
-  .ccl-expandable__button[aria-expanded='true']
+  .ccl-expandable__button[aria-expanded="true"]
   .dropdown-icon {
   transform: rotate(-180deg);
 }
 
-.measurement-dropdown .ccl-expandable__button[aria-expanded='false'] + * {
+.measurement-dropdown .ccl-expandable__button[aria-expanded="false"] + * {
   display: none;
 }
 
-.measurement-dropdown .ccl-expandable__button[aria-expanded='true'] + * {
+.measurement-dropdown .ccl-expandable__button[aria-expanded="true"] + * {
   display: block;
 }
 
@@ -238,7 +238,7 @@
   font-size: 1rem;
 }
 
-.esri-print input[type='checkbox'] {
+.esri-print input[type="checkbox"] {
   margin-right: 0.25rem;
   vertical-align: middle;
 }
@@ -430,13 +430,13 @@
 }
 
 .map-menu-dropdown
-  .ccl-expandable__button[aria-expanded='false']
+  .ccl-expandable__button[aria-expanded="false"]
   .dropdown-icon {
   transform: rotate(0deg);
 }
 
 .map-menu-dropdown
-  .ccl-expandable__button[aria-expanded='true']
+  .ccl-expandable__button[aria-expanded="true"]
   .dropdown-icon {
   transform: rotate(90deg);
 }
@@ -450,11 +450,11 @@
   color: black;
 }
 
-.map-menu-dropdown .ccl-expandable__button[aria-expanded='false'] + * {
+.map-menu-dropdown .ccl-expandable__button[aria-expanded="false"] + * {
   display: none;
 }
 
-.map-menu-dropdown .ccl-expandable__button[aria-expanded='true'] + * {
+.map-menu-dropdown .ccl-expandable__button[aria-expanded="true"] + * {
   display: block;
 }
 
@@ -784,8 +784,8 @@
 
 .esri-time-slider__time-extent-date {
   margin: 0.5rem 0;
-  color:#a0b128;
-  font-weight: bold;
+  color: #a0b128 !important;
+  font-weight: bold !important;
 }
 
 .esri-time-slider__time-extent-time,
@@ -875,17 +875,17 @@
 }
 
 /* Tooltip */
-[tooltip][type='widget'] {
+[tooltip][type="widget"] {
   height: 36px;
 }
 
-[tooltip][type='widget']::after {
+[tooltip][type="widget"]::after {
   border: none;
   background: #ffffffcc;
 }
 
-[tooltip][direction^='left'][type='widget']::before,
-[tooltip][direction^='right'][type='widget']::before {
+[tooltip][direction^="left"][type="widget"]::before,
+[tooltip][direction^="right"][type="widget"]::before {
   border-color: transparent;
 }
 
@@ -929,7 +929,7 @@
   float: right;
 }
 
-input[type='range'] {
+input[type="range"] {
   width: 100%;
   height: 4px;
   -webkit-appearance: none;
@@ -938,7 +938,7 @@ input[type='range'] {
   cursor: pointer;
 }
 
-input[type='range']::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border: solid 3px black;
@@ -949,7 +949,7 @@ input[type='range']::-webkit-slider-thumb {
   transition: all 0.3s ease-in-out;
 }
 
-input[type='range']::-moz-range-thumb {
+input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border: solid 3px black;
@@ -960,7 +960,7 @@ input[type='range']::-moz-range-thumb {
   transition: all 0.3s ease-in-out;
 }
 
-input[type='range']::-ms-thumb {
+input[type="range"]::-ms-thumb {
   width: 16px;
   height: 16px;
   border: solid 3px black;
@@ -971,36 +971,36 @@ input[type='range']::-ms-thumb {
   transition: all 0.3s ease-in-out;
 }
 
-input[type='range']::-webkit-slider-thumb:hover {
+input[type="range"]::-webkit-slider-thumb:hover {
   border-color: black;
   transform: scale(1.2);
 }
 
-input[type='range']::-moz-range-thumb:hover {
+input[type="range"]::-moz-range-thumb:hover {
   border-color: black;
   transform: scale(1.2);
 }
 
-input[type='range']::-ms-thumb:hover {
+input[type="range"]::-ms-thumb:hover {
   border-color: black;
   transform: scale(1.2);
 }
 
-input[type='range']::-webkit-slider-runnable-track {
+input[type="range"]::-webkit-slider-runnable-track {
   border: none;
   -webkit-appearance: none;
   background: transparent;
   box-shadow: none;
 }
 
-input[type='range']::-moz-range-track {
+input[type="range"]::-moz-range-track {
   border: none;
   -webkit-appearance: none;
   background: transparent;
   box-shadow: none;
 }
 
-input[type='range']::-ms-track {
+input[type="range"]::-ms-track {
   border: none;
   -webkit-appearance: none;
   background: transparent;
