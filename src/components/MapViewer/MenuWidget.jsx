@@ -910,8 +910,16 @@ class MenuWidget extends React.Component {
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + datIndex}
-            onClick={this.toggleDropdownContent.bind(this)}
-            onKeyDown={this.toggleDropdownContent.bind(this)}
+            onClick={
+              dataset.HandlingLevel
+                ? null
+                : this.toggleDropdownContent.bind(this)
+            }
+            onKeyDown={
+              dataset.HandlingLevel
+                ? null
+                : this.toggleDropdownContent.bind(this)
+            }
             tabIndex="0"
             role="button"
             style={style}
@@ -1283,14 +1291,6 @@ class MenuWidget extends React.Component {
    */
 
   toggleDropdownContent(e) {
-    //CLMS-1471 dont expand when dropdown-icon is hidden (if handlingLevel == true)
-    if (e.currentTarget.firstChild) {
-      if (e.currentTarget.firstChild.className === 'dropdown-icon') {
-        if (e.currentTarget.firstChild.style.visibility === 'hidden') {
-          return;
-        }
-      }
-    }
     var aria = e.currentTarget.getAttribute('aria-expanded');
     e.currentTarget.setAttribute(
       'aria-expanded',
