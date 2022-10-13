@@ -164,6 +164,27 @@ class TimesliderWidget extends React.Component {
       timeVisible: true,
       mode: this.props.download ? 'time-window' : 'instant',
       loop: false,
+      labelFormatFunction: (value, type, element, layout) => {
+        if (!this.TimesliderWidget.fullTimeExtent) {
+          element.innerText = 'loading...';
+          return;
+        }
+        if (value) {
+          const normal = new Intl.DateTimeFormat('en-gb');
+          switch (type) {
+            case 'min':
+            case 'max':
+              element.innerText = normal.format(value);
+              break;
+            case 'extent':
+              element.innerText = normal.format(value[0]);
+              break;
+            default:
+              element.innerText = normal.format(value);
+              break;
+          }
+        }
+      },
       values: this.props.time.start
         ? this.props.download
           ? [new Date(this.props.time.start), new Date(this.props.time.end)]

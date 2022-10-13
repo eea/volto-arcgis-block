@@ -910,8 +910,16 @@ class MenuWidget extends React.Component {
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + datIndex}
-            onClick={this.toggleDropdownContent.bind(this)}
-            onKeyDown={this.toggleDropdownContent.bind(this)}
+            onClick={
+              dataset.HandlingLevel
+                ? null
+                : this.toggleDropdownContent.bind(this)
+            }
+            onKeyDown={
+              dataset.HandlingLevel
+                ? null
+                : this.toggleDropdownContent.bind(this)
+            }
             tabIndex="0"
             role="button"
             style={style}

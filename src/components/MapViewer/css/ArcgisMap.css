@@ -784,6 +784,8 @@
 
 .esri-time-slider__time-extent-date {
   margin: 0.5rem 0;
+  color: #a0b128 !important;
+  font-weight: bold !important;
 }
 
 .esri-time-slider__time-extent-time,
