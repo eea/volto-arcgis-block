@@ -983,7 +983,10 @@ class MenuWidget extends React.Component {
                       />
                     </a>
                   )}
-                  {!this.props.download && dataset.Downloadable ? (
+                  {!this.props.download &&
+                  dataset.Downloadable &&
+                  document.getElementById(checkIndex) &&
+                  document.getElementById(checkIndex).checked ? (
                     <AddCartItem
                       cartData={this.compCfg}
                       props={this.props}
