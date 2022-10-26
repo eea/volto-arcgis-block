@@ -141,6 +141,9 @@ class InfoWidget extends React.Component {
           className="use-case-element"
           aria-hidden="true"
           onClick={() => {
+            //save scroll position CLMS-1489
+            let scrollPosition =
+              document.querySelector('.use-cases-products-list').scrollTop || 0;
             view.popup.close();
             layerControl.getGeometry(val.Spatial_coverage, layerHighlight);
             layerControl.showLayer(layerHighlight.id);
@@ -148,6 +151,7 @@ class InfoWidget extends React.Component {
               useCaseLevel: 4,
               selectedUseCase: val,
               previousState: prevState.useCaseLevel,
+              scrollPosition: scrollPosition,
             }));
           }}
           id={`use_case_${val.OBJECTID}`}
@@ -286,7 +290,8 @@ class InfoWidget extends React.Component {
       <div key={topic_name} className="use-cases-dropdown">
         <div
           className="ccl-expandable__button"
-          aria-expanded="false"
+          aria-expanded={mapViewer.state.activeDropdowns.includes(topic_name)}
+          id={topic_name}
           onClick={this.toggleDropdownContent.bind(this)}
           onKeyDown={this.toggleDropdownContent.bind(this)}
           tabIndex="0"
@@ -306,13 +311,32 @@ class InfoWidget extends React.Component {
   toggleDropdownContent(e) {
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+
+    // dropdown expanded
     if (aria === 'false') {
+      //save for reload
+      mapViewer.state.activeDropdowns.push(e.target.getAttribute('id'));
+
+      //scroll position
       document.querySelector('.use-cases-products-list').scrollTo({
         top:
           e.currentTarget.offsetTop -
           document.querySelector('.use-cases-products-list').offsetTop,
         behavior: 'smooth',
       });
+    } else {
+      if (
+        //remove for reload
+        mapViewer.state.activeDropdowns.includes(e.target.getAttribute('id'))
+      ) {
+        const index = mapViewer.state.activeDropdowns.indexOf(
+          e.target.getAttribute('id'),
+        );
+        if (index > -1) {
+          // only splice array when item is found
+          mapViewer.state.activeDropdowns.splice(index, 1);
+        }
+      }
     }
   }
 
@@ -458,6 +482,16 @@ class InfoWidget extends React.Component {
       default:
         return 0;
     }
+  }
+
+  componentDidUpdate() {
+    // code to run after initial render goes here
+    try {
+      // go to saved scroll position
+      document
+        .querySelector('.use-cases-products-list')
+        .scrollTo({ top: mapViewer.state.scrollPosition, behavior: 'auto' });
+    } catch {}
   }
 
   /**
