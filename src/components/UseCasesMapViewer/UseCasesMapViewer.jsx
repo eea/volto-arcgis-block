@@ -1,12 +1,12 @@
-import React, { createRef } from 'react';
-import './css/ArcgisMap.css';
-import classNames from 'classnames';
+import React, { createRef } from "react";
+import "./css/ArcgisMap.css";
+import classNames from "classnames";
 
-import { loadModules, loadCss } from 'esri-loader';
-import LayerControl from './LayerControl';
-import InfoWidget from './InfoWidget';
-import LegendWidget from './LegendWidget';
-import NavigationControl from './NavigationControl';
+import { loadModules, loadCss } from "esri-loader";
+import LayerControl from "./LayerControl";
+import InfoWidget from "./InfoWidget";
+import LegendWidget from "./LegendWidget";
+import NavigationControl from "./NavigationControl";
 
 let Map,
   MapView,
@@ -31,49 +31,50 @@ class UseCasesMapViewer extends React.Component {
     this.map = null;
     this.id = props.id;
     this.popupOnce = false;
-    this.popupRegion = '';
-    this.mapClass = classNames('map-container', {
+    this.popupRegion = "";
+    this.mapClass = classNames("map-container", {
       [`${props.customClass}`]: props.customClass || null,
     });
     this.spatialConfig = {
-      id: 'spatialLayer',
+      id: "spatialLayer",
       url: props.cfg.Services.SpatialCoverageLayer,
       render: props.cfg.SpatialRenderer,
       showLegend: true,
     };
     this.regionConfig = {
-      id: 'regionLayer',
+      id: "regionLayer",
       url: props.cfg.Services.RegionLayer,
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
       showLegend: false,
     };
     this.HighlightConfig = {
-      id: 'HightlightLayer',
+      id: "HightlightLayer",
       url: props.cfg.Services.Highlight_service,
       render: props.cfg.HightlightRenderer,
       showLegend: false,
     };
     this.state = {
       useCaseLevel: 1,
-      region: '',
-      selectedUseCase: '',
+      region: "",
+      selectedUseCase: "",
       selectedUseCases: [],
       previousState: 1,
       showMapMenu: false,
       activeDropdowns: [],
-      scrollPosition: 0,
+      productsScrollPosition: 0,
+      casesScrollPosition: 0,
     };
   }
 
   loader() {
     return loadModules([
-      'esri/WebMap',
-      'esri/views/MapView',
-      'esri/layers/FeatureLayer',
-      'esri/geometry/Extent',
-      'esri/Basemap',
-      'esri/layers/VectorTileLayer',
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/geometry/Extent",
+      "esri/Basemap",
+      "esri/layers/VectorTileLayer",
     ]).then(
       ([
         _Map,
@@ -91,7 +92,7 @@ class UseCasesMapViewer extends React.Component {
           _Basemap,
           _VectorTileLayer,
         ];
-      },
+      }
     );
   }
 
@@ -106,7 +107,7 @@ class UseCasesMapViewer extends React.Component {
 
     const gray_basemap = new VectorTileLayer({
       portalItem: {
-        id: '291da5eab3a0412593b66d384379f89f',
+        id: "291da5eab3a0412593b66d384379f89f",
       },
     });
 
@@ -126,12 +127,12 @@ class UseCasesMapViewer extends React.Component {
       center: this.mapCfg.center,
       zoom: this.mapCfg.zoom,
       ui: {
-        components: ['attribution'],
+        components: ["attribution"],
       },
     });
 
     this.view.ui.add(this.zoom, {
-      position: 'top-right',
+      position: "top-right",
     });
 
     layerControl = new LayerControl({
@@ -190,7 +191,7 @@ class UseCasesMapViewer extends React.Component {
       this.view,
       layerControl,
       navigationControl,
-      layerSpatial,
+      layerSpatial
     );
 
     //Once we have created the MapView, we need to ensure that the map div
@@ -211,41 +212,41 @@ class UseCasesMapViewer extends React.Component {
   setMapFunctions(view, layerControl, navigationControl, layerSpatial) {
     const prohibitedKeys = this.mapCfg.prohibitedKeys;
 
-    view.on('mouse-wheel', function (event) {
+    view.on("mouse-wheel", function (event) {
       event.stopPropagation();
     });
-    view.on('double-click', function (event) {
+    view.on("double-click", function (event) {
       event.stopPropagation();
     });
-    view.on('double-click', ['Control'], function (event) {
+    view.on("double-click", ["Control"], function (event) {
       event.stopPropagation();
     });
 
-    view.on('click', ['Shift'], function (event) {
+    view.on("click", ["Shift"], function (event) {
       event.stopPropagation();
     });
-    view.on('drag', function (event) {
+    view.on("drag", function (event) {
       event.stopPropagation();
     });
-    view.on('drag', ['Shift'], function (event) {
+    view.on("drag", ["Shift"], function (event) {
       event.stopPropagation();
     });
-    view.on('drag', ['Shift', 'Control'], function (event) {
+    view.on("drag", ["Shift", "Control"], function (event) {
       event.stopPropagation();
     });
-    view.on('key-down', function (event) {
+    view.on("key-down", function (event) {
       let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
-    view.on('key-down', ['Shift'], function (event) {
+    view.on("key-down", ["Shift"], function (event) {
       let keyPressed = event.key;
       if (prohibitedKeys.indexOf(keyPressed) !== -1) {
         event.stopPropagation();
       }
     });
-    view.on('click', (e) => {
+    view.on("click", (e) => {
       let screenPoint = { x: e.x, y: e.y };
 
       (async () => {
@@ -259,14 +260,23 @@ class UseCasesMapViewer extends React.Component {
             navigationControl.navigateToRegion(
               boundingBox,
               selectedRegion,
-              layerSpatial,
+              layerSpatial
             );
+            // CLMS-1489
+            let productsScrollPosition;
+            let pl = document.getElementById("use-cases-product-list");
+            if (pl) {
+              productsScrollPosition = pl.scrollTop;
+            } else {
+              productsScrollPosition = 0;
+            }
             this.setState((prevState) => {
               return {
                 useCaseLevel: 2,
                 selectedUseCase: selectedPoint,
                 region: selectedRegion,
                 previousState: prevState.useCaseLevel,
+                productsScrollPosition: productsScrollPosition,
               };
             });
           } else if (
@@ -281,7 +291,7 @@ class UseCasesMapViewer extends React.Component {
                   navigationControl.navigateToRegion(
                     data.BBOX,
                     data.Region,
-                    layerSpatial,
+                    layerSpatial
                   );
 
                   MapViewerThis.setState((prevState) => {
@@ -292,7 +302,7 @@ class UseCasesMapViewer extends React.Component {
                       previousState: prevState.useCaseLevel,
                     };
                   });
-                },
+                }
               );
             } else {
               let latLon = {
@@ -317,7 +327,7 @@ class UseCasesMapViewer extends React.Component {
                     selectedTitle,
                     selectedRegion,
                     selectedSpatial,
-                    layerSpatial,
+                    layerSpatial
                   );
                   MapViewerThis.setState((prevState) => {
                     return {
@@ -332,12 +342,12 @@ class UseCasesMapViewer extends React.Component {
           }
           view.popup.close();
           this.popupOnce = true;
-          document.querySelector('.map').style.cursor = '';
+          document.querySelector(".map").style.cursor = "";
         }
       })();
     });
 
-    view.on('pointer-move', (e) => {
+    view.on("pointer-move", (e) => {
       let screenPoint = {
         x: e.x,
         y: e.y,
@@ -351,47 +361,47 @@ class UseCasesMapViewer extends React.Component {
               this.popupRegion === response.results[0].graphic.attributes.Region
             ) {
               this.popupOnce = false;
-              document.querySelector('.map').style.cursor = 'pointer';
+              document.querySelector(".map").style.cursor = "pointer";
               let region = response.results[0].graphic.attributes.Region;
 
               layerControl.getRegionInfo(region, (data) => {
                 let data_eu = [
                   ...new Set(
                     data.features
-                      .filter((a) => a.attributes.Spatial_coverage === 'EU')
-                      .map((item) => item.attributes.Use_case_id),
+                      .filter((a) => a.attributes.Spatial_coverage === "EU")
+                      .map((item) => item.attributes.Use_case_id)
                   ),
                 ].length;
                 let data_eu_uk = [
                   ...new Set(
                     data.features
                       .filter(
-                        (a) => a.attributes.Spatial_coverage === 'EU 27+UK',
+                        (a) => a.attributes.Spatial_coverage === "EU 27+UK"
                       )
-                      .map((item) => item.attributes.Use_case_id),
+                      .map((item) => item.attributes.Use_case_id)
                   ),
                 ].length;
                 let data_eea = [
                   ...new Set(
                     data.features
-                      .filter((a) => a.attributes.Spatial_coverage === 'EEA38')
-                      .map((item) => item.attributes.Use_case_id),
+                      .filter((a) => a.attributes.Spatial_coverage === "EEA38")
+                      .map((item) => item.attributes.Use_case_id)
                   ),
                 ].length;
                 let data_eea_uk = [
                   ...new Set(
                     data.features
                       .filter(
-                        (a) => a.attributes.Spatial_coverage === 'EEA38+UK',
+                        (a) => a.attributes.Spatial_coverage === "EEA38+UK"
                       )
-                      .map((item) => item.attributes.Use_case_id),
+                      .map((item) => item.attributes.Use_case_id)
                   ),
                 ].length;
                 let data_global = [
                   ...new Set(
                     data.features
-                      .filter((a) => a.attributes.Spatial_coverage === 'GLOBAL')
-                      .map((item) => item.attributes.Use_case_id),
+                      .filter((a) => a.attributes.Spatial_coverage === "GLOBAL")
+                      .map((item) => item.attributes.Use_case_id)
                   ),
                 ].length;
                 let data_country = [
@@ -399,17 +409,17 @@ class UseCasesMapViewer extends React.Component {
                     data.features
                       .filter(
                         (a) =>
-                          a.attributes.Spatial_coverage !== 'EU' &&
-                          a.attributes.Spatial_coverage !== 'EU 27+UK' &&
-                          a.attributes.Spatial_coverage !== 'EEA38' &&
-                          a.attributes.Spatial_coverage !== 'EEA38+UK' &&
-                          a.attributes.Spatial_coverage !== 'GLOBAL',
+                          a.attributes.Spatial_coverage !== "EU" &&
+                          a.attributes.Spatial_coverage !== "EU 27+UK" &&
+                          a.attributes.Spatial_coverage !== "EEA38" &&
+                          a.attributes.Spatial_coverage !== "EEA38+UK" &&
+                          a.attributes.Spatial_coverage !== "GLOBAL"
                       )
-                      .map((item) => item.attributes.Use_case_id),
+                      .map((item) => item.attributes.Use_case_id)
                   ),
                 ].length;
 
-                let string = '';
+                let string = "";
                 if (data_eu > 0) {
                   string += `<div>${data_eu} Use cases with EU coverage</div>`;
                 }
@@ -444,17 +454,17 @@ class UseCasesMapViewer extends React.Component {
               this.popupOnce = true;
               if (response.results[0].graphic.attributes.Region === undefined) {
                 view.popup.close();
-                document.querySelector('.map').style.cursor = '';
+                document.querySelector(".map").style.cursor = "";
               }
             }
           } else {
             this.popupOnce = true;
-            document.querySelector('.map').style.cursor = '';
+            document.querySelector(".map").style.cursor = "";
             view.popup.close();
           }
         });
       } else if (this.state.useCaseLevel === 2) {
-        if (document.querySelector('.esri-popup').hasChildNodes()) {
+        if (document.querySelector(".esri-popup").hasChildNodes()) {
           view.popup.close();
         }
         view.hitTest(screenPoint).then((response) => {
