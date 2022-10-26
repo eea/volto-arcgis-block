@@ -61,6 +61,8 @@ class UseCasesMapViewer extends React.Component {
       selectedUseCases: [],
       previousState: 1,
       showMapMenu: false,
+      activeDropdowns: [],
+      scrollPosition: 0,
     };
   }
 
