@@ -61,6 +61,9 @@ class UseCasesMapViewer extends React.Component {
       selectedUseCases: [],
       previousState: 1,
       showMapMenu: false,
+      activeDropdowns: [],
+      productsScrollPosition: 0,
+      casesScrollPosition: 0,
     };
   }
 
@@ -245,6 +248,21 @@ class UseCasesMapViewer extends React.Component {
     });
     view.on('click', (e) => {
       let screenPoint = { x: e.x, y: e.y };
+      // CLMS-1489
+      let productsScrollPosition;
+      let pl = document.getElementById('use-cases-product-list');
+      if (pl) {
+        productsScrollPosition = pl.scrollTop;
+      } else {
+        productsScrollPosition = null;
+      }
+      let casesScrollPosition;
+      let ucl = document.getElementById('use-cases-list');
+      if (ucl) {
+        casesScrollPosition = ucl.scrollTop;
+      } else {
+        casesScrollPosition = null;
+      }
 
       (async () => {
         let selectedPoint = await layerControl.getPointInfo(screenPoint);
@@ -259,12 +277,26 @@ class UseCasesMapViewer extends React.Component {
               selectedRegion,
               layerSpatial,
             );
+            // CLMS-1489
+            let productsScrollPosition;
+            let pl = document.getElementById('use-cases-product-list');
+            if (pl) {
+              productsScrollPosition = pl.scrollTop;
+            } else {
+              productsScrollPosition = 0;
+            }
             this.setState((prevState) => {
               return {
                 useCaseLevel: 2,
                 selectedUseCase: selectedPoint,
                 region: selectedRegion,
                 previousState: prevState.useCaseLevel,
+                productsScrollPosition: productsScrollPosition
+                  ? productsScrollPosition
+                  : prevState.productsScrollPosition,
+                casesScrollPosition: casesScrollPosition
+                  ? casesScrollPosition
+                  : prevState.casesScrollPosition,
               };
             });
           } else if (
@@ -288,6 +320,12 @@ class UseCasesMapViewer extends React.Component {
                       selectedUseCase: data,
                       region: data.Region,
                       previousState: prevState.useCaseLevel,
+                      productsScrollPosition: productsScrollPosition
+                        ? productsScrollPosition
+                        : prevState.productsScrollPosition,
+                      casesScrollPosition: casesScrollPosition
+                        ? casesScrollPosition
+                        : prevState.casesScrollPosition,
                     };
                   });
                 },
@@ -307,6 +345,12 @@ class UseCasesMapViewer extends React.Component {
                       selectedUseCase: selectedPoint,
                       selectedUseCases: data.features,
                       previousState: prevState.useCaseLevel,
+                      productsScrollPosition: productsScrollPosition
+                        ? productsScrollPosition
+                        : prevState.productsScrollPosition,
+                      casesScrollPosition: casesScrollPosition
+                        ? casesScrollPosition
+                        : prevState.casesScrollPosition,
                     };
                   });
                 } else {
@@ -322,6 +366,12 @@ class UseCasesMapViewer extends React.Component {
                       useCaseLevel: 4,
                       selectedUseCase: selectedPoint,
                       previousState: prevState.useCaseLevel,
+                      productsScrollPosition: productsScrollPosition
+                        ? productsScrollPosition
+                        : prevState.productsScrollPosition,
+                      casesScrollPosition: casesScrollPosition
+                        ? casesScrollPosition
+                        : prevState.casesScrollPosition,
                     };
                   });
                 }

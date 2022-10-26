@@ -141,6 +141,22 @@ class InfoWidget extends React.Component {
           className="use-case-element"
           aria-hidden="true"
           onClick={() => {
+            //save scroll position CLMS-1489
+            let productsScrollPosition;
+            let pl = document.getElementById('use-cases-product-list');
+            if (pl) {
+              productsScrollPosition = pl.scrollTop;
+            } else {
+              productsScrollPosition = null;
+            }
+            let casesScrollPosition;
+            let ucl = document.getElementById('use-cases-list');
+            if (ucl) {
+              casesScrollPosition = ucl.scrollTop;
+            } else {
+              casesScrollPosition = null;
+            }
+
             view.popup.close();
             layerControl.getGeometry(val.Spatial_coverage, layerHighlight);
             layerControl.showLayer(layerHighlight.id);
@@ -148,6 +164,10 @@ class InfoWidget extends React.Component {
               useCaseLevel: 4,
               selectedUseCase: val,
               previousState: prevState.useCaseLevel,
+              productsScrollPosition: productsScrollPosition,
+              casesScrollPosition: casesScrollPosition
+                ? casesScrollPosition
+                : prevState,
             }));
           }}
           id={`use_case_${val.OBJECTID}`}
@@ -208,7 +228,7 @@ class InfoWidget extends React.Component {
               See all use cases
             </button>
           </div>
-          <div className="use-cases-products-list">
+          <div className="use-cases-products-list" id="use-cases-list">
             <div key={selectedRegion} className="use-cases-dropdown">
               {this.getDataBrief(regionFeatures)}
             </div>
@@ -244,7 +264,7 @@ class InfoWidget extends React.Component {
               Back
             </button>
           </div>
-          <div className="use-cases-products-list">
+          <div className="use-cases-products-list" id="specific-use-cases-list">
             <div key={selectedRegion} className="use-cases-dropdown">
               {this.getDataBrief(regionFeatures)}
             </div>
@@ -286,7 +306,8 @@ class InfoWidget extends React.Component {
       <div key={topic_name} className="use-cases-dropdown">
         <div
           className="ccl-expandable__button"
-          aria-expanded="false"
+          aria-expanded={mapViewer.state.activeDropdowns.includes(topic_name)}
+          id={topic_name}
           onClick={this.toggleDropdownContent.bind(this)}
           onKeyDown={this.toggleDropdownContent.bind(this)}
           tabIndex="0"
@@ -306,13 +327,32 @@ class InfoWidget extends React.Component {
   toggleDropdownContent(e) {
     let aria = e.target.getAttribute('aria-expanded');
     e.target.setAttribute('aria-expanded', aria === 'true' ? 'false' : 'true');
+
+    // dropdown expanded
     if (aria === 'false') {
+      //save for reload
+      mapViewer.state.activeDropdowns.push(e.target.getAttribute('id'));
+
+      //scroll position
       document.querySelector('.use-cases-products-list').scrollTo({
         top:
           e.currentTarget.offsetTop -
           document.querySelector('.use-cases-products-list').offsetTop,
         behavior: 'smooth',
       });
+    } else {
+      if (
+        //remove for reload
+        mapViewer.state.activeDropdowns.includes(e.target.getAttribute('id'))
+      ) {
+        const index = mapViewer.state.activeDropdowns.indexOf(
+          e.target.getAttribute('id'),
+        );
+        if (index > -1) {
+          // only splice array when item is found
+          mapViewer.state.activeDropdowns.splice(index, 1);
+        }
+      }
     }
   }
 
@@ -414,7 +454,10 @@ class InfoWidget extends React.Component {
               </span>
               use cases
             </div>
-            <div className="use-cases-products-list">
+            <div
+              className="use-cases-products-list"
+              id="use-cases-product-list"
+            >
               {this.setDOMSummary()}
             </div>
           </>
@@ -458,6 +501,27 @@ class InfoWidget extends React.Component {
       default:
         return 0;
     }
+  }
+
+  componentDidUpdate() {
+    // code to run after initial render goes here
+    try {
+      // go to saved scroll position(s)
+      let pl = document.getElementById('use-cases-product-list');
+      if (pl) {
+        pl.scrollTo({
+          top: mapViewer.state.productsScrollPosition,
+          behavior: 'auto',
+        });
+      }
+      let ucl = document.getElementById('use-cases-list');
+      if (ucl) {
+        ucl.scrollTo({
+          top: mapViewer.state.casesScrollPosition,
+          behavior: 'auto',
+        });
+      }
+    } catch {}
   }
 
   /**
