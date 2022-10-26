@@ -83,7 +83,21 @@ class NavigationControl extends React.Component {
    */
   returnToPrevious() {
     // this.layerControl.hideLayer(layerHighlight.id);
-
+    // CLMS-1489
+    let productsScrollPosition;
+    let pl = document.getElementById('use-cases-product-list');
+    if (pl) {
+      productsScrollPosition = pl.scrollTop;
+    } else {
+      productsScrollPosition = null;
+    }
+    let casesScrollPosition;
+    let ucl = document.getElementById('use-cases-list');
+    if (ucl) {
+      casesScrollPosition = ucl.scrollTop;
+    } else {
+      casesScrollPosition = null;
+    }
     switch (
       mapViewer.state.previousState === mapViewer.state.useCaseLevel
         ? mapViewer.state.useCaseLevel - 1
@@ -101,14 +115,26 @@ class NavigationControl extends React.Component {
           mapViewer.state.selectedUseCase.Region,
           layerSpatial,
         );
-        mapViewer.setState(() => ({
+        mapViewer.setState((prevState) => ({
           useCaseLevel: 2,
           region: mapViewer.state.selectedUseCase.Region,
+          productsScrollPosition: productsScrollPosition
+            ? productsScrollPosition
+            : prevState.productsScrollPosition,
+          casesScrollPosition: casesScrollPosition
+            ? casesScrollPosition
+            : prevState.casesScrollPosition,
         }));
         break;
       case 3:
-        mapViewer.setState(() => ({
+        mapViewer.setState((prevState) => ({
           useCaseLevel: 3,
+          productsScrollPosition: productsScrollPosition
+            ? productsScrollPosition
+            : prevState.productsScrollPosition,
+          casesScrollPosition: casesScrollPosition
+            ? casesScrollPosition
+            : prevState.casesScrollPosition,
         }));
         break;
       default:

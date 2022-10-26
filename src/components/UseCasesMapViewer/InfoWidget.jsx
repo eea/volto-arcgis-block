@@ -147,14 +147,14 @@ class InfoWidget extends React.Component {
             if (pl) {
               productsScrollPosition = pl.scrollTop;
             } else {
-              productsScrollPosition = 0;
+              productsScrollPosition = null;
             }
             let casesScrollPosition;
             let ucl = document.getElementById('use-cases-list');
             if (ucl) {
               casesScrollPosition = ucl.scrollTop;
             } else {
-              casesScrollPosition = 0;
+              casesScrollPosition = null;
             }
 
             view.popup.close();
@@ -165,7 +165,9 @@ class InfoWidget extends React.Component {
               selectedUseCase: val,
               previousState: prevState.useCaseLevel,
               productsScrollPosition: productsScrollPosition,
-              casesScrollPosition: casesScrollPosition,
+              casesScrollPosition: casesScrollPosition
+                ? casesScrollPosition
+                : prevState,
             }));
           }}
           id={`use_case_${val.OBJECTID}`}
@@ -262,7 +264,7 @@ class InfoWidget extends React.Component {
               Back
             </button>
           </div>
-          <div className="use-cases-products-list" id="use-cases-list">
+          <div className="use-cases-products-list" id="specific-use-cases-list">
             <div key={selectedRegion} className="use-cases-dropdown">
               {this.getDataBrief(regionFeatures)}
             </div>
