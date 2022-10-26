@@ -1,6 +1,6 @@
 {
   "name": "@eeacms/volto-arcgis-block",
-  "version": "0.1.71",
+  "version": "0.1.72",
   "description": "volto-arcgis-block: Volto add-on",
   "main": "src/index.js",
   "author": "European Environment Agency: CodeSyntax",
