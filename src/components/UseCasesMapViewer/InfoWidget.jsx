@@ -71,8 +71,10 @@ class InfoWidget extends React.Component {
             <div className="use-case-detail-info">
               <b>{UseCase.Copernicus_Land_Monitoring_Service_products_used}</b>
             </div>
-            <div className="use-case-detail-description">
-              <p>{UseCase.Use_case_summary}</p>
+            <div
+              className="use-case-detail-description"
+              dangerouslySetInnerHTML={{ __html: UseCase.Use_case_summary }}
+            >
               {UseCase.Links_to_web_sites && (
                 <div className="use-case-detail-link">
                   <p>
