@@ -9,7 +9,7 @@ import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
 import { UniversalLink } from '@plone/volto/components';
-var WMSLayer, WMTSLayer, FeatureLayer;
+var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
 
 const popupSettings = {
   basic: true,
@@ -412,10 +412,11 @@ class MenuWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = { showMapMenu: false, tms_jsx: null };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
     this.map = this.props.map;
+    this.view = this.props.view;
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
@@ -429,11 +430,23 @@ class MenuWidget extends React.Component {
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
       'esri/layers/FeatureLayer',
-    ]).then(([_WMSLayer, _WMTSLayer, _FeatureLayer]) => {
-      WMSLayer = _WMSLayer;
-      WMTSLayer = _WMTSLayer;
-      FeatureLayer = _FeatureLayer;
-    });
+      'esri/layers/BaseTileLayer',
+      'esri/request',
+    ]).then(
+      ([
+        _WMSLayer,
+        _WMTSLayer,
+        _FeatureLayer,
+        _BaseTileLayer,
+        _esriRequest,
+      ]) => {
+        WMSLayer = _WMSLayer;
+        WMTSLayer = _WMTSLayer;
+        FeatureLayer = _FeatureLayer;
+        BaseTileLayer = _BaseTileLayer;
+        esriRequest = _esriRequest;
+      },
+    );
   }
 
   /**
@@ -530,6 +543,20 @@ class MenuWidget extends React.Component {
     this.loadLayers();
     this.loadOpacity();
     this.loadVisibility();
+
+    // let user know when datasets are not visible at the current zoom level
+    // CLMS-1528
+    this.view.watch('stationary', (newValue, oldValue, property, object) => {
+      // only act when zoom event finishes (stationary)
+      if (this.view.stationary) {
+        // Find layers that are active but not visible at current zoom
+        const foundLayers = this.map.allLayers.find(function (layer) {
+          // return layer.ProductId === '10ee0f23fcb146ea89dcdacc40b0900d';
+          return layer.ProductId === '8474c3b080fa42cc837f1d2338fcf096';
+        });
+        console.log(foundLayers);
+      }
+    });
   }
 
   /**
@@ -883,6 +910,9 @@ class MenuWidget extends React.Component {
           dataset.IsTimeSeries,
           layer_default,
           dataset.HandlingLevel,
+          dataset.DatasetId,
+          dataset.DatasetTitle,
+          dataset.ProductId,
         ),
       );
       index++;
@@ -1048,28 +1078,95 @@ class MenuWidget extends React.Component {
     layer,
     layerIndex,
     inheritedIndex,
-    urlWMS,
+    viewService,
     featureInfoUrl,
     parentIndex,
     isTimeSeries,
-    layer_default,
-    handlingLevel,
+    DatasetId,
+    DatasetTitle,
+    ProductId,
   ) {
     //For Legend request
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     //For each layer
-    var inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
+    let inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
+    let style = this.props.download ? { paddingLeft: '4rem' } : {};
     //Add sublayers and popup enabled for layers
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      if (urlWMS.toLowerCase().includes('wms')) {
-        urlWMS = urlWMS.endsWith('?') ? urlWMS : urlWMS + '?';
+      // TMS
+      if (viewService.endsWith('file')) {
+        // get custom TMS layer JSON
+        fetch(viewService, { mode: 'no-cors' })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error, status = ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            let layers = data.Layers;
+            let tms_jsx = layers.map((sublayer) => {
+              this.processTMSLayer(
+                layer,
+                layerIndex,
+                inheritedIndex,
+                DatasetId,
+                DatasetTitle,
+                ProductId,
+              );
+              // Default_active: true
+              // LayerUrl:"https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png"
+              // StaticImageLegend: "https://clms-prod.eea.europa.eu/api/en/products/global-dynamic-land-cover/map-legends/global-dynamic-land-cover.png"
+              // Title: "Single class forest"
+              return (
+                <div
+                  className="ccl-form-group map-menu-layer"
+                  id={'layer_' + inheritedIndexLayer}
+                  key={'a' + layerIndex}
+                  data-timeseries={isTimeSeries}
+                  style={style}
+                >
+                  <input
+                    type="checkbox"
+                    id={layer.LayerId + '_' + inheritedIndexLayer}
+                    parentid={parentIndex}
+                    layerid={layer.LayerId}
+                    name="layerCheckbox"
+                    value="name"
+                    className="ccl-checkbox ccl-required ccl-form-check-input"
+                    key={'c' + layerIndex}
+                    title={sublayer.Title}
+                    onChange={(e) => {
+                      this.toggleLayer(e.target);
+                    }}
+                  ></input>
+                  <label
+                    className="ccl-form-check-label"
+                    htmlFor={layer.LayerId + '_' + inheritedIndexLayer}
+                    key={'d' + layerIndex}
+                  >
+                    <span>{sublayer.Title}</span>
+                  </label>
+                </div>
+              );
+            });
+            return this.setState({ tms_jsx: tms_jsx });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+        return this.state.tms_jsx;
+      } else if (viewService.toLowerCase().includes('wms')) {
+        viewService = viewService.endsWith('?')
+          ? viewService
+          : viewService + '?';
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMSLayer({
-          url: urlWMS,
+          url: viewService,
           featureInfoFormat: 'text/html',
-          featureInfoUrl: urlWMS,
+          featureInfoUrl: viewService,
           //id: layer.LayerId,
           title: '',
           legendEnabled: true,
@@ -1083,16 +1180,19 @@ class MenuWidget extends React.Component {
               legendEnabled: true,
               legendUrl: layer.StaticImageLegend
                 ? layer.StaticImageLegend
-                : urlWMS + legendRequest + layer.LayerId,
+                : viewService + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
             },
           ],
           isTimeSeries: isTimeSeries,
           fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
         });
-      } else if (urlWMS.toLowerCase().includes('wmts')) {
+      } else if (viewService.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
-          url: urlWMS.endsWith('?') ? urlWMS : urlWMS + '?',
+          url: viewService.endsWith('?') ? viewService : viewService + '?',
           //id: layer.LayerId,
           title: '',
           _wmtsTitle: layer.Title, // CLMS-1105
@@ -1103,22 +1203,31 @@ class MenuWidget extends React.Component {
           },
           isTimeSeries: isTimeSeries,
           fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
         });
       } else {
         this.layers[
           layer.LayerId + '_' + inheritedIndexLayer
         ] = new FeatureLayer({
-          url: urlWMS + (urlWMS.endsWith('/') ? '' : '/') + layer.LayerId,
+          url:
+            viewService +
+            (viewService.endsWith('/') ? '' : '/') +
+            layer.LayerId,
           id: layer.LayerId,
           title: layer.Title,
           featureInfoUrl: featureInfoUrl,
           popupEnabled: true,
           isTimeSeries: isTimeSeries,
           fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
         });
       }
     }
-    let style = this.props.download ? { paddingLeft: '4rem' } : {};
+
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -1150,6 +1259,113 @@ class MenuWidget extends React.Component {
         </label>
       </div>
     );
+  }
+
+  /**
+   * adds a custom TMS layer to this.layers array
+   * @param {*} elem Is the checkbox
+   */
+  processTMSLayer(
+    layer,
+    layerIndex,
+    inheritedIndex,
+    DatasetId,
+    DatasetTitle,
+    ProductId,
+  ) {
+    let inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
+    const CustomTileLayer = BaseTileLayer.createSubclass({
+      properties: {
+        urlTemplate: null,
+        tms: false,
+        tint: {
+          value: null,
+        },
+      },
+
+      // generate the tile url for a given level, row and column
+      getTileUrl: function (level, row, col) {
+        // si es cero será el maximo. las filas serán el array invertido
+        // tengo que extrarer de alguna manera la cantidad de filas y columnas que se muestran.
+
+        // console.log(level, row, col);
+        // console.log(this.getTileBounds(level, row, col))
+        // console.log(this.tileInfo);
+
+        return this.urlTemplate
+          .replace('{z}', level)
+          .replace('{x}', col)
+          .replace('{y}', row);
+      },
+
+      // This method fetches tiles for the specified level and size.
+      // Override this method to process the data returned from the server.
+      fetchTile: function (level, row, col, options) {
+        // call getTileUrl() method to construct the URL to tiles
+        // for a given level, row and col provided by the LayerView
+
+        // Images pyramid formula
+        if (this.tms) {
+          var rowmax = 1 << level; // LEVEL 1 * (2 ** 1) = 1 * (2) = 2   ;   LEVEL 2 * (2 ** 2) = 1 * (4) = 4 ; LEVEL 3 * (2 ** 3) = 1 * (8) = 8 . . .
+          var row = rowmax - row - 1; // Invert Y axis
+        }
+
+        const url = this.getTileUrl(level, row, col);
+
+        // request for tiles based on the generated url
+        // the signal option ensures that obsolete requests are aborted
+        console.log(url);
+        return esriRequest(url, {
+          responseType: 'image',
+          signal: options && options.signal,
+        }).then(
+          function (response) {
+            // when esri request resolves successfully
+            // get the image from the response
+            const image = response.data;
+            const width = this.tileInfo.size[0];
+            const height = this.tileInfo.size[0];
+            // create a canvas with 2D rendering context
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            //canvas
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw the blended image onto the canvas.
+            context.drawImage(image, 0, 0, width, height);
+
+            return canvas;
+          }.bind(this),
+        );
+      },
+    });
+    // *******************************************************
+    // end of Custom tile layer class code
+    // *******************************************************
+    this.layers[
+      layer.LayerId + '_' + inheritedIndexLayer
+    ] = new CustomTileLayer({
+      tms: true, // True establishes Y axis from the south northwards. False establishes tile origin top left and Y from north southwards (Default False)
+      urlTemplate:
+        // TMS Service.
+        'https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png',
+
+      // Google/ESRI/OSM tiling style services
+      // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      // "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+      // "https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
+
+      spatialReference: {
+        wkid: 3857,
+      },
+      title: '',
+      _TMSTitle: layer.title,
+      fields: layer.Fields,
+      DatasetId: DatasetId,
+      DatasetTitle: DatasetTitle,
+      ProductId: ProductId,
+    });
   }
 
   /**
@@ -1282,6 +1498,7 @@ class MenuWidget extends React.Component {
     } else {
       datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
+
     datasetChecks.forEach((element) => {
       element.checked = value;
       this.toggleDataset(value, element.id, element);
