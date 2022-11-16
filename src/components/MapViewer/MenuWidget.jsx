@@ -554,7 +554,6 @@ class MenuWidget extends React.Component {
           // return layer.ProductId === '10ee0f23fcb146ea89dcdacc40b0900d';
           return layer.ProductId === '8474c3b080fa42cc837f1d2338fcf096';
         });
-        console.log(foundLayers);
       }
     });
   }
@@ -1288,10 +1287,6 @@ class MenuWidget extends React.Component {
         // si es cero será el maximo. las filas serán el array invertido
         // tengo que extrarer de alguna manera la cantidad de filas y columnas que se muestran.
 
-        // console.log(level, row, col);
-        // console.log(this.getTileBounds(level, row, col))
-        // console.log(this.tileInfo);
-
         return this.urlTemplate
           .replace('{z}', level)
           .replace('{x}', col)
@@ -1314,7 +1309,6 @@ class MenuWidget extends React.Component {
 
         // request for tiles based on the generated url
         // the signal option ensures that obsolete requests are aborted
-        console.log(url);
         return esriRequest(url, {
           responseType: 'image',
           signal: options && options.signal,
