@@ -1335,22 +1335,22 @@ class MenuWidget extends React.Component {
     // end of Custom tile layer class code
     // *******************************************************
     this.layers[checkboxId] = new CustomTileLayer({
+      id: checkboxId,
       tms: true, // True establishes Y axis from the south northwards. False establishes tile origin top left and Y from north southwards (Default False)
-      urlTemplate:
-        // TMS Service.
-        'https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png',
-
+      urlTemplate: layer.LayerUrl,
+      // TMS Service.
+      // 'https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png',
       // Google/ESRI/OSM tiling style services
       // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       // "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
       // "https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
-
       spatialReference: {
         wkid: 3857,
       },
       title: '',
       LayerTitle: layer.Title,
       DatasetTitle: dataset.DatasetTitle,
+      url: layer.LayerUrl,
     });
   }
 
@@ -1397,6 +1397,8 @@ class MenuWidget extends React.Component {
     } else {
       this.deleteCheckedLayer(elem.id);
       this.layers[elem.id].opacity = 1;
+      let mapLayer = this.map.findLayerById(elem.id);
+      if (mapLayer) mapLayer.destroy();
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
