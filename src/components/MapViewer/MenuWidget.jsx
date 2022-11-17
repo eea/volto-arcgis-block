@@ -1347,10 +1347,12 @@ class MenuWidget extends React.Component {
       spatialReference: {
         wkid: 3857,
       },
-      title: '',
+      title: layer.Title,
       LayerTitle: layer.Title,
       DatasetTitle: dataset.DatasetTitle,
       url: layer.LayerUrl,
+      legendEnabled: true,
+      legendUrl: layer.StaticImageLegend,
     });
   }
 
