@@ -1299,7 +1299,7 @@ class MenuWidget extends React.Component {
         // Images pyramid formula
         if (this.tms) {
           var rowmax = 1 << level; // LEVEL 1 * (2 ** 1) = 1 * (2) = 2   ;   LEVEL 2 * (2 ** 2) = 1 * (4) = 4 ; LEVEL 3 * (2 ** 3) = 1 * (8) = 8 . . .
-          var row = rowmax - row - 1; // Invert Y axis
+          row = rowmax - row - 1; // Invert Y axis
         }
 
         const url = this.getTileUrl(level, row, col);
