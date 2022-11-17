@@ -922,6 +922,11 @@ class MenuWidget extends React.Component {
         }
         let inheritedIndexLayer = inheritedIndex + '_' + tmsLayerIndex;
         let checkboxId = layer.LayerId + '_' + inheritedIndexLayer;
+
+        // add as default
+        if (!layer_default.length) {
+          layer_default.push(checkboxId);
+        }
         // add each sublayer to this.layers
         this.processTMSLayer(layer, checkboxId, dataset);
 
