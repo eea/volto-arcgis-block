@@ -449,6 +449,36 @@ class MenuWidget extends React.Component {
     );
   }
 
+  // get custom TMS layer JSON
+  getTMSLayersJSON() {
+    let promises = []; // download JSON file calls
+    this.compCfg.forEach((component) => {
+      component.Products.forEach((product) => {
+        product.Datasets.forEach((dataset) => {
+          if (dataset.ViewService.endsWith('file')) {
+            let promise = fetch(dataset.ViewService, { mode: 'no-cors' })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(`HTTP error, status = ${response.status}`);
+                }
+                return response.json();
+              })
+              .then((data) => {
+                // fill dataset.Layer manually
+                dataset.Layer = data.Layers;
+              })
+              .catch((error) => {
+                throw new Error(error);
+              });
+            promises.push(promise);
+          }
+        });
+      });
+    });
+
+    return Promise.all(promises);
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
@@ -518,11 +548,12 @@ class MenuWidget extends React.Component {
   }
 
   /**
-   * This method is executed after the rener method is executed
+   * This method is executed after the render method is executed
    */
   async componentDidMount() {
     loadCss();
     await this.loader();
+    await this.getTMSLayersJSON();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
       document.querySelector('.area-panel input:checked').click();
@@ -543,19 +574,6 @@ class MenuWidget extends React.Component {
     this.loadLayers();
     this.loadOpacity();
     this.loadVisibility();
-
-    // let user know when datasets are not visible at the current zoom level
-    // CLMS-1528
-    this.view.watch('stationary', (newValue, oldValue, property, object) => {
-      // only act when zoom event finishes (stationary)
-      if (this.view.stationary) {
-        // Find layers that are active but not visible at current zoom
-        const foundLayers = this.map.allLayers.find(function (layer) {
-          // return layer.ProductId === '10ee0f23fcb146ea89dcdacc40b0900d';
-          return layer.ProductId === '8474c3b080fa42cc837f1d2338fcf096';
-        });
-      }
-    });
   }
 
   /**
@@ -886,35 +904,88 @@ class MenuWidget extends React.Component {
         ? dataset.DatasetDescription.substr(0, 300) + '...'
         : dataset.DatasetDescription;
 
+    let style = this.props.download
+      ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
+      : {};
+
     if (dataset.HandlingLevel) {
       this.layerGroups[dataset.DatasetId] = [];
     }
-    for (var i in dataset.Layer) {
-      if (dataset.Layer[i].Default_active === true) {
-        layer_default.push(
-          dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
+
+    // TMS
+    if (dataset.ViewService.endsWith('file')) {
+      let tmsLayerIndex = 0;
+
+      dataset.Layer.forEach((layer, sublayerIndex) => {
+        if (!layer.LayerId) {
+          layer.LayerId = sublayerIndex;
+        }
+        let inheritedIndexLayer = inheritedIndex + '_' + tmsLayerIndex;
+        let checkboxId = layer.LayerId + '_' + inheritedIndexLayer;
+        // add each sublayer to this.layers
+        this.processTMSLayer(layer, checkboxId, dataset);
+
+        // build TMS DOM nodes for TOC
+        layers.push(
+          <div
+            className="ccl-form-group map-menu-layer"
+            id={'layer_' + inheritedIndexLayer}
+            key={'a' + tmsLayerIndex}
+            data-timeseries={dataset.IsTimeSeries}
+            style={style}
+          >
+            <input
+              type="checkbox"
+              id={checkboxId}
+              parentid={checkIndex}
+              layerid={layer.LayerId}
+              name="layerCheckbox"
+              value="name"
+              className="ccl-checkbox ccl-required ccl-form-check-input"
+              key={'c' + tmsLayerIndex}
+              title={layer.Title}
+              onChange={(e) => {
+                this.toggleLayer(e.target);
+              }}
+            ></input>
+            <label
+              className="ccl-form-check-label"
+              htmlFor={layer.LayerId + '_' + inheritedIndexLayer}
+              key={'d' + tmsLayerIndex}
+            >
+              <span>{layer.Title}</span>
+            </label>
+          </div>,
         );
+        tmsLayerIndex++;
+      });
+    } else {
+      for (var i in dataset.Layer) {
+        if (dataset.Layer[i].Default_active === true) {
+          layer_default.push(
+            dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
+          );
+        }
+        if (dataset.HandlingLevel) {
+          this.layerGroups[dataset.DatasetId].push(dataset.Layer[i].LayerId);
+        }
+
+        layers.push(
+          this.metodProcessLayer(
+            dataset.Layer[i],
+            index,
+            inheritedIndexDataset,
+            dataset.ViewService,
+            dataset.TimeSeriesService,
+            checkIndex,
+            dataset.IsTimeSeries,
+            dataset.DatasetId,
+            dataset.DatasetTitle,
+            dataset.ProductId,
+          ),
+        );
+        index++;
       }
-      if (dataset.HandlingLevel) {
-        this.layerGroups[dataset.DatasetId].push(dataset.Layer[i].LayerId);
-      }
-      layers.push(
-        this.metodProcessLayer(
-          dataset.Layer[i],
-          index,
-          inheritedIndexDataset,
-          dataset.ViewService,
-          dataset.TimeSeriesService,
-          checkIndex,
-          dataset.IsTimeSeries,
-          layer_default,
-          dataset.HandlingLevel,
-          dataset.DatasetId,
-          dataset.DatasetTitle,
-          dataset.ProductId,
-        ),
-      );
-      index++;
     }
 
     if (!layer_default.length) {
@@ -922,9 +993,6 @@ class MenuWidget extends React.Component {
         dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
       );
     }
-    let style = this.props.download
-      ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
-      : {};
 
     return (
       <div
@@ -1095,70 +1163,7 @@ class MenuWidget extends React.Component {
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      // TMS
-      if (viewService.endsWith('file')) {
-        // get custom TMS layer JSON
-        fetch(viewService, { mode: 'no-cors' })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error, status = ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            let layers = data.Layers;
-            let tms_jsx = layers.map((sublayer) => {
-              this.processTMSLayer(
-                layer,
-                layerIndex,
-                inheritedIndex,
-                DatasetId,
-                DatasetTitle,
-                ProductId,
-              );
-              // Default_active: true
-              // LayerUrl:"https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png"
-              // StaticImageLegend: "https://clms-prod.eea.europa.eu/api/en/products/global-dynamic-land-cover/map-legends/global-dynamic-land-cover.png"
-              // Title: "Single class forest"
-              return (
-                <div
-                  className="ccl-form-group map-menu-layer"
-                  id={'layer_' + inheritedIndexLayer}
-                  key={'a' + layerIndex}
-                  data-timeseries={isTimeSeries}
-                  style={style}
-                >
-                  <input
-                    type="checkbox"
-                    id={layer.LayerId + '_' + inheritedIndexLayer}
-                    parentid={parentIndex}
-                    layerid={layer.LayerId}
-                    name="layerCheckbox"
-                    value="name"
-                    className="ccl-checkbox ccl-required ccl-form-check-input"
-                    key={'c' + layerIndex}
-                    title={sublayer.Title}
-                    onChange={(e) => {
-                      this.toggleLayer(e.target);
-                    }}
-                  ></input>
-                  <label
-                    className="ccl-form-check-label"
-                    htmlFor={layer.LayerId + '_' + inheritedIndexLayer}
-                    key={'d' + layerIndex}
-                  >
-                    <span>{sublayer.Title}</span>
-                  </label>
-                </div>
-              );
-            });
-            return this.setState({ tms_jsx: tms_jsx });
-          })
-          .catch((error) => {
-            console.error(error);
-          });
-        return this.state.tms_jsx;
-      } else if (viewService.toLowerCase().includes('wms')) {
+      if (viewService.toLowerCase().includes('wms')) {
         viewService = viewService.endsWith('?')
           ? viewService
           : viewService + '?';
@@ -1262,17 +1267,9 @@ class MenuWidget extends React.Component {
 
   /**
    * adds a custom TMS layer to this.layers array
-   * @param {*} elem Is the checkbox
+   * @param {*} checkboxId Is the layers checkbox ID
    */
-  processTMSLayer(
-    layer,
-    layerIndex,
-    inheritedIndex,
-    DatasetId,
-    DatasetTitle,
-    ProductId,
-  ) {
-    let inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
+  processTMSLayer(layer, checkboxId, dataset) {
     const CustomTileLayer = BaseTileLayer.createSubclass({
       properties: {
         urlTemplate: null,
@@ -1337,9 +1334,7 @@ class MenuWidget extends React.Component {
     // *******************************************************
     // end of Custom tile layer class code
     // *******************************************************
-    this.layers[
-      layer.LayerId + '_' + inheritedIndexLayer
-    ] = new CustomTileLayer({
+    this.layers[checkboxId] = new CustomTileLayer({
       tms: true, // True establishes Y axis from the south northwards. False establishes tile origin top left and Y from north southwards (Default False)
       urlTemplate:
         // TMS Service.
@@ -1354,11 +1349,8 @@ class MenuWidget extends React.Component {
         wkid: 3857,
       },
       title: '',
-      _TMSTitle: layer.title,
-      fields: layer.Fields,
-      DatasetId: DatasetId,
-      DatasetTitle: DatasetTitle,
-      ProductId: ProductId,
+      LayerTitle: layer.Title,
+      DatasetTitle: dataset.DatasetTitle,
     });
   }
 
