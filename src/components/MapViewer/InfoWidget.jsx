@@ -297,11 +297,14 @@ class InfoWidget extends React.Component {
                         break;
                       case 'featureLayer':
                         if (data.results.length) {
-                          var graphic = data.results.filter((result) => {
+                          var graphics = data.results.filter((result) => {
                             return result.graphic.layer === layers[index];
-                          })[0].graphic;
-                          if (graphic) {
-                            properties = graphic.attributes;
+                          });
+                          if (graphics[0]) {
+                            let graphic = graphics[0].graphic;
+                            if (graphic) {
+                              properties = graphic.attributes;
+                            }
                           }
                         }
                         this.infoData[index] = {
