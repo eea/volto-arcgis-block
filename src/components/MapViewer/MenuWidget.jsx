@@ -423,6 +423,17 @@ class MenuWidget extends React.Component {
     this.layers = {};
     this.activeLayersJSON = {};
     this.layerGroups = {};
+
+    // add zoomend listener to map to show/hide zoom in message
+    this.view.watch('stationary', (isStationary) => {
+      if (isStationary) {
+        let node = document.getElementById('snow-and-ice-zoom-message');
+        if (node) {
+          let zoom = this.view.get('zoom');
+          node.style.display = zoom > 6 ? 'none' : 'block';
+        }
+      }
+    });
   }
 
   loader() {
@@ -846,12 +857,38 @@ class MenuWidget extends React.Component {
                   <legend className="ccl-form-legend">
                     {description ? (
                       <Popup
-                        trigger={<span>{product.ProductTitle}</span>}
+                        trigger={
+                          product.ProductId ===
+                            '8474c3b080fa42cc837f1d2338fcf096' ||
+                          product.ProductTitle === 'Snow and Ice Parameters' ? (
+                            <div class="zoom-in-message-container">
+                              <span>{product.ProductTitle}</span>
+                              <div
+                                class="zoom-in-message"
+                                id="snow-and-ice-zoom-message"
+                              >
+                                Zoom in to view on map
+                              </div>
+                            </div>
+                          ) : (
+                            <span>{product.ProductTitle}</span>
+                          )
+                        }
                         content={description}
                         basic
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
+                    ) : product.ProductId ===
+                        '8474c3b080fa42cc837f1d2338fcf096' ||
+                      product.ProductTitle ===
+                        'High Resolution Snow and Ice Parameters' ? (
+                      <div class="zoom-in-message-container">
+                        <span>{product.ProductTitle}</span>
+                        <div class="zoom-in-message">
+                          Zoom in to view on map
+                        </div>
+                      </div>
                     ) : (
                       <span>{product.ProductTitle}</span>
                     )}
