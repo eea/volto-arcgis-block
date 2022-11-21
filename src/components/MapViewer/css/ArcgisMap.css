@@ -1011,8 +1011,8 @@ input[type='range']::-ms-track {
   background: #a0b128;
   border-radius: 10px;
   color: white;
-  font-size: 0.875rem;
-  margin-top: 0.2rem;
   padding: 0.1rem 0.6rem 0.1rem 0.6rem;
+  margin-top: 0.2rem;
+  font-size: 0.875rem;
   text-align: center;
 }
