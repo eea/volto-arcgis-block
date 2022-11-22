@@ -9,7 +9,7 @@ import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
 import { UniversalLink } from '@plone/volto/components';
-var WMSLayer, WMTSLayer, FeatureLayer;
+var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
 
 const popupSettings = {
   basic: true,
@@ -412,16 +412,28 @@ class MenuWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = { showMapMenu: false, tms_jsx: null };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
     this.map = this.props.map;
+    this.view = this.props.view;
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
     this.layers = {};
     this.activeLayersJSON = {};
     this.layerGroups = {};
+
+    // add zoomend listener to map to show/hide zoom in message
+    this.view.watch('stationary', (isStationary) => {
+      if (isStationary) {
+        let node = document.getElementById('snow-and-ice-zoom-message');
+        if (node) {
+          let zoom = this.view.get('zoom');
+          node.style.display = zoom > 6 ? 'none' : 'block';
+        }
+      }
+    });
   }
 
   loader() {
@@ -429,11 +441,53 @@ class MenuWidget extends React.Component {
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
       'esri/layers/FeatureLayer',
-    ]).then(([_WMSLayer, _WMTSLayer, _FeatureLayer]) => {
-      WMSLayer = _WMSLayer;
-      WMTSLayer = _WMTSLayer;
-      FeatureLayer = _FeatureLayer;
+      'esri/layers/BaseTileLayer',
+      'esri/request',
+    ]).then(
+      ([
+        _WMSLayer,
+        _WMTSLayer,
+        _FeatureLayer,
+        _BaseTileLayer,
+        _esriRequest,
+      ]) => {
+        WMSLayer = _WMSLayer;
+        WMTSLayer = _WMTSLayer;
+        FeatureLayer = _FeatureLayer;
+        BaseTileLayer = _BaseTileLayer;
+        esriRequest = _esriRequest;
+      },
+    );
+  }
+
+  // get custom TMS layer JSON
+  getTMSLayersJSON() {
+    let promises = []; // download JSON file calls
+    this.compCfg.forEach((component) => {
+      component.Products.forEach((product) => {
+        product.Datasets.forEach((dataset) => {
+          if (dataset.ViewService.endsWith('file')) {
+            let promise = fetch(dataset.ViewService, { mode: 'no-cors' })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(`HTTP error, status = ${response.status}`);
+                }
+                return response.json();
+              })
+              .then((data) => {
+                // fill dataset.Layer manually
+                dataset.Layer = data.Layers;
+              })
+              .catch((error) => {
+                throw new Error(error);
+              });
+            promises.push(promise);
+          }
+        });
+      });
     });
+
+    return Promise.all(promises);
   }
 
   /**
@@ -505,11 +559,12 @@ class MenuWidget extends React.Component {
   }
 
   /**
-   * This method is executed after the rener method is executed
+   * This method is executed after the render method is executed
    */
   async componentDidMount() {
     loadCss();
     await this.loader();
+    await this.getTMSLayersJSON();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
       document.querySelector('.area-panel input:checked').click();
@@ -802,12 +857,38 @@ class MenuWidget extends React.Component {
                   <legend className="ccl-form-legend">
                     {description ? (
                       <Popup
-                        trigger={<span>{product.ProductTitle}</span>}
+                        trigger={
+                          product.ProductId ===
+                            '8474c3b080fa42cc837f1d2338fcf096' ||
+                          product.ProductTitle === 'Snow and Ice Parameters' ? (
+                            <div class="zoom-in-message-container">
+                              <span>{product.ProductTitle}</span>
+                              <div
+                                class="zoom-in-message"
+                                id="snow-and-ice-zoom-message"
+                              >
+                                Zoom in to view on map
+                              </div>
+                            </div>
+                          ) : (
+                            <span>{product.ProductTitle}</span>
+                          )
+                        }
                         content={description}
                         basic
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
+                    ) : product.ProductId ===
+                        '8474c3b080fa42cc837f1d2338fcf096' ||
+                      product.ProductTitle ===
+                        'High Resolution Snow and Ice Parameters' ? (
+                      <div class="zoom-in-message-container">
+                        <span>{product.ProductTitle}</span>
+                        <div class="zoom-in-message">
+                          Zoom in to view on map
+                        </div>
+                      </div>
                     ) : (
                       <span>{product.ProductTitle}</span>
                     )}
@@ -860,32 +941,93 @@ class MenuWidget extends React.Component {
         ? dataset.DatasetDescription.substr(0, 300) + '...'
         : dataset.DatasetDescription;
 
+    let style = this.props.download
+      ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
+      : {};
+
     if (dataset.HandlingLevel) {
       this.layerGroups[dataset.DatasetId] = [];
     }
-    for (var i in dataset.Layer) {
-      if (dataset.Layer[i].Default_active === true) {
-        layer_default.push(
-          dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
+
+    // TMS
+    if (dataset.ViewService.endsWith('file')) {
+      let tmsLayerIndex = 0;
+
+      dataset.Layer.forEach((layer, sublayerIndex) => {
+        if (!layer.LayerId) {
+          layer.LayerId = sublayerIndex;
+        }
+        let inheritedIndexLayer = inheritedIndex + '_' + tmsLayerIndex;
+        let checkboxId = layer.LayerId + '_' + inheritedIndexLayer;
+
+        // add as default
+        if (!layer_default.length) {
+          layer_default.push(checkboxId);
+        }
+        // add each sublayer to this.layers
+        this.processTMSLayer(layer, checkboxId, dataset);
+
+        // build TMS DOM nodes for TOC
+        layers.push(
+          <div
+            className="ccl-form-group map-menu-layer"
+            id={'layer_' + inheritedIndexLayer}
+            key={'a' + tmsLayerIndex}
+            data-timeseries={dataset.IsTimeSeries}
+            style={style}
+          >
+            <input
+              type="checkbox"
+              id={checkboxId}
+              parentid={checkIndex}
+              layerid={layer.LayerId}
+              name="layerCheckbox"
+              value="name"
+              className="ccl-checkbox ccl-required ccl-form-check-input"
+              key={'c' + tmsLayerIndex}
+              title={layer.Title}
+              onChange={(e) => {
+                this.toggleLayer(e.target);
+              }}
+            ></input>
+            <label
+              className="ccl-form-check-label"
+              htmlFor={layer.LayerId + '_' + inheritedIndexLayer}
+              key={'d' + tmsLayerIndex}
+            >
+              <span>{layer.Title}</span>
+            </label>
+          </div>,
         );
+        tmsLayerIndex++;
+      });
+    } else {
+      for (var i in dataset.Layer) {
+        if (dataset.Layer[i].Default_active === true) {
+          layer_default.push(
+            dataset.Layer[i].LayerId + '_' + inheritedIndexDataset + '_' + i,
+          );
+        }
+        if (dataset.HandlingLevel) {
+          this.layerGroups[dataset.DatasetId].push(dataset.Layer[i].LayerId);
+        }
+
+        layers.push(
+          this.metodProcessLayer(
+            dataset.Layer[i],
+            index,
+            inheritedIndexDataset,
+            dataset.ViewService,
+            dataset.TimeSeriesService,
+            checkIndex,
+            dataset.IsTimeSeries,
+            dataset.DatasetId,
+            dataset.DatasetTitle,
+            dataset.ProductId,
+          ),
+        );
+        index++;
       }
-      if (dataset.HandlingLevel) {
-        this.layerGroups[dataset.DatasetId].push(dataset.Layer[i].LayerId);
-      }
-      layers.push(
-        this.metodProcessLayer(
-          dataset.Layer[i],
-          index,
-          inheritedIndexDataset,
-          dataset.ViewService,
-          dataset.TimeSeriesService,
-          checkIndex,
-          dataset.IsTimeSeries,
-          layer_default,
-          dataset.HandlingLevel,
-        ),
-      );
-      index++;
     }
 
     if (!layer_default.length) {
@@ -893,9 +1035,6 @@ class MenuWidget extends React.Component {
         dataset.Layer[0].LayerId + '_' + inheritedIndexDataset + '_0',
       );
     }
-    let style = this.props.download
-      ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
-      : {};
 
     return (
       <div
@@ -1048,28 +1187,32 @@ class MenuWidget extends React.Component {
     layer,
     layerIndex,
     inheritedIndex,
-    urlWMS,
+    viewService,
     featureInfoUrl,
     parentIndex,
     isTimeSeries,
-    layer_default,
-    handlingLevel,
+    DatasetId,
+    DatasetTitle,
+    ProductId,
   ) {
     //For Legend request
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     //For each layer
-    var inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
+    let inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
+    let style = this.props.download ? { paddingLeft: '4rem' } : {};
     //Add sublayers and popup enabled for layers
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      if (urlWMS.toLowerCase().includes('wms')) {
-        urlWMS = urlWMS.endsWith('?') ? urlWMS : urlWMS + '?';
+      if (viewService.toLowerCase().includes('wms')) {
+        viewService = viewService.endsWith('?')
+          ? viewService
+          : viewService + '?';
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMSLayer({
-          url: urlWMS,
+          url: viewService,
           featureInfoFormat: 'text/html',
-          featureInfoUrl: urlWMS,
+          featureInfoUrl: viewService,
           //id: layer.LayerId,
           title: '',
           legendEnabled: true,
@@ -1083,16 +1226,19 @@ class MenuWidget extends React.Component {
               legendEnabled: true,
               legendUrl: layer.StaticImageLegend
                 ? layer.StaticImageLegend
-                : urlWMS + legendRequest + layer.LayerId,
+                : viewService + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
             },
           ],
           isTimeSeries: isTimeSeries,
           fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
         });
-      } else if (urlWMS.toLowerCase().includes('wmts')) {
+      } else if (viewService.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
-          url: urlWMS.endsWith('?') ? urlWMS : urlWMS + '?',
+          url: viewService.endsWith('?') ? viewService : viewService + '?',
           //id: layer.LayerId,
           title: '',
           _wmtsTitle: layer.Title, // CLMS-1105
@@ -1103,22 +1249,31 @@ class MenuWidget extends React.Component {
           },
           isTimeSeries: isTimeSeries,
           fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
         });
       } else {
         this.layers[
           layer.LayerId + '_' + inheritedIndexLayer
         ] = new FeatureLayer({
-          url: urlWMS + (urlWMS.endsWith('/') ? '' : '/') + layer.LayerId,
+          url:
+            viewService +
+            (viewService.endsWith('/') ? '' : '/') +
+            layer.LayerId,
           id: layer.LayerId,
           title: layer.Title,
           featureInfoUrl: featureInfoUrl,
           popupEnabled: true,
           isTimeSeries: isTimeSeries,
           fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
         });
       }
     }
-    let style = this.props.download ? { paddingLeft: '4rem' } : {};
+
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -1150,6 +1305,97 @@ class MenuWidget extends React.Component {
         </label>
       </div>
     );
+  }
+
+  /**
+   * adds a custom TMS layer to this.layers array
+   * @param {*} checkboxId Is the layers checkbox ID
+   */
+  processTMSLayer(layer, checkboxId, dataset) {
+    const CustomTileLayer = BaseTileLayer.createSubclass({
+      properties: {
+        urlTemplate: null,
+        tms: false,
+        tint: {
+          value: null,
+        },
+      },
+
+      // generate the tile url for a given level, row and column
+      getTileUrl: function (level, row, col) {
+        // si es cero será el maximo. las filas serán el array invertido
+        // tengo que extrarer de alguna manera la cantidad de filas y columnas que se muestran.
+
+        return this.urlTemplate
+          .replace('{z}', level)
+          .replace('{x}', col)
+          .replace('{y}', row);
+      },
+
+      // This method fetches tiles for the specified level and size.
+      // Override this method to process the data returned from the server.
+      fetchTile: function (level, row, col, options) {
+        // call getTileUrl() method to construct the URL to tiles
+        // for a given level, row and col provided by the LayerView
+
+        // Images pyramid formula
+        if (this.tms) {
+          var rowmax = 1 << level; // LEVEL 1 * (2 ** 1) = 1 * (2) = 2   ;   LEVEL 2 * (2 ** 2) = 1 * (4) = 4 ; LEVEL 3 * (2 ** 3) = 1 * (8) = 8 . . .
+          row = rowmax - row - 1; // Invert Y axis
+        }
+
+        const url = this.getTileUrl(level, row, col);
+
+        // request for tiles based on the generated url
+        // the signal option ensures that obsolete requests are aborted
+        return esriRequest(url, {
+          responseType: 'image',
+          signal: options && options.signal,
+        }).then(
+          function (response) {
+            // when esri request resolves successfully
+            // get the image from the response
+            const image = response.data;
+            const width = this.tileInfo.size[0];
+            const height = this.tileInfo.size[0];
+            // create a canvas with 2D rendering context
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            //canvas
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw the blended image onto the canvas.
+            context.drawImage(image, 0, 0, width, height);
+
+            return canvas;
+          }.bind(this),
+        );
+      },
+    });
+    // *******************************************************
+    // end of Custom tile layer class code
+    // *******************************************************
+    this.layers[checkboxId] = new CustomTileLayer({
+      id: checkboxId,
+      tms: true, // True establishes Y axis from the south northwards. False establishes tile origin top left and Y from north southwards (Default False)
+      urlTemplate: layer.LayerUrl,
+      // TMS Service.
+      // 'https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png',
+      // Google/ESRI/OSM tiling style services
+      // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      // "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+      // "https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
+      spatialReference: {
+        wkid: 3857,
+      },
+      title: layer.Title,
+      LayerTitle: layer.Title,
+      DatasetTitle: dataset.DatasetTitle,
+      url: layer.LayerUrl,
+      legendEnabled: true,
+      legendUrl: layer.StaticImageLegend,
+    });
   }
 
   /**
@@ -1195,6 +1441,8 @@ class MenuWidget extends React.Component {
     } else {
       this.deleteCheckedLayer(elem.id);
       this.layers[elem.id].opacity = 1;
+      let mapLayer = this.map.findLayerById(elem.id);
+      if (mapLayer) mapLayer.destroy();
       this.map.remove(this.layers[elem.id]);
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -1282,6 +1530,7 @@ class MenuWidget extends React.Component {
     } else {
       datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
+
     datasetChecks.forEach((element) => {
       element.checked = value;
       this.toggleDataset(value, element.id, element);
