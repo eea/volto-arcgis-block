@@ -1454,6 +1454,7 @@ class MenuWidget extends React.Component {
     } else {
       this.deleteCheckedLayer(elem.id);
       this.layers[elem.id].opacity = 1;
+      this.layers[elem.id].visible = false;
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) mapLayer.destroy();
       this.map.remove(this.layers[elem.id]);
@@ -1484,7 +1485,7 @@ class MenuWidget extends React.Component {
   toggleCustomLegendItem(layer) {
     // check for existing legend item
     let existingItem = document.getElementById(
-      'custom-legend-item-' + layer.Id,
+      'custom-legend-item-' + layer.id,
     );
 
     if (layer.visible) {
@@ -1492,8 +1493,8 @@ class MenuWidget extends React.Component {
         // create one
         this.addCustomItemToLegend(layer);
       } else {
-        // hide existing one
-        existingItem.style.display = 'none';
+        // show existing one
+        existingItem.style.display = 'block';
       }
     } else {
       // hide legend item
@@ -1517,15 +1518,24 @@ class MenuWidget extends React.Component {
 
     // append to Legend widet
     childDiv.appendChild(legendItem);
+
+    // hide no legend message
+    const noLegendMessage = document.querySelectorAll(
+      '.esri-legend__message',
+    )[0];
+    if (noLegendMessage) {
+      noLegendMessage.style.display = 'none';
+    }
   }
 
   createStaticLegendImageNode(id, title, imageURL) {
     let node = document.createElement('div');
     node.classList.add('esri-legend__service');
+    node.id = 'custom-legend-item-' + id;
 
     // Create node
     let template = `
-    <div class="esri-legend__layer" id=${'custom-legend-item-' + id}> 
+    <div class="esri-legend__layer"> 
       <div class="esri-legend__layer-table esri-legend__layer-table--size-ramp" > 
         <div class="esri-legend__layer-caption"> 
           ${title} 
