@@ -1,9 +1,9 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var BasemapGallery;
-var Basemap;
-var WebTileLayer;
-var LocalBasemapsSource;
+// var Basemap;
+// var WebTileLayer;
+// var LocalBasemapsSource;
 
 class BasemapWidget extends React.Component {
   /**
@@ -19,7 +19,7 @@ class BasemapWidget extends React.Component {
     this.state = { showMapMenu: false };
     this.menuClass =
       'esri-icon-basemap esri-widget--button esri-widget esri-interactive';
-    this.loadFirst = false;
+    this.loadFirst = true;
   }
 
   loader() {
@@ -31,9 +31,9 @@ class BasemapWidget extends React.Component {
     ]).then(
       ([_BasemapGallery, _Basemap, _WebTileLayer, _LocalBasemapsSource]) => {
         BasemapGallery = _BasemapGallery;
-        Basemap = _Basemap;
-        WebTileLayer = _WebTileLayer;
-        LocalBasemapsSource = _LocalBasemapsSource;
+        // Basemap = _Basemap;
+        // WebTileLayer = _WebTileLayer;
+        // LocalBasemapsSource = _LocalBasemapsSource;
       },
     );
   }
@@ -106,26 +106,30 @@ class BasemapWidget extends React.Component {
   async componentDidMount() {
     await this.loader();
     if (!this.container.current) return;
-    let basemaps = [];
-    // or create from a third party source
-    basemaps.push(
-      new Basemap({
-        baseLayers: [
-          new WebTileLayer({
-            urlTemplate:
-              'https://gisco-services.ec.europa.eu/maps/wmts/OSMCartoV4CompositeEN/EPSG3857/{z}/{x}/{y}.png',
-          }),
-        ],
-        title: 'OSM GISCO',
-        id: 'osm-gisco',
-      }),
-    );
+
+    // custom basemaps
+    // let basemaps = [Basemap.fromId('topo-vector'), Basemap.fromId('hybrid')];
+    // basemaps.push(
+    //   new Basemap({
+    //     baseLayers: [
+    //       new WebTileLayer({
+    //         urlTemplate:
+    //           'https://gisco-services.ec.europa.eu/maps/wmts/OSMCartoV4CompositeEN/EPSG3857/{z}/{x}/{y}.png',
+    //       }),
+    //     ],
+    //     title: 'OSM GISCO',
+    //     id: 'osm-gisco',
+    //   }),
+    // );
+
+    // let customSource = new LocalBasemapsSource({
+    //      basemaps,
+    // });
+
     this.basemapGallery = new BasemapGallery({
       view: this.props.view,
       container: this.container.current.querySelector('.basemap-panel'),
-      // source: new LocalBasemapsSource({
-      //   basemaps,
-      // }),
+      // source: customSource
     });
     this.props.view.ui.add(this.container.current, 'top-right');
   }
