@@ -76,7 +76,7 @@ pipeline {
             node(label: 'docker') {
               script {
                 try {
-                  sh '''docker pull plone/volto-addon-ci'''
+                  sh '''docker pull plone/volto-addon-ci:15.x'''
                   sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" plone/volto-addon-ci'''
                   sh '''rm -rf xunit-reports'''
                   sh '''mkdir -p xunit-reports'''
