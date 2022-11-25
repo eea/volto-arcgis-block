@@ -1,6 +1,9 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var BasemapGallery;
+// var Basemap;
+// var WebTileLayer;
+// var LocalBasemapsSource;
 
 class BasemapWidget extends React.Component {
   /**
@@ -20,9 +23,17 @@ class BasemapWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/widgets/BasemapGallery']).then(
-      ([_BasemapGallery]) => {
+    return loadModules([
+      'esri/widgets/BasemapGallery',
+      'esri/Basemap',
+      'esri/layers/WebTileLayer',
+      'esri/widgets/BasemapGallery/support/LocalBasemapsSource',
+    ]).then(
+      ([_BasemapGallery, _Basemap, _WebTileLayer, _LocalBasemapsSource]) => {
         BasemapGallery = _BasemapGallery;
+        // Basemap = _Basemap;
+        // WebTileLayer = _WebTileLayer;
+        // LocalBasemapsSource = _LocalBasemapsSource;
       },
     );
   }
@@ -95,9 +106,30 @@ class BasemapWidget extends React.Component {
   async componentDidMount() {
     await this.loader();
     if (!this.container.current) return;
+
+    // custom basemaps
+    // let basemaps = [Basemap.fromId('topo-vector'), Basemap.fromId('hybrid')];
+    // basemaps.push(
+    //   new Basemap({
+    //     baseLayers: [
+    //       new WebTileLayer({
+    //         urlTemplate:
+    //           'https://gisco-services.ec.europa.eu/maps/wmts/OSMCartoV4CompositeEN/EPSG3857/{z}/{x}/{y}.png',
+    //       }),
+    //     ],
+    //     title: 'OSM GISCO',
+    //     id: 'osm-gisco',
+    //   }),
+    // );
+
+    // let customSource = new LocalBasemapsSource({
+    //      basemaps,
+    // });
+
     this.basemapGallery = new BasemapGallery({
       view: this.props.view,
       container: this.container.current.querySelector('.basemap-panel'),
+      // source: customSource
     });
     this.props.view.ui.add(this.container.current, 'top-right');
   }

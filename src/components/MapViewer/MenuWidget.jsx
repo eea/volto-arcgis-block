@@ -792,15 +792,23 @@ class MenuWidget extends React.Component {
         dataset_def.push(idDataset);
       }
 
-      datasets.push(
-        this.metodProcessDataset(
-          product.Datasets[i],
-          index,
-          inheritedIndexProduct,
-          checkProduct,
-        ),
-      );
-      index++;
+      // CLMS-1545
+      if (
+        product.Datasets[i].ViewService !==
+          'https://trial.discomap.eea.europa.eu/arcgis/services/CLMS/WorldCountries/MapServer/WmsServer' &&
+        product.Datasets[i].ViewService !==
+          'https://trial.discomap.eea.europa.eu/arcgis/services/CLMS/WorldCountries/MapServer/WmsServer?'
+      ) {
+        datasets.push(
+          this.metodProcessDataset(
+            product.Datasets[i],
+            index,
+            inheritedIndexProduct,
+            checkProduct,
+          ),
+        );
+        index++;
+      }
     }
 
     // Empty vector, add the first dataset
@@ -1235,6 +1243,7 @@ class MenuWidget extends React.Component {
           DatasetId: DatasetId,
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
+          ViewService: viewService,
         });
       } else if (viewService.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
@@ -1252,6 +1261,9 @@ class MenuWidget extends React.Component {
           DatasetId: DatasetId,
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
+          ViewService: viewService,
+          StaticImageLegend: layer.StaticImageLegend,
+          LayerTitle: layer.Title,
         });
       } else {
         this.layers[
@@ -1270,6 +1282,7 @@ class MenuWidget extends React.Component {
           DatasetId: DatasetId,
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
+          ViewService: viewService,
         });
       }
     }
@@ -1392,9 +1405,9 @@ class MenuWidget extends React.Component {
       title: layer.Title,
       LayerTitle: layer.Title,
       DatasetTitle: dataset.DatasetTitle,
-      url: layer.LayerUrl,
-      legendEnabled: true,
-      legendUrl: layer.StaticImageLegend,
+      ViewService: dataset.ViewService,
+      StaticImageLegend: layer.StaticImageLegend,
+      url: dataset.ViewService,
     });
   }
 
@@ -1441,6 +1454,7 @@ class MenuWidget extends React.Component {
     } else {
       this.deleteCheckedLayer(elem.id);
       this.layers[elem.id].opacity = 1;
+      this.layers[elem.id].visible = false;
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) mapLayer.destroy();
       this.map.remove(this.layers[elem.id]);
@@ -1451,8 +1465,103 @@ class MenuWidget extends React.Component {
     this.updateCheckDataset(parentId);
     this.layersReorder();
     this.checkInfoWidget();
+
+    // toggle custom legend for WMTS and TMS
+    if (
+      this.layers[elem.id].ViewService.toLowerCase().includes('wmts') ||
+      this.layers[elem.id].ViewService.toLowerCase().endsWith('file')
+    ) {
+      this.toggleCustomLegendItem(this.layers[elem.id]);
+    }
     // update DOM
     this.setState({});
+  }
+
+  /**
+   * Hide or show a legend image in the legend widget for a WMTS or a TMS layer
+   *
+   * @param Layer
+   */
+  toggleCustomLegendItem(layer) {
+    // check for existing legend item
+    let existingItem = document.getElementById(
+      'custom-legend-item-' + layer.id,
+    );
+
+    if (layer.visible) {
+      if (!existingItem) {
+        // create one
+        this.addCustomItemToLegend(layer);
+      } else {
+        // show existing one
+        existingItem.style.display = 'block';
+      }
+    } else {
+      // hide legend item
+      if (existingItem) {
+        existingItem.style.display = 'none';
+      }
+    }
+  }
+
+  addCustomItemToLegend(layer) {
+    // Find legend widget node
+    const legendDiv = document.querySelectorAll('.esri-widget.esri-legend')[0];
+    let childDiv = legendDiv.firstChild;
+
+    // create legend element
+    let legendItem = this.createStaticLegendImageNode(
+      layer.id,
+      layer.LayerTitle,
+      layer.StaticImageLegend,
+    );
+
+    // append to Legend widet
+    childDiv.appendChild(legendItem);
+
+    // hide no legend message
+    const noLegendMessage = document.querySelectorAll(
+      '.esri-legend__message',
+    )[0];
+    if (noLegendMessage) {
+      noLegendMessage.style.display = 'none';
+    }
+  }
+
+  createStaticLegendImageNode(id, title, imageURL) {
+    let node = document.createElement('div');
+    node.classList.add('esri-legend__service');
+    node.id = 'custom-legend-item-' + id;
+
+    // Create node
+    let template = `
+    <div class="esri-legend__layer"> 
+      <div class="esri-legend__layer-table esri-legend__layer-table--size-ramp" > 
+        <div class="esri-legend__layer-caption"> 
+          ${title} 
+        </div> 
+        <div class="esri-legend__layer-body"> 
+          <div class="esri-legend__layer-row"> 
+            <div class="esri-legend__layer-cell esri-legend__layer-cell--symbols" > 
+              <div class="esri-legend__symbol"> 
+                <img crossorigin="anonymous" 
+                  alt="" 
+                  src="${imageURL}"
+                  style="opacity: 1" 
+                /> 
+              </div> 
+            </div> 
+            <div 
+              class="esri-legend__layer-cell esri-legend__layer-cell--info"
+            ></div> 
+          </div> 
+        </div> 
+      </div> 
+    </div>`;
+
+    node.innerHTML = template;
+
+    return node;
   }
 
   /**
