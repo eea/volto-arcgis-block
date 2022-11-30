@@ -475,7 +475,7 @@ class MenuWidget extends React.Component {
             let promise = fetch(dataset.ViewService, { mode: 'no-cors' })
               .then((response) => {
                 if (!response.ok) {
-                  console.error(`HTTP error, status = ${response.status}`);
+                  //console.error(`HTTP error, status = ${response.status}`);
                 }
                 return response.json();
               })
@@ -484,7 +484,7 @@ class MenuWidget extends React.Component {
                 dataset.Layer = data.Layers;
               })
               .catch((error) => {
-                console.error(error);
+                //console.error(error);
               });
             promises.push(promise);
           }
