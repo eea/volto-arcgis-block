@@ -92,12 +92,13 @@ export const AddCartItem = ({
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
     };
-    if (
-      dataset.IsTimeSeries &&
-      datasetElem
-        .querySelector('.map-dataset-checkbox input')
-        .hasAttribute('time-start')
-    ) {
+    let hasTimeStart = datasetElem
+      ? datasetElem
+          .querySelector('.map-dataset-checkbox input')
+          .hasAttribute('time-start')
+      : false;
+
+    if (dataset.IsTimeSeries && hasTimeStart) {
       let datasetInput = datasetElem.querySelector(
         '.map-dataset-checkbox input',
       );
@@ -412,7 +413,11 @@ class MenuWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false, tms_jsx: null };
+    this.state = {
+      showMapMenu: false,
+      noServiceModal: true,
+      setNoServiceModal: true,
+    };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
     this.map = this.props.map;
@@ -490,6 +495,16 @@ class MenuWidget extends React.Component {
     return Promise.all(promises);
   }
 
+  closeNoServiceModal = (e) => {
+    if (e) e.stopPropagation();
+    this.setState({ noServiceModal: false });
+  };
+
+  showNoServiceModal = (e) => {
+    if (e) e.stopPropagation();
+    this.setState({ noServiceModal: true });
+  };
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
@@ -541,7 +556,7 @@ class MenuWidget extends React.Component {
     if (this.props.download && this.layers) {
       let layerid = Object.keys(this.layers)[0];
 
-      if (this.layers[layerid].isTimeSeries) {
+      if (layerid && this.layers[layerid].isTimeSeries) {
         // select active on map tab
         let event = new MouseEvent('click', {
           view: window,
@@ -1641,8 +1656,10 @@ class MenuWidget extends React.Component {
     }
 
     datasetChecks.forEach((element) => {
-      element.checked = value;
-      this.toggleDataset(value, element.id, element);
+      if (element) {
+        element.checked = value;
+        this.toggleDataset(value, element.id, element);
+      }
     });
   }
 
@@ -2534,6 +2551,52 @@ class MenuWidget extends React.Component {
                   />
                 </div>
               )}
+
+              {this.props.download &&
+                this.layers &&
+                !Object.keys(this.layers)[0] && (
+                  // CLMS-1588 show modal if download and dataset has no dataset to show
+
+                  <>
+                    <Modal
+                      size="tiny"
+                      open={this.state.noServiceModal}
+                      onClose={() => this.closeNoServiceModal()}
+                      onOpen={() => this.showNoServiceModal()}
+                      className="map-download-modal"
+                    >
+                      <div className="modal-close modal-clms-close">
+                        <span
+                          className="ccl-icon-close"
+                          onClick={(e) => this.closeNoServiceModal(e)}
+                          onKeyDown={(e) => this.closeNoServiceModal(e)}
+                          aria-label="Close"
+                          tabIndex="0"
+                          role="button"
+                        ></span>
+                      </div>
+                      <Modal.Content>
+                        <p>
+                          This dataset cannot be visualised on the map, only
+                          downloaded.
+                        </p>
+                      </Modal.Content>
+                      <Modal.Actions>
+                        <div
+                          className="map-download-buttons"
+                          style={{ textAlign: 'center', display: 'block' }}
+                        >
+                          <button
+                            className="ccl-button ccl-button-green"
+                            onClick={(e) => this.closeNoServiceModal(e)}
+                          >
+                            Continue
+                          </button>
+                        </div>
+                      </Modal.Actions>
+                    </Modal>
+                  </>
+                )}
             </div>
           </div>
           <div tooltip="Menu of products" direction="right" type="widget">
