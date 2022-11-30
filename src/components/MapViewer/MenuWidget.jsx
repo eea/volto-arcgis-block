@@ -475,7 +475,7 @@ class MenuWidget extends React.Component {
             let promise = fetch(dataset.ViewService, { mode: 'no-cors' })
               .then((response) => {
                 if (!response.ok) {
-                  throw new Error(`HTTP error, status = ${response.status}`);
+                  console.error(`HTTP error, status = ${response.status}`);
                 }
                 return response.json();
               })
@@ -484,7 +484,7 @@ class MenuWidget extends React.Component {
                 dataset.Layer = data.Layers;
               })
               .catch((error) => {
-                throw new Error(error);
+                console.error(error);
               });
             promises.push(promise);
           }
@@ -980,7 +980,8 @@ class MenuWidget extends React.Component {
         if (!layer.LayerId) {
           layer.LayerId = sublayerIndex;
         }
-        let inheritedIndexLayer = inheritedIndex + '_' + tmsLayerIndex;
+
+        let inheritedIndexLayer = inheritedIndexDataset + '_' + tmsLayerIndex;
         let checkboxId = layer.LayerId + '_' + inheritedIndexLayer;
 
         // add as default
@@ -990,7 +991,7 @@ class MenuWidget extends React.Component {
         // add each sublayer to this.layers
         this.processTMSLayer(layer, checkboxId, dataset);
 
-        // build TMS DOM nodes for TOC
+        // build TMS Layer for TOC
         layers.push(
           <div
             className="ccl-form-group map-menu-layer"
