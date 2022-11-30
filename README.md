@@ -25,7 +25,6 @@ This endpoint is called `@mapviewer` and an example implementation is in the [cl
 
 This means that the product is not generic enough to show any ArcGIS map.
 
-![Demo example volto-arcgis-block](docs/demo.gif)
 
 ## Styling
 To create custom styles, we need to add it in the block configuration and import the Less file into our project.
