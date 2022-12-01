@@ -810,8 +810,7 @@ class MenuWidget extends React.Component {
       // CLMS-1545
       if (
         product.Datasets[i].ViewService.toLowerCase() !==
-        'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver'
-        &&
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver' &&
         product.Datasets[i].ViewService.toLowerCase() !==
           'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver?'
       ) {
