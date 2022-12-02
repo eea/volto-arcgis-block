@@ -174,13 +174,13 @@ class TimesliderWidget extends React.Component {
           switch (type) {
             case 'min':
             case 'max':
-              element.innerText = normal.format(value);
+              element.innerText = normal.format(value).replaceAll('/', '.');
               break;
             case 'extent':
-              element.innerText = normal.format(value[0]);
+              element.innerText = normal.format(value[0]).replaceAll('/', '.');
               break;
             default:
-              element.innerText = normal.format(value);
+              element.innerText = normal.format(value).replaceAll('/', '.');
               break;
           }
         }
