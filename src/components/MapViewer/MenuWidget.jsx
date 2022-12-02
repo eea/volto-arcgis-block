@@ -734,14 +734,24 @@ class MenuWidget extends React.Component {
         : component.ComponentDescription;
 
     for (var i in component.Products) {
-      products.push(
-        this.metodProcessProduct(
-          component.Products[i],
-          index,
-          inheritedIndexComponent,
-        ),
-      );
-      index++;
+      // CLMS-1544
+      // dont show the product if all of its datasets has the auxiliary service as its ViewService URL
+      const isAuxiliary = (dataset) =>
+        dataset.ViewService.toLowerCase() ===
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver' ||
+        dataset.ViewService.toLowerCase() ===
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver?';
+
+      if (!component.Products[i].Datasets.every(isAuxiliary)) {
+        products.push(
+          this.metodProcessProduct(
+            component.Products[i],
+            index,
+            inheritedIndexComponent,
+          ),
+        );
+        index++;
+      }
     }
     let style = this.props.download ? { display: 'none' } : {};
 
