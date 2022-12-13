@@ -108,6 +108,7 @@ class InfoWidget extends React.Component {
    * @returns useCasesRegion
    */
   getDataBrief(data) {
+    data.sort((a, b) => a.Use_case_title.localeCompare(b.Use_case_title));
     let titles = [];
     let children = data.map((val) => {
       let hideTitle = false;
