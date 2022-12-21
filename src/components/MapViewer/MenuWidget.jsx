@@ -408,7 +408,10 @@ export const TouchScreenPopup = () => {
       <div className="touchScreenPopup-block">
         <div className="touchScreenPopup-content">
           <div className="touchScreenPopup-text">
-            <p>Some functionalities of the map viewer are not available for touchscreens. Functionality will be limited.</p>
+            <p>
+              Some functionalities of the map viewer are not available for touchscreens.
+              Functionality will be limited.
+            </p>
           </div>
         </div>
       </div>
