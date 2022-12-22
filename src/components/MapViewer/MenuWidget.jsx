@@ -402,6 +402,23 @@ export const CheckLogin = () => {
   );
 };
 
+export const TouchScreenPopup = () => {
+  return (
+    <>
+      <div className="touchScreenPopup-block">
+        <div className="touchScreenPopup-content">
+          <div className="touchScreenPopup-text">
+            <p>
+              Some functionalities of the map viewer are not available for
+              touchscreens. Functionality will be limited.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 class MenuWidget extends React.Component {
   /**
    * Creator of the Basemap widget class
@@ -2177,6 +2194,10 @@ class MenuWidget extends React.Component {
     document.querySelector('.login-panel').style.display = '';
   }
 
+  closetouchScreenPopup() {
+    document.querySelector('.touchScreenPopup-panel').style.display = 'none';
+  }
+
   /**
    * Method to show/hide layer from "Active Layers"
    * @param {*} e From the click event
@@ -2654,6 +2675,17 @@ class MenuWidget extends React.Component {
             tabIndex="0"
           ></div>
           {!this.props.download && <CheckLogin />}
+        </div>
+        <div className="touchScreenPopup-panel">
+          <div
+            className="esri-icon-close"
+            id="touchScreenPopup_close"
+            role="button"
+            onClick={() => this.closetouchScreenPopup()}
+            onKeyDown={() => this.closetouchScreenPopup()}
+            tabIndex="0"
+          ></div>
+          {<TouchScreenPopup />}
         </div>
       </>
     );
