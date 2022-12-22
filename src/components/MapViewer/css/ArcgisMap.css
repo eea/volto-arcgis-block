@@ -393,6 +393,41 @@
   cursor: pointer;
 }
 
+/* touchScreenPopup START*/
+.touchScreenPopup-panel {
+  position: absolute;
+  display: none;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0px 0px 4px 0px #dadada;
+}
+
+.touchScreenPopup-panel .touchScreenPopup-block {
+  width: 100%;
+  margin: 0;
+  background: none;
+  float: none;
+}
+
+.touchScreenPopup-panel .touchScreenPopup-text {
+  margin-bottom: 1rem;
+}
+
+.touchScreenPopup-panel .touchScreenPopup-block .ccl-button {
+  margin: 0;
+}
+
+#touchScreenPopup_close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0.5rem;
+  color: #a0b128;
+  cursor: pointer;
+}
+
+/* touchScreenPopup END*/
+
 .map-menu-icon-login .fa-lock {
   position: absolute;
   top: 1.75rem;
@@ -832,6 +867,10 @@
 @media only screen and (max-width: 767px) {
   .ui.custom.popup {
     max-width: 400px;
+  }
+
+  .touchScreenPopup-panel {
+    display: block;
   }
 }
 
