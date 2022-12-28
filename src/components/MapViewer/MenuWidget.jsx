@@ -276,18 +276,6 @@ export const AddCartItem = ({
                         </p>
                       </li>
                       <br />
-                      <li>
-                        <p>
-                          If you would like to download data for your area of
-                          interest and for the selected time interval, please
-                          follow this{' '}
-                          <UniversalLink
-                            href={dataset.DatasetURL + '/download-by-area'}
-                          >
-                            link.
-                          </UniversalLink>
-                        </p>
-                      </li>
                     </>
                   ) : (
                     <li>
