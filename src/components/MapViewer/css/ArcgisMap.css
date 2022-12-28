@@ -809,7 +809,7 @@
   right: 0;
   display: none;
   margin: 0.5rem;
-  color: black;
+  color: #a0b128;
   cursor: pointer;
 }
 
@@ -827,6 +827,47 @@
 .esri-time-slider__min-date + div,
 .esri-time-slider__max-date + div {
   display: none;
+}
+
+.esri-time-slider__mode--time-window .esri-slider__segment-0,
+.esri-time-slider__mode--time-window .esri-slider__segment-1,
+.esri-time-slider__mode--time-window .esri-slider__segment-2 {
+  background-color: #c5c5c5 !important;
+}
+
+.esri-slider__thumb {
+  border-color: #a0b128 !important;
+  outline: none !important;
+}
+
+.esri-slider__thumb:hover {
+  border-color: #7c8921 !important;
+}
+
+.esri-widget--button {
+  width: 36px !important;
+  height: 36px !important;
+  border: none !important;
+  background-color: rgba(160, 177, 40, 0.8) !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  font-size: 18px !important;
+  line-height: 1.1rem !important;
+  outline: none !important;
+}
+
+.esri-widget--button:hover {
+  background-color: #7c8921 !important;
+  color: white !important;
+}
+
+.esri-time-slider__slider {
+  background-color: rgba(160, 177, 40, 0.058823529411764705) !important;
+}
+
+.esri-time-slider__slider .esri-slider {
+  background-color: transparent !important;
 }
 
 /* Scale */
@@ -1054,4 +1095,31 @@ input[type='range']::-ms-track {
   color: white;
   font-size: 0.875rem;
   text-align: center;
+}
+
+/* Privacy protection tooltip */
+.ui.primary.buttons .button,
+.ui.primary.button {
+  background-color: #a0b128 !important;
+  color: #ffffff;
+  text-shadow: none;
+  background-image: none;
+}
+
+.privacy-toggle .ui.toggle.checkbox input:checked ~ label:before {
+  background-color: #a0b128 !important;
+}
+
+.privacy-toggle .ui.checked.toggle.checkbox input:checked ~ label:before {
+  background-color: #a0b128 !important;
+}
+
+.ui.checkbox input:checked ~ label:before {
+  border: 1px solid #a0b128 !important;
+  box-shadow: none;
+}
+
+.privacy-toggle .ui.checkbox input:checked ~ label:after {
+  color: #a0b128 !important;
+  content: '\e800';
 }

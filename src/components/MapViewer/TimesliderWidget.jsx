@@ -162,7 +162,7 @@ class TimesliderWidget extends React.Component {
       view: this.props.view,
       container: document.querySelector('.timeslider-panel'),
       timeVisible: true,
-      mode: this.props.download ? 'time-window' : 'instant',
+      mode: /*this.props.download ? 'time-window' : 'instant'*/ 'time-window',
       loop: false,
       labelFormatFunction: (value, type, element, layout) => {
         if (!this.TimesliderWidget.fullTimeExtent) {
@@ -186,9 +186,10 @@ class TimesliderWidget extends React.Component {
         }
       },
       values: this.props.time.start
-        ? this.props.download
+        ? /*this.props.download
           ? [new Date(this.props.time.start), new Date(this.props.time.end)]
-          : [new Date(this.props.time.start)]
+          : [new Date(this.props.time.start)]*/
+          [new Date(this.props.time.start), new Date(this.props.time.end)]
         : null,
     });
     this.props.view.ui.add(this.container.current, 'bottom-right');
@@ -224,6 +225,8 @@ class TimesliderWidget extends React.Component {
               this.props.time.dataset.setAttribute('time-start', start);
               this.props.time.dataset.setAttribute('time-end', end);
             }
+            /*this.props.time.dataset.setAttribute('time-start', start);
+            this.props.time.dataset.setAttribute('time-end', end);*/
           });
         } else {
           let serviceType = '';
@@ -301,6 +304,8 @@ class TimesliderWidget extends React.Component {
                   this.props.time.dataset.setAttribute('time-start', start);
                   this.props.time.dataset.setAttribute('time-end', end);
                 }
+                /*this.props.time.dataset.setAttribute('time-start', start);
+                this.props.time.dataset.setAttribute('time-end', end);*/
                 if (this.layer.type === 'wmts') {
                   this.layer.customParameters = {};
                   this.layer.customParameters['TIME'] =
