@@ -845,11 +845,11 @@
 }
 
 .esri-widget--button {
+  overflow: visible !important;
   width: 36px !important;
   height: 36px !important;
   border: none !important;
   background-color: rgba(160, 177, 40, 0.8) !important;
-  overflow: visible !important;
   box-shadow: none !important;
   color: #fff !important;
   font-size: 18px !important;
@@ -1101,9 +1101,9 @@ input[type='range']::-ms-track {
 .ui.primary.buttons .button,
 .ui.primary.button {
   background-color: #a0b128 !important;
+  background-image: none;
   color: #ffffff;
   text-shadow: none;
-  background-image: none;
 }
 
 .privacy-toggle .ui.toggle.checkbox input:checked ~ label:before {
