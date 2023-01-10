@@ -34,6 +34,7 @@ export const AddCartItem = ({
   const [message, setMessage] = useState(0);
   const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
+  const [loginUrl] = React.useState('');
 
   const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
@@ -183,7 +184,7 @@ export const AddCartItem = ({
     closeModal(e);
   };
 
-  const showLogin = (e) => {
+  /*const showLogin = (e) => {
     e.stopPropagation();
     document.querySelector('.login-panel').style.display = 'block';
     let left = e.currentTarget.offsetLeft + 48;
@@ -196,7 +197,7 @@ export const AddCartItem = ({
       e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
       document.querySelector('.login-panel').offsetHeight / 2;
     document.querySelector('.login-panel').style.top = top + 'px';
-  };
+  };*/
 
   return (
     <>
@@ -231,7 +232,7 @@ export const AddCartItem = ({
             Cancel
           </button>
         </div>
-      ) : (
+      ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <>
           <Modal
             size="tiny"
@@ -341,10 +342,110 @@ export const AddCartItem = ({
               <span
                 className={'map-menu-icon map-menu-icon-login'}
                 onClick={(e) => {
-                  isLoggedIn ? showModal(e) : showLogin(e);
+                  showModal(e);
                 }}
                 onKeyDown={(e) => {
-                  isLoggedIn ? showModal(e) : showLogin(e);
+                  showModal(e);
+                }}
+                tabIndex="0"
+                role="button"
+              >
+                <FontAwesomeIcon
+                  className={isLoggedIn ? '' : ' locked'}
+                  icon={['fas', 'download']}
+                />
+                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+              </span>
+            }
+            content="Download"
+            {...popupSettings}
+          />
+        </>
+      ) : (
+        // If isLoggedIn == false and user clicks download
+        <>
+          <Modal
+            size="tiny"
+            onClose={() => closeModal()}
+            onOpen={() => showModal()}
+            open={modal}
+            className="modal-clms-container"
+          >
+            <div className="modal-close modal-clms-close">
+              <span
+                className="ccl-icon-close"
+                aria-label="Close"
+                onClick={(e) => closeModal(e)}
+                onKeyDown={(e) => closeModal(e)}
+                tabIndex="0"
+                role="button"
+              ></span>
+            </div>
+            <Modal.Content>
+              <div className="content">
+                <div className="modal-login-title">
+                  This website uses EU Login for user authentication.
+                </div>
+                <div className="modal-login-text">
+                  <p>
+                    {' '}
+                    EU Login, the European Commission Authentication Service,
+                    enables you to access various web applications centrally
+                    using the same e-mail and password. You can read more{' '}
+                    <UniversalLink
+                      openLinkInNewTab
+                      href="https://ecas.ec.europa.eu/cas/about.html"
+                    >
+                      here
+                    </UniversalLink>
+                    .
+                  </p>
+                  <p>
+                    {' '}
+                    If you have EU Login account, please click 'Login using EU
+                    Login'.
+                  </p>
+                  <p>
+                    If you don't have EU Login account, please follow this{' '}
+                    <UniversalLink
+                      openLinkInNewTab
+                      href="https://ecas.ec.europa.eu/cas/eim/external/register.cgi"
+                    >
+                      link
+                    </UniversalLink>{' '}
+                    to create it.
+                  </p>
+                  <p>
+                    If you have other questions, please contact our
+                    <UniversalLink openLinkInNewTab href="/en/service-desk">
+                      {' '}
+                      Service desk
+                    </UniversalLink>
+                    .
+                  </p>
+                </div>
+              </div>
+            </Modal.Content>
+            <Modal.Actions>
+              <div className="modal-buttons">
+                <a
+                  href={loginUrl || '#'}
+                  className="ccl-button ccl-button-green"
+                >
+                  Login using EU Login
+                </a>
+              </div>
+            </Modal.Actions>
+          </Modal>
+          <Popup
+            trigger={
+              <span
+                className={'map-menu-icon map-menu-icon-login'}
+                onClick={(e) => {
+                  showModal(e);
+                }}
+                onKeyDown={(e) => {
+                  showModal(e);
                 }}
                 tabIndex="0"
                 role="button"
@@ -365,7 +466,7 @@ export const AddCartItem = ({
   );
 };
 
-export const CheckLogin = () => {
+/*export const CheckLogin = () => {
   const { isLoggedIn } = useCartState();
   return (
     <>
@@ -388,7 +489,7 @@ export const CheckLogin = () => {
       )}
     </>
   );
-};
+};*/
 
 export const TouchScreenPopup = () => {
   return (
@@ -2652,17 +2753,6 @@ class MenuWidget extends React.Component {
             <span className="opacity-label left">0 %</span>
             <span className="opacity-label right">100 %</span>
           </div>
-        </div>
-        <div className="login-panel">
-          <div
-            className="esri-icon-close"
-            id="login_close"
-            role="button"
-            onClick={() => this.closeLogin()}
-            onKeyDown={() => this.closeLogin()}
-            tabIndex="0"
-          ></div>
-          {!this.props.download && <CheckLogin />}
         </div>
         <div className="touchScreenPopup-panel">
           <div
