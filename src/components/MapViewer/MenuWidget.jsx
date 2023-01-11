@@ -184,7 +184,7 @@ export const AddCartItem = ({
     closeModal(e);
   };
 
-  const showLogin = (e) => {
+  /*const showLogin = (e) => {
     e.stopPropagation();
     document.querySelector('.login-panel').style.display = 'block';
     let left = e.currentTarget.offsetLeft + 48;
@@ -197,7 +197,7 @@ export const AddCartItem = ({
       e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
       document.querySelector('.login-panel').offsetHeight / 2;
     document.querySelector('.login-panel').style.top = top + 'px';
-  };
+  };*/
 
   return (
     <>
