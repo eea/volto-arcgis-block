@@ -466,7 +466,7 @@ export const AddCartItem = ({
   );
 };
 
-/*export const CheckLogin = () => {
+export const CheckLogin = () => {
   const { isLoggedIn } = useCartState();
   return (
     <>
@@ -489,7 +489,7 @@ export const AddCartItem = ({
       )}
     </>
   );
-};*/
+};
 
 export const TouchScreenPopup = () => {
   return (
@@ -2753,6 +2753,17 @@ class MenuWidget extends React.Component {
             <span className="opacity-label left">0 %</span>
             <span className="opacity-label right">100 %</span>
           </div>
+        </div>
+        <div className="login-panel">
+          <div
+            className="esri-icon-close"
+            id="login_close"
+            role="button"
+            onClick={() => this.closeLogin()}
+            onKeyDown={() => this.closeLogin()}
+            tabIndex="0"
+          ></div>
+          {!this.props.download && <CheckLogin />}
         </div>
         <div className="touchScreenPopup-panel">
           <div
