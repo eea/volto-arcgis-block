@@ -19,6 +19,8 @@ class TimesliderWidget extends React.Component {
     this.state = {
       showMapMenu: false,
       styles: { bottom: '0', right: '0' },
+      timeSelectedValues: [], //To store time slider values [min, max]
+      timeSelectedValuesC: [] //To compare time slider stored values with new selected values
     };
     this.map = this.props.map;
     this.layer = this.props.layer;
@@ -173,13 +175,27 @@ class TimesliderWidget extends React.Component {
           const normal = new Intl.DateTimeFormat('en-gb');
           switch (type) {
             case 'min':
+              if(this.state.timeSelectedValuesC==null) // In case of first iteration
+                this.state.timeSelectedValuesC[0] = value; 
+              element.innerText = normal.format(value).replaceAll('/', '.');
+              break;
             case 'max':
+              if(this.state.timeSelectedValuesC==null) // In case of first iteration
+                this.state.timeSelectedValuesC[1] = value;
               element.innerText = normal.format(value).replaceAll('/', '.');
               break;
             case 'extent':
-              element.innerText = normal.format(value[0]).replaceAll('/', '.');
+              this.state.timeSelectedValues = value;
+              if(normal.format(this.state.timeSelectedValues[0]).replaceAll('/', '.')!==normal.format(this.state.timeSelectedValuesC[0]).replaceAll('/', '.')){
+                this.state.timeSelectedValuesC[0] = value[0];
+                element.innerText = normal.format(value[0]).replaceAll('/', '.'); 
+              }else if(normal.format(this.state.timeSelectedValues[1]).replaceAll('/', '.')!==normal.format(this.state.timeSelectedValuesC[1]).replaceAll('/', '.')){
+                this.state.timeSelectedValuesC[1] = value[1];
+                element.innerText = normal.format(value[1]).replaceAll('/', '.'); 
+              }
               break;
             default:
+              
               element.innerText = normal.format(value).replaceAll('/', '.');
               break;
           }
