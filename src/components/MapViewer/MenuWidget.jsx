@@ -252,15 +252,19 @@ export const AddCartItem = ({
               ></span>
             </div>
             <Modal.Content>
-              <p>Do you want to add this dataset to the cart?</p>
               {!areaData && (
                 <ul>
+                  <br></br>
                   <li>
                     <p>
-                      If you would like to download an entire dataset then
-                      select &#39;Add entire dataset&#39; (Note: the download
-                      will take longer for large datasets and Europe is selected
-                      as the area of interest by default).
+                      If you would want to download the full dataset, click{' '}
+                      <UniversalLink
+                        openLinkInNewTab
+                        href="https://clms-prod.eea.europa.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
+                      >
+                        here
+                      </UniversalLink>{' '}
+                      to learn more.
                     </p>
                   </li>
                   <br />
@@ -307,12 +311,6 @@ export const AddCartItem = ({
                   <>
                     <button
                       className="ccl-button ccl-button-green"
-                      onClick={(e) => checkArea(e)}
-                    >
-                      Add entire dataset
-                    </button>
-                    <button
-                      className="ccl-button ccl-button--default"
                       onClick={(e) => selectBBox(e)}
                     >
                       Area of interest
