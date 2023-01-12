@@ -667,7 +667,7 @@
 
 .map-download-buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   margin: 0 1rem;
 }
 
@@ -947,7 +947,7 @@
 }
 
 .active-widget {
-  background: black;
+  background: black !important;
 }
 
 .esri-component {
