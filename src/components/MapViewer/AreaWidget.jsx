@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
   Extent,
@@ -22,7 +23,10 @@ class AreaWidget extends React.Component {
       : createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = { 
+      showMapMenu: false,
+      showInfoPopup: false 
+    };
     this.menuClass =
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
     // Enable defaultPopup option to charge popup and highlifght feature
@@ -164,6 +168,9 @@ class AreaWidget extends React.Component {
       if (e.action === 'start') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         origin = this.props.view.toMap(e);
+        this.setState({ 
+          showInfoPopup: true 
+        });
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         let p = this.props.view.toMap(e);
@@ -184,7 +191,9 @@ class AreaWidget extends React.Component {
         this.props.view.graphics.add(extentGraphic);
       }
     });
-    this.setState({ ShowGraphics: drawGraphics });
+    this.setState({ 
+      ShowGraphics: drawGraphics,
+    });
   }
   clearWidget() {
     this.props.mapViewer.view.popup.close();
@@ -196,6 +205,9 @@ class AreaWidget extends React.Component {
     this.nutsGroupLayer.removeAll();
     this.props.view.graphics.removeAll();
     this.props.updateArea();
+    this.setState({ 
+      showInfoPopup: false 
+    });
   }
   /**
    * This method is executed after the rener method is executed
@@ -389,7 +401,25 @@ class AreaWidget extends React.Component {
               </div>
             </div>
           </div>
+          {this.state.showInfoPopup && (
+          <div className="map-container">
+            <div className="drawRectanglePopup-block">
+            <div className="drawRectanglePopup-content">
+              <span className='drawRectanglePopup-icon'>
+                <FontAwesomeIcon
+                      icon={['fas', 'download']}
+                    />
+                </span>
+              <div className="drawRectanglePopup-text">
+                  Click on the download icon of the "Menu of products" to download the dataset
+              </div>
+            </div>
+          </div>
         </div>
+        )}
+        {this.state.showInfoPopup && console.log("testDrawPopup")}
+        </div>
+        
       </>
     );
   }
