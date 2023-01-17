@@ -23,9 +23,9 @@ class AreaWidget extends React.Component {
       : createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { 
+    this.state = {
       showMapMenu: false,
-      showInfoPopup: false 
+      showInfoPopup: false,
     };
     this.menuClass =
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
@@ -168,8 +168,8 @@ class AreaWidget extends React.Component {
       if (e.action === 'start') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         origin = this.props.view.toMap(e);
-        this.setState({ 
-          showInfoPopup: true 
+        this.setState({
+          showInfoPopup: true,
         });
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
@@ -191,7 +191,7 @@ class AreaWidget extends React.Component {
         this.props.view.graphics.add(extentGraphic);
       }
     });
-    this.setState({ 
+    this.setState({
       ShowGraphics: drawGraphics,
     });
   }
@@ -205,8 +205,8 @@ class AreaWidget extends React.Component {
     this.nutsGroupLayer.removeAll();
     this.props.view.graphics.removeAll();
     this.props.updateArea();
-    this.setState({ 
-      showInfoPopup: false 
+    this.setState({
+      showInfoPopup: false,
     });
   }
   /**
@@ -402,24 +402,21 @@ class AreaWidget extends React.Component {
             </div>
           </div>
           {this.state.showInfoPopup && (
-          <div className="map-container">
-            <div className="drawRectanglePopup-block">
-            <div className="drawRectanglePopup-content">
-              <span className='drawRectanglePopup-icon'>
-                <FontAwesomeIcon
-                      icon={['fas', 'download']}
-                    />
-                </span>
-              <div className="drawRectanglePopup-text">
-                  Click on the download icon of the "Menu of products" to download the dataset
+            <div className="map-container">
+              <div className="drawRectanglePopup-block">
+                <div className="drawRectanglePopup-content">
+                  <span className="drawRectanglePopup-icon">
+                    <FontAwesomeIcon icon={['fas', 'download']} />
+                  </span>
+                  <div className="drawRectanglePopup-text">
+                    Click on the download icon of the "Menu of products" to
+                    download the dataset
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-        )}
-        {this.state.showInfoPopup && console.log("testDrawPopup")}
-        </div>
-        
       </>
     );
   }

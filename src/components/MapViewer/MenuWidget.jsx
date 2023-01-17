@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom';
-import React, { createRef, useState, useEffect } from 'react';
+import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
@@ -9,7 +9,7 @@ import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
 import { UniversalLink } from '@plone/volto/components';
-import {toBase64} from '@eeacms/volto-clms-theme/components/CclUtils';
+import { toBase64 } from '@eeacms/volto-clms-theme/components/CclUtils';
 var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
 
 const popupSettings = {
@@ -35,7 +35,6 @@ export const AddCartItem = ({
   const [message, setMessage] = useState(0);
   const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
-  const [loginUrl, setLoginUrl] = React.useState('');
   const windowToBase64 = toBase64(window.location.href);
 
   const checkArea = (e) => {
@@ -200,7 +199,7 @@ export const AddCartItem = ({
       document.querySelector('.login-panel').offsetHeight / 2;
     document.querySelector('.login-panel').style.top = top + 'px';
   };*/
-  
+
   return (
     <>
       {showMessage && (
@@ -430,7 +429,10 @@ export const AddCartItem = ({
             <Modal.Actions>
               <div className="modal-buttons">
                 <a
-                  href={"clms.addon.login_url_controlpanel.login_url?came_from="+windowToBase64}
+                  href={
+                    'clms.addon.login_url_controlpanel.login_url?came_from=' +
+                    windowToBase64
+                  }
                   className="ccl-button ccl-button-green"
                 >
                   Login using EU Login

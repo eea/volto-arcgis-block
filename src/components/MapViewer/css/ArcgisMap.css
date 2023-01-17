@@ -1124,28 +1124,27 @@ input[type='range']::-ms-track {
   content: '\e800';
 }
 
-
 /*Draw rectangle popup*/
 
-.drawRectanglePopup-content{
-  display: flex;
+.drawRectanglePopup-content {
   /*margin-right: calc(100vw - 250px);
   margin-top: -8rem;*/
   position: absolute;
-  background-color: white;
-  height: 60px;
+  display: flex;
   width: 19rem;
-  padding: 0.6rem 0.8rem 0.8rem 0.8rem;
+  height: 60px;
   justify-content: space-between;
+  padding: 0.6rem 0.8rem 0.8rem 0.8rem;
+  background-color: white;
   transform: translate(-34vw, -214%);
 }
 
 .drawRectanglePopup-content .drawRectanglePopup-icon {
+  margin-top: 0.6rem;
+  margin-right: 0.6rem;
   color: #a0b128;
   font-size: 1rem;
   text-decoration: none;
-  margin-top: 0.6rem;
-  margin-right: 0.6rem;
 }
 
 /*.drawRectanglePopup-icon .svg{
