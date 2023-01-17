@@ -9,7 +9,6 @@ import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
 import { UniversalLink } from '@plone/volto/components';
-import { toBase64 } from '@eeacms/volto-clms-theme/components/CclUtils';
 var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
 
 const popupSettings = {
@@ -35,7 +34,7 @@ export const AddCartItem = ({
   const [message, setMessage] = useState(0);
   const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
-  const windowToBase64 = toBase64(window.location.href);
+  /*const windowToBase64 = toBase64(window.location.href);*/
 
   const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
@@ -430,8 +429,8 @@ export const AddCartItem = ({
               <div className="modal-buttons">
                 <a
                   href={
-                    'clms.addon.login_url_controlpanel.login_url?came_from=' +
-                    windowToBase64
+                    'clms.addon.login_url_controlpanel.login_url?came_from='
+                    //windowToBase64
                   }
                   className="ccl-button ccl-button-green"
                 >
