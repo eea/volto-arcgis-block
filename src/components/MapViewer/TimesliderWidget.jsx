@@ -330,6 +330,7 @@ class TimesliderWidget extends React.Component {
               this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
                 if (!this.container.current ? true : false) {
                   this.TimesliderWidget.stop();
+                  console.log(this.TimesliderWidget.stop());
                 }
                 let start = new Date(timeExtent.start).getTime();
                 let end = new Date(timeExtent.end).getTime();
