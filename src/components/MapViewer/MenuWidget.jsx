@@ -34,7 +34,6 @@ export const AddCartItem = ({
   const [message, setMessage] = useState(0);
   const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
-  /*const windowToBase64 = toBase64(window.location.href);*/
 
   const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
@@ -362,92 +361,17 @@ export const AddCartItem = ({
       ) : (
         // If isLoggedIn == false and user clicks download
         <>
-          <Modal
-            size="tiny"
-            onClose={() => closeModal()}
-            onOpen={() => showModal()}
-            open={modal}
-            className="modal-clms-container"
-            //modalStatus={modalStatus}
-          >
-            <div className="modal-close modal-clms-close">
-              <span
-                className="ccl-icon-close"
-                aria-label="Close"
-                onClick={(e) => closeModal(e)}
-                onKeyDown={(e) => closeModal(e)}
-                tabIndex="0"
-                role="button"
-              ></span>
-            </div>
-            <Modal.Content>
-              <div className="content">
-                <div className="modal-login-title">
-                  This website uses EU Login for user authentication.
-                </div>
-                <div className="modal-login-text">
-                  <p>
-                    {' '}
-                    EU Login, the European Commission Authentication Service,
-                    enables you to access various web applications centrally
-                    using the same e-mail and password. You can read more{' '}
-                    <UniversalLink
-                      openLinkInNewTab
-                      href="https://ecas.ec.europa.eu/cas/about.html"
-                    >
-                      here
-                    </UniversalLink>
-                    .
-                  </p>
-                  <p>
-                    {' '}
-                    If you have EU Login account, please click 'Login using EU
-                    Login'.
-                  </p>
-                  <p>
-                    If you don't have EU Login account, please follow this{' '}
-                    <UniversalLink
-                      openLinkInNewTab
-                      href="https://ecas.ec.europa.eu/cas/eim/external/register.cgi"
-                    >
-                      link
-                    </UniversalLink>{' '}
-                    to create it.
-                  </p>
-                  <p>
-                    If you have other questions, please contact our
-                    <UniversalLink openLinkInNewTab href="/en/service-desk">
-                      {' '}
-                      Service desk
-                    </UniversalLink>
-                    .
-                  </p>
-                </div>
-              </div>
-            </Modal.Content>
-            <Modal.Actions>
-              <div className="modal-buttons">
-                <a
-                  href={
-                    'clms.addon.login_url_controlpanel.login_url?came_from='
-                    //windowToBase64
-                  }
-                  className="ccl-button ccl-button-green"
-                >
-                  Login using EU Login
-                </a>
-              </div>
-            </Modal.Actions>
-          </Modal>
           <Popup
             trigger={
               <span
                 className={'map-menu-icon map-menu-icon-login'}
                 onClick={(e) => {
-                  showModal(e);
+                  //showModal(e);
+                  document.querySelector('.header-login-link').click();
                 }}
                 onKeyDown={(e) => {
-                  showModal(e);
+                  //showModal(e);
+                  document.querySelector('.header-login-link').click();
                 }}
                 tabIndex="0"
                 role="button"
