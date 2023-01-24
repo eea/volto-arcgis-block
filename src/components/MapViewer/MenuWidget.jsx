@@ -118,24 +118,18 @@ export const AddCartItem = ({
     props.updateArea('');
   };
 
+  /* This function does not affect the prepackaged items*/
+  /* this function is also not receiving cues from checkarea function */
   const showMessageTimer = (msg, type) => {
-    toast[type](
-      <Toast
-        info
-        autoClose={4000}
-        // title={'test'}
-        content={msg}
-      />,
-      {
-        position: 'top-center',
-        autoClose: 4000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-      },
-    );
+    toast[type](<Toast autoClose={4000} title={type} content={msg} />, {
+      position: 'top-center',
+      autoClose: 4000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: true,
+      progress: undefined,
+    });
   };
 
   const showModal = (e) => {
