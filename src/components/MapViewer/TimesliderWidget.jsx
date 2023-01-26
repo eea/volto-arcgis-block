@@ -174,7 +174,7 @@ class TimesliderWidget extends React.Component {
       view: this.props.view,
       container: document.querySelector('.timeslider-panel'),
       timeVisible: true,
-      mode: /*this.props.download ? 'time-window' : 'instant'*/ 'instant',
+      mode: /*this.props.download ? 'time-window' : 'instant'*/ 'time-window',
       loop: false,
       labelFormatFunction: (value, type, element, layout) => {
         if (!this.TimesliderWidget.fullTimeExtent) {
@@ -340,8 +340,7 @@ class TimesliderWidget extends React.Component {
 
               this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
                 if (!this.container.current ? true : false) {
-                  this.TimesliderWidget.stop();
-                  console.log(this.TimesliderWidget.stop());
+                  this.TimesliderWidget.stop();                  
                 }
                 let start = new Date(timeExtent.start).getTime();
                 let end = new Date(timeExtent.end).getTime();
@@ -358,14 +357,13 @@ class TimesliderWidget extends React.Component {
                   this.layer.customLayerParameters['TIME'] = timeDict[this.TimesliderWidget.timeExtent.end];                  
                 } else {
                   this.layer.customLayerParameters = {};
-                  if (times[this.layerName].hasOwnProperty('array')) {
+                  if (times[this.layerName].hasOwnProperty('array')){
                     this.layer.customLayerParameters['TIME'] = timeDict[this.TimesliderWidget.timeExtent.end];                  
-                  } else {
+                  } else{
                     const newDateTimeObject = new Date(this.TimesliderWidget.timeExtent.start.toISOString());
-                    newDateTimeObject.setMinutes(this.TimesliderWidget.timeExtent.start.getMinutes() + this.TimesliderWidget.stops['interval'].value);
-                    this.layer.customLayerParameters['TIME'] = this.TimesliderWidget.timeExtent.start.toISOString() + '/' + newDateTimeObject.toISOString();
-                  }
-                  console.log(this.layer.customLayerParameters['TIME']);
+                    newDateTimeObject.setMinutes(this.TimesliderWidget.timeExtent.start.getMinutes() + this.TimesliderWidget.stops["interval"].value);             
+                    this.layer.customLayerParameters["TIME"] = this.TimesliderWidget.timeExtent.start.toISOString() + '/' + newDateTimeObject.toISOString(); //OK                            
+                  }                  
                 }
                 this.layer.refresh();
               });

@@ -1302,7 +1302,6 @@ class MenuWidget extends React.Component {
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
           ViewService: viewService,
-          customLayerParameters: {},
         });
       } else if (viewService.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
@@ -1323,7 +1322,6 @@ class MenuWidget extends React.Component {
           ViewService: viewService,
           StaticImageLegend: layer.StaticImageLegend,
           LayerTitle: layer.Title,
-          customLayerParameters: {},
         });
       } else {
         this.layers[
