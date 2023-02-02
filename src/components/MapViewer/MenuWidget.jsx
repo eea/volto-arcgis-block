@@ -449,7 +449,7 @@ class MenuWidget extends React.Component {
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
-    this.layers = {};
+    this.layers = this.props.layers;
     this.activeLayersJSON = {};
     this.layerGroups = {};
 
@@ -463,6 +463,8 @@ class MenuWidget extends React.Component {
         }
       }
     });
+
+    this.activeLayersHandler = this.props.activeLayersHandler;
   }
 
   loader() {
@@ -577,24 +579,25 @@ class MenuWidget extends React.Component {
 
     // CLMS-1389
     // "Active on map" section and the time slider opened by default if download and timeseries == true
-    if (this.props.download && this.layers) {
-      let layerid = Object.keys(this.layers)[0];
+    if (this.layers)
+      if (this.props.download && this.layers) {
+        let layerid = Object.keys(this.layers)[0];
 
-      if (layerid && this.layers[layerid].isTimeSeries) {
-        // select active on map tab
-        let event = new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: false,
-        });
-        let el = document.getElementById('active_label');
-        el.dispatchEvent(event);
+        if (layerid && this.layers[layerid].isTimeSeries) {
+          // select active on map tab
+          let event = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: false,
+          });
+          let el = document.getElementById('active_label');
+          el.dispatchEvent(event);
 
-        //open time slider
-        let layerElem = document.getElementById(layerid);
-        this.showTimeSlider(layerElem);
+          //open time slider
+          let layerElem = document.getElementById(layerid);
+          this.showTimeSlider(layerElem);
+        }
       }
-    }
   }
 
   /**
@@ -1525,6 +1528,7 @@ class MenuWidget extends React.Component {
     }
     // update DOM
     this.setState({});
+    //this.activeLayersHandler(this.activeLayersAsArray);
   }
 
   /**
@@ -1638,6 +1642,8 @@ class MenuWidget extends React.Component {
         activeLayers.indexOf(a.props['layer-id']) -
         activeLayers.indexOf(b.props['layer-id']),
     );
+    //this.props.mapDispatchToProps(activeLayersArray);
+    this.activeLayersHandler(activeLayersArray);
     return data;
   }
 
@@ -2451,6 +2457,41 @@ class MenuWidget extends React.Component {
     }
   }
 
+  renderHotspot() {
+    var hotspotLayers = [];
+    Object.keys(this.activeLayersJSON).forEach((key) => {
+      let layer = this.layers[key];
+      if (
+        /* layer.visible && */
+        key.includes('all_present_lc_a_pol') ||
+        key.includes('all_lcc_a_pol')
+      ) {
+        hotspotLayers.push(layer);
+      }
+    });
+    if (
+      hotspotLayers.length === 0 &&
+      document.querySelector('.hotspot-container')
+    ) {
+      this.props.mapViewer.closeActiveWidget();
+      document.querySelector('.hotspot-container').style.display = 'none';
+    } else if (this.props.view && hotspotLayers.length > 0) {
+      document.querySelector('.hotspot-container').style.display = 'flex';
+      if (sessionStorage.checkedLayers.includes('all_present_lc_a_pol'))
+        document.querySelector('.presentLandCoverContainer').style.display =
+          'block';
+      else
+        document.querySelector('.presentLandCoverContainer').style.display =
+          'none';
+      if (sessionStorage.checkedLayers.includes('all_lcc_a_pol'))
+        document.querySelector('.landCoverChangeContainer').style.display =
+          'block';
+      else
+        document.querySelector('.landCoverChangeContainer').style.display =
+          'none';
+    }
+  }
+
   renderTimeslider(elem, layer) {
     if (this.props.view && layer) {
       let activeLayer = document.querySelector('#active_' + elem.id);
@@ -2693,6 +2734,7 @@ class MenuWidget extends React.Component {
             tabIndex="0"
           ></div>
           {<TouchScreenPopup />}
+          {this.renderHotspot()}
         </div>
       </>
     );
