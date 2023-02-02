@@ -78,6 +78,17 @@ class HotspotWidget extends React.Component {
 
   handleApplyFilter(typeFilter) {
     if (this.props.selectedLayers) {
+      //Clear previous selections when apply a new filter
+      var currentLccLayer = Object.keys(this.props.selectedLayers).find((e) =>
+        e.includes('lcc_filter'),
+      );
+      if (currentLccLayer) delete this.props.selectedLayers[currentLccLayer];
+
+      var currentLcLayer = Object.keys(this.props.selectedLayers).find((e) =>
+        e.includes('lc_filter'),
+      );
+      if (currentLcLayer) delete this.props.selectedLayers[currentLcLayer];
+
       var currentLcckey = Object.keys(this.props.selectedLayers).find((e) =>
         e.includes('all_lcc'),
       );
@@ -115,29 +126,29 @@ class HotspotWidget extends React.Component {
         this.props.map.add(this.esriLayer_lcc);
         this.props.selectedLayers['lcc_filter'] = this.esriLayer_lcc;
         this.props.selectedLayers['lcc_filter'].visible = true;
-      } else {
-        /* var typeLegend =
-          document.getElementById('select-klc-highlights-lcc').value ===
-          'Dichotomous'
-            ? 'all_present_lc_a_pol'
-            : 'all_present_lc_b_pol'; */
-        var selectBoxHighlightsLc = document
-          .getElementById('select-klc-lcTime')
-          .value.match(/\d+/g)
-          .map(Number)[0];
-        if (this.esriLayer_lc !== null) {
-          //this.esriLayer_lc.sublayers.items[0].name = typeLegend;
-          this.esriLayer_lc.customLayerParameters['CQL_FILTER'] =
-            'klc_code LIKE ' +
-            "'" +
-            this.dataKlc_code +
-            "'" +
-            " AND in_pa = 'not_defined' AND date = " +
-            selectBoxHighlightsLc;
-          this.props.map.add(this.esriLayer_lc);
-          this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
-          this.props.selectedLayers['lc_filter'].visible = true;
-        }
+      }
+    } else {
+      /* var typeLegend =
+        document.getElementById('select-klc-highlights-lcc').value ===
+        'Dichotomous'
+          ? 'all_present_lc_a_pol'
+          : 'all_present_lc_b_pol'; */
+      var selectBoxHighlightsLc = document
+        .getElementById('select-klc-lcTime')
+        .value.match(/\d+/g)
+        .map(Number)[0];
+      if (this.esriLayer_lc !== null) {
+        //this.esriLayer_lc.sublayers.items[0].name = typeLegend;
+        this.esriLayer_lc.customLayerParameters['CQL_FILTER'] =
+          'klc_code LIKE ' +
+          "'" +
+          this.dataKlc_code +
+          "'" +
+          " AND in_pa = 'not_defined' AND date = " +
+          selectBoxHighlightsLc;
+        this.props.map.add(this.esriLayer_lc);
+        this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
+        this.props.selectedLayers['lc_filter'].visible = true;
       }
     }
   }
@@ -158,6 +169,11 @@ class HotspotWidget extends React.Component {
    */
   openMenu() {
     if (this.state.showMapMenu) {
+      if (this.dataJSONNames)
+        this.getKLCNames(
+          this.dataJSONNames,
+          this.dataJSONNames[0].node.klc_name,
+        );
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
