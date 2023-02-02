@@ -2631,10 +2631,9 @@ class MenuWidget extends React.Component {
                   />
                 </div>
               )}
-
               {this.props.download &&
-                this.layers &&
-                !Object.keys(this.layers)[0] && (
+                this.compCfg[0].Products[0].Datasets[0]
+                  .MarkAsDownloadableNoServiceToVisualize === false && (
                   // CLMS-1588 show modal if download and dataset has no dataset to show
 
                   <>
