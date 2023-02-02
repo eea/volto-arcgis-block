@@ -16,7 +16,7 @@ import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
 import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
-
+import HotspotWidget from './HotspotWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl;
 let mapStatus = {};
@@ -48,6 +48,15 @@ class MapViewer extends React.Component {
       [`${props.customClass}`]: props.customClass || null,
     });
     this.state = {};
+    this.layers = {};
+    this.activeLayersHandler = this.activeLayersHandler.bind(this);
+    this.activeLayersArray = {};
+  }
+
+  activeLayersHandler(newActiveLayers) {
+    this.activeLayers = newActiveLayers;
+    mapStatus.activeLayers = newActiveLayers;
+    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
   }
 
   setCenterState(centerStatus) {
@@ -104,8 +113,10 @@ class MapViewer extends React.Component {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
+      mapStatus.activeLayers = this.mapCfg.activeLayers;
       this.setCenterState(this.mapCfg.center);
       this.setZoomState(this.mapCfg.zoom);
+      this.activeLayersHandler(this.mapCfg.activeLayers);
     }
 
     this.view = new MapView({
@@ -221,6 +232,19 @@ class MapViewer extends React.Component {
       return <InfoWidget view={this.view} map={this.map} mapViewer={this} />;
   }
 
+  renderHotspot() {
+    if (this.view)
+      return (
+        <HotspotWidget
+          view={this.view}
+          map={this.map}
+          selectedLayers={this.layers}
+          mapViewer={this}
+          layers={sessionStorage}
+        />
+      );
+  }
+
   renderMenu() {
     if (this.view)
       return (
@@ -232,6 +256,8 @@ class MapViewer extends React.Component {
           mapViewer={this}
           updateArea={this.updateArea}
           area={this.state.area}
+          layers={this.layers}
+          activeLayersHandler={this.activeLayersHandler}
         />
       ); //call conf
   }
@@ -259,6 +285,7 @@ class MapViewer extends React.Component {
           {this.renderArea()}
           {this.renderScale()}
           {this.renderInfo()}
+          {this.renderHotspot()}
           {this.renderMenu()}
         </div>
       </div>
@@ -285,7 +312,7 @@ export const CheckLogin = ({ reference }) => {
 
 export default compose(
   connect(
-    (state, props) => ({
+    (state) => ({
       mapviewer_config: state.mapviewer_config.mapviewer_config,
     }),
     { MapViewerConfig },

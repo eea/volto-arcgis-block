@@ -1155,3 +1155,35 @@ input[type='range']::-ms-track {
   font-family: 'Lato', sans-serif;
   font-size: 0.875rem;
 }
+
+/* Hotspot*/
+.hotspot-container {
+  display: flex;
+  flex-direction: column;
+  box-shadow: none !important;
+}
+
+.hotspot-panel/*.esri-legend.esri-widget*/ {
+  overflow: visible;
+}
+
+.hotspot-container .esri-button {
+  border: none;
+  background-color: #a0b128;
+}
+
+.hotspot-container .esri-button:hover {
+  border-color: #a0b128;
+  background-color: white;
+  color: #a0b128;
+}
+
+/*.hotspot-container .esri-select{
+  font-family:Helvetica, sans-serif;
+  font-size:20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+*/

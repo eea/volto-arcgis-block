@@ -5,6 +5,7 @@ const config = {
     zoom: 4,
     minZoom: 3,
     maxZoom: 20,
+    activeLayers: [],
   },
   Components: [
     {
