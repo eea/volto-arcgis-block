@@ -5,7 +5,6 @@ import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Message, Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
-import HotspotWidget from './HotspotWidget';
 import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
@@ -232,7 +231,7 @@ export const AddCartItem = ({
             Cancel
           </button>
         </div>
-      ) : !isLoggedIn ? ( // If isLoggedIn == true and user clicks download
+      ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <>
           <Modal
             size="tiny"
@@ -297,7 +296,11 @@ export const AddCartItem = ({
                 <p>
                   If you would like to download data for your area of interest
                   and for the selected time interval, please follow this{' '}
-                  <UniversalLink href={loginUrl || '#'}>link.</UniversalLink>
+                  <UniversalLink
+                    href={dataset.DatasetURL + '/download-by-area'}
+                  >
+                    link.
+                  </UniversalLink>
                 </p>
               )}
             </Modal.Content>
@@ -1647,6 +1650,7 @@ class MenuWidget extends React.Component {
         activeLayers.indexOf(a.props['layer-id']) -
         activeLayers.indexOf(b.props['layer-id']),
     );
+    //this.props.mapDispatchToProps(activeLayersArray);
     this.activeLayersHandler(activeLayersArray);
     return data;
   }
@@ -2466,8 +2470,9 @@ class MenuWidget extends React.Component {
     Object.keys(this.activeLayersJSON).forEach((key) => {
       let layer = this.layers[key];
       if (
-        layer.visible &&
-        (key.includes('all_present_lc_a_pol') || key.includes('all_lcc_a_pol'))
+        /* layer.visible && */
+        key.includes('all_present_lc_a_pol') ||
+        key.includes('all_lcc_a_pol')
       ) {
         hotspotLayers.push(layer);
       }
@@ -2480,6 +2485,18 @@ class MenuWidget extends React.Component {
       document.querySelector('.hotspot-container').style.display = 'none';
     } else if (this.props.view && hotspotLayers.length > 0) {
       document.querySelector('.hotspot-container').style.display = 'flex';
+      if (sessionStorage.checkedLayers.includes('all_present_lc_a_pol'))
+        document.querySelector('.presentLandCoverContainer').style.display =
+          'block';
+      else
+        document.querySelector('.presentLandCoverContainer').style.display =
+          'none';
+      if (sessionStorage.checkedLayers.includes('all_lcc_a_pol'))
+        document.querySelector('.landCoverChangeContainer').style.display =
+          'block';
+      else
+        document.querySelector('.landCoverChangeContainer').style.display =
+          'none';
     }
   }
 

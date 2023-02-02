@@ -1167,6 +1167,17 @@ input[type='range']::-ms-track {
   overflow: visible;
 }
 
+.hotspot-container .esri-button {
+  border: none;
+  background-color: #a0b128;
+}
+
+.hotspot-container .esri-button:hover {
+  border-color: #a0b128;
+  background-color: white;
+  color: #a0b128;
+}
+
 /*.hotspot-container .esri-select{
   font-family:Helvetica, sans-serif;
   font-size:20px;

@@ -17,7 +17,6 @@ import LegendWidget from './LegendWidget';
 import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
-
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl;
 let mapStatus = {};
@@ -239,8 +238,9 @@ class MapViewer extends React.Component {
         <HotspotWidget
           view={this.view}
           map={this.map}
+          selectedLayers={this.layers}
           mapViewer={this}
-          layers={this.props.mapviewer_config}
+          layers={sessionStorage}
         />
       );
   }
@@ -312,9 +312,8 @@ export const CheckLogin = ({ reference }) => {
 
 export default compose(
   connect(
-    (state, props, mapStateToProps) => ({
+    (state) => ({
       mapviewer_config: state.mapviewer_config.mapviewer_config,
-      /*activeLayersArray: state.mapviewer_config.newActiveLayers observableActiveLayers*/
     }),
     { MapViewerConfig },
   ),
