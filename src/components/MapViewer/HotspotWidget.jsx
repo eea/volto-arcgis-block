@@ -78,6 +78,17 @@ class HotspotWidget extends React.Component {
 
   handleApplyFilter(typeFilter) {
     if (this.props.selectedLayers) {
+      //Clear previous selections when apply a new filter
+      var currentLccLayer = Object.keys(this.props.selectedLayers).find((e) =>
+        e.includes('lcc_filter'),
+      );
+      if (currentLccLayer) delete this.props.selectedLayers[currentLccLayer];
+
+      var currentLcLayer = Object.keys(this.props.selectedLayers).find((e) =>
+        e.includes('lc_filter'),
+      );
+      if (currentLcLayer) delete this.props.selectedLayers[currentLcLayer];
+
       var currentLcckey = Object.keys(this.props.selectedLayers).find((e) =>
         e.includes('all_lcc'),
       );
@@ -158,6 +169,11 @@ class HotspotWidget extends React.Component {
    */
   openMenu() {
     if (this.state.showMapMenu) {
+      if (this.dataJSONNames)
+        this.getKLCNames(
+          this.dataJSONNames,
+          this.dataJSONNames[0].node.klc_name,
+        );
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
