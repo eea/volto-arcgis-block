@@ -64,18 +64,18 @@ export const AddCartItem = ({
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
           setMessage('Added to cart');
-          showMessageTimer('Added to cart', 'success');
+          showMessageTimer('Added to cart', 'Success');
         });
       } else {
         setMessage('Please select an area');
-        showMessageTimer('Please select an area', 'warning');
+        showMessageTimer('Please select an area', 'Warning');
       }
     } else {
       closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
         setMessage('Added to cart');
-        showMessageTimer('Added to cart', 'success');
+        showMessageTimer('Added to cart', 'Success');
       });
     }
   };
@@ -122,7 +122,7 @@ export const AddCartItem = ({
     toast[type](<Toast autoClose={4000} title={type} content={msg} />, {
       position: 'top-center',
       autoClose: 4000,
-      hideProgressBar: false,
+      hideProgressBar: true,
       closeOnClick: true,
       pauseOnHover: false,
       draggable: true,
