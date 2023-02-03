@@ -2086,6 +2086,8 @@ class MenuWidget extends React.Component {
     } else if (layers.length > 0) {
       document.querySelector('.info-container').style.display = 'flex';
     }
+    this.renderHotspot();
+    /**/
   }
 
   getLayerTitle(layer) {
@@ -2733,7 +2735,6 @@ class MenuWidget extends React.Component {
             tabIndex="0"
           ></div>
           {<TouchScreenPopup />}
-          {this.renderHotspot()}
         </div>
       </>
     );
