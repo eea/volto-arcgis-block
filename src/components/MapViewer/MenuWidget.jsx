@@ -64,18 +64,18 @@ export const AddCartItem = ({
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
           setMessage('Added to cart');
-          showMessageTimer('Added to cart', 'Success');
+          showMessageTimer('Added to cart', 'success', 'Success');
         });
       } else {
         setMessage('Please select an area');
-        showMessageTimer('Please select an area', 'Warning');
+        showMessageTimer('Please select an area', 'warning', 'Warning');
       }
     } else {
       closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
         setMessage('Added to cart');
-        showMessageTimer('Added to cart', 'Success');
+        showMessageTimer('Added to cart', 'success', 'Success');
       });
     }
   };
@@ -118,8 +118,8 @@ export const AddCartItem = ({
     props.updateArea('');
   };
 
-  const showMessageTimer = (msg, type) => {
-    toast[type](<Toast autoClose={4000} title={type} content={msg} />, {
+  const showMessageTimer = (msg, type, title) => {
+    toast[type](<Toast autoClose={4000} title={title} content={msg} />, {
       position: 'top-center',
       autoClose: 4000,
       hideProgressBar: true,
