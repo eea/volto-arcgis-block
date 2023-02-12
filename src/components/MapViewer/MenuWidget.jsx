@@ -1506,6 +1506,7 @@ class MenuWidget extends React.Component {
       }
     } else {
       this.deleteCheckedLayer(elem.id);
+      this.deleteFilteredLayer();
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
       let mapLayer = this.map.findLayerById(elem.id);
@@ -2368,6 +2369,19 @@ class MenuWidget extends React.Component {
       }
     }
   }
+
+  deleteFilteredLayer() {
+    Object.keys(this.layers).find((key) => {
+      if (
+        key.includes('lcc_filter') ||
+        key.includes('lc_filter')
+        ) {
+          return (
+            this.layers[key].visible = false,
+          delete this.layers[key])
+        }
+      });
+    }
 
   /**
    * Method to load previously expanded dropdowns according to sessionStorage
