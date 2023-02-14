@@ -250,6 +250,9 @@ class AreaWidget extends React.Component {
                 let highlight = new Graphic(geometry, symbol);
                 this.props.view.graphics.removeAll();
                 this.props.view.graphics.add(highlight);
+                this.setState({
+                  showInfoPopup: true,
+                });
               }
             }
           }

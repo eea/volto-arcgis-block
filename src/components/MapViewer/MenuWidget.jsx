@@ -132,6 +132,12 @@ export const AddCartItem = ({
 
   const showModal = (e) => {
     if (e) e.stopPropagation();
+    if (
+      !areaData &&
+      (!mapViewer.activeWidget ||
+        !mapViewer.activeWidget.container.current.classList.contains)
+    )
+      document.querySelector('#map_area_button').click();
     setModal(true);
   };
 
@@ -153,26 +159,6 @@ export const AddCartItem = ({
     } else {
       return 'translate(1rem, 2rem)';
     }
-  };
-
-  const selectBBox = (e) => {
-    if (
-      !mapViewer.activeWidget ||
-      !mapViewer.activeWidget.container.current.classList.contains(
-        'area-container',
-      )
-    ) {
-      let event = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: false,
-      });
-      let node = document.getElementById('map_area_button');
-      if (node) {
-        node.dispatchEvent(event);
-      }
-    }
-    closeModal(e);
   };
 
   /*const showLogin = (e) => {
@@ -247,19 +233,10 @@ export const AddCartItem = ({
                 <ul>
                   <br></br>
                   <li>
-                    <p>
-                      If you want to download the full dataset, click{' '}
-                      <UniversalLink
-                        openLinkInNewTab
-                        href="https://clms-prod.eea.europa.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
-                      >
-                        here
-                      </UniversalLink>{' '}
-                      to learn more.
-                    </p>
+                    <p>Select the area of interest by NUTS or by rectangle</p>
                   </li>
                   <br />
-                  {dataset.IsTimeSeries ? (
+                  {dataset.IsTimeSeries && (
                     <>
                       <li>
                         <p>
@@ -273,14 +250,6 @@ export const AddCartItem = ({
                       </li>
                       <br />
                     </>
-                  ) : (
-                    <li>
-                      <p>
-                        If you would like to download data for your area of
-                        interest: first select an area of interest and then
-                        click the download button next to the dataset.
-                      </p>
-                    </li>
                   )}
                 </ul>
               )}
@@ -298,28 +267,13 @@ export const AddCartItem = ({
             </Modal.Content>
             <Modal.Actions>
               <div className="map-download-buttons">
-                {!areaData ? (
+                {!areaData && (
                   <>
                     <button
                       className="ccl-button ccl-button-green"
-                      onClick={(e) => selectBBox(e)}
+                      onClick={(e) => closeModal()}
                     >
-                      Area of interest
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="ccl-button ccl-button-green"
-                      onClick={(e) => checkArea(e)}
-                    >
-                      Add to cart
-                    </button>
-                    <button
-                      className="ccl-button ccl-button--default"
-                      onClick={(e) => closeModal(e)}
-                    >
-                      Cancel
+                      Accept
                     </button>
                   </>
                 )}
@@ -331,10 +285,10 @@ export const AddCartItem = ({
               <span
                 className={'map-menu-icon map-menu-icon-login'}
                 onClick={(e) => {
-                  showModal(e);
+                  !areaData ? showModal(e) : checkArea(e);
                 }}
                 onKeyDown={(e) => {
-                  showModal(e);
+                  !areaData ? showModal(e) : checkArea(e);
                 }}
                 tabIndex="0"
                 role="button"
