@@ -92,15 +92,14 @@ export const AddCartItem = ({
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
     };
-    let hasTimeStart = datasetElem
-      ? datasetElem
-          .querySelector('.map-dataset-checkbox input')
-          .hasAttribute('time-start')
-      : false;
+    let hasTimeStart = checkTimeData(dataset);
 
     if (dataset.IsTimeSeries && hasTimeStart) {
-      let datasetInput = datasetElem.querySelector(
-        '.map-dataset-checkbox input',
+      let datasetInput = document.querySelector(
+        '#active_' +
+          datasetElem
+            .querySelector('.map-dataset-checkbox input')
+            .getAttribute('defcheck'),
       );
       let time = {
         start: parseInt(datasetInput.getAttribute('time-start')),
@@ -132,18 +131,24 @@ export const AddCartItem = ({
 
   const showModal = (e) => {
     if (e) e.stopPropagation();
-    if (
-      !areaData &&
-      (!mapViewer.activeWidget ||
-        !mapViewer.activeWidget.container.current.classList.contains)
-    )
-      document.querySelector('#map_area_button').click();
     setModal(true);
   };
 
   const closeModal = (e) => {
     if (e) e.stopPropagation();
     setModal(false);
+  };
+
+  const checkTimeData = (dataset) => {
+    let id = dataset.DatasetId;
+    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
+    let datasetActive = document.querySelector(
+      '#active_' +
+        datasetElem
+          .querySelector('.map-dataset-checkbox input')
+          .getAttribute('defcheck'),
+    );
+    return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
   const checkScrollPosition = () => {
@@ -160,21 +165,10 @@ export const AddCartItem = ({
       return 'translate(1rem, 2rem)';
     }
   };
-
-  /*const showLogin = (e) => {
-    e.stopPropagation();
-    document.querySelector('.login-panel').style.display = 'block';
-    let left = e.currentTarget.offsetLeft + 48;
-    document.querySelector('.login-panel').style.left = left + 'px';
-    let top =
-      document.querySelector('.tabs').offsetHeight +
-      15 -
-      document.querySelector('.panels').scrollTop +
-      e.currentTarget.closest('.ccl-expandable__button').offsetTop +
-      e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
-      document.querySelector('.login-panel').offsetHeight / 2;
-    document.querySelector('.login-panel').style.top = top + 'px';
-  };*/
+  let timeData;
+  if (dataset.IsTimeSeries) {
+    timeData = checkTimeData(dataset);
+  }
 
   return (
     <>
@@ -229,40 +223,14 @@ export const AddCartItem = ({
               ></span>
             </div>
             <Modal.Content>
-              {!areaData && (
-                <ul>
-                  <br></br>
-                  <li>
-                    <p>Select the area of interest by NUTS or by rectangle</p>
-                  </li>
-                  <br />
-                  {dataset.IsTimeSeries && (
-                    <>
-                      <li>
-                        <p>
-                          If you would like to download data for your area of
-                          interest: first select an area of interest and then
-                          click the download button next to the dataset (Note:
-                          the time range to download will be the first date of
-                          the dataset but if it is not included in the dataset's
-                          metadata then it will be the last 10 days).
-                        </p>
-                      </li>
-                      <br />
-                    </>
-                  )}
-                </ul>
+              {dataset.IsTimeSeries && !timeData && (
+                <p>Select the temporal interval to download</p>
               )}
-              {areaData && dataset.IsTimeSeries && (
-                <p>
-                  If you would like to download data for your area of interest
-                  and for the selected time interval, please follow this{' '}
-                  <UniversalLink
-                    href={dataset.DatasetURL + '/download-by-area'}
-                  >
-                    link.
-                  </UniversalLink>
-                </p>
+              {dataset.IsTimeSeries && timeData && !areaData && (
+                <p>Select the area of interest by NUTS or by rectangle</p>
+              )}
+              {!dataset.IsTimeSeries && !areaData && (
+                <p>Select the area of interest by NUTS or by rectangle</p>
               )}
             </Modal.Content>
             <Modal.Actions>
@@ -283,12 +251,69 @@ export const AddCartItem = ({
           <Popup
             trigger={
               <span
-                className={'map-menu-icon map-menu-icon-login'}
+                className={
+                  'map-menu-icon map-menu-icon-login' +
+                  (isLoggedIn ? ' logged' : '')
+                }
                 onClick={(e) => {
-                  !areaData ? showModal(e) : checkArea(e);
+                  if (dataset.IsTimeSeries && !timeData) {
+                    document.getElementById('active_label').click();
+                    if (!document.querySelector('.timeslider-container')) {
+                      let layerId = document
+                        .querySelector(
+                          '[datasetid="' + dataset.DatasetId + '"] input',
+                        )
+                        .getAttribute('defcheck');
+                      document
+                        .querySelector(
+                          "[layer-id='" + layerId + "'] .active-layer-time",
+                        )
+                        .click();
+                    }
+                    showModal(e);
+                  } else if (!areaData) {
+                    if (
+                      !mapViewer.activeWidget ||
+                      !mapViewer.activeWidget.container.current.classList.contains(
+                        'area-container',
+                      )
+                    ) {
+                      document.querySelector('#map_area_button').click();
+                    }
+                    showModal(e);
+                  } else {
+                    checkArea(e);
+                  }
                 }}
                 onKeyDown={(e) => {
-                  !areaData ? showModal(e) : checkArea(e);
+                  if (dataset.IsTimeSeries && !timeData) {
+                    document.getElementById('active_label').click();
+                    if (!document.querySelector('.timeslider-container')) {
+                      let layerId = document
+                        .querySelector(
+                          '[datasetid="' + dataset.DatasetId + '"] input',
+                        )
+                        .getAttribute('defcheck');
+                      document
+                        .querySelector(
+                          "[layer-id='" + layerId + "'] .active-layer-time",
+                        )
+                        .click();
+                    }
+                    showModal(e);
+                  } else if (!areaData) {
+                    if (
+                      !mapViewer.activeWidget ||
+                      !mapViewer.activeWidget.container.current.classList.contains(
+                        'area-container',
+                      )
+                    ) {
+                      document.querySelector('#map_area_button').click();
+                    }
+                    showModal(e);
+                  } else {
+                    checkArea(e);
+                  }
                 }}
                 tabIndex="0"
                 role="button"
@@ -311,12 +336,10 @@ export const AddCartItem = ({
             trigger={
               <span
                 className={'map-menu-icon map-menu-icon-login'}
-                onClick={(e) => {
-                  //showModal(e);
+                onClick={() => {
                   document.querySelector('.header-login-link').click();
                 }}
-                onKeyDown={(e) => {
-                  //showModal(e);
+                onKeyDown={() => {
                   document.querySelector('.header-login-link').click();
                 }}
                 tabIndex="0"
@@ -333,31 +356,6 @@ export const AddCartItem = ({
             {...popupSettings}
           />
         </>
-      )}
-    </>
-  );
-};
-
-export const CheckLogin = () => {
-  const { isLoggedIn } = useCartState();
-  return (
-    <>
-      {!isLoggedIn && (
-        <div className="login-block">
-          <div className="login-content">
-            <div className="login-text">
-              <p>Register/Login to download the data</p>
-            </div>
-            <button
-              className="ccl-button ccl-button-green"
-              onClick={() =>
-                document.querySelector('.header-login-link').click()
-              }
-            >
-              Register/Login
-            </button>
-          </div>
-        </div>
       )}
     </>
   );
@@ -503,9 +501,6 @@ class MenuWidget extends React.Component {
       }
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
-      }
-      if (document.querySelector('.login-panel').style.display === 'block') {
-        this.closeLogin();
       }
 
       // By invoking the setState, we notify the state we want to reach
@@ -2159,10 +2154,6 @@ class MenuWidget extends React.Component {
     document.querySelector('.opacity-panel input').dataset.layer = '';
   }
 
-  closeLogin() {
-    document.querySelector('.login-panel').style.display = '';
-  }
-
   closetouchScreenPopup() {
     document.querySelector('.touchScreenPopup-panel').style.display = 'none';
   }
@@ -2407,9 +2398,6 @@ class MenuWidget extends React.Component {
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
       }
-      if (document.querySelector('.login-panel').style.display === 'block') {
-        this.closeLogin();
-      }
     }
   }
 
@@ -2460,6 +2448,10 @@ class MenuWidget extends React.Component {
         time.start = parseInt(activeLayer.getAttribute('time-start'));
         time.end = parseInt(activeLayer.getAttribute('time-end'));
       }
+      let isLoggedIn = document
+        .querySelector('[defcheck=' + elem.id + ']')
+        .parentElement.querySelector('.map-menu-icon-login')
+        .classList.contains('logged');
       ReactDOM.render(
         <TimesliderWidget
           view={this.props.view}
@@ -2467,6 +2459,7 @@ class MenuWidget extends React.Component {
           layer={layer}
           download={this.props.download}
           time={time}
+          logged={isLoggedIn}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
@@ -2667,17 +2660,6 @@ class MenuWidget extends React.Component {
             <span className="opacity-label left">0 %</span>
             <span className="opacity-label right">100 %</span>
           </div>
-        </div>
-        <div className="login-panel">
-          <div
-            className="esri-icon-close"
-            id="login_close"
-            role="button"
-            onClick={() => this.closeLogin()}
-            onKeyDown={() => this.closeLogin()}
-            tabIndex="0"
-          ></div>
-          {!this.props.download && <CheckLogin />}
         </div>
         <div className="touchScreenPopup-panel">
           <div
