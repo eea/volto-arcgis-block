@@ -30,8 +30,6 @@ export const AddCartItem = ({
   dataset,
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
-  const [message, setMessage] = useState(0);
-  const [showMessage] = useState(false);
   const [modal, setModal] = useState(false);
 
   const checkArea = (e) => {
@@ -62,18 +60,15 @@ export const AddCartItem = ({
       if (area) {
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
-          setMessage('Added to cart');
           showMessageTimer('Added to cart', 'success', 'Success');
         });
       } else {
-        setMessage('Please select an area');
         showMessageTimer('Please select an area', 'warning', 'Warning');
       }
     } else {
       closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
-        setMessage('Added to cart');
         showMessageTimer('Added to cart', 'success', 'Success');
       });
     }
@@ -91,20 +86,21 @@ export const AddCartItem = ({
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
     };
-    let hasTimeStart = checkTimeData(dataset);
-
-    if (dataset.IsTimeSeries && hasTimeStart) {
-      let datasetInput = document.querySelector(
-        '#active_' +
-          datasetElem
-            .querySelector('.map-dataset-checkbox input')
-            .getAttribute('defcheck'),
-      );
-      let time = {
-        start: parseInt(datasetInput.getAttribute('time-start')),
-        end: parseInt(datasetInput.getAttribute('time-end')),
-      };
-      datasetData.timeExtent = [time.start, time.end];
+    if (dataset.IsTimeSeries) {
+      let hasTimeStart = checkTimeData(dataset);
+      if (hasTimeStart) {
+        let datasetInput = document.querySelector(
+          '#active_' +
+            datasetElem
+              .querySelector('.map-dataset-checkbox input')
+              .getAttribute('defcheck'),
+        );
+        let time = {
+          start: parseInt(datasetInput.getAttribute('time-start')),
+          end: parseInt(datasetInput.getAttribute('time-end')),
+        };
+        datasetData.timeExtent = [time.start, time.end];
+      }
     }
     let data = [datasetData];
     return data;
@@ -150,20 +146,6 @@ export const AddCartItem = ({
     return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
-  const checkScrollPosition = () => {
-    let dt = document.querySelector(
-      '[datasetid="' + dataset.DatasetId + '"] .map-dataset-checkbox',
-    );
-    if (
-      dt.offsetTop + dt.offsetHeight + 4 * 16 >
-      document.querySelector('.panels').offsetHeight +
-        document.querySelector('.panels').scrollTop
-    ) {
-      return 'translate(1rem, -5rem)';
-    } else {
-      return 'translate(1rem, 2rem)';
-    }
-  };
   let timeData;
   if (dataset.IsTimeSeries) {
     timeData = checkTimeData(dataset);
@@ -171,20 +153,6 @@ export const AddCartItem = ({
 
   return (
     <>
-      {showMessage && (
-        <Message
-          floating
-          size="small"
-          style={{
-            zIndex: 2,
-            transform: download
-              ? 'translate(1rem, 4rem)'
-              : checkScrollPosition(),
-          }}
-        >
-          {message}
-        </Message>
-      )}
       {download ? (
         <div className="map-download-buttons">
           <button
