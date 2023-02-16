@@ -241,12 +241,6 @@ class TimesliderWidget extends React.Component {
           this.setState({ lockDatePanel: false });
         }
       },
-      values: this.props.time.start
-        ? /*this.props.download
-          ? [new Date(this.props.time.start), new Date(this.props.time.end)]
-          : [new Date(this.props.time.start)]*/
-          [new Date(this.props.time.start), new Date(this.props.time.end)]
-        : null,
     });
     this.props.view.ui.add(this.container.current, 'bottom-right');
     this.container.current.insertAdjacentHTML(
