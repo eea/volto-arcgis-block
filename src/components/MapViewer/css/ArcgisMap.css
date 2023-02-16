@@ -871,8 +871,8 @@
 }
 
 .timeslider-calendar-button {
-  border-top: solid 1px #a0b12833;
   padding: 0.5rem 2rem;
+  border-top: solid 1px #a0b12833;
   background: white;
 }
 
@@ -917,9 +917,9 @@
 
 .timeslider-calendar-row {
   display: flex;
-  margin-bottom: 0.75rem;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 0.75rem;
 }
 
 .timeslider-calendar-row label {
