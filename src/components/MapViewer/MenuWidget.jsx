@@ -8,7 +8,6 @@ import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
-import { UniversalLink } from '@plone/volto/components';
 var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
 
 const popupSettings = {

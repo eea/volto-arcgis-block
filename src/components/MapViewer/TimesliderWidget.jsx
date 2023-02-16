@@ -569,7 +569,11 @@ class TimesliderWidget extends React.Component {
                   className="esri-icon-close"
                   id="timeslider_calendar_close"
                   role="button"
+                  tabIndex="0"
                   onClick={() => {
+                    this.setState({ showCalendar: false });
+                  }}
+                  onKeyDown={() => {
                     this.setState({ showCalendar: false });
                   }}
                 ></div>
