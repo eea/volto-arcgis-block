@@ -1468,6 +1468,7 @@ class MenuWidget extends React.Component {
    * Method to show/hide a layer. Update checkboxes from dataset and products
    * @param {*} elem Is the checkbox
    */
+
   toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
@@ -1506,6 +1507,7 @@ class MenuWidget extends React.Component {
       }
     } else {
       this.deleteCheckedLayer(elem.id);
+      this.deleteFilteredLayer();
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
       let mapLayer = this.map.findLayerById(elem.id);
@@ -1516,6 +1518,7 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
+    this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
 
@@ -1531,6 +1534,22 @@ class MenuWidget extends React.Component {
     //this.activeLayersHandler(this.activeLayersAsArray);
   }
 
+  /**
+   * Hide or show the hotspot widget for a hotspot layer
+   */
+
+  toggleHotspotWidget() {
+    let hotspotButton = document.querySelector('#hotspot_button');
+    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    checkedLayers.forEach((key) => {
+      if (
+        key.includes('all_present_lc_a_pol') ||
+        key.includes('all_lcc_a_pol')
+      ) {
+        hotspotButton.click();
+      }
+    });
+  }
   /**
    * Hide or show a legend image in the legend widget for a WMTS or a TMS layer
    *
@@ -2369,6 +2388,17 @@ class MenuWidget extends React.Component {
     }
   }
 
+  deleteFilteredLayer() {
+    let layers = this.layers;
+    if (layers['lcc_filter']) {
+      layers['lcc_filter'].visible = false;
+      delete layers['lcc_filter'];
+    } else if (layers['lc_filter']) {
+      layers['lc_filter'].visible = false;
+      delete layers['lc_filter'];
+    }
+  }
+
   /**
    * Method to load previously expanded dropdowns according to sessionStorage
    */
@@ -2488,9 +2518,10 @@ class MenuWidget extends React.Component {
       if (sessionStorage.checkedLayers.includes('all_lcc_a_pol'))
         document.querySelector('.landCoverChangeContainer').style.display =
           'block';
-      else
+      else {
         document.querySelector('.landCoverChangeContainer').style.display =
           'none';
+      }
     }
   }
 

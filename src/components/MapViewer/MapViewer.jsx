@@ -184,6 +184,7 @@ class MapViewer extends React.Component {
     this.closeActiveWidget();
     this.activeWidget = widget;
   }
+
   closeActiveWidget() {
     if (this.activeWidget) {
       this.activeWidget.openMenu();
