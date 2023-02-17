@@ -1,14 +1,13 @@
 import ReactDOM from 'react-dom';
-import React, { createRef, useState } from 'react';
+import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
-import { Message, Modal, Popup } from 'semantic-ui-react';
+import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
-import { UniversalLink } from '@plone/volto/components';
 var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
 
 const popupSettings = {
@@ -31,9 +30,6 @@ export const AddCartItem = ({
   dataset,
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
-  const [message, setMessage] = useState(0);
-  const [showMessage] = useState(false);
-  const [modal, setModal] = useState(false);
 
   const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
@@ -63,18 +59,14 @@ export const AddCartItem = ({
       if (area) {
         let data = checkCartData(cartData, area);
         addCartItem(data).then(() => {
-          setMessage('Added to cart');
           showMessageTimer('Added to cart', 'success', 'Success');
         });
       } else {
-        setMessage('Please select an area');
         showMessageTimer('Please select an area', 'warning', 'Warning');
       }
     } else {
-      closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
-        setMessage('Added to cart');
         showMessageTimer('Added to cart', 'success', 'Success');
       });
     }
@@ -92,21 +84,21 @@ export const AddCartItem = ({
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
     };
-    let hasTimeStart = datasetElem
-      ? datasetElem
-          .querySelector('.map-dataset-checkbox input')
-          .hasAttribute('time-start')
-      : false;
-
-    if (dataset.IsTimeSeries && hasTimeStart) {
-      let datasetInput = datasetElem.querySelector(
-        '.map-dataset-checkbox input',
-      );
-      let time = {
-        start: parseInt(datasetInput.getAttribute('time-start')),
-        end: parseInt(datasetInput.getAttribute('time-end')),
-      };
-      datasetData.timeExtent = [time.start, time.end];
+    if (dataset.IsTimeSeries) {
+      let hasTimeStart = checkTimeData(dataset);
+      if (hasTimeStart) {
+        let datasetInput = document.querySelector(
+          '#active_' +
+            datasetElem
+              .querySelector('.map-dataset-checkbox input')
+              .getAttribute('defcheck'),
+        );
+        let time = {
+          start: parseInt(datasetInput.getAttribute('time-start')),
+          end: parseInt(datasetInput.getAttribute('time-end')),
+        };
+        datasetData.timeExtent = [time.start, time.end];
+      }
     }
     let data = [datasetData];
     return data;
@@ -130,82 +122,25 @@ export const AddCartItem = ({
     });
   };
 
-  const showModal = (e) => {
-    if (e) e.stopPropagation();
-    setModal(true);
-  };
-
-  const closeModal = (e) => {
-    if (e) e.stopPropagation();
-    setModal(false);
-  };
-
-  const checkScrollPosition = () => {
-    let dt = document.querySelector(
-      '[datasetid="' + dataset.DatasetId + '"] .map-dataset-checkbox',
+  const checkTimeData = (dataset) => {
+    let id = dataset.DatasetId;
+    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
+    let datasetActive = document.querySelector(
+      '#active_' +
+        datasetElem
+          .querySelector('.map-dataset-checkbox input')
+          .getAttribute('defcheck'),
     );
-    if (
-      dt.offsetTop + dt.offsetHeight + 4 * 16 >
-      document.querySelector('.panels').offsetHeight +
-        document.querySelector('.panels').scrollTop
-    ) {
-      return 'translate(1rem, -5rem)';
-    } else {
-      return 'translate(1rem, 2rem)';
-    }
+    return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
-  const selectBBox = (e) => {
-    if (
-      !mapViewer.activeWidget ||
-      !mapViewer.activeWidget.container.current.classList.contains(
-        'area-container',
-      )
-    ) {
-      let event = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: false,
-      });
-      let node = document.getElementById('map_area_button');
-      if (node) {
-        node.dispatchEvent(event);
-      }
-    }
-    closeModal(e);
-  };
-
-  /*const showLogin = (e) => {
-    e.stopPropagation();
-    document.querySelector('.login-panel').style.display = 'block';
-    let left = e.currentTarget.offsetLeft + 48;
-    document.querySelector('.login-panel').style.left = left + 'px';
-    let top =
-      document.querySelector('.tabs').offsetHeight +
-      15 -
-      document.querySelector('.panels').scrollTop +
-      e.currentTarget.closest('.ccl-expandable__button').offsetTop +
-      e.currentTarget.closest('.ccl-expandable__button').offsetHeight / 2 -
-      document.querySelector('.login-panel').offsetHeight / 2;
-    document.querySelector('.login-panel').style.top = top + 'px';
-  };*/
+  let timeData;
+  if (dataset.IsTimeSeries) {
+    timeData = checkTimeData(dataset);
+  }
 
   return (
     <>
-      {showMessage && (
-        <Message
-          floating
-          size="small"
-          style={{
-            zIndex: 2,
-            transform: download
-              ? 'translate(1rem, 4rem)'
-              : checkScrollPosition(),
-          }}
-        >
-          {message}
-        </Message>
-      )}
       {download ? (
         <div className="map-download-buttons">
           <button
@@ -224,186 +159,107 @@ export const AddCartItem = ({
           </button>
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
-        <>
-          <Modal
-            size="tiny"
-            onClose={() => closeModal()}
-            onOpen={() => showModal()}
-            open={modal}
-            className="map-download-modal"
-          >
-            <div className="modal-close modal-clms-close">
-              <span
-                className="ccl-icon-close"
-                aria-label="Close"
-                onClick={(e) => closeModal(e)}
-                onKeyDown={(e) => closeModal(e)}
-                tabIndex="0"
-                role="button"
-              ></span>
-            </div>
-            <Modal.Content>
-              {!areaData && (
-                <ul>
-                  <br></br>
-                  <li>
-                    <p>
-                      If you want to download the full dataset, click{' '}
-                      <UniversalLink
-                        openLinkInNewTab
-                        href="https://clms-prod.eea.europa.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
-                      >
-                        here
-                      </UniversalLink>{' '}
-                      to learn more.
-                    </p>
-                  </li>
-                  <br />
-                  {dataset.IsTimeSeries ? (
-                    <>
-                      <li>
-                        <p>
-                          If you would like to download data for your area of
-                          interest: first select an area of interest and then
-                          click the download button next to the dataset (Note:
-                          the time range to download will be the first date of
-                          the dataset but if it is not included in the dataset's
-                          metadata then it will be the last 10 days).
-                        </p>
-                      </li>
-                      <br />
-                    </>
-                  ) : (
-                    <li>
-                      <p>
-                        If you would like to download data for your area of
-                        interest: first select an area of interest and then
-                        click the download button next to the dataset.
-                      </p>
-                    </li>
-                  )}
-                </ul>
-              )}
-              {areaData && dataset.IsTimeSeries && (
-                <p>
-                  If you would like to download data for your area of interest
-                  and for the selected time interval, please follow this{' '}
-                  <UniversalLink
-                    href={dataset.DatasetURL + '/download-by-area'}
-                  >
-                    link.
-                  </UniversalLink>
-                </p>
-              )}
-            </Modal.Content>
-            <Modal.Actions>
-              <div className="map-download-buttons">
-                {!areaData ? (
-                  <>
-                    <button
-                      className="ccl-button ccl-button-green"
-                      onClick={(e) => selectBBox(e)}
-                    >
-                      Area of interest
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="ccl-button ccl-button-green"
-                      onClick={(e) => checkArea(e)}
-                    >
-                      Add to cart
-                    </button>
-                    <button
-                      className="ccl-button ccl-button--default"
-                      onClick={(e) => closeModal(e)}
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
-              </div>
-            </Modal.Actions>
-          </Modal>
-          <Popup
-            trigger={
-              <span
-                className={'map-menu-icon map-menu-icon-login'}
-                onClick={(e) => {
-                  showModal(e);
-                }}
-                onKeyDown={(e) => {
-                  showModal(e);
-                }}
-                tabIndex="0"
-                role="button"
-              >
-                <FontAwesomeIcon
-                  className={isLoggedIn ? '' : ' locked'}
-                  icon={['fas', 'download']}
-                />
-                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
-              </span>
-            }
-            content="Download"
-            {...popupSettings}
-          />
-        </>
+        <Popup
+          trigger={
+            <span
+              className={
+                'map-menu-icon map-menu-icon-login' +
+                (isLoggedIn ? ' logged' : '')
+              }
+              onClick={(e) => {
+                if (dataset.IsTimeSeries && !timeData) {
+                  document.getElementById('active_label').click();
+                  if (!document.querySelector('.timeslider-container')) {
+                    let layerId = document
+                      .querySelector(
+                        '[datasetid="' + dataset.DatasetId + '"] input',
+                      )
+                      .getAttribute('defcheck');
+                    document
+                      .querySelector(
+                        "[layer-id='" + layerId + "'] .active-layer-time",
+                      )
+                      .click(e);
+                  }
+                } else if (!areaData) {
+                  if (
+                    !mapViewer.activeWidget ||
+                    !mapViewer.activeWidget.container.current.classList.contains(
+                      'area-container',
+                    )
+                  ) {
+                    document.querySelector('#map_area_button').click();
+                  }
+                } else {
+                  checkArea(e);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (dataset.IsTimeSeries && !timeData) {
+                  document.getElementById('active_label').click();
+                  if (!document.querySelector('.timeslider-container')) {
+                    let layerId = document
+                      .querySelector(
+                        '[datasetid="' + dataset.DatasetId + '"] input',
+                      )
+                      .getAttribute('defcheck');
+                    document
+                      .querySelector(
+                        "[layer-id='" + layerId + "'] .active-layer-time",
+                      )
+                      .click(e);
+                  }
+                } else if (!areaData) {
+                  if (
+                    !mapViewer.activeWidget ||
+                    !mapViewer.activeWidget.container.current.classList.contains(
+                      'area-container',
+                    )
+                  ) {
+                    document.querySelector('#map_area_button').click();
+                  }
+                } else {
+                  checkArea(e);
+                }
+              }}
+              tabIndex="0"
+              role="button"
+            >
+              <FontAwesomeIcon
+                className={isLoggedIn ? '' : ' locked'}
+                icon={['fas', 'download']}
+              />
+              {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+            </span>
+          }
+          content="Download"
+          {...popupSettings}
+        />
       ) : (
         // If isLoggedIn == false and user clicks download
-        <>
-          <Popup
-            trigger={
-              <span
-                className={'map-menu-icon map-menu-icon-login'}
-                onClick={(e) => {
-                  //showModal(e);
-                  document.querySelector('.header-login-link').click();
-                }}
-                onKeyDown={(e) => {
-                  //showModal(e);
-                  document.querySelector('.header-login-link').click();
-                }}
-                tabIndex="0"
-                role="button"
-              >
-                <FontAwesomeIcon
-                  className={isLoggedIn ? '' : ' locked'}
-                  icon={['fas', 'download']}
-                />
-                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
-              </span>
-            }
-            content="Download"
-            {...popupSettings}
-          />
-        </>
-      )}
-    </>
-  );
-};
-
-export const CheckLogin = () => {
-  const { isLoggedIn } = useCartState();
-  return (
-    <>
-      {!isLoggedIn && (
-        <div className="login-block">
-          <div className="login-content">
-            <div className="login-text">
-              <p>Register/Login to download the data</p>
-            </div>
-            <button
-              className="ccl-button ccl-button-green"
-              onClick={() =>
-                document.querySelector('.header-login-link').click()
-              }
+        <Popup
+          trigger={
+            <span
+              className={'map-menu-icon map-menu-icon-login'}
+              onClick={() => {
+                document.querySelector('.header-login-link').click();
+              }}
+              onKeyDown={() => {
+                document.querySelector('.header-login-link').click();
+              }}
+              tabIndex="0"
+              role="button"
             >
-              Register/Login
-            </button>
-          </div>
-        </div>
+              <FontAwesomeIcon
+                className={isLoggedIn ? '' : ' locked'}
+                icon={['fas', 'download']}
+              />
+              {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+            </span>
+          }
+          content="Download"
+          {...popupSettings}
+        />
       )}
     </>
   );
@@ -549,9 +405,6 @@ class MenuWidget extends React.Component {
       }
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
-      }
-      if (document.querySelector('.login-panel').style.display === 'block') {
-        this.closeLogin();
       }
 
       // By invoking the setState, we notify the state we want to reach
@@ -1770,7 +1623,7 @@ class MenuWidget extends React.Component {
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
    */
-  addActiveLayer(elem, order) {
+  addActiveLayer(elem, order, fromDownload) {
     return (
       <div
         className="active-layer"
@@ -1791,8 +1644,16 @@ class MenuWidget extends React.Component {
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
-              onClick={() => this.showTimeSlider(elem)}
-              onKeyDown={() => this.showTimeSlider(elem)}
+              onClick={(e) => {
+                e.isTrusted
+                  ? this.showTimeSlider(elem)
+                  : this.showTimeSlider(elem, true);
+              }}
+              onKeyDown={(e) => {
+                e.isTrusted
+                  ? this.showTimeSlider(elem)
+                  : this.showTimeSlider(elem, true);
+              }}
               tabIndex="0"
               role="button"
             >
@@ -1852,7 +1713,7 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(elem, this.layers[elem.id])}
+            this.renderTimeslider(elem, this.layers[elem.id], fromDownload)}
         </div>
       </div>
     );
@@ -1987,7 +1848,7 @@ class MenuWidget extends React.Component {
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
-  showTimeSlider(elem) {
+  showTimeSlider(elem, fromDownload) {
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
@@ -2017,7 +1878,11 @@ class MenuWidget extends React.Component {
           document.querySelector('#map_remove_layers').classList.add('locked');
           if (this.props.download)
             document.querySelector('#download_label').classList.add('locked');
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(
+            elem,
+            order,
+            fromDownload,
+          );
         } else {
           if (
             document.getElementById(layerId).parentElement.dataset
@@ -2034,6 +1899,7 @@ class MenuWidget extends React.Component {
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
             order,
+            fromDownload,
           );
         }
       });
@@ -2049,7 +1915,11 @@ class MenuWidget extends React.Component {
         }
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['far', 'clock'];
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(
+            elem,
+            order,
+            fromDownload,
+          );
           document
             .querySelectorAll(
               '.active-layer[layer-id="' +
@@ -2080,6 +1950,7 @@ class MenuWidget extends React.Component {
             this.activeLayersJSON[layerId] = this.addActiveLayer(
               document.getElementById(layerId),
               order,
+              fromDownload,
             );
           }
           document
@@ -2222,10 +2093,6 @@ class MenuWidget extends React.Component {
   closeOpacity() {
     document.querySelector('.opacity-panel').style.display = '';
     document.querySelector('.opacity-panel input').dataset.layer = '';
-  }
-
-  closeLogin() {
-    document.querySelector('.login-panel').style.display = '';
   }
 
   closetouchScreenPopup() {
@@ -2483,9 +2350,6 @@ class MenuWidget extends React.Component {
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
       }
-      if (document.querySelector('.login-panel').style.display === 'block') {
-        this.closeLogin();
-      }
     }
   }
 
@@ -2525,7 +2389,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  renderTimeslider(elem, layer) {
+  renderTimeslider(elem, layer, fromDownload) {
     if (this.props.view && layer) {
       let activeLayer = document.querySelector('#active_' + elem.id);
       let time = { elem: activeLayer };
@@ -2537,6 +2401,10 @@ class MenuWidget extends React.Component {
         time.start = parseInt(activeLayer.getAttribute('time-start'));
         time.end = parseInt(activeLayer.getAttribute('time-end'));
       }
+      let isLoggedIn = document
+        .querySelector('[defcheck=' + elem.id + ']')
+        .parentElement.querySelector('.map-menu-icon-login')
+        .classList.contains('logged');
       ReactDOM.render(
         <TimesliderWidget
           view={this.props.view}
@@ -2544,6 +2412,8 @@ class MenuWidget extends React.Component {
           layer={layer}
           download={this.props.download}
           time={time}
+          logged={isLoggedIn}
+          fromDownload={fromDownload}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
@@ -2744,17 +2614,6 @@ class MenuWidget extends React.Component {
             <span className="opacity-label left">0 %</span>
             <span className="opacity-label right">100 %</span>
           </div>
-        </div>
-        <div className="login-panel">
-          <div
-            className="esri-icon-close"
-            id="login_close"
-            role="button"
-            onClick={() => this.closeLogin()}
-            onKeyDown={() => this.closeLogin()}
-            tabIndex="0"
-          ></div>
-          {!this.props.download && <CheckLogin />}
         </div>
         <div className="touchScreenPopup-panel">
           <div

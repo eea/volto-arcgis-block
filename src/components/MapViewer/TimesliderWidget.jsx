@@ -1,4 +1,5 @@
 import React, { createRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 var TimeSlider;
 var TimeExtent;
@@ -21,6 +22,12 @@ class TimesliderWidget extends React.Component {
       styles: { bottom: '0', right: '0' },
       timeSelectedValues: [], //To store time slider values [min, max]
       timeSelectedValuesC: [], //To compare time slider stored values with new selected values
+      showDatePanel: false,
+      lockDatePanel: true,
+      showCalendar: false,
+      dateStart: this.props.time.start ? new Date(this.props.time.start) : null,
+      dateEnd: this.props.time.end ? new Date(this.props.time.end) : null,
+      periodicity: null,
     };
     this.map = this.props.map;
     this.layer = this.props.layer;
@@ -177,7 +184,7 @@ class TimesliderWidget extends React.Component {
       view: this.props.view,
       container: document.querySelector('.timeslider-panel'),
       timeVisible: true,
-      mode: /*this.props.download ? 'time-window' : 'instant'*/ 'time-window',
+      mode: 'instant',
       loop: false,
       labelFormatFunction: (value, type, element, layout) => {
         if (!this.TimesliderWidget.fullTimeExtent) {
@@ -231,14 +238,12 @@ class TimesliderWidget extends React.Component {
               element.innerText = normal.format(value).replaceAll('/', '.');
               break;
           }
+          this.setState({
+            lockDatePanel: false,
+            showCalendar: this.props.fromDownload ? true : false,
+          });
         }
       },
-      values: this.props.time.start
-        ? /*this.props.download
-          ? [new Date(this.props.time.start), new Date(this.props.time.end)]
-          : [new Date(this.props.time.start)]*/
-          [new Date(this.props.time.start), new Date(this.props.time.end)]
-        : null,
     });
     this.props.view.ui.add(this.container.current, 'bottom-right');
     this.container.current.insertAdjacentHTML(
@@ -246,6 +251,7 @@ class TimesliderWidget extends React.Component {
       '<div class="esri-icon-close" id="timeslider_close" role="button"></div>',
     );
     this.container.current.style.display = 'block';
+    this.setState({ showDatePanel: true });
 
     document
       .querySelector('#timeslider_close')
@@ -265,7 +271,7 @@ class TimesliderWidget extends React.Component {
             if (!this.container.current ? true : false) {
               this.TimesliderWidget.stop();
             }
-            let start = new Date(timeExtent.start).getTime();
+            /*let start = new Date(timeExtent.start).getTime();
             let end = new Date(timeExtent.end).getTime();
             this.props.time.elem.setAttribute('time-start', start);
             this.props.time.elem.setAttribute('time-end', end);
@@ -273,7 +279,7 @@ class TimesliderWidget extends React.Component {
               this.props.time.dataset.setAttribute('time-start', start);
               this.props.time.dataset.setAttribute('time-end', end);
             }
-            /*this.props.time.dataset.setAttribute('time-start', start);
+            this.props.time.dataset.setAttribute('time-start', start);
             this.props.time.dataset.setAttribute('time-end', end);*/
           });
         } else {
@@ -341,11 +347,24 @@ class TimesliderWidget extends React.Component {
                 }
               }
 
+              let periodicity = Math.floor(
+                (Date.parse(times[this.layerName].array[1]) -
+                  Date.parse(times[this.layerName].array[0])) /
+                  86400000,
+              );
+              if (periodicity === 0) {
+                periodicity =
+                  (new Date(times[this.layerName].array[1]).getHours() -
+                    new Date(times[this.layerName].array[0]).getHours()) /
+                  24;
+              }
+              this.setState({ periodicity: periodicity });
+
               this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
                 if (!this.container.current ? true : false) {
                   this.TimesliderWidget.stop();
                 }
-                let start = new Date(timeExtent.start).getTime();
+                /*let start = new Date(timeExtent.start).getTime();
                 let end = new Date(timeExtent.end).getTime();
                 this.props.time.elem.setAttribute('time-start', start);
                 this.props.time.elem.setAttribute('time-end', end);
@@ -353,7 +372,7 @@ class TimesliderWidget extends React.Component {
                   this.props.time.dataset.setAttribute('time-start', start);
                   this.props.time.dataset.setAttribute('time-end', end);
                 }
-                /*this.props.time.dataset.setAttribute('time-start', start);
+                this.props.time.dataset.setAttribute('time-start', start);
                 this.props.time.dataset.setAttribute('time-end', end);*/
                 if (this.layer.type === 'wmts') {
                   this.layer.customLayerParameters = {};
@@ -388,6 +407,25 @@ class TimesliderWidget extends React.Component {
         } // is feature or WMS/WMTS
       });
   } //componentDidMount
+
+  getPeriodicity() {
+    let period = this.state.periodicity;
+    if (period === 1 / 24) {
+      return 'hourly';
+    } else if (period === 1) {
+      return 'daily';
+    } else if (period === 7) {
+      return 'weekly';
+    } else if (period === 10) {
+      return '10-daily';
+    } else if (period >= 28 && period <= 31) {
+      return 'monthly';
+    } else if (period === 365 || period === 366) {
+      return 'yearly';
+    } else {
+      return 'not regular';
+    }
+  }
 
   /**
    * Needed to get the desired drag-and-drop behavior
@@ -425,11 +463,55 @@ class TimesliderWidget extends React.Component {
     ).style.pointerEvents = '';
   }
 
+  showCalendar() {
+    if (this.state.showCalendar) {
+      this.setState({ showCalendar: false });
+    } else {
+      this.setState({ showCalendar: true });
+    }
+  }
+
+  applyDate() {
+    let start = document.querySelector('#date_start').valueAsDate;
+    start = start
+      ? new Date(start)
+      : this.TimesliderWidget.fullTimeExtent.start;
+    let end = document.querySelector('#date_end').valueAsDate;
+    end = end ? new Date(end) : this.TimesliderWidget.fullTimeExtent.end;
+    this.props.time.elem.setAttribute('time-start', new Date(start).getTime());
+    this.props.time.elem.setAttribute('time-end', new Date(end).getTime());
+    this.setState({
+      dateStart: start,
+      dateEnd: end,
+      showCalendar: false,
+    });
+  }
+
   /**
    * This method renders the component
    * @returns jsx
    */
   render() {
+    let timeStart;
+    let timeEnd;
+    if (this.state.showCalendar) {
+      timeStart = new Date(
+        this.state.dateStart
+          ? this.state.dateStart
+          : this.TimesliderWidget.fullTimeExtent.start,
+      )
+        .toISOString()
+        .split('T')[0]
+        .toString();
+      timeEnd = new Date(
+        this.state.dateEnd
+          ? this.state.dateEnd
+          : this.TimesliderWidget.fullTimeExtent.end,
+      )
+        .toISOString()
+        .split('T')[0]
+        .toString();
+    }
     return (
       <>
         <div
@@ -445,6 +527,91 @@ class TimesliderWidget extends React.Component {
           style={this.state.styles}
         >
           <div className="timeslider-panel"></div>
+          {this.state.showDatePanel && (
+            <div className="timeslider-calendar-button">
+              {this.props.logged ? (
+                <button
+                  onClick={() => {
+                    this.showCalendar();
+                  }}
+                  className={this.state.lockDatePanel ? 'locked' : ''}
+                >
+                  <FontAwesomeIcon icon={['fas', 'calendar']} />
+                  {this.state.dateStart && this.state.dateEnd ? (
+                    <>
+                      {this.state.dateStart.toLocaleDateString('en-gb')} -{' '}
+                      {this.state.dateEnd.toLocaleDateString('en-gb')}{' '}
+                    </>
+                  ) : (
+                    <>Select temporal interval to download</>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    document.querySelector('.header-login-link').click();
+                  }}
+                >
+                  <FontAwesomeIcon icon={['fas', 'calendar']} />
+                  Login to select the temporal interval to download
+                </button>
+              )}
+            </div>
+          )}
+          {this.state.showCalendar && (
+            <div className="timeslider-calendar-container">
+              <div className="timeslider-calendar-header">
+                <b>Select temporal interval to download</b>
+                <div
+                  className="esri-icon-close"
+                  id="timeslider_calendar_close"
+                  role="button"
+                  tabIndex="0"
+                  onClick={() => {
+                    this.setState({ showCalendar: false });
+                  }}
+                  onKeyDown={() => {
+                    this.setState({ showCalendar: false });
+                  }}
+                ></div>
+              </div>
+              <div className="timeslider-calendar-panel">
+                {this.state.periodicity && (
+                  <p>
+                    The periodicity of this dataset is {this.getPeriodicity()}
+                  </p>
+                )}
+                <div className="timeslider-calendar-row">
+                  <label htmlFor="start">From</label>
+                  <input
+                    type="date"
+                    id="date_start"
+                    defaultValue={timeStart}
+                    min={timeStart}
+                    max={timeEnd}
+                  />
+                </div>
+                <div className="timeslider-calendar-row">
+                  <label htmlFor="start">To</label>
+                  <input
+                    type="date"
+                    id="date_end"
+                    defaultValue={timeEnd}
+                    min={timeStart}
+                    max={timeEnd}
+                  />
+                </div>
+                <button
+                  className="ccl-button ccl-button-white"
+                  onClick={() => {
+                    this.applyDate();
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </>
     );
