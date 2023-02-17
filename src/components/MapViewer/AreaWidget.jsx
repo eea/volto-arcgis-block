@@ -26,6 +26,7 @@ class AreaWidget extends React.Component {
     this.state = {
       showMapMenu: false,
       showInfoPopup: false,
+      infoPopupType: 'area',
     };
     this.menuClass =
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
@@ -91,7 +92,11 @@ class AreaWidget extends React.Component {
         .classList.remove('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: false });
+      this.setState({
+        showMapMenu: false,
+        showInfoPopup: false,
+        infoPopupType: 'area',
+      });
       this.clearWidget();
       this.container.current.querySelector(
         '#download_area_select_nuts0',
@@ -108,7 +113,11 @@ class AreaWidget extends React.Component {
         .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });
+      this.setState({
+        showMapMenu: true,
+        showInfoPopup: true,
+        infoPopupType: 'area',
+      });
       this.container.current.querySelector('input:checked').click();
     }
   }
@@ -170,6 +179,7 @@ class AreaWidget extends React.Component {
         origin = this.props.view.toMap(e);
         this.setState({
           showInfoPopup: true,
+          infoPopupType: 'download',
         });
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
@@ -206,7 +216,7 @@ class AreaWidget extends React.Component {
     this.props.view.graphics.removeAll();
     this.props.updateArea();
     this.setState({
-      showInfoPopup: false,
+      infoPopupType: 'area',
     });
   }
   /**
@@ -252,6 +262,7 @@ class AreaWidget extends React.Component {
                 this.props.view.graphics.add(highlight);
                 this.setState({
                   showInfoPopup: true,
+                  infoPopupType: 'download',
                 });
               }
             }
@@ -408,13 +419,27 @@ class AreaWidget extends React.Component {
             <div className="map-container">
               <div className="drawRectanglePopup-block">
                 <div className="drawRectanglePopup-content">
-                  <span className="drawRectanglePopup-icon">
-                    <FontAwesomeIcon icon={['fas', 'download']} />
-                  </span>
-                  <div className="drawRectanglePopup-text">
-                    Click on the download icon of the "Menu of products" to
-                    download the dataset
-                  </div>
+                  {this.state.infoPopupType === 'area' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <span className="esri-icon-cursor-marquee"></span>
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Select an area of interest to download a dataset
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'download' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'download']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Click on the download icon of the "Menu of products" to
+                        download the dataset
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
