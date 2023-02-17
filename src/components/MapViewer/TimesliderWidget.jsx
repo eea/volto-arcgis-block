@@ -238,7 +238,10 @@ class TimesliderWidget extends React.Component {
               element.innerText = normal.format(value).replaceAll('/', '.');
               break;
           }
-          this.setState({ lockDatePanel: false });
+          this.setState({
+            lockDatePanel: false,
+            showCalendar: this.props.fromDownload ? true : false,
+          });
         }
       },
     });

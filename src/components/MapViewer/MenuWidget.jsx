@@ -179,7 +179,7 @@ export const AddCartItem = ({
                       .querySelector(
                         "[layer-id='" + layerId + "'] .active-layer-time",
                       )
-                      .click();
+                      .click(e);
                   }
                 } else if (!areaData) {
                   if (
@@ -207,7 +207,7 @@ export const AddCartItem = ({
                       .querySelector(
                         "[layer-id='" + layerId + "'] .active-layer-time",
                       )
-                      .click();
+                      .click(e);
                   }
                 } else if (!areaData) {
                   if (
@@ -1604,7 +1604,7 @@ class MenuWidget extends React.Component {
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
    */
-  addActiveLayer(elem, order) {
+  addActiveLayer(elem, order, fromDownload) {
     return (
       <div
         className="active-layer"
@@ -1625,8 +1625,16 @@ class MenuWidget extends React.Component {
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
-              onClick={() => this.showTimeSlider(elem)}
-              onKeyDown={() => this.showTimeSlider(elem)}
+              onClick={(e) => {
+                e.isTrusted
+                  ? this.showTimeSlider(elem)
+                  : this.showTimeSlider(elem, true);
+              }}
+              onKeyDown={(e) => {
+                e.isTrusted
+                  ? this.showTimeSlider(elem)
+                  : this.showTimeSlider(elem, true);
+              }}
               tabIndex="0"
               role="button"
             >
@@ -1686,7 +1694,7 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(elem, this.layers[elem.id])}
+            this.renderTimeslider(elem, this.layers[elem.id], fromDownload)}
         </div>
       </div>
     );
@@ -1821,7 +1829,7 @@ class MenuWidget extends React.Component {
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
-  showTimeSlider(elem) {
+  showTimeSlider(elem, fromDownload) {
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
@@ -1851,7 +1859,11 @@ class MenuWidget extends React.Component {
           document.querySelector('#map_remove_layers').classList.add('locked');
           if (this.props.download)
             document.querySelector('#download_label').classList.add('locked');
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(
+            elem,
+            order,
+            fromDownload,
+          );
         } else {
           if (
             document.getElementById(layerId).parentElement.dataset
@@ -1868,6 +1880,7 @@ class MenuWidget extends React.Component {
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
             order,
+            fromDownload,
           );
         }
       });
@@ -1883,7 +1896,11 @@ class MenuWidget extends React.Component {
         }
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['far', 'clock'];
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          this.activeLayersJSON[elem.id] = this.addActiveLayer(
+            elem,
+            order,
+            fromDownload,
+          );
           document
             .querySelectorAll(
               '.active-layer[layer-id="' +
@@ -1914,6 +1931,7 @@ class MenuWidget extends React.Component {
             this.activeLayersJSON[layerId] = this.addActiveLayer(
               document.getElementById(layerId),
               order,
+              fromDownload,
             );
           }
           document
@@ -2340,7 +2358,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  renderTimeslider(elem, layer) {
+  renderTimeslider(elem, layer, fromDownload) {
     if (this.props.view && layer) {
       let activeLayer = document.querySelector('#active_' + elem.id);
       let time = { elem: activeLayer };
@@ -2364,6 +2382,7 @@ class MenuWidget extends React.Component {
           download={this.props.download}
           time={time}
           logged={isLoggedIn}
+          fromDownload={fromDownload}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
