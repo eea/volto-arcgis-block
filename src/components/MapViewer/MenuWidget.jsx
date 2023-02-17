@@ -3,7 +3,7 @@ import React, { createRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
-import { Message, Modal, Popup } from 'semantic-ui-react';
+import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
@@ -171,158 +171,112 @@ export const AddCartItem = ({
           </button>
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
-        <>
-          <Modal
-            size="tiny"
-            onClose={() => closeModal()}
-            onOpen={() => showModal()}
-            open={modal}
-            className="map-download-modal"
-          >
-            <div className="modal-close modal-clms-close">
-              <span
-                className="ccl-icon-close"
-                aria-label="Close"
-                onClick={(e) => closeModal(e)}
-                onKeyDown={(e) => closeModal(e)}
-                tabIndex="0"
-                role="button"
-              ></span>
-            </div>
-            <Modal.Content>
-              {dataset.IsTimeSeries && !timeData && (
-                <p>Select the temporal interval to download</p>
-              )}
-              {dataset.IsTimeSeries && timeData && !areaData && (
-                <p>Select the area of interest by NUTS or by rectangle</p>
-              )}
-              {!dataset.IsTimeSeries && !areaData && (
-                <p>Select the area of interest by NUTS or by rectangle</p>
-              )}
-            </Modal.Content>
-            <Modal.Actions>
-              <div className="map-download-buttons">
-                {!areaData && (
-                  <>
-                    <button
-                      className="ccl-button ccl-button-green"
-                      onClick={(e) => closeModal()}
-                    >
-                      Accept
-                    </button>
-                  </>
-                )}
-              </div>
-            </Modal.Actions>
-          </Modal>
-          <Popup
-            trigger={
-              <span
-                className={
-                  'map-menu-icon map-menu-icon-login' +
-                  (isLoggedIn ? ' logged' : '')
+        <Popup
+          trigger={
+            <span
+              className={
+                'map-menu-icon map-menu-icon-login' +
+                (isLoggedIn ? ' logged' : '')
+              }
+              onClick={(e) => {
+                if (dataset.IsTimeSeries && !timeData) {
+                  document.getElementById('active_label').click();
+                  if (!document.querySelector('.timeslider-container')) {
+                    let layerId = document
+                      .querySelector(
+                        '[datasetid="' + dataset.DatasetId + '"] input',
+                      )
+                      .getAttribute('defcheck');
+                    document
+                      .querySelector(
+                        "[layer-id='" + layerId + "'] .active-layer-time",
+                      )
+                      .click();
+                  }
+                  showModal(e);
+                } else if (!areaData) {
+                  if (
+                    !mapViewer.activeWidget ||
+                    !mapViewer.activeWidget.container.current.classList.contains(
+                      'area-container',
+                    )
+                  ) {
+                    document.querySelector('#map_area_button').click();
+                  }
+                  showModal(e);
+                } else {
+                  checkArea(e);
                 }
-                onClick={(e) => {
-                  if (dataset.IsTimeSeries && !timeData) {
-                    document.getElementById('active_label').click();
-                    if (!document.querySelector('.timeslider-container')) {
-                      let layerId = document
-                        .querySelector(
-                          '[datasetid="' + dataset.DatasetId + '"] input',
-                        )
-                        .getAttribute('defcheck');
-                      document
-                        .querySelector(
-                          "[layer-id='" + layerId + "'] .active-layer-time",
-                        )
-                        .click();
-                    }
-                    showModal(e);
-                  } else if (!areaData) {
-                    if (
-                      !mapViewer.activeWidget ||
-                      !mapViewer.activeWidget.container.current.classList.contains(
-                        'area-container',
+              }}
+              onKeyDown={(e) => {
+                if (dataset.IsTimeSeries && !timeData) {
+                  document.getElementById('active_label').click();
+                  if (!document.querySelector('.timeslider-container')) {
+                    let layerId = document
+                      .querySelector(
+                        '[datasetid="' + dataset.DatasetId + '"] input',
                       )
-                    ) {
-                      document.querySelector('#map_area_button').click();
-                    }
-                    showModal(e);
-                  } else {
-                    checkArea(e);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (dataset.IsTimeSeries && !timeData) {
-                    document.getElementById('active_label').click();
-                    if (!document.querySelector('.timeslider-container')) {
-                      let layerId = document
-                        .querySelector(
-                          '[datasetid="' + dataset.DatasetId + '"] input',
-                        )
-                        .getAttribute('defcheck');
-                      document
-                        .querySelector(
-                          "[layer-id='" + layerId + "'] .active-layer-time",
-                        )
-                        .click();
-                    }
-                    showModal(e);
-                  } else if (!areaData) {
-                    if (
-                      !mapViewer.activeWidget ||
-                      !mapViewer.activeWidget.container.current.classList.contains(
-                        'area-container',
+                      .getAttribute('defcheck');
+                    document
+                      .querySelector(
+                        "[layer-id='" + layerId + "'] .active-layer-time",
                       )
-                    ) {
-                      document.querySelector('#map_area_button').click();
-                    }
-                    showModal(e);
-                  } else {
-                    checkArea(e);
+                      .click();
+                    //document.querySelector(".timeslider-calendar-button").click();
                   }
-                }}
-                tabIndex="0"
-                role="button"
-              >
-                <FontAwesomeIcon
-                  className={isLoggedIn ? '' : ' locked'}
-                  icon={['fas', 'download']}
-                />
-                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
-              </span>
-            }
-            content="Download"
-            {...popupSettings}
-          />
-        </>
+                  showModal(e);
+                } else if (!areaData) {
+                  if (
+                    !mapViewer.activeWidget ||
+                    !mapViewer.activeWidget.container.current.classList.contains(
+                      'area-container',
+                    )
+                  ) {
+                    document.querySelector('#map_area_button').click();
+                  }
+                  showModal(e);
+                } else {
+                  checkArea(e);
+                }
+              }}
+              tabIndex="0"
+              role="button"
+            >
+              <FontAwesomeIcon
+                className={isLoggedIn ? '' : ' locked'}
+                icon={['fas', 'download']}
+              />
+              {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+            </span>
+          }
+          content="Download"
+          {...popupSettings}
+        />
       ) : (
         // If isLoggedIn == false and user clicks download
-        <>
-          <Popup
-            trigger={
-              <span
-                className={'map-menu-icon map-menu-icon-login'}
-                onClick={() => {
-                  document.querySelector('.header-login-link').click();
-                }}
-                onKeyDown={() => {
-                  document.querySelector('.header-login-link').click();
-                }}
-                tabIndex="0"
-                role="button"
-              >
-                <FontAwesomeIcon
-                  className={isLoggedIn ? '' : ' locked'}
-                  icon={['fas', 'download']}
-                />
-                {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
-              </span>
-            }
-            content="Download"
-            {...popupSettings}
-          />
-        </>
+        <Popup
+          trigger={
+            <span
+              className={'map-menu-icon map-menu-icon-login'}
+              onClick={() => {
+                document.querySelector('.header-login-link').click();
+              }}
+              onKeyDown={() => {
+                document.querySelector('.header-login-link').click();
+              }}
+              tabIndex="0"
+              role="button"
+            >
+              <FontAwesomeIcon
+                className={isLoggedIn ? '' : ' locked'}
+                icon={['fas', 'download']}
+              />
+              {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+            </span>
+          }
+          content="Download"
+          {...popupSettings}
+        />
       )}
     </>
   );
