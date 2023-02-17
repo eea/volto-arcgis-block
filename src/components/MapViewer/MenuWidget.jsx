@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom';
-import React, { createRef, useState } from 'react';
+import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
@@ -65,7 +65,6 @@ export const AddCartItem = ({
         showMessageTimer('Please select an area', 'warning', 'Warning');
       }
     } else {
-      closeModal(e);
       let data = checkCartData(cartData, area, dataset);
       addCartItem(data).then(() => {
         showMessageTimer('Added to cart', 'success', 'Success');
@@ -121,16 +120,6 @@ export const AddCartItem = ({
       draggable: true,
       progress: undefined,
     });
-  };
-
-  const showModal = (e) => {
-    if (e) e.stopPropagation();
-    setModal(true);
-  };
-
-  const closeModal = (e) => {
-    if (e) e.stopPropagation();
-    setModal(false);
   };
 
   const checkTimeData = (dataset) => {
@@ -192,7 +181,6 @@ export const AddCartItem = ({
                       )
                       .click();
                   }
-                  showModal(e);
                 } else if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
@@ -202,7 +190,6 @@ export const AddCartItem = ({
                   ) {
                     document.querySelector('#map_area_button').click();
                   }
-                  showModal(e);
                 } else {
                   checkArea(e);
                 }
@@ -221,9 +208,7 @@ export const AddCartItem = ({
                         "[layer-id='" + layerId + "'] .active-layer-time",
                       )
                       .click();
-                    //document.querySelector(".timeslider-calendar-button").click();
                   }
-                  showModal(e);
                 } else if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
@@ -233,7 +218,6 @@ export const AddCartItem = ({
                   ) {
                     document.querySelector('#map_area_button').click();
                   }
-                  showModal(e);
                 } else {
                   checkArea(e);
                 }
