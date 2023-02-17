@@ -30,7 +30,6 @@ export const AddCartItem = ({
   dataset,
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
-  const [modal, setModal] = useState(false);
 
   const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
