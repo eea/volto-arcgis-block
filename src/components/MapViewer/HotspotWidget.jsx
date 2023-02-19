@@ -50,7 +50,7 @@ class HotspotWidget extends React.Component {
 
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
-      // featureInfoFormat: "text/html",
+      featureInfoFormat: "text/plain",
       customLayerParameters: {},
       sublayers: [
         // LAND COVER CHANGE DATASET ________________________________________________________________________________________________________________
@@ -63,7 +63,7 @@ class HotspotWidget extends React.Component {
     });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
-      // featureInfoFormat: "text/html",
+      featureInfoFormat: "text/plain",
       customLayerParameters: {},
       sublayers: [
         // PRESENT LAND COVER DATASET ________________________________________________________________________________________________________________
