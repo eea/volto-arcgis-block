@@ -35,7 +35,7 @@ class HotspotWidget extends React.Component {
     this.getKLCNames = this.getKLCNames.bind(this);
     this.layerModelInit = this.layerModelInit.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
-    this.getLayerParameters();
+    //this.getLayerParameters();
   }
 
   loader() {
@@ -44,33 +44,42 @@ class HotspotWidget extends React.Component {
     });
   }
 
+  addLegendName(legend) {
+    let name = legend;
+    return name;
+  }
+
+  addLegendNameToUrl(legend) {
+    const legendLinkUrl =
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=';
+    return legendLinkUrl + legend;
+  }
+
   layerModelInit() {
     const serviceUrl =
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms';
 
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
-      // featureInfoFormat: "text/html",
+      //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
         // LAND COVER CHANGE DATASET ________________________________________________________________________________________________________________
         {
-          name: 'all_lcc_a_pol',
-          legendUrl:
-            'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=all_lcc_a_pol',
+          name: this.addLegendName('all_lcc_a_pol'),
+          legendUrl: this.addLegendNameToUrl('all_lcc_a_pol'),
         },
       ],
     });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
-      // featureInfoFormat: "text/html",
+      //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
         // PRESENT LAND COVER DATASET ________________________________________________________________________________________________________________
         {
-          name: 'all_lcc_a_pol',
-          legendUrl:
-            'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=all_lcc_a_pol',
+          name: this.addLegendName('all_present_lc_a_pol'),
+          legendUrl: this.addLegendNameToUrl('all_present_lc_a_pol'),
         },
       ],
     });
@@ -109,13 +118,18 @@ class HotspotWidget extends React.Component {
         .getElementById('select-klc-lccTime')
         .value.match(/\d+/g)
         .map(Number)[0];
-      /* var typeLegend =
+      let typeLegend =
         document.getElementById('select-klc-highlights-lcc').value ===
         'Dichotomous'
           ? 'all_lcc_a_pol'
-          : 'all_lcc_b_pol'; */
+          : 'all_lcc_b_pol';
       if (this.esriLayer_lcc !== null) {
-        //this.esriLayer_lcc.sublayers.items[0].name = typeLegend;
+        this.esriLayer_lcc.sublayers.items[0].name = this.addLegendName(
+          typeLegend,
+        );
+        this.esriLayer_lcc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
+          typeLegend,
+        );
         this.esriLayer_lcc.customLayerParameters['CQL_FILTER'] =
           'klc_code LIKE ' +
           "'" +
@@ -128,17 +142,21 @@ class HotspotWidget extends React.Component {
         this.props.selectedLayers['lcc_filter'].visible = true;
       }
     } else {
-      /* var typeLegend =
-        document.getElementById('select-klc-highlights-lcc').value ===
-        'Dichotomous'
+      let typeLegend =
+        document.getElementById('select-klc-highlights-lc').value === 'Modular'
           ? 'all_present_lc_a_pol'
-          : 'all_present_lc_b_pol'; */
+          : 'all_present_lc_b_pol';
       var selectBoxHighlightsLc = document
         .getElementById('select-klc-lcTime')
         .value.match(/\d+/g)
         .map(Number)[0];
       if (this.esriLayer_lc !== null) {
-        //this.esriLayer_lc.sublayers.items[0].name = typeLegend;
+        this.esriLayer_lc.sublayers.items[0].name = this.addLegendName(
+          typeLegend,
+        );
+        this.esriLayer_lc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
+          typeLegend,
+        );
         this.esriLayer_lc.customLayerParameters['CQL_FILTER'] =
           'klc_code LIKE ' +
           "'" +
@@ -167,13 +185,10 @@ class HotspotWidget extends React.Component {
    * button is clicked. It controls the open
    * and close actions of the component
    */
+
   openMenu() {
     if (this.state.showMapMenu) {
-      if (this.dataJSONNames)
-        this.getKLCNames(
-          this.dataJSONNames,
-          this.dataJSONNames[0].node.klc_name,
-        );
+      this.getKLCNames(this.dataJSONNames, this.dataJSONNames[0].node.klc_name);
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -187,7 +202,12 @@ class HotspotWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
-      this.getKLCNames(this.dataJSONNames, this.dataJSONNames[0].node.klc_name);
+      this.getLayerParameters();
+      if (this.getLayerParameters.length !== 0)
+        this.getKLCNames(
+          this.dataJSONNames,
+          this.dataJSONNames[0].node.klc_name,
+        );
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
@@ -203,7 +223,7 @@ class HotspotWidget extends React.Component {
     }
   }
 
-  async getLayerParameters() {
+  getLayerParameters() {
     fetch('https://land.copernicus.eu/global/hsm/all_geo_klc_json')
       .then((data) => {
         if (data.status === 200) {
@@ -465,9 +485,14 @@ class HotspotWidget extends React.Component {
   }
 
   /**
+   *  This method is executed before the render method is executed
+   */
+
+  /**
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    await this.getLayerParameters();
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();

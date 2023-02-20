@@ -1395,11 +1395,14 @@ class MenuWidget extends React.Component {
     let hotspotButton = document.querySelector('#hotspot_button');
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     checkedLayers.forEach((key) => {
+      // if key includes all_present_lc_a_pol or all_lcc_a_pol and if the activeWidget is not the hotspot widget, click on the hotspot button, else close the active widget and set the hotspot container to display to none
       if (
         key.includes('all_present_lc_a_pol') ||
         key.includes('all_lcc_a_pol')
       ) {
-        hotspotButton.click();
+        if (!this.props.mapViewer.activeWidget) {
+          hotspotButton.click();
+        }
       }
     });
   }
