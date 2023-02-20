@@ -308,7 +308,8 @@ class MenuWidget extends React.Component {
     this.layers = this.props.layers;
     this.activeLayersJSON = {};
     this.layerGroups = {};
-
+    let sliderIsActive = false;
+    
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       if (isStationary) {
@@ -453,6 +454,7 @@ class MenuWidget extends React.Component {
       }
   }
 
+
   /**
    * This method is executed after the render method is executed
    */
@@ -480,6 +482,21 @@ class MenuWidget extends React.Component {
     this.loadLayers();
     this.loadOpacity();
     this.loadVisibility();
+  }
+
+    //if component properties have changed during an update, and if sliderisactive is true and user is logged in, show the time slider
+    componentdidUpdate(prevProps) {
+      if (this.props !== prevProps) {
+        if (this.props.sliderIsActive && this.props.user) {
+          this.showTimeSlider();
+        }
+      }
+    }
+
+  setActiveSlider(val) {
+    if (!sessionStorage.key('sliderIsActive'))
+        sessionStorage.setItem('sliderIsActive', 'false');
+      sessionStorage.setItem('sliderIsActive', val);
   }
 
   /**
@@ -1851,7 +1868,12 @@ class MenuWidget extends React.Component {
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
+
   showTimeSlider(elem, fromDownload) {
+    if (sessionStorage.key('sliderIsActive') && sessionStorage.getItem('sliderIsActive') === 'false')
+      this.setActiveSlider(true);
+    else
+      this.setActiveSlider(false);
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
