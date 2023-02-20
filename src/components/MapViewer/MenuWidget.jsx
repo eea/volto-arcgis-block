@@ -1539,7 +1539,6 @@ class MenuWidget extends React.Component {
    */
 
   toggleHotspotWidget() {
-    let hotspotContainer = document.querySelector('.hotspot-container');
     let hotspotButton = document.querySelector('#hotspot_button');
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     checkedLayers.forEach((key) => {
@@ -1552,7 +1551,6 @@ class MenuWidget extends React.Component {
           hotspotButton.click();
         }
       }
-    
     });
   }
   /**
