@@ -55,21 +55,10 @@ export const AddCartItem = ({
         area = '';
       }
     }
-    if (download) {
-      if (area) {
-        let data = checkCartData(cartData, area);
-        addCartItem(data).then(() => {
-          showMessageTimer('Added to cart', 'success', 'Success');
-        });
-      } else {
-        showMessageTimer('Please select an area', 'warning', 'Warning');
-      }
-    } else {
-      let data = checkCartData(cartData, area, dataset);
-      addCartItem(data).then(() => {
-        showMessageTimer('Added to cart', 'success', 'Success');
-      });
-    }
+    let data = checkCartData(cartData, area, dataset);
+    addCartItem(data).then(() => {
+      showMessageTimer('Added to cart', 'success', 'Success');
+    });
   };
 
   const checkCartData = (cartData, area, dataset) => {
@@ -135,11 +124,6 @@ export const AddCartItem = ({
     return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
-  // let timeData;
-  // if (dataset?.IsTimeSeries) {
-  //   timeData = checkTimeData(dataset);
-  // }
-
   if (!dataset) {
     dataset = cartData[0].Products[0].Datasets[0];
   }
@@ -166,9 +150,7 @@ export const AddCartItem = ({
                     )
                     .click(e);
                 }
-              } else if (!areaData) {
-                checkArea(e);
-              } else {
+              } else if (areaData) {
                 checkArea(e);
               }
             }}
@@ -1455,7 +1437,7 @@ class MenuWidget extends React.Component {
   toggleHotspotWidget() {
     let hotspotButton = document.querySelector('#hotspot_button');
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if(this.props.download){
+    if (this.props.download) {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
     checkedLayers.forEach((key) => {

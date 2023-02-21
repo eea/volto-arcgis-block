@@ -28,6 +28,10 @@ class TimesliderWidget extends React.Component {
       dateStart: this.props.time.start ? new Date(this.props.time.start) : null,
       dateEnd: this.props.time.end ? new Date(this.props.time.end) : null,
       periodicity: null,
+      inputStart: this.props.time.start
+        ? new Date(this.props.time.start)
+        : null,
+      inputEnd: this.props.time.end ? new Date(this.props.time.end) : null,
     };
     this.map = this.props.map;
     this.layer = this.props.layer;
@@ -488,30 +492,40 @@ class TimesliderWidget extends React.Component {
     });
   }
 
+  handleInputChange(e) {
+    if (e.currentTarget.id === 'date_start') {
+      this.setState({ inputStart: e.currentTarget.value });
+    } else if (e.currentTarget.id === 'date_end') {
+      this.setState({ inputEnd: e.currentTarget.value });
+    }
+  }
+
+  formatDate(date) {
+    return new Date(date).toISOString().split('T')[0].toString();
+  }
+
   /**
    * This method renders the component
    * @returns jsx
    */
   render() {
+    let inputStart;
+    let inputEnd;
     let timeStart;
     let timeEnd;
     if (this.state.showCalendar) {
-      timeStart = new Date(
-        this.state.dateStart
-          ? this.state.dateStart
+      inputStart = this.formatDate(
+        this.state.inputStart
+          ? this.state.inputStart
           : this.TimesliderWidget.fullTimeExtent.start,
-      )
-        .toISOString()
-        .split('T')[0]
-        .toString();
-      timeEnd = new Date(
-        this.state.dateEnd
-          ? this.state.dateEnd
+      );
+      inputEnd = this.formatDate(
+        this.state.inputEnd
+          ? this.state.inputEnd
           : this.TimesliderWidget.fullTimeExtent.end,
-      )
-        .toISOString()
-        .split('T')[0]
-        .toString();
+      );
+      timeStart = this.formatDate(this.TimesliderWidget.fullTimeExtent.start);
+      timeEnd = this.formatDate(this.TimesliderWidget.fullTimeExtent.end);
     }
     return (
       <>
@@ -587,9 +601,14 @@ class TimesliderWidget extends React.Component {
                   <input
                     type="date"
                     id="date_start"
-                    defaultValue={timeStart}
                     min={timeStart}
-                    max={timeEnd}
+                    max={
+                      Date.parse(inputEnd) < Date.parse(timeEnd)
+                        ? inputEnd
+                        : timeEnd
+                    }
+                    value={inputStart}
+                    onChange={(e) => this.handleInputChange(e)}
                   />
                 </div>
                 <div className="timeslider-calendar-row">
@@ -597,9 +616,14 @@ class TimesliderWidget extends React.Component {
                   <input
                     type="date"
                     id="date_end"
-                    defaultValue={timeEnd}
-                    min={timeStart}
+                    min={
+                      Date.parse(inputStart) > Date.parse(timeStart)
+                        ? inputStart
+                        : timeStart
+                    }
                     max={timeEnd}
+                    value={inputEnd}
+                    onChange={(e) => this.handleInputChange(e)}
                   />
                 </div>
                 <button
