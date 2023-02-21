@@ -240,7 +240,8 @@ class TimesliderWidget extends React.Component {
           }
           this.setState({
             lockDatePanel: false,
-            showCalendar: this.props.fromDownload ? true : false,
+            showCalendar:
+              this.props.fromDownload || this.props.download ? true : false,
           });
         }
       },
@@ -529,7 +530,7 @@ class TimesliderWidget extends React.Component {
           <div className="timeslider-panel"></div>
           {this.state.showDatePanel && (
             <div className="timeslider-calendar-button">
-              {this.props.logged ? (
+              {this.props.logged || this.props.download ? (
                 <button
                   onClick={() => {
                     this.showCalendar();

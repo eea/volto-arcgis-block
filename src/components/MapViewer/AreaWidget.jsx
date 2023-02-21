@@ -25,7 +25,7 @@ class AreaWidget extends React.Component {
     //not be showing the basemap panel
     this.state = {
       showMapMenu: false,
-      showInfoPopup: false,
+      showInfoPopup: this.props.download ? true : false,
       infoPopupType: 'area',
     };
     this.menuClass =
@@ -181,6 +181,10 @@ class AreaWidget extends React.Component {
           showInfoPopup: true,
           infoPopupType: 'download',
         });
+        if (this.props.download) {
+          document.querySelector('.drawRectanglePopup-block').style.display =
+            'none';
+        }
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         let p = this.props.view.toMap(e);
@@ -218,6 +222,10 @@ class AreaWidget extends React.Component {
     this.setState({
       infoPopupType: 'area',
     });
+    if (this.props.download) {
+      document.querySelector('.drawRectanglePopup-block').style.display =
+        'block';
+    }
   }
   /**
    * This method is executed after the rener method is executed
@@ -264,6 +272,11 @@ class AreaWidget extends React.Component {
                   showInfoPopup: true,
                   infoPopupType: 'download',
                 });
+                if (this.props.download) {
+                  document.querySelector(
+                    '.drawRectanglePopup-block',
+                  ).style.display = 'none';
+                }
               }
             }
           }
@@ -274,6 +287,16 @@ class AreaWidget extends React.Component {
     this.props.download
       ? this.container !== null && this.props.view.ui.add(this.container)
       : this.props.view.ui.add(this.container.current, 'top-right');
+
+    var z = document.createElement('div'); // is a node
+    z.className = 'drawRectanglePopup-block';
+    z.innerHTML =
+      '<div class="drawRectanglePopup-content">' +
+      '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
+      '<div class="drawRectanglePopup-text">Select an area of interest to download a dataset</div>' +
+      '</div>';
+
+    this.props.download && this.props.view.ui.add(z, 'top-right');
   }
 
   /**
@@ -415,7 +438,7 @@ class AreaWidget extends React.Component {
               </div>
             </div>
           </div>
-          {this.state.showInfoPopup && (
+          {!this.props.download && this.state.showInfoPopup && (
             <div className="map-container">
               <div className="drawRectanglePopup-block">
                 <div className="drawRectanglePopup-content">

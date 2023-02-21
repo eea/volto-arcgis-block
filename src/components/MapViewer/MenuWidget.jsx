@@ -108,6 +108,7 @@ export const AddCartItem = ({
     mapViewer.view.popup.close();
     mapViewer.view.graphics.removeAll();
     props.updateArea('');
+    document.querySelector('.drawRectanglePopup-block').style.display = 'block';
   };
 
   const showMessageTimer = (msg, type, title) => {
@@ -134,9 +135,13 @@ export const AddCartItem = ({
     return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
-  let timeData;
-  if (dataset.IsTimeSeries) {
-    timeData = checkTimeData(dataset);
+  // let timeData;
+  // if (dataset?.IsTimeSeries) {
+  //   timeData = checkTimeData(dataset);
+  // }
+
+  if (!dataset) {
+    dataset = cartData[0].Products[0].Datasets[0];
   }
 
   return (
@@ -146,7 +151,27 @@ export const AddCartItem = ({
           <button
             id="map_download_add"
             className="ccl-button ccl-button-green"
-            onClick={() => checkArea()}
+            onClick={(e) => {
+              if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
+                document.getElementById('active_label').click();
+                if (!document.querySelector('.timeslider-container')) {
+                  let layerId = document
+                    .querySelector(
+                      '[datasetid="' + dataset.DatasetId + '"] input',
+                    )
+                    .getAttribute('defcheck');
+                  document
+                    .querySelector(
+                      "[layer-id='" + layerId + "'] .active-layer-time",
+                    )
+                    .click(e);
+                }
+              } else if (!areaData) {
+                checkArea(e);
+              } else {
+                checkArea(e);
+              }
+            }}
           >
             Add to cart
           </button>
@@ -167,7 +192,7 @@ export const AddCartItem = ({
                 (isLoggedIn ? ' logged' : '')
               }
               onClick={(e) => {
-                if (dataset.IsTimeSeries && !timeData) {
+                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
                     let layerId = document
@@ -195,7 +220,7 @@ export const AddCartItem = ({
                 }
               }}
               onKeyDown={(e) => {
-                if (dataset.IsTimeSeries && !timeData) {
+                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
                     let layerId = document
@@ -436,7 +461,13 @@ class MenuWidget extends React.Component {
       if (this.props.download && this.layers) {
         let layerid = Object.keys(this.layers)[0];
 
-        if (layerid && this.layers[layerid].isTimeSeries) {
+        if (
+          layerid &&
+          this.layers[layerid].isTimeSeries &&
+          !this.container.current
+            .querySelector('.esri-widget')
+            .classList.contains('esri-icon-drag-horizontal')
+        ) {
           // select active on map tab
           let event = new MouseEvent('click', {
             view: window,
@@ -448,7 +479,7 @@ class MenuWidget extends React.Component {
 
           //open time slider
           let layerElem = document.getElementById(layerid);
-          this.showTimeSlider(layerElem);
+          this.showTimeSlider(layerElem, true);
         }
       }
   }
@@ -487,7 +518,7 @@ class MenuWidget extends React.Component {
    */
 
   componentDidUpdate(prevProps) {
-    if (this.props !== prevProps) {
+    if (!this.props.download && this.props !== prevProps) {
       let isLoggedIn = document
         .querySelector('[defcheck=' + this.props.elem.id + ']')
         .parentElement.querySelector('.map-menu-icon-login')
@@ -1400,6 +1431,7 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
+    //!this.props.download && this.toggleHotspotWidget();
     this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
@@ -1423,6 +1455,9 @@ class MenuWidget extends React.Component {
   toggleHotspotWidget() {
     let hotspotButton = document.querySelector('#hotspot_button');
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    if(this.props.download){
+      checkedLayers = Object.keys(this.activeLayersJSON);
+    }
     checkedLayers.forEach((key) => {
       // if key includes all_present_lc_a_pol or all_lcc_a_pol and if the activeWidget is not the hotspot widget, click on the hotspot button, else close the active widget and set the hotspot container to display to none
       if (
