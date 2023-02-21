@@ -1224,6 +1224,16 @@ input[type='range']::-ms-track {
   font-size: 0.875rem;
 }
 
+.esri-component.drawRectanglePopup-block {
+  margin: 0 !important;
+}
+
+.esri-component .drawRectanglePopup-content {
+  top: 0;
+  right: -450px;
+  transform: translate(-50vw, 0);
+}
+
 /* Hotspot*/
 .hotspot-container {
   display: none;
