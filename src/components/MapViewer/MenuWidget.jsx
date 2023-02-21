@@ -484,9 +484,20 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
   }
 
+  /**
+   * Active on map is tab and time slider widget is opened by default if the user selected time slider and is coming back from the EU pass login
+   */
+  
     componentDidUpdate(prevProps) {
       if (this.props !== prevProps) {
         if (this.props.sliderIsActive && isLoggedIn) {
+          let event = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: false,
+          });
+          let el = document.getElementById('active_label');
+          el.dispatchEvent(event);
           this.showTimeSlider();
         }
       }
