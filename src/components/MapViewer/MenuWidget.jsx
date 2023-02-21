@@ -484,10 +484,9 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
   }
 
-    //if component properties have changed during an update, and if sliderisactive is true and user is logged in, show the time slider
-    componentdidUpdate(prevProps) {
+    componentDidUpdate(prevProps) {
       if (this.props !== prevProps) {
-        if (this.props.sliderIsActive && this.props.user) {
+        if (this.props.sliderIsActive && isLoggedIn) {
           this.showTimeSlider();
         }
       }
