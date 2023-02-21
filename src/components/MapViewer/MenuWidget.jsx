@@ -308,8 +308,7 @@ class MenuWidget extends React.Component {
     this.layers = this.props.layers;
     this.activeLayersJSON = {};
     this.layerGroups = {};
-    let sliderIsActive = false;
-    
+
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       if (isStationary) {
@@ -454,7 +453,6 @@ class MenuWidget extends React.Component {
       }
   }
 
-
   /**
    * This method is executed after the render method is executed
    */
@@ -487,26 +485,30 @@ class MenuWidget extends React.Component {
   /**
    * Active on map is tab and time slider widget is opened by default if the user selected time slider and is coming back from the EU pass login
    */
-  
-    componentDidUpdate(prevProps) {
-      if (this.props !== prevProps) {
-        if (this.props.sliderIsActive && isLoggedIn) {
-          let event = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: false,
-          });
-          let el = document.getElementById('active_label');
-          el.dispatchEvent(event);
-          this.showTimeSlider();
-        }
+
+  componentDidUpdate(prevProps) {
+    if (this.props !== prevProps) {
+      let isLoggedIn = document
+        .querySelector('[defcheck=' + this.props.elem.id + ']')
+        .parentElement.querySelector('.map-menu-icon-login')
+        .classList.contains('logged');
+      if (this.props.sliderIsActive && isLoggedIn) {
+        let event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: false,
+        });
+        let el = document.getElementById('active_label');
+        el.dispatchEvent(event);
+        this.showTimeSlider();
       }
     }
+  }
 
   setActiveSlider(val) {
     if (!sessionStorage.key('sliderIsActive'))
-        sessionStorage.setItem('sliderIsActive', 'false');
-      sessionStorage.setItem('sliderIsActive', val);
+      sessionStorage.setItem('sliderIsActive', 'false');
+    sessionStorage.setItem('sliderIsActive', val);
   }
 
   /**
@@ -1880,10 +1882,12 @@ class MenuWidget extends React.Component {
    */
 
   showTimeSlider(elem, fromDownload) {
-    if (sessionStorage.key('sliderIsActive') && sessionStorage.getItem('sliderIsActive') === 'false')
+    if (
+      sessionStorage.key('sliderIsActive') &&
+      sessionStorage.getItem('sliderIsActive') === 'false'
+    )
       this.setActiveSlider(true);
-    else
-      this.setActiveSlider(false);
+    else this.setActiveSlider(false);
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
