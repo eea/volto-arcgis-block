@@ -2,7 +2,7 @@ const config = {
   Map: {
     div: 'mapDiv',
     center: [5, 52],
-    zoom: 4,
+    zoom: 3,
     minZoom: 3,
     maxZoom: 20,
     activeLayers: [],
