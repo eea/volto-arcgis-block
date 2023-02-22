@@ -495,33 +495,10 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
   }
 
-  /**
-   * Active on map is tab and time slider widget is opened by default if the user selected time slider and is coming back from the EU pass login
-   */
-
-  componentDidUpdate(prevProps) {
-    if (!this.props.download && this.props !== prevProps) {
-      let isLoggedIn = document
-        .querySelector('[defcheck=' + this.props.elem.id + ']')
-        .parentElement.querySelector('.map-menu-icon-login')
-        .classList.contains('logged');
-      if (this.props.sliderIsActive && isLoggedIn) {
-        let event = new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: false,
-        });
-        let el = document.getElementById('active_label');
-        el.dispatchEvent(event);
-        this.showTimeSlider();
-      }
-    }
-  }
-
-  setActiveSlider(val) {
-    if (!sessionStorage.key('sliderIsActive'))
-      sessionStorage.setItem('sliderIsActive', 'false');
-    sessionStorage.setItem('sliderIsActive', val);
+  setSliderTag(val) {
+    if (!sessionStorage.key('timeSliderTag'))
+      sessionStorage.setItem('timeSliderTag', 'false');
+    sessionStorage.setItem('timeSliderTag', val);
   }
 
   /**
@@ -1900,11 +1877,11 @@ class MenuWidget extends React.Component {
 
   showTimeSlider(elem, fromDownload) {
     if (
-      sessionStorage.key('sliderIsActive') &&
-      sessionStorage.getItem('sliderIsActive') === 'false'
+      sessionStorage.key('timeSliderTag') &&
+      sessionStorage.getItem('timeSliderTag') === 'false'
     )
-      this.setActiveSlider(true);
-    else this.setActiveSlider(false);
+      this.setSliderTag(true);
+    else this.setSliderTag(false);
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
