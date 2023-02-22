@@ -476,15 +476,19 @@ class MenuWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
       document.querySelector('.area-panel input:checked').click();
-      document.querySelector('.map-product-checkbox input').click();
-      let dropdown = document.querySelector(
-        '.map-menu-dropdown .ccl-expandable__button',
-      );
-      dropdown.setAttribute('aria-expanded', 'true');
-      dropdown = document.querySelector(
-        '.map-menu-product-dropdown .ccl-expandable__button',
-      );
-      dropdown.setAttribute('aria-expanded', 'true');
+      if (document.querySelector('.map-product-checkbox input')) {
+        document.querySelector('.map-product-checkbox input').click();
+        let dropdown = document.querySelector(
+          '.map-menu-dropdown .ccl-expandable__button',
+        );
+        if (dropdown) {
+          dropdown.setAttribute('aria-expanded', 'true');
+          dropdown = document.querySelector(
+            '.map-menu-product-dropdown .ccl-expandable__button',
+          );
+          dropdown.setAttribute('aria-expanded', 'true');
+        }
+      }
     }
     //to watch the component
     this.setState({});
