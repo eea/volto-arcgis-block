@@ -1,7 +1,7 @@
 const config = {
   Map: {
     div: 'mapDiv',
-    center: [5, 52],
+    center: [-15, 35],
     zoom: 3,
     minZoom: 3,
     maxZoom: 20,
