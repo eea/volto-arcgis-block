@@ -1195,8 +1195,6 @@ input[type='range']::-ms-track {
 /*Draw rectangle popup*/
 
 .drawRectanglePopup-content {
-  /*margin-right: calc(100vw - 250px);
-  margin-top: -8rem;*/
   position: absolute;
   display: flex;
   width: 19rem;
@@ -1204,7 +1202,6 @@ input[type='range']::-ms-track {
   justify-content: space-between;
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
   background-color: white;
-  transform: translate(-34vw, -214%);
 }
 
 .drawRectanglePopup-content .drawRectanglePopup-icon {
@@ -1215,20 +1212,20 @@ input[type='range']::-ms-track {
   text-decoration: none;
 }
 
-/*.drawRectanglePopup-icon .svg{
-  margin-top: 0.6rem;
-}*/
-
 .drawRectanglePopup-text {
   font-family: 'Lato', sans-serif;
   font-size: 0.875rem;
+}
+
+.area-container .drawRectanglePopup-content {
+  transform: translate(-34vw, -214%);
 }
 
 .esri-component.drawRectanglePopup-block {
   margin: 0 !important;
 }
 
-.esri-component .drawRectanglePopup-content {
+.esri-component.drawRectanglePopup-block .drawRectanglePopup-content {
   top: 0;
   right: -450px;
   transform: translate(-50vw, 0);
