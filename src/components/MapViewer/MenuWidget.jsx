@@ -394,76 +394,136 @@ class MenuWidget extends React.Component {
     this.setState({ noServiceModal: true });
   };
 
+  getCookie(name) {
+    var dc = document.cookie;
+    var prefix = name + '=';
+    var begin = dc.indexOf('; ' + prefix);
+    if (begin === -1) {
+      begin = dc.indexOf(prefix);
+      if (begin !== 0) return null;
+    } else {
+      begin += 2;
+      var end = document.cookie.indexOf(';', begin);
+      if (end === -1) {
+        end = dc.length;
+      }
+    }
+    return decodeURI(dc.substring(begin + prefix.length, end));
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
    * and close actions of the component
    */
   openMenu() {
-    if (this.state.showMapMenu) {
-      this.container.current.querySelector('#tabcontainer').style.display =
-        'none';
-      this.container.current.querySelector('#paneles').style.display = 'none';
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
-      if (document.contains(document.querySelector('.timeslider-container'))) {
-        document.querySelector('.timeslider-container').style.display = 'none';
-      }
-      if (document.querySelector('.opacity-panel').style.display === 'block') {
-        this.closeOpacity();
-      }
-
-      // By invoking the setState, we notify the state we want to reach
-      // and ensure that the component is rendered again
-      this.setState({ showMapMenu: false });
-    } else {
-      this.container.current.querySelector('#tabcontainer').style.display =
-        'block';
-      this.container.current.querySelector('#paneles').style.display = 'block';
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-drag-horizontal', 'esri-icon-close');
-      if (document.contains(document.querySelector('.timeslider-container')))
-        document.querySelector('.timeslider-container').style.display = 'block';
-
-      // By invoking the setState, we notify the state we want to reach
-      // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });
-    }
-    if (this.loadFirst) {
-      this.checkUrl();
-      this.loadFirst = false;
-      this.zoomTooltips();
-    }
-
-    // CLMS-1389
-    // "Active on map" section and the time slider opened by default if download and timeseries == true
-    if (this.layers)
-      if (this.props.download && this.layers) {
-        let layerid = Object.keys(this.layers)[0];
-
+    setTimeout(() => {
+      if (this.state.showMapMenu) {
+        this.container.current.querySelector('#tabcontainer').style.display =
+          'none';
+        this.container.current.querySelector('#paneles').style.display = 'none';
+        this.container.current
+          .querySelector('.esri-widget--button')
+          .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
         if (
-          layerid &&
-          this.layers[layerid].isTimeSeries &&
-          !this.container.current
-            .querySelector('.esri-widget')
-            .classList.contains('esri-icon-drag-horizontal')
+          document.contains(document.querySelector('.timeslider-container'))
         ) {
-          // select active on map tab
-          let event = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: false,
-          });
-          let el = document.getElementById('active_label');
-          el.dispatchEvent(event);
+          document.querySelector('.timeslider-container').style.display =
+            'none';
+        }
+        if (
+          document.querySelector('.opacity-panel').style.display === 'block'
+        ) {
+          this.closeOpacity();
+        }
 
-          //open time slider
-          let layerElem = document.getElementById(layerid);
-          this.showTimeSlider(layerElem, true);
+        // By invoking the setState, we notify the state we want to reach
+        // and ensure that the component is rendered again
+        this.setState({ showMapMenu: false });
+      } else {
+        this.container.current.querySelector('#tabcontainer').style.display =
+          'block';
+        this.container.current.querySelector('#paneles').style.display =
+          'block';
+        this.container.current
+          .querySelector('.esri-widget--button')
+          .classList.replace('esri-icon-drag-horizontal', 'esri-icon-close');
+        if (document.contains(document.querySelector('.timeslider-container')))
+          document.querySelector('.timeslider-container').style.display =
+            'block';
+
+        // By invoking the setState, we notify the state we want to reach
+        // and ensure that the component is rendered again
+        this.setState({ showMapMenu: true });
+      }
+      if (this.loadFirst) {
+        this.checkUrl();
+        this.loadFirst = false;
+        this.zoomTooltips();
+      }
+
+      let authToken = this.getAuthToken();
+      let timeSliderTag = this.getTimeSliderTag();
+      let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+
+      // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
+
+      if (checkedLayers) {
+        if (authToken && timeSliderTag) {
+          for (let i = 0; i < checkedLayers.length; i++) {
+            let layerid = checkedLayers[i];
+            if (
+              layerid &&
+              this.layers[layerid].isTimeSeries &&
+              !this.container.current
+                .querySelector('.esri-widget')
+                .classList.contains('esri-icon-drag-horizontal')
+            ) {
+              // select active on map tab
+              let event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false,
+              });
+              let el = document.getElementById('active_label');
+              el.dispatchEvent(event);
+
+              //open time slider
+              let layerElem = document.getElementById(layerid);
+              this.showTimeSlider(layerElem, true);
+              break;
+            }
+          }
         }
       }
+      // CLMS-1389
+      // "Active on map" section and the time slider opened by default if download and timeseries == true
+
+      if (this.layers)
+        if (this.props.download && this.layers) {
+          let layerid = Object.keys(this.layers)[0];
+          if (
+            layerid &&
+            this.layers[layerid].isTimeSeries &&
+            !this.container.current
+              .querySelector('.esri-widget')
+              .classList.contains('esri-icon-drag-horizontal')
+          ) {
+            // select active on map tab
+            let event = new MouseEvent('click', {
+              view: window,
+              bubbles: true,
+              cancelable: false,
+            });
+            let el = document.getElementById('active_label');
+            el.dispatchEvent(event);
+
+            //open time slider
+            let layerElem = document.getElementById(layerid);
+            this.showTimeSlider(layerElem, true);
+          }
+        }
+    }, 1000);
   }
 
   /**
@@ -501,8 +561,26 @@ class MenuWidget extends React.Component {
 
   setSliderTag(val) {
     if (!sessionStorage.key('timeSliderTag'))
-      sessionStorage.setItem('timeSliderTag', 'false');
-    sessionStorage.setItem('timeSliderTag', val);
+      sessionStorage.setItem('timeSliderTag', 'true');
+    else sessionStorage.setItem('timeSliderTag', val);
+  }
+
+  getAuthToken() {
+    let tokenResult = null;
+    if (this.getCookie('auth_token')) {
+      tokenResult = true;
+    } else {
+      tokenResult = false;
+    }
+    return tokenResult;
+  }
+
+  getTimeSliderTag() {
+    let tagResult = true;
+    if (!sessionStorage.key('timeSliderTag')) {
+      tagResult = false;
+    }
+    return tagResult;
   }
 
   /**
@@ -1882,10 +1960,10 @@ class MenuWidget extends React.Component {
   showTimeSlider(elem, fromDownload) {
     if (
       sessionStorage.key('timeSliderTag') &&
-      sessionStorage.getItem('timeSliderTag') === 'false'
+      sessionStorage.getItem('timeSliderTag') === 'true'
     )
-      this.setSliderTag(true);
-    else this.setSliderTag(false);
+      this.setSliderTag(false);
+    else this.setSliderTag(true);
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
