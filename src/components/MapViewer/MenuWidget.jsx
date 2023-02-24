@@ -519,7 +519,7 @@ class MenuWidget extends React.Component {
             this.showTimeSlider(layerElem, true);
           }
         }
-    }, 1000);
+    }, 100);
   }
 
   /**
@@ -2480,7 +2480,14 @@ class MenuWidget extends React.Component {
       hotspotLayers.length === 0 &&
       document.querySelector('.hotspot-container')
     ) {
-      this.props.mapViewer.closeActiveWidget();
+      if (
+        this.props.mapViewer.activeWidget &&
+        this.props.mapViewer.activeWidget.container.current.classList.contains(
+          'hotspot-container',
+        )
+      ) {
+        this.props.mapViewer.closeActiveWidget();
+      }
       document.querySelector('.hotspot-container').style.display = 'none';
     } else if (this.props.view && hotspotLayers.length > 0) {
       document.querySelector('.hotspot-container').style.display = 'flex';
