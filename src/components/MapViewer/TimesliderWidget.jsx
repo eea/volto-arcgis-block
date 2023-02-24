@@ -297,6 +297,7 @@ class TimesliderWidget extends React.Component {
 
           this.getCapabilities(this.layer.url, serviceType).then((xml) => {
             let times = {};
+            let periodicity;
             if (this.layer.type === 'wms') {
               times = this.parseTimeWMS(xml);
             } else if (this.layer.type === 'wmts') {
@@ -326,6 +327,8 @@ class TimesliderWidget extends React.Component {
                     unit: 'minutes',
                   },
                 };
+
+                periodicity = times[this.layerName].period;
               } else if (times[this.layerName].hasOwnProperty('array')) {
                 // Dates array
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
@@ -350,19 +353,20 @@ class TimesliderWidget extends React.Component {
                     timeDict[time[i]] = times[this.layerName].array[i];
                   }
                 }
+
+                periodicity = Math.floor(
+                  (Date.parse(times[this.layerName].array[1]) -
+                    Date.parse(times[this.layerName].array[0])) /
+                    86400000,
+                );
+                if (periodicity === 0) {
+                  periodicity =
+                    (new Date(times[this.layerName].array[1]).getHours() -
+                      new Date(times[this.layerName].array[0]).getHours()) /
+                    24;
+                }
               }
 
-              let periodicity = Math.floor(
-                (Date.parse(times[this.layerName].array[1]) -
-                  Date.parse(times[this.layerName].array[0])) /
-                  86400000,
-              );
-              if (periodicity === 0) {
-                periodicity =
-                  (new Date(times[this.layerName].array[1]).getHours() -
-                    new Date(times[this.layerName].array[0]).getHours()) /
-                  24;
-              }
               this.setState({ periodicity: periodicity });
 
               this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
@@ -415,17 +419,17 @@ class TimesliderWidget extends React.Component {
 
   getPeriodicity() {
     let period = this.state.periodicity;
-    if (period === 1 / 24) {
+    if (period === 1 / 24 || period === 'PT1H') {
       return 'hourly';
-    } else if (period === 1) {
+    } else if (period === 1 || period === 'P1D') {
       return 'daily';
-    } else if (period === 7) {
+    } else if (period === 7 || period === 'P7D' || period === 'P1W') {
       return 'weekly';
-    } else if (period === 10) {
+    } else if (period === 10 || period === 'P10D') {
       return '10-daily';
-    } else if (period >= 28 && period <= 31) {
+    } else if ((period >= 28 && period <= 31) || period === 'P1M') {
       return 'monthly';
-    } else if (period === 365 || period === 366) {
+    } else if (period === 365 || period === 366 || period === 'P1Y') {
       return 'yearly';
     } else {
       return 'not regular';
