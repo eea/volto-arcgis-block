@@ -1063,6 +1063,20 @@ class MenuWidget extends React.Component {
                   )}
                 </label>
                 <div className="map-menu-icons">
+                  {!this.props.download && dataset.IsTimeSeries && (
+                    <Popup
+                      trigger={
+                        <span
+                          className="map-menu-icon"
+                          onClick={() => this.checkTimeLayer(dataset)}
+                        >
+                          <FontAwesomeIcon icon={['far', 'clock']} />
+                        </span>
+                      }
+                      content={'Show time slider'}
+                      {...popupSettings}
+                    />
+                  )}
                   {!this.props.download && (
                     <a
                       href={dataset.DatasetURL}
@@ -2477,6 +2491,25 @@ class MenuWidget extends React.Component {
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
+    }
+  }
+
+  checkTimeLayer(dataset) {
+    let id = dataset.DatasetId;
+    let checkbox = document
+      .querySelector('[datasetid="' + id + '"]')
+      .querySelector('.map-dataset-checkbox input');
+    if (!checkbox.checked) {
+      checkbox.click();
+    }
+    document.getElementById('active_label').click();
+    if (!document.querySelector('.timeslider-container')) {
+      let layerId = document
+        .querySelector('[datasetid="' + id + '"] input')
+        .getAttribute('defcheck');
+      setTimeout(() => {
+        this.showTimeSlider(document.getElementById(layerId), false);
+      }, 100);
     }
   }
 
