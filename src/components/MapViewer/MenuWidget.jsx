@@ -519,7 +519,7 @@ class MenuWidget extends React.Component {
             this.showTimeSlider(layerElem, true);
           }
         }
-    }, 100);
+    }, 1000);
   }
 
   /**
@@ -2054,6 +2054,9 @@ class MenuWidget extends React.Component {
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
             );
+          if (document.querySelector('.drawRectanglePopup-block'))
+            document.querySelector('.drawRectanglePopup-block').style.display =
+              'block';
         } else {
           if (this.visibleLayers[layerId][1] === 'eye-slash') {
             this.layers[layerId].visible = true;
@@ -2524,6 +2527,7 @@ class MenuWidget extends React.Component {
         <TimesliderWidget
           view={this.props.view}
           map={this.map}
+          mapViewer={this.props.mapViewer}
           layer={layer}
           download={this.props.download}
           time={time}

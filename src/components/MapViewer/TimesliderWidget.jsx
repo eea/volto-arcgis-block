@@ -24,7 +24,8 @@ class TimesliderWidget extends React.Component {
       timeSelectedValuesC: [], //To compare time slider stored values with new selected values
       showDatePanel: false,
       lockDatePanel: true,
-      showCalendar: false,
+      showCalendar:
+        this.props.fromDownload || this.props.download ? true : false,
       dateStart: this.props.time.start ? new Date(this.props.time.start) : null,
       dateEnd: this.props.time.end ? new Date(this.props.time.end) : null,
       periodicity: null,
@@ -43,6 +44,13 @@ class TimesliderWidget extends React.Component {
       this.layerName = this.layer.activeLayer.id; //WMTS
     }
     this.drag = {};
+    if (
+      this.props.fromDownload &&
+      document.querySelector('.drawRectanglePopup-block')
+    ) {
+      document.querySelector('.drawRectanglePopup-block').style.display =
+        'none';
+    }
   }
 
   loader() {
@@ -244,8 +252,8 @@ class TimesliderWidget extends React.Component {
           }
           this.setState({
             lockDatePanel: false,
-            showCalendar:
-              this.props.fromDownload || this.props.download ? true : false,
+            // showCalendar:
+            //   this.props.fromDownload || this.props.download ? true : false,
           });
         }
       },
@@ -494,6 +502,18 @@ class TimesliderWidget extends React.Component {
       dateEnd: end,
       showCalendar: false,
     });
+    if (this.props.fromDownload) {
+      this.props.time.elem.querySelector('.active-layer-time').click();
+      document.getElementById('products_label').click();
+      if (
+        this.props.mapViewer.activeWidget &&
+        !this.props.mapViewer.activeWidget.container.current.classList.contains(
+          'area-container',
+        )
+      ) {
+        document.getElementById('map_area_button').click();
+      }
+    }
   }
 
   handleInputChange(e) {
@@ -517,7 +537,7 @@ class TimesliderWidget extends React.Component {
     let inputEnd;
     let timeStart;
     let timeEnd;
-    if (this.state.showCalendar) {
+    if (!this.state.lockDatePanel && this.state.showCalendar) {
       inputStart = this.formatDate(
         this.state.inputStart
           ? this.state.inputStart
@@ -577,7 +597,7 @@ class TimesliderWidget extends React.Component {
               )}
             </div>
           )}
-          {this.state.showCalendar && (
+          {!this.state.lockDatePanel && this.state.showCalendar && (
             <div className="timeslider-calendar-container">
               <div className="timeslider-calendar-header">
                 <b>Select temporal interval to download</b>
