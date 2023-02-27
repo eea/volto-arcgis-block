@@ -1472,7 +1472,6 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
-    //!this.props.download && this.toggleHotspotWidget();
     this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
@@ -1499,17 +1498,24 @@ class MenuWidget extends React.Component {
     if (this.props.download) {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
-    checkedLayers.forEach((key) => {
-      // if key includes all_present_lc_a_pol or all_lcc_a_pol and if the activeWidget is not the hotspot widget, click on the hotspot button, else close the active widget and set the hotspot container to display to none
-      if (
-        key.includes('all_present_lc_a_pol') ||
-        key.includes('all_lcc_a_pol')
-      ) {
-        if (!this.props.mapViewer.activeWidget) {
-          hotspotButton.click();
+    if (
+      checkedLayers.length === 0 &&
+      sessionStorage.getItem('hotspotFilterApplied')
+    ) {
+      sessionStorage.removeItem('hotspotFilterApplied');
+    }
+    if (checkedLayers) {
+      checkedLayers.forEach((key) => {
+        if (
+          key.includes('all_present_lc_a_pol') ||
+          key.includes('all_lcc_a_pol')
+        ) {
+          if (!this.props.mapViewer.activeWidget) {
+            hotspotButton.click();
+          }
         }
-      }
-    });
+      });
+    }
   }
   /**
    * Hide or show a legend image in the legend widget for a WMTS or a TMS layer
@@ -2085,11 +2091,13 @@ class MenuWidget extends React.Component {
         layers.push(layer);
       }
     });
-    if (layers.length === 0 && document.querySelector('.info-container')) {
-      this.props.mapViewer.closeActiveWidget();
-      document.querySelector('.info-container').style.display = 'none';
-    } else if (layers.length > 0) {
-      document.querySelector('.info-container').style.display = 'flex';
+    if (!sessionStorage.getItem('hotspotFilterApplied')) {
+      if (layers.length === 0 && document.querySelector('.info-container')) {
+        this.props.mapViewer.closeActiveWidget();
+        document.querySelector('.info-container').style.display = 'none';
+      } else if (layers.length > 0) {
+        document.querySelector('.info-container').style.display = 'flex';
+      }
     }
     this.renderHotspot();
     /**/
