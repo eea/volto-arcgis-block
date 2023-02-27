@@ -252,8 +252,6 @@ class TimesliderWidget extends React.Component {
           }
           this.setState({
             lockDatePanel: false,
-            // showCalendar:
-            //   this.props.fromDownload || this.props.download ? true : false,
           });
         }
       },
