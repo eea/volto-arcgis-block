@@ -124,6 +124,12 @@ export const AddCartItem = ({
     dataset = cartData[0].Products[0].Datasets[0];
   }
 
+  const setDownloadTag = (val) => {
+    if (!sessionStorage.key('downloadButtonClicked'))
+      sessionStorage.setItem('downloadButtonClicked', 'true');
+    else sessionStorage.setItem('downloadButtonClicked', val);
+  };
+
   return (
     <>
       {download ? (
@@ -245,6 +251,7 @@ export const AddCartItem = ({
             <span
               className={'map-menu-icon map-menu-icon-login'}
               onClick={() => {
+                setDownloadTag(true);
                 document.querySelector('.header-login-link').click();
               }}
               onKeyDown={() => {
@@ -459,12 +466,12 @@ class MenuWidget extends React.Component {
       }
 
       let authToken = this.getAuthToken();
-      let timeSliderTag = this.getTimeSliderTag();
+      let timeSliderTag = sessionStorage.getItem('timeSliderTag');
+      let downloadTag = sessionStorage.getItem('downloadButtonClicked');
       let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
 
-      // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
-
       if (checkedLayers) {
+        // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
         if (authToken && timeSliderTag) {
           for (let i = 0; i < checkedLayers.length; i++) {
             let layerid = checkedLayers[i];
@@ -487,6 +494,30 @@ class MenuWidget extends React.Component {
               //open time slider
               let layerElem = document.getElementById(layerid);
               this.showTimeSlider(layerElem, true);
+              break;
+            }
+          }
+        }
+        // "Area widget" opened by default if user is logged in and downloadTag is true
+        else if (authToken && downloadTag) {
+          for (let i = 0; i < checkedLayers.length; i++) {
+            let layerid = checkedLayers[i];
+            if (
+              layerid &&
+              !this.layers[layerid].isTimeSeries &&
+              !this.container.current
+                .querySelector('.esri-widget')
+                .classList.contains('esri-icon-drag-horizontal')
+            ) {
+              //open area widget
+              let event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false,
+              });
+              document
+                .querySelector('.map-menu-icon-login.logged')
+                .dispatchEvent(event);
               break;
             }
           }
@@ -571,13 +602,21 @@ class MenuWidget extends React.Component {
     return tokenResult;
   }
 
-  getTimeSliderTag() {
-    let tagResult = true;
-    if (!sessionStorage.key('timeSliderTag')) {
-      tagResult = false;
-    }
-    return tagResult;
-  }
+  //  getTimeSliderTag() {
+  //    let tagResult = true;
+  //    if (!sessionStorage.key('timeSliderTag')) {
+  //      tagResult = false;
+  //    }
+  //    return tagResult;
+  //  }
+
+  //  getDownloadTag() {
+  //    let downloadTag = true;
+  //    if (!sessionStorage.key('downloadButtonClicked')) {
+  //      downloadTag = false;
+  //    }
+  //    return downloadTag;
+  //  }
 
   /**
    * Close opacity panel if user clicks outside
