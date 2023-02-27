@@ -132,22 +132,26 @@ export const AddCartItem = ({
             id="map_download_add"
             className="ccl-button ccl-button-green"
             onClick={(e) => {
-              if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
-                document.getElementById('active_label').click();
-                if (!document.querySelector('.timeslider-container')) {
-                  let layerId = document.querySelector(
-                    '[datasetid="' +
-                      dataset.DatasetId +
-                      '"] .map-menu-layer input:checked',
-                  ).id;
-                  document
-                    .querySelector(
-                      "[layer-id='" + layerId + "'] .active-layer-time",
-                    )
-                    .click(e);
+              if (!document.querySelector('.map-menu-layer input:checked')) {
+                document.getElementById('products_label').click();
+              } else {
+                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
+                  document.getElementById('active_label').click();
+                  if (!document.querySelector('.timeslider-container')) {
+                    let layerId = document.querySelector(
+                      '[datasetid="' +
+                        dataset.DatasetId +
+                        '"] .map-menu-layer input:checked',
+                    ).id;
+                    document
+                      .querySelector(
+                        "[layer-id='" + layerId + "'] .active-layer-time",
+                      )
+                      .click(e);
+                  }
+                } else if (areaData) {
+                  checkArea(e);
                 }
-              } else if (areaData) {
-                checkArea(e);
               }
             }}
           >
@@ -464,7 +468,7 @@ class MenuWidget extends React.Component {
 
       // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
 
-      if (checkedLayers) {
+      if (checkedLayers && !this.props.download) {
         if (authToken && timeSliderTag) {
           for (let i = 0; i < checkedLayers.length; i++) {
             let layerid = checkedLayers[i];
@@ -2533,6 +2537,7 @@ class MenuWidget extends React.Component {
           time={time}
           logged={isLoggedIn}
           fromDownload={fromDownload}
+          area={this.props.area}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
