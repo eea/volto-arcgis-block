@@ -602,22 +602,6 @@ class MenuWidget extends React.Component {
     return tokenResult;
   }
 
-  //  getTimeSliderTag() {
-  //    let tagResult = true;
-  //    if (!sessionStorage.key('timeSliderTag')) {
-  //      tagResult = false;
-  //    }
-  //    return tagResult;
-  //  }
-
-  //  getDownloadTag() {
-  //    let downloadTag = true;
-  //    if (!sessionStorage.key('downloadButtonClicked')) {
-  //      downloadTag = false;
-  //    }
-  //    return downloadTag;
-  //  }
-
   /**
    * Close opacity panel if user clicks outside
    */
@@ -1495,6 +1479,8 @@ class MenuWidget extends React.Component {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
+      sessionStorage.removeItem('downloadButtonClicked');
+      sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
       this.deleteFilteredLayer();
       this.layers[elem.id].opacity = 1;
