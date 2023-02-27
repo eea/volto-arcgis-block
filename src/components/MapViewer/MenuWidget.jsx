@@ -78,9 +78,7 @@ export const AddCartItem = ({
       if (hasTimeStart) {
         let datasetInput = document.querySelector(
           '#active_' +
-            datasetElem
-              .querySelector('.map-dataset-checkbox input')
-              .getAttribute('defcheck'),
+            datasetElem.querySelector('.map-menu-layer input:checked').id,
         );
         let time = {
           start: parseInt(datasetInput.getAttribute('time-start')),
@@ -117,9 +115,7 @@ export const AddCartItem = ({
     let datasetElem = document.querySelector('[datasetid="' + id + '"]');
     let datasetActive = document.querySelector(
       '#active_' +
-        datasetElem
-          .querySelector('.map-dataset-checkbox input')
-          .getAttribute('defcheck'),
+        datasetElem.querySelector('.map-menu-layer input:checked').id,
     );
     return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
@@ -139,11 +135,11 @@ export const AddCartItem = ({
               if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                 document.getElementById('active_label').click();
                 if (!document.querySelector('.timeslider-container')) {
-                  let layerId = document
-                    .querySelector(
-                      '[datasetid="' + dataset.DatasetId + '"] input',
-                    )
-                    .getAttribute('defcheck');
+                  let layerId = document.querySelector(
+                    '[datasetid="' +
+                      dataset.DatasetId +
+                      '"] .map-menu-layer input:checked',
+                  ).id;
                   document
                     .querySelector(
                       "[layer-id='" + layerId + "'] .active-layer-time",
@@ -177,11 +173,11 @@ export const AddCartItem = ({
                 if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document
-                      .querySelector(
-                        '[datasetid="' + dataset.DatasetId + '"] input',
-                      )
-                      .getAttribute('defcheck');
+                    let layerId = document.querySelector(
+                      '[datasetid="' +
+                        dataset.DatasetId +
+                        '"] .map-menu-layer input:checked',
+                    ).id;
                     document
                       .querySelector(
                         "[layer-id='" + layerId + "'] .active-layer-time",
@@ -205,11 +201,11 @@ export const AddCartItem = ({
                 if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document
-                      .querySelector(
-                        '[datasetid="' + dataset.DatasetId + '"] input',
-                      )
-                      .getAttribute('defcheck');
+                    let layerId = document.querySelector(
+                      '[datasetid="' +
+                        dataset.DatasetId +
+                        '"] .map-menu-layer input:checked',
+                    ).id;
                     document
                       .querySelector(
                         "[layer-id='" + layerId + "'] .active-layer-time",
@@ -928,7 +924,7 @@ class MenuWidget extends React.Component {
    */
   updateCheckProduct(productid) {
     let datasetChecks = Array.from(
-      document.querySelectorAll('[parentid=' + productid + ']'),
+      document.querySelectorAll('[parentid="' + productid + '"]'),
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
@@ -1180,7 +1176,7 @@ class MenuWidget extends React.Component {
   updateCheckDataset(id) {
     let datasetCheck = document.querySelector('#' + id);
     let layerChecks = Array.from(
-      document.querySelectorAll('[parentid=' + id + ']'),
+      document.querySelectorAll('[parentid="' + id + '"]'),
     );
 
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
@@ -2058,6 +2054,9 @@ class MenuWidget extends React.Component {
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
             );
+          if (document.querySelector('.drawRectanglePopup-block'))
+            document.querySelector('.drawRectanglePopup-block').style.display =
+              'block';
         } else {
           if (this.visibleLayers[layerId][1] === 'eye-slash') {
             this.layers[layerId].visible = true;
@@ -2484,7 +2483,14 @@ class MenuWidget extends React.Component {
       hotspotLayers.length === 0 &&
       document.querySelector('.hotspot-container')
     ) {
-      this.props.mapViewer.closeActiveWidget();
+      if (
+        this.props.mapViewer.activeWidget &&
+        this.props.mapViewer.activeWidget.container.current.classList.contains(
+          'hotspot-container',
+        )
+      ) {
+        this.props.mapViewer.closeActiveWidget();
+      }
       document.querySelector('.hotspot-container').style.display = 'none';
     } else if (this.props.view && hotspotLayers.length > 0) {
       document.querySelector('.hotspot-container').style.display = 'flex';
@@ -2516,14 +2522,12 @@ class MenuWidget extends React.Component {
         time.start = parseInt(activeLayer.getAttribute('time-start'));
         time.end = parseInt(activeLayer.getAttribute('time-end'));
       }
-      let isLoggedIn = document
-        .querySelector('[defcheck=' + elem.id + ']')
-        .parentElement.querySelector('.map-menu-icon-login')
-        .classList.contains('logged');
+      let isLoggedIn = document.querySelector('.map-menu-icon-login.logged');
       ReactDOM.render(
         <TimesliderWidget
           view={this.props.view}
           map={this.map}
+          mapViewer={this.props.mapViewer}
           layer={layer}
           download={this.props.download}
           time={time}
