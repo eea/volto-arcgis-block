@@ -24,7 +24,8 @@ class TimesliderWidget extends React.Component {
       timeSelectedValuesC: [], //To compare time slider stored values with new selected values
       showDatePanel: false,
       lockDatePanel: true,
-      showCalendar: false,
+      showCalendar:
+        this.props.fromDownload || this.props.download ? true : false,
       dateStart: this.props.time.start ? new Date(this.props.time.start) : null,
       dateEnd: this.props.time.end ? new Date(this.props.time.end) : null,
       periodicity: null,
@@ -43,6 +44,13 @@ class TimesliderWidget extends React.Component {
       this.layerName = this.layer.activeLayer.id; //WMTS
     }
     this.drag = {};
+    if (
+      this.props.fromDownload &&
+      document.querySelector('.drawRectanglePopup-block')
+    ) {
+      document.querySelector('.drawRectanglePopup-block').style.display =
+        'none';
+    }
   }
 
   loader() {
@@ -244,8 +252,6 @@ class TimesliderWidget extends React.Component {
           }
           this.setState({
             lockDatePanel: false,
-            showCalendar:
-              this.props.fromDownload || this.props.download ? true : false,
           });
         }
       },
@@ -297,6 +303,7 @@ class TimesliderWidget extends React.Component {
 
           this.getCapabilities(this.layer.url, serviceType).then((xml) => {
             let times = {};
+            let periodicity;
             if (this.layer.type === 'wms') {
               times = this.parseTimeWMS(xml);
             } else if (this.layer.type === 'wmts') {
@@ -326,6 +333,8 @@ class TimesliderWidget extends React.Component {
                     unit: 'minutes',
                   },
                 };
+
+                periodicity = times[this.layerName].period;
               } else if (times[this.layerName].hasOwnProperty('array')) {
                 // Dates array
                 this.TimesliderWidget.fullTimeExtent = new TimeExtent({
@@ -350,19 +359,20 @@ class TimesliderWidget extends React.Component {
                     timeDict[time[i]] = times[this.layerName].array[i];
                   }
                 }
+
+                periodicity = Math.floor(
+                  (Date.parse(times[this.layerName].array[1]) -
+                    Date.parse(times[this.layerName].array[0])) /
+                    86400000,
+                );
+                if (periodicity === 0) {
+                  periodicity =
+                    (new Date(times[this.layerName].array[1]).getHours() -
+                      new Date(times[this.layerName].array[0]).getHours()) /
+                    24;
+                }
               }
 
-              let periodicity = Math.floor(
-                (Date.parse(times[this.layerName].array[1]) -
-                  Date.parse(times[this.layerName].array[0])) /
-                  86400000,
-              );
-              if (periodicity === 0) {
-                periodicity =
-                  (new Date(times[this.layerName].array[1]).getHours() -
-                    new Date(times[this.layerName].array[0]).getHours()) /
-                  24;
-              }
               this.setState({ periodicity: periodicity });
 
               this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
@@ -415,17 +425,17 @@ class TimesliderWidget extends React.Component {
 
   getPeriodicity() {
     let period = this.state.periodicity;
-    if (period === 1 / 24) {
+    if (period === 1 / 24 || period === 'PT1H') {
       return 'hourly';
-    } else if (period === 1) {
+    } else if (period === 1 || period === 'P1D') {
       return 'daily';
-    } else if (period === 7) {
+    } else if (period === 7 || period === 'P7D' || period === 'P1W') {
       return 'weekly';
-    } else if (period === 10) {
+    } else if (period === 10 || period === 'P10D') {
       return '10-daily';
-    } else if (period >= 28 && period <= 31) {
+    } else if ((period >= 28 && period <= 31) || period === 'P1M') {
       return 'monthly';
-    } else if (period === 365 || period === 366) {
+    } else if (period === 365 || period === 366 || period === 'P1Y') {
       return 'yearly';
     } else {
       return 'not regular';
@@ -490,6 +500,18 @@ class TimesliderWidget extends React.Component {
       dateEnd: end,
       showCalendar: false,
     });
+    if (this.props.fromDownload) {
+      this.props.time.elem.querySelector('.active-layer-time').click();
+      document.getElementById('products_label').click();
+      if (
+        this.props.mapViewer.activeWidget &&
+        !this.props.mapViewer.activeWidget.container.current.classList.contains(
+          'area-container',
+        )
+      ) {
+        document.getElementById('map_area_button').click();
+      }
+    }
   }
 
   handleInputChange(e) {
@@ -513,7 +535,7 @@ class TimesliderWidget extends React.Component {
     let inputEnd;
     let timeStart;
     let timeEnd;
-    if (this.state.showCalendar) {
+    if (!this.state.lockDatePanel && this.state.showCalendar) {
       inputStart = this.formatDate(
         this.state.inputStart
           ? this.state.inputStart
@@ -573,7 +595,7 @@ class TimesliderWidget extends React.Component {
               )}
             </div>
           )}
-          {this.state.showCalendar && (
+          {!this.state.lockDatePanel && this.state.showCalendar && (
             <div className="timeslider-calendar-container">
               <div className="timeslider-calendar-header">
                 <b>Select temporal interval to download</b>
