@@ -167,6 +167,8 @@ class HotspotWidget extends React.Component {
         this.props.map.add(this.esriLayer_lc);
         this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
         this.props.selectedLayers['lc_filter'].visible = true;
+        //set sessionStorage value to keep the widget open
+        sessionStorage.setItem('hotspotFilterApplied', 'true');
       }
     }
   }
@@ -483,10 +485,6 @@ class HotspotWidget extends React.Component {
       </>
     );
   }
-
-  /**
-   *  This method is executed before the render method is executed
-   */
 
   /**
    * This method is executed after the rener method is executed

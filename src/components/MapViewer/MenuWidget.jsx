@@ -124,6 +124,12 @@ export const AddCartItem = ({
     dataset = cartData[0].Products[0].Datasets[0];
   }
 
+  const setDownloadTag = (val) => {
+    if (!sessionStorage.key('downloadButtonClicked'))
+      sessionStorage.setItem('downloadButtonClicked', 'true');
+    else sessionStorage.setItem('downloadButtonClicked', val);
+  };
+
   return (
     <>
       {download ? (
@@ -249,6 +255,7 @@ export const AddCartItem = ({
             <span
               className={'map-menu-icon map-menu-icon-login'}
               onClick={() => {
+                setDownloadTag(true);
                 document.querySelector('.header-login-link').click();
               }}
               onKeyDown={() => {
@@ -463,12 +470,13 @@ class MenuWidget extends React.Component {
       }
 
       let authToken = this.getAuthToken();
-      let timeSliderTag = this.getTimeSliderTag();
+      let timeSliderTag = sessionStorage.getItem('timeSliderTag');
+      let downloadTag = sessionStorage.getItem('downloadButtonClicked');
       let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
 
       // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
-
       if (checkedLayers && !this.props.download) {
+        // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
         if (authToken && timeSliderTag) {
           for (let i = 0; i < checkedLayers.length; i++) {
             let layerid = checkedLayers[i];
@@ -491,6 +499,30 @@ class MenuWidget extends React.Component {
               //open time slider
               let layerElem = document.getElementById(layerid);
               this.showTimeSlider(layerElem, true);
+              break;
+            }
+          }
+        }
+        // "Area widget" opened by default if user is logged in and downloadTag is true
+        else if (authToken && downloadTag) {
+          for (let i = 0; i < checkedLayers.length; i++) {
+            let layerid = checkedLayers[i];
+            if (
+              layerid &&
+              !this.layers[layerid].isTimeSeries &&
+              !this.container.current
+                .querySelector('.esri-widget')
+                .classList.contains('esri-icon-drag-horizontal')
+            ) {
+              //open area widget
+              let event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false,
+              });
+              document
+                .querySelector('.map-menu-icon-login.logged')
+                .dispatchEvent(event);
               break;
             }
           }
@@ -573,14 +605,6 @@ class MenuWidget extends React.Component {
       tokenResult = false;
     }
     return tokenResult;
-  }
-
-  getTimeSliderTag() {
-    let tagResult = true;
-    if (!sessionStorage.key('timeSliderTag')) {
-      tagResult = false;
-    }
-    return tagResult;
   }
 
   /**
@@ -1460,6 +1484,8 @@ class MenuWidget extends React.Component {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
+      sessionStorage.removeItem('downloadButtonClicked');
+      sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
       this.deleteFilteredLayer();
       this.layers[elem.id].opacity = 1;
@@ -1472,7 +1498,6 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
-    //!this.props.download && this.toggleHotspotWidget();
     this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
@@ -1499,17 +1524,24 @@ class MenuWidget extends React.Component {
     if (this.props.download) {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
-    checkedLayers.forEach((key) => {
-      // if key includes all_present_lc_a_pol or all_lcc_a_pol and if the activeWidget is not the hotspot widget, click on the hotspot button, else close the active widget and set the hotspot container to display to none
-      if (
-        key.includes('all_present_lc_a_pol') ||
-        key.includes('all_lcc_a_pol')
-      ) {
-        if (!this.props.mapViewer.activeWidget) {
-          hotspotButton.click();
+    if (
+      checkedLayers.length === 0 &&
+      sessionStorage.getItem('hotspotFilterApplied')
+    ) {
+      sessionStorage.removeItem('hotspotFilterApplied');
+    }
+    if (checkedLayers) {
+      checkedLayers.forEach((key) => {
+        if (
+          key.includes('all_present_lc_a_pol') ||
+          key.includes('all_lcc_a_pol')
+        ) {
+          if (!this.props.mapViewer.activeWidget) {
+            hotspotButton.click();
+          }
         }
-      }
-    });
+      });
+    }
   }
   /**
    * Hide or show a legend image in the legend widget for a WMTS or a TMS layer
@@ -2088,11 +2120,13 @@ class MenuWidget extends React.Component {
         layers.push(layer);
       }
     });
-    if (layers.length === 0 && document.querySelector('.info-container')) {
-      this.props.mapViewer.closeActiveWidget();
-      document.querySelector('.info-container').style.display = 'none';
-    } else if (layers.length > 0) {
-      document.querySelector('.info-container').style.display = 'flex';
+    if (!sessionStorage.getItem('hotspotFilterApplied')) {
+      if (layers.length === 0 && document.querySelector('.info-container')) {
+        this.props.mapViewer.closeActiveWidget();
+        document.querySelector('.info-container').style.display = 'none';
+      } else if (layers.length > 0) {
+        document.querySelector('.info-container').style.display = 'flex';
+      }
     }
     this.renderHotspot();
     /**/
