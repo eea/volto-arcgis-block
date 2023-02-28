@@ -1,6 +1,6 @@
 {
   "name": "@eeacms/volto-arcgis-block",
-  "version": "0.1.109",
+  "version": "0.1.110",
   "description": "volto-arcgis-block: Volto add-on",
   "main": "src/index.js",
   "author": "European Environment Agency: CodeSyntax",
@@ -42,7 +42,8 @@
     "@fortawesome/react-fontawesome": "0.1.14",
     "@eeacms/volto-clms-utils": "*",
     "highcharts": "^9.3.2",
-    "highcharts-react-official": "^3.1.0"
+    "highcharts-react-official": "^3.1.0",
+    "react-datepicker": "4.10.0"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.5",
