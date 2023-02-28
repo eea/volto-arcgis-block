@@ -78,9 +78,7 @@ export const AddCartItem = ({
       if (hasTimeStart) {
         let datasetInput = document.querySelector(
           '#active_' +
-            datasetElem
-              .querySelector('.map-dataset-checkbox input')
-              .getAttribute('defcheck'),
+            datasetElem.querySelector('.map-menu-layer input:checked').id,
         );
         let time = {
           start: parseInt(datasetInput.getAttribute('time-start')),
@@ -117,9 +115,7 @@ export const AddCartItem = ({
     let datasetElem = document.querySelector('[datasetid="' + id + '"]');
     let datasetActive = document.querySelector(
       '#active_' +
-        datasetElem
-          .querySelector('.map-dataset-checkbox input')
-          .getAttribute('defcheck'),
+        datasetElem.querySelector('.map-menu-layer input:checked').id,
     );
     return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
@@ -127,6 +123,12 @@ export const AddCartItem = ({
   if (!dataset) {
     dataset = cartData[0].Products[0].Datasets[0];
   }
+
+  const setDownloadTag = (val) => {
+    if (!sessionStorage.key('downloadButtonClicked'))
+      sessionStorage.setItem('downloadButtonClicked', 'true');
+    else sessionStorage.setItem('downloadButtonClicked', val);
+  };
 
   return (
     <>
@@ -136,22 +138,26 @@ export const AddCartItem = ({
             id="map_download_add"
             className="ccl-button ccl-button-green"
             onClick={(e) => {
-              if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
-                document.getElementById('active_label').click();
-                if (!document.querySelector('.timeslider-container')) {
-                  let layerId = document
-                    .querySelector(
-                      '[datasetid="' + dataset.DatasetId + '"] input',
-                    )
-                    .getAttribute('defcheck');
-                  document
-                    .querySelector(
-                      "[layer-id='" + layerId + "'] .active-layer-time",
-                    )
-                    .click(e);
+              if (!document.querySelector('.map-menu-layer input:checked')) {
+                document.getElementById('products_label').click();
+              } else {
+                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
+                  document.getElementById('active_label').click();
+                  if (!document.querySelector('.timeslider-container')) {
+                    let layerId = document.querySelector(
+                      '[datasetid="' +
+                        dataset.DatasetId +
+                        '"] .map-menu-layer input:checked',
+                    ).id;
+                    document
+                      .querySelector(
+                        "[layer-id='" + layerId + "'] .active-layer-time",
+                      )
+                      .click(e);
+                  }
+                } else if (areaData) {
+                  checkArea(e);
                 }
-              } else if (areaData) {
-                checkArea(e);
               }
             }}
           >
@@ -177,11 +183,11 @@ export const AddCartItem = ({
                 if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document
-                      .querySelector(
-                        '[datasetid="' + dataset.DatasetId + '"] input',
-                      )
-                      .getAttribute('defcheck');
+                    let layerId = document.querySelector(
+                      '[datasetid="' +
+                        dataset.DatasetId +
+                        '"] .map-menu-layer input:checked',
+                    ).id;
                     document
                       .querySelector(
                         "[layer-id='" + layerId + "'] .active-layer-time",
@@ -205,11 +211,11 @@ export const AddCartItem = ({
                 if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document
-                      .querySelector(
-                        '[datasetid="' + dataset.DatasetId + '"] input',
-                      )
-                      .getAttribute('defcheck');
+                    let layerId = document.querySelector(
+                      '[datasetid="' +
+                        dataset.DatasetId +
+                        '"] .map-menu-layer input:checked',
+                    ).id;
                     document
                       .querySelector(
                         "[layer-id='" + layerId + "'] .active-layer-time",
@@ -249,6 +255,7 @@ export const AddCartItem = ({
             <span
               className={'map-menu-icon map-menu-icon-login'}
               onClick={() => {
+                setDownloadTag(true);
                 document.querySelector('.header-login-link').click();
               }}
               onKeyDown={() => {
@@ -394,76 +401,161 @@ class MenuWidget extends React.Component {
     this.setState({ noServiceModal: true });
   };
 
+  getCookie(name) {
+    var dc = document.cookie;
+    var prefix = name + '=';
+    var begin = dc.indexOf('; ' + prefix);
+    if (begin === -1) {
+      begin = dc.indexOf(prefix);
+      if (begin !== 0) return null;
+    } else {
+      begin += 2;
+      var end = document.cookie.indexOf(';', begin);
+      if (end === -1) {
+        end = dc.length;
+      }
+    }
+    return decodeURI(dc.substring(begin + prefix.length, end));
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
    * and close actions of the component
    */
   openMenu() {
-    if (this.state.showMapMenu) {
-      this.container.current.querySelector('#tabcontainer').style.display =
-        'none';
-      this.container.current.querySelector('#paneles').style.display = 'none';
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
-      if (document.contains(document.querySelector('.timeslider-container'))) {
-        document.querySelector('.timeslider-container').style.display = 'none';
-      }
-      if (document.querySelector('.opacity-panel').style.display === 'block') {
-        this.closeOpacity();
-      }
-
-      // By invoking the setState, we notify the state we want to reach
-      // and ensure that the component is rendered again
-      this.setState({ showMapMenu: false });
-    } else {
-      this.container.current.querySelector('#tabcontainer').style.display =
-        'block';
-      this.container.current.querySelector('#paneles').style.display = 'block';
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.replace('esri-icon-drag-horizontal', 'esri-icon-close');
-      if (document.contains(document.querySelector('.timeslider-container')))
-        document.querySelector('.timeslider-container').style.display = 'block';
-
-      // By invoking the setState, we notify the state we want to reach
-      // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });
-    }
-    if (this.loadFirst) {
-      this.checkUrl();
-      this.loadFirst = false;
-      this.zoomTooltips();
-    }
-
-    // CLMS-1389
-    // "Active on map" section and the time slider opened by default if download and timeseries == true
-    if (this.layers)
-      if (this.props.download && this.layers) {
-        let layerid = Object.keys(this.layers)[0];
-
+    setTimeout(() => {
+      if (this.state.showMapMenu) {
+        this.container.current.querySelector('#tabcontainer').style.display =
+          'none';
+        this.container.current.querySelector('#paneles').style.display = 'none';
+        this.container.current
+          .querySelector('.esri-widget--button')
+          .classList.replace('esri-icon-close', 'esri-icon-drag-horizontal');
         if (
-          layerid &&
-          this.layers[layerid].isTimeSeries &&
-          !this.container.current
-            .querySelector('.esri-widget')
-            .classList.contains('esri-icon-drag-horizontal')
+          document.contains(document.querySelector('.timeslider-container'))
         ) {
-          // select active on map tab
-          let event = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: false,
-          });
-          let el = document.getElementById('active_label');
-          el.dispatchEvent(event);
+          document.querySelector('.timeslider-container').style.display =
+            'none';
+        }
+        if (
+          document.querySelector('.opacity-panel').style.display === 'block'
+        ) {
+          this.closeOpacity();
+        }
 
-          //open time slider
-          let layerElem = document.getElementById(layerid);
-          this.showTimeSlider(layerElem, true);
+        // By invoking the setState, we notify the state we want to reach
+        // and ensure that the component is rendered again
+        this.setState({ showMapMenu: false });
+      } else {
+        this.container.current.querySelector('#tabcontainer').style.display =
+          'block';
+        this.container.current.querySelector('#paneles').style.display =
+          'block';
+        this.container.current
+          .querySelector('.esri-widget--button')
+          .classList.replace('esri-icon-drag-horizontal', 'esri-icon-close');
+        if (document.contains(document.querySelector('.timeslider-container')))
+          document.querySelector('.timeslider-container').style.display =
+            'block';
+
+        // By invoking the setState, we notify the state we want to reach
+        // and ensure that the component is rendered again
+        this.setState({ showMapMenu: true });
+      }
+      if (this.loadFirst) {
+        this.checkUrl();
+        this.loadFirst = false;
+        this.zoomTooltips();
+      }
+
+      let authToken = this.getAuthToken();
+      let timeSliderTag = sessionStorage.getItem('timeSliderTag');
+      let downloadTag = sessionStorage.getItem('downloadButtonClicked');
+      let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+
+      // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
+      if (checkedLayers && !this.props.download) {
+        // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
+        if (authToken && timeSliderTag) {
+          for (let i = 0; i < checkedLayers.length; i++) {
+            let layerid = checkedLayers[i];
+            if (
+              layerid &&
+              this.layers[layerid].isTimeSeries &&
+              !this.container.current
+                .querySelector('.esri-widget')
+                .classList.contains('esri-icon-drag-horizontal')
+            ) {
+              // select active on map tab
+              let event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false,
+              });
+              let el = document.getElementById('active_label');
+              el.dispatchEvent(event);
+
+              //open time slider
+              let layerElem = document.getElementById(layerid);
+              this.showTimeSlider(layerElem, true);
+              break;
+            }
+          }
+        }
+        // "Area widget" opened by default if user is logged in and downloadTag is true
+        else if (authToken && downloadTag) {
+          for (let i = 0; i < checkedLayers.length; i++) {
+            let layerid = checkedLayers[i];
+            if (
+              layerid &&
+              !this.layers[layerid].isTimeSeries &&
+              !this.container.current
+                .querySelector('.esri-widget')
+                .classList.contains('esri-icon-drag-horizontal')
+            ) {
+              //open area widget
+              let event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false,
+              });
+              document
+                .querySelector('.map-menu-icon-login.logged')
+                .dispatchEvent(event);
+              break;
+            }
+          }
         }
       }
+      // CLMS-1389
+      // "Active on map" section and the time slider opened by default if download and timeseries == true
+
+      if (this.layers)
+        if (this.props.download && this.layers) {
+          let layerid = Object.keys(this.layers)[0];
+          if (
+            layerid &&
+            this.layers[layerid].isTimeSeries &&
+            !this.container.current
+              .querySelector('.esri-widget')
+              .classList.contains('esri-icon-drag-horizontal')
+          ) {
+            // select active on map tab
+            let event = new MouseEvent('click', {
+              view: window,
+              bubbles: true,
+              cancelable: false,
+            });
+            let el = document.getElementById('active_label');
+            el.dispatchEvent(event);
+
+            //open time slider
+            let layerElem = document.getElementById(layerid);
+            this.showTimeSlider(layerElem, true);
+          }
+        }
+    }, 1000);
   }
 
   /**
@@ -499,33 +591,20 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
   }
 
-  /**
-   * Active on map is tab and time slider widget is opened by default if the user selected time slider and is coming back from the EU pass login
-   */
-
-  componentDidUpdate(prevProps) {
-    if (!this.props.download && this.props !== prevProps) {
-      let isLoggedIn = document
-        .querySelector('[defcheck=' + this.props.elem.id + ']')
-        .parentElement.querySelector('.map-menu-icon-login')
-        .classList.contains('logged');
-      if (this.props.sliderIsActive && isLoggedIn) {
-        let event = new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: false,
-        });
-        let el = document.getElementById('active_label');
-        el.dispatchEvent(event);
-        this.showTimeSlider();
-      }
-    }
+  setSliderTag(val) {
+    if (!sessionStorage.key('timeSliderTag'))
+      sessionStorage.setItem('timeSliderTag', 'true');
+    else sessionStorage.setItem('timeSliderTag', val);
   }
 
-  setActiveSlider(val) {
-    if (!sessionStorage.key('sliderIsActive'))
-      sessionStorage.setItem('sliderIsActive', 'false');
-    sessionStorage.setItem('sliderIsActive', val);
+  getAuthToken() {
+    let tokenResult = null;
+    if (this.getCookie('auth_token')) {
+      tokenResult = true;
+    } else {
+      tokenResult = false;
+    }
+    return tokenResult;
   }
 
   /**
@@ -873,7 +952,7 @@ class MenuWidget extends React.Component {
    */
   updateCheckProduct(productid) {
     let datasetChecks = Array.from(
-      document.querySelectorAll('[parentid=' + productid + ']'),
+      document.querySelectorAll('[parentid="' + productid + '"]'),
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
@@ -1139,7 +1218,7 @@ class MenuWidget extends React.Component {
   updateCheckDataset(id) {
     let datasetCheck = document.querySelector('#' + id);
     let layerChecks = Array.from(
-      document.querySelectorAll('[parentid=' + id + ']'),
+      document.querySelectorAll('[parentid="' + id + '"]'),
     );
 
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
@@ -1419,6 +1498,8 @@ class MenuWidget extends React.Component {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
     } else {
+      sessionStorage.removeItem('downloadButtonClicked');
+      sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
       this.deleteFilteredLayer();
       this.layers[elem.id].opacity = 1;
@@ -1431,7 +1512,6 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
-    //!this.props.download && this.toggleHotspotWidget();
     this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
@@ -1458,17 +1538,24 @@ class MenuWidget extends React.Component {
     if (this.props.download) {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
-    checkedLayers.forEach((key) => {
-      // if key includes all_present_lc_a_pol or all_lcc_a_pol and if the activeWidget is not the hotspot widget, click on the hotspot button, else close the active widget and set the hotspot container to display to none
-      if (
-        key.includes('all_present_lc_a_pol') ||
-        key.includes('all_lcc_a_pol')
-      ) {
-        if (!this.props.mapViewer.activeWidget) {
-          hotspotButton.click();
+    if (
+      checkedLayers.length === 0 &&
+      sessionStorage.getItem('hotspotFilterApplied')
+    ) {
+      sessionStorage.removeItem('hotspotFilterApplied');
+    }
+    if (checkedLayers) {
+      checkedLayers.forEach((key) => {
+        if (
+          key.includes('all_present_lc_a_pol') ||
+          key.includes('all_lcc_a_pol')
+        ) {
+          if (!this.props.mapViewer.activeWidget) {
+            hotspotButton.click();
+          }
         }
-      }
-    });
+      });
+    }
   }
   /**
    * Hide or show a legend image in the legend widget for a WMTS or a TMS layer
@@ -1918,11 +2005,11 @@ class MenuWidget extends React.Component {
 
   showTimeSlider(elem, fromDownload) {
     if (
-      sessionStorage.key('sliderIsActive') &&
-      sessionStorage.getItem('sliderIsActive') === 'false'
+      sessionStorage.key('timeSliderTag') &&
+      sessionStorage.getItem('timeSliderTag') === 'true'
     )
-      this.setActiveSlider(true);
-    else this.setActiveSlider(false);
+      this.setSliderTag(false);
+    else this.setSliderTag(true);
     let activeLayers = document.querySelectorAll('.active-layer');
     let group = this.getGroup(elem);
     let groupLayers = this.getGroupLayers(group);
@@ -2017,6 +2104,9 @@ class MenuWidget extends React.Component {
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
             );
+          if (document.querySelector('.drawRectanglePopup-block'))
+            document.querySelector('.drawRectanglePopup-block').style.display =
+              'block';
         } else {
           if (this.visibleLayers[layerId][1] === 'eye-slash') {
             this.layers[layerId].visible = true;
@@ -2044,11 +2134,13 @@ class MenuWidget extends React.Component {
         layers.push(layer);
       }
     });
-    if (layers.length === 0 && document.querySelector('.info-container')) {
-      this.props.mapViewer.closeActiveWidget();
-      document.querySelector('.info-container').style.display = 'none';
-    } else if (layers.length > 0) {
-      document.querySelector('.info-container').style.display = 'flex';
+    if (!sessionStorage.getItem('hotspotFilterApplied')) {
+      if (layers.length === 0 && document.querySelector('.info-container')) {
+        this.props.mapViewer.closeActiveWidget();
+        document.querySelector('.info-container').style.display = 'none';
+      } else if (layers.length > 0) {
+        document.querySelector('.info-container').style.display = 'flex';
+      }
     }
     this.renderHotspot();
     /**/
@@ -2443,7 +2535,14 @@ class MenuWidget extends React.Component {
       hotspotLayers.length === 0 &&
       document.querySelector('.hotspot-container')
     ) {
-      this.props.mapViewer.closeActiveWidget();
+      if (
+        this.props.mapViewer.activeWidget &&
+        this.props.mapViewer.activeWidget.container.current.classList.contains(
+          'hotspot-container',
+        )
+      ) {
+        this.props.mapViewer.closeActiveWidget();
+      }
       document.querySelector('.hotspot-container').style.display = 'none';
     } else if (this.props.view && hotspotLayers.length > 0) {
       document.querySelector('.hotspot-container').style.display = 'flex';
@@ -2475,19 +2574,18 @@ class MenuWidget extends React.Component {
         time.start = parseInt(activeLayer.getAttribute('time-start'));
         time.end = parseInt(activeLayer.getAttribute('time-end'));
       }
-      let isLoggedIn = document
-        .querySelector('[defcheck=' + elem.id + ']')
-        .parentElement.querySelector('.map-menu-icon-login')
-        .classList.contains('logged');
+      let isLoggedIn = document.querySelector('.map-menu-icon-login.logged');
       ReactDOM.render(
         <TimesliderWidget
           view={this.props.view}
           map={this.map}
+          mapViewer={this.props.mapViewer}
           layer={layer}
           download={this.props.download}
           time={time}
           logged={isLoggedIn}
           fromDownload={fromDownload}
+          area={this.props.area}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
