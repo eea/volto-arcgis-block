@@ -524,6 +524,26 @@ class MenuWidget extends React.Component {
                 .querySelector('.map-menu-icon-login.logged')
                 .dispatchEvent(event);
               break;
+            } else if (
+              layerid &&
+              this.layers[layerid].isTimeSeries &&
+              !this.container.current
+                .querySelector('.esri-widget')
+                .classList.contains('esri-icon-drag-horizontal')
+            ) {
+              // select active on map tab
+              let event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false,
+              });
+              let el = document.getElementById('active_label');
+              el.dispatchEvent(event);
+
+              //open time slider
+              let layerElem = document.getElementById(layerid);
+              this.showTimeSlider(layerElem, true);
+              break;
             }
           }
         }
