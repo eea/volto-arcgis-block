@@ -1,6 +1,8 @@
 import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 var TimeSlider;
 var TimeExtent;
 var esriRequest;
@@ -199,7 +201,7 @@ class TimesliderWidget extends React.Component {
       loop: false,
       labelFormatFunction: (value, type, element, layout) => {
         if (!this.TimesliderWidget.fullTimeExtent) {
-          element.innerText = 'loading...';
+          element.innerText = 'Loading...';
           return;
         }
         if (value) {
@@ -497,12 +499,10 @@ class TimesliderWidget extends React.Component {
   }
 
   applyDate() {
-    let start = document.querySelector('#date_start').valueAsDate;
-    start = start
-      ? new Date(start)
-      : this.TimesliderWidget.fullTimeExtent.start;
-    let end = document.querySelector('#date_end').valueAsDate;
-    end = end ? new Date(end) : this.TimesliderWidget.fullTimeExtent.end;
+    let start = this.state.inputStart;
+    start = start ? start : this.TimesliderWidget.fullTimeExtent.start;
+    let end = this.state.inputEnd;
+    end = end ? end : this.TimesliderWidget.fullTimeExtent.end;
     this.props.time.elem.setAttribute('time-start', new Date(start).getTime());
     this.props.time.elem.setAttribute('time-end', new Date(end).getTime());
     this.setState({
@@ -531,11 +531,11 @@ class TimesliderWidget extends React.Component {
     }
   }
 
-  handleInputChange(e) {
-    if (e.currentTarget.id === 'date_start') {
-      this.setState({ inputStart: e.currentTarget.value });
-    } else if (e.currentTarget.id === 'date_end') {
-      this.setState({ inputEnd: e.currentTarget.value });
+  handleInputChange(e, input) {
+    if (input === 'date_start') {
+      this.setState({ inputStart: this.formatDate(e) });
+    } else if (input === 'date_end') {
+      this.setState({ inputEnd: this.formatDate(e) });
     }
   }
 
@@ -593,8 +593,11 @@ class TimesliderWidget extends React.Component {
                   <FontAwesomeIcon icon={['fas', 'calendar']} />
                   {this.state.dateStart && this.state.dateEnd ? (
                     <>
-                      {this.state.dateStart.toLocaleDateString('en-gb')} -{' '}
-                      {this.state.dateEnd.toLocaleDateString('en-gb')}{' '}
+                      {new Date(this.state.dateStart).toLocaleDateString(
+                        'en-gb',
+                      )}{' '}
+                      -{' '}
+                      {new Date(this.state.dateEnd).toLocaleDateString('en-gb')}{' '}
                     </>
                   ) : (
                     <>Select temporal interval to download</>
@@ -633,32 +636,46 @@ class TimesliderWidget extends React.Component {
                 )}
                 <div className="timeslider-calendar-row">
                   <label htmlFor="start">From</label>
-                  <input
-                    type="date"
+                  <DatePicker
                     id="date_start"
-                    min={timeStart}
-                    max={
-                      Date.parse(inputEnd) < Date.parse(timeEnd)
-                        ? inputEnd
-                        : timeEnd
+                    minDate={new Date(timeStart)}
+                    maxDate={
+                      new Date(
+                        Date.parse(inputEnd) < Date.parse(timeEnd)
+                          ? inputEnd
+                          : timeEnd,
+                      )
                     }
-                    value={inputStart}
-                    onChange={(e) => this.handleInputChange(e)}
+                    selected={new Date(inputStart)}
+                    onChange={(e) => this.handleInputChange(e, 'date_start')}
+                    includeDates={this.TimesliderWidget.stops.dates}
+                    dateFormat="dd/MM/yyyy"
+                    calendarStartDay={1}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
                   />
                 </div>
                 <div className="timeslider-calendar-row">
                   <label htmlFor="start">To</label>
-                  <input
-                    type="date"
+                  <DatePicker
                     id="date_end"
-                    min={
-                      Date.parse(inputStart) > Date.parse(timeStart)
-                        ? inputStart
-                        : timeStart
+                    minDate={
+                      new Date(
+                        Date.parse(inputStart) > Date.parse(timeStart)
+                          ? inputStart
+                          : timeStart,
+                      )
                     }
-                    max={timeEnd}
-                    value={inputEnd}
-                    onChange={(e) => this.handleInputChange(e)}
+                    maxDate={new Date(timeEnd)}
+                    selected={new Date(inputEnd)}
+                    onChange={(e) => this.handleInputChange(e, 'date_end')}
+                    includeDates={this.TimesliderWidget.stops.dates}
+                    dateFormat="dd/MM/yyyy"
+                    calendarStartDay={1}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
                   />
                 </div>
                 <button
