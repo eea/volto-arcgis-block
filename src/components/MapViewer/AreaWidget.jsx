@@ -288,15 +288,14 @@ class AreaWidget extends React.Component {
       ? this.container !== null && this.props.view.ui.add(this.container)
       : this.props.view.ui.add(this.container.current, 'top-right');
 
-    var z = document.createElement('div'); // is a node
-    z.className = 'drawRectanglePopup-block';
-    z.innerHTML =
+    var popup = document.createElement('div');
+    popup.className = 'drawRectanglePopup-block';
+    popup.innerHTML =
       '<div class="drawRectanglePopup-content">' +
       '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
       '<div class="drawRectanglePopup-text">Select an area of interest to download a dataset</div>' +
       '</div>';
-
-    this.props.download && this.props.view.ui.add(z, 'top-right');
+    this.props.download && this.props.view.ui.add(popup, 'top-right');
   }
 
   /**

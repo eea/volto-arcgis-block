@@ -24,8 +24,7 @@ class TimesliderWidget extends React.Component {
       timeSelectedValuesC: [], //To compare time slider stored values with new selected values
       showDatePanel: false,
       lockDatePanel: true,
-      showCalendar:
-        this.props.fromDownload || this.props.download ? true : false,
+      showCalendar: this.props.fromDownload ? true : false,
       dateStart: this.props.time.start ? new Date(this.props.time.start) : null,
       dateEnd: this.props.time.end ? new Date(this.props.time.end) : null,
       periodicity: null,
@@ -481,8 +480,19 @@ class TimesliderWidget extends React.Component {
   showCalendar() {
     if (this.state.showCalendar) {
       this.setState({ showCalendar: false });
+      if (
+        document.querySelector('.drawRectanglePopup-block') &&
+        !this.props.area
+      ) {
+        document.querySelector('.drawRectanglePopup-block').style.display =
+          'block';
+      }
     } else {
       this.setState({ showCalendar: true });
+      if (document.querySelector('.drawRectanglePopup-block')) {
+        document.querySelector('.drawRectanglePopup-block').style.display =
+          'none';
+      }
     }
   }
 
@@ -498,18 +508,25 @@ class TimesliderWidget extends React.Component {
     this.setState({
       dateStart: start,
       dateEnd: end,
-      showCalendar: false,
     });
-    if (this.props.fromDownload) {
-      this.props.time.elem.querySelector('.active-layer-time').click();
-      document.getElementById('products_label').click();
-      if (
-        this.props.mapViewer.activeWidget &&
-        !this.props.mapViewer.activeWidget.container.current.classList.contains(
-          'area-container',
-        )
-      ) {
-        document.getElementById('map_area_button').click();
+    this.showCalendar();
+    if (this.props.download) {
+      if (this.props.fromDownload) {
+        this.props.time.elem.querySelector('.active-layer-time').click();
+        document.getElementById('download_label').click();
+      }
+    } else {
+      if (this.props.fromDownload) {
+        this.props.time.elem.querySelector('.active-layer-time').click();
+        document.getElementById('products_label').click();
+        if (
+          !this.props.mapViewer.activeWidget ||
+          !this.props.mapViewer.activeWidget.container.current.classList.contains(
+            'area-container',
+          )
+        ) {
+          document.getElementById('map_area_button').click();
+        }
       }
     }
   }
@@ -604,12 +621,8 @@ class TimesliderWidget extends React.Component {
                   id="timeslider_calendar_close"
                   role="button"
                   tabIndex="0"
-                  onClick={() => {
-                    this.setState({ showCalendar: false });
-                  }}
-                  onKeyDown={() => {
-                    this.setState({ showCalendar: false });
-                  }}
+                  onClick={() => this.showCalendar()}
+                  onKeyDown={() => this.showCalendar()}
                 ></div>
               </div>
               <div className="timeslider-calendar-panel">
