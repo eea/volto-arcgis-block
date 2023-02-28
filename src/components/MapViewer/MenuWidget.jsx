@@ -1148,6 +1148,9 @@ class MenuWidget extends React.Component {
                         <span
                           className="map-menu-icon"
                           onClick={() => this.checkTimeLayer(dataset)}
+                          onKeyDown={() => this.checkTimeLayer(dataset)}
+                          tabIndex="0"
+                          role="button"
                         >
                           <FontAwesomeIcon icon={['far', 'clock']} />
                         </span>
