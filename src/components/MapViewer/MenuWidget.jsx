@@ -138,10 +138,17 @@ export const AddCartItem = ({
             id="map_download_add"
             className="ccl-button ccl-button-green"
             onClick={(e) => {
-              if (!document.querySelector('.map-menu-layer input:checked')) {
+              if (
+                !document.querySelector('.map-menu-layer input:checked') &&
+                !dataset.MarkAsDownloadableNoServiceToVisualize
+              ) {
                 document.getElementById('products_label').click();
               } else {
-                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
+                if (
+                  dataset.IsTimeSeries &&
+                  !checkTimeData(dataset) &&
+                  !dataset.MarkAsDownloadableNoServiceToVisualize
+                ) {
                   document.getElementById('active_label').click();
                   if (!document.querySelector('.timeslider-container')) {
                     let layerId = document.querySelector(
