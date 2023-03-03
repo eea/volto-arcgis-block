@@ -144,8 +144,8 @@ class HotspotWidget extends React.Component {
     } else {
       let typeLegend =
         document.getElementById('select-klc-highlights-lc').value === 'Modular'
-          ? 'all_present_lc_a_pol'
-          : 'all_present_lc_b_pol';
+          ? 'all_present_lc_b_pol'
+          : 'all_present_lc_a_pol';
       var selectBoxHighlightsLc = document
         .getElementById('select-klc-lcTime')
         .value.match(/\d+/g)
