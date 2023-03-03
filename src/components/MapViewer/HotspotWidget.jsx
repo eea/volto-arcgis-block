@@ -113,64 +113,70 @@ class HotspotWidget extends React.Component {
         this.props.selectedLayers[currentLckey].visible = false;
       }
     }
-    if (typeFilter === 'lcc') {
-      var selectBoxHighlightsLcc = document
-        .getElementById('select-klc-lccTime')
-        .value.match(/\d+/g)
-        .map(Number)[0];
-      let typeLegend =
-        document.getElementById('select-klc-highlights-lcc').value ===
-        'Dichotomous'
-          ? 'all_lcc_a_pol'
-          : 'all_lcc_b_pol';
-      if (this.esriLayer_lcc !== null) {
-        this.esriLayer_lcc.sublayers.items[0].name = this.addLegendName(
-          typeLegend,
-        );
-        this.esriLayer_lcc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
-          typeLegend,
-        );
-        this.esriLayer_lcc.customLayerParameters['CQL_FILTER'] =
-          'klc_code LIKE ' +
-          "'" +
-          this.dataKlc_code +
-          "'" +
-          " AND in_pa = 'not_defined' AND date = " +
-          selectBoxHighlightsLcc;
-        this.props.map.add(this.esriLayer_lcc);
-        this.props.selectedLayers['lcc_filter'] = this.esriLayer_lcc;
-        this.props.selectedLayers['lcc_filter'].visible = true;
+    typeFilter.forEach((type) => {
+      if (type === 'lcc') {
+        var selectBoxHighlightsLcc = document
+          .getElementById('select-klc-lccTime')
+          .value.match(/\d+/g)
+          .map(Number)[0];
+        let typeLegend =
+          document.getElementById('select-klc-highlights-lcc').value ===
+          'Dichotomous'
+            ? 'all_lcc_a_pol'
+            : 'all_lcc_b_pol';
+        if (this.esriLayer_lcc !== null) {
+          this.esriLayer_lcc.sublayers.items[0].name = this.addLegendName(
+            typeLegend,
+          );
+          this.esriLayer_lcc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
+            typeLegend,
+          );
+          this.esriLayer_lcc.customLayerParameters['CQL_FILTER'] =
+            'klc_code LIKE ' +
+            "'" +
+            this.dataKlc_code +
+            "'" +
+            " AND in_pa = 'not_defined' AND date = " +
+            selectBoxHighlightsLcc;
+          this.props.map.add(this.esriLayer_lcc);
+          this.props.selectedLayers['lcc_filter'] = this.esriLayer_lcc;
+          this.props.selectedLayers['lcc_filter'].visible = true;
+          this.layerModelInit();
+        }
       }
-    } else {
-      let typeLegend =
-        document.getElementById('select-klc-highlights-lc').value === 'Modular'
-          ? 'all_present_lc_b_pol'
-          : 'all_present_lc_a_pol';
-      var selectBoxHighlightsLc = document
-        .getElementById('select-klc-lcTime')
-        .value.match(/\d+/g)
-        .map(Number)[0];
-      if (this.esriLayer_lc !== null) {
-        this.esriLayer_lc.sublayers.items[0].name = this.addLegendName(
-          typeLegend,
-        );
-        this.esriLayer_lc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
-          typeLegend,
-        );
-        this.esriLayer_lc.customLayerParameters['CQL_FILTER'] =
-          'klc_code LIKE ' +
-          "'" +
-          this.dataKlc_code +
-          "'" +
-          " AND in_pa = 'not_defined' AND date = " +
-          selectBoxHighlightsLc;
-        this.props.map.add(this.esriLayer_lc);
-        this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
-        this.props.selectedLayers['lc_filter'].visible = true;
-        //set sessionStorage value to keep the widget open
-        sessionStorage.setItem('hotspotFilterApplied', 'true');
+      if (type === 'lc') {
+        let typeLegend =
+          document.getElementById('select-klc-highlights-lc').value ===
+          'Modular'
+            ? 'all_present_lc_b_pol'
+            : 'all_present_lc_a_pol';
+        var selectBoxHighlightsLc = document
+          .getElementById('select-klc-lcTime')
+          .value.match(/\d+/g)
+          .map(Number)[0];
+        if (this.esriLayer_lc !== null) {
+          this.esriLayer_lc.sublayers.items[0].name = this.addLegendName(
+            typeLegend,
+          );
+          this.esriLayer_lc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
+            typeLegend,
+          );
+          this.esriLayer_lc.customLayerParameters['CQL_FILTER'] =
+            'klc_code LIKE ' +
+            "'" +
+            this.dataKlc_code +
+            "'" +
+            " AND in_pa = 'not_defined' AND date = " +
+            selectBoxHighlightsLc;
+          this.props.map.add(this.esriLayer_lc);
+          this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
+          this.props.selectedLayers['lc_filter'].visible = true;
+          this.layerModelInit();
+        }
       }
-    }
+    });
+    //set sessionStorage value to keep the widget open
+    sessionStorage.setItem('hotspotFilterApplied', 'true');
   }
 
   dropdownAnimation() {
@@ -243,6 +249,26 @@ class HotspotWidget extends React.Component {
       });
   }
 
+  renderApplyFilterButton() {
+    let typeFilter = [];
+
+    if (
+      this.container.current.querySelector('.presentLandCoverContainer').style
+        .display === 'block'
+    ) {
+      typeFilter.push('lc');
+    }
+
+    if (
+      this.container.current.querySelector('.landCoverChangeContainer').style
+        .display === 'block'
+    ) {
+      typeFilter.push('lcc');
+    }
+
+    return this.handleApplyFilter(typeFilter);
+  }
+
   renderPresentLandCover() {
     return (
       <div className="measurement-dropdown" id="PresentLandCoverDropdown">
@@ -278,12 +304,6 @@ class HotspotWidget extends React.Component {
               ></select>
             </label>
           </div>
-          <button
-            className="esri-button"
-            onClick={() => this.handleApplyFilter('lc')}
-          >
-            Apply filter
-          </button>
         </div>
       </div>
     );
@@ -419,12 +439,6 @@ class HotspotWidget extends React.Component {
               ></select>
             </label>
           </div>
-          <button
-            className="esri-button"
-            onClick={() => this.handleApplyFilter('lcc')}
-          >
-            Apply filter
-          </button>
         </div>
       </div>
     );
@@ -478,6 +492,12 @@ class HotspotWidget extends React.Component {
                 <div className="landCoverChangeContainer">
                   {this.renderLandCoverChange()}
                 </div>
+                <button
+                  className="esri-button"
+                  onClick={() => this.renderApplyFilterButton()}
+                >
+                  Apply filter
+                </button>
               </div>
             </div>
           </div>
