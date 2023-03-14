@@ -332,7 +332,8 @@ class MenuWidget extends React.Component {
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
-      if (isStationary) {        let nodes = document.querySelectorAll('.zoom-in-message-general');
+      if (isStationary) {
+        let nodes = document.querySelectorAll('.zoom-in-message-general');
         if (nodes) {
           let zoom = this.view.get('zoom');
           nodes.forEach((node) => {
