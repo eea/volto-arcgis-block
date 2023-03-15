@@ -333,12 +333,10 @@ class MenuWidget extends React.Component {
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       if (isStationary) {
-        let nodes = document.querySelectorAll('.zoom-in-message-general');
-        if (nodes) {
+        let node = document.getElementById('snow-and-ice-zoom-message');
+        if (node) {
           let zoom = this.view.get('zoom');
-          nodes.forEach((node) => {
-            node.style.display = zoom > 6 ? 'none' : 'block';
-          });
+          node.style.display = zoom > 6 ? 'none' : 'block';
         }
       }
     });
@@ -931,7 +929,7 @@ class MenuWidget extends React.Component {
                             <div class="zoom-in-message-container">
                               <span>{product.ProductTitle}</span>
                               <div
-                                class="zoom-in-message zoom-in-message-general"
+                                class="zoom-in-message"
                                 id="snow-and-ice-zoom-message"
                               >
                                 Zoom in to view on map
@@ -1158,42 +1156,17 @@ class MenuWidget extends React.Component {
                   htmlFor={checkIndex}
                   key={'d' + datIndex}
                 >
-                  <legend className="ccl-form-legend">
-                    {description ? (
-                      <Popup
-                        trigger={
-                          dataset.ProductId ===
-                            '8474c3b080fa42cc837f1d2338fcf096' ||
-                          dataset.Product === 'Snow and Ice Parameters' ? (
-                            <div class="zoom-in-message-container">
-                              <span>{dataset.DatasetTitle}</span>
-                              <div class="zoom-in-message zoom-in-message-general">
-                                Zoom in to view on map
-                              </div>
-                            </div>
-                          ) : (
-                            <span>{dataset.DatasetTitle}</span>
-                          )
-                        }
-                        content={description}
-                        basic
-                        className="custom"
-                        style={{ transform: 'translateX(-4rem)' }}
-                      />
-                    ) : dataset.ProductId ===
-                        '8474c3b080fa42cc837f1d2338fcf096' ||
-                      dataset.Product ===
-                        'High Resolution Snow and Ice Parameters' ? (
-                      <div class="zoom-in-message-container">
-                        <span>{dataset.DatasetTitle}</span>
-                        <div class="zoom-in-message">
-                          Zoom in to view on map
-                        </div>
-                      </div>
-                    ) : (
-                      <span>{dataset.DatasetTitle}</span>
-                    )}
-                  </legend>
+                  {description ? (
+                    <Popup
+                      trigger={<span>{dataset.DatasetTitle}</span>}
+                      content={description}
+                      basic
+                      className="custom"
+                      style={{ transform: 'translateX(-5.5rem)' }}
+                    />
+                  ) : (
+                    <span>{dataset.DatasetTitle}</span>
+                  )}
                 </label>
                 <div className="map-menu-icons">
                   {!this.props.download && dataset.IsTimeSeries && (
