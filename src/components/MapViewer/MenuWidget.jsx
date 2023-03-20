@@ -335,9 +335,11 @@ class MenuWidget extends React.Component {
       if (isStationary) {
         let node = document.getElementById('snow-and-ice-zoom-message');
         let nodes = document.querySelectorAll('.zoom-in-message-dataset');
-        if (node || nodes) {
-          let zoom = this.view.get('zoom');
+        let zoom = this.view.get('zoom');
+        if (node !== null) {
           node.style.display = zoom > 6 ? 'none' : 'block';
+        }
+        if (nodes !== null) {
           nodes.forEach((node) => {
             let isChecked = node.parentElement.offsetParent.offsetParent.querySelector(
               'input',
@@ -1596,6 +1598,7 @@ class MenuWidget extends React.Component {
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
   showZoomMessageOnDataset(dataset) {
+    if (this.props.download) return;
     let snowAndIceParameters = this.compCfg[2].Products[1];
     let node = document.getElementById(dataset.id).nextElementSibling
       .lastElementChild.lastChild.lastElementChild;
@@ -2573,11 +2576,13 @@ class MenuWidget extends React.Component {
   }
 
   showZoomMessageForDatasets() {
-    let nodes = document.querySelectorAll('.zoom-in-message-dataset');
-    if (nodes) {
-      nodes.forEach((node) => {
-        node.style.display = 'none';
-      });
+    if (!this.props.download) {
+      let nodes = document.querySelectorAll('.zoom-in-message-dataset');
+      if (nodes) {
+        nodes.forEach((node) => {
+          node.style.display = 'none';
+        });
+      }
     }
   }
 
