@@ -334,9 +334,18 @@ class MenuWidget extends React.Component {
     this.view.watch('stationary', (isStationary) => {
       if (isStationary) {
         let node = document.getElementById('snow-and-ice-zoom-message');
-        if (node) {
-          let zoom = this.view.get('zoom');
+        let nodes = document.querySelectorAll('.zoom-in-message-dataset');
+        let zoom = this.view.get('zoom');
+        if (node !== null) {
           node.style.display = zoom > 6 ? 'none' : 'block';
+        }
+        if (nodes !== null) {
+          nodes.forEach((node) => {
+            let isChecked = node.parentElement.offsetParent.offsetParent.querySelector(
+              'input',
+            ).checked;
+            if (isChecked) node.style.display = zoom > 6 ? 'none' : 'block';
+          });
         }
       }
     });
@@ -614,6 +623,7 @@ class MenuWidget extends React.Component {
     this.openMenu();
     this.expandDropdowns();
     this.loadLayers();
+    this.showZoomMessageForDatasets();
     this.loadOpacity();
     this.loadVisibility();
   }
@@ -1001,11 +1011,11 @@ class MenuWidget extends React.Component {
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
+    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     var description =
       dataset.DatasetDescription && dataset.DatasetDescription.length >= 300
         ? dataset.DatasetDescription.substr(0, 300) + '...'
         : dataset.DatasetDescription;
-
     let style = this.props.download
       ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
       : {};
@@ -1156,17 +1166,44 @@ class MenuWidget extends React.Component {
                   htmlFor={checkIndex}
                   key={'d' + datIndex}
                 >
-                  {description ? (
-                    <Popup
-                      trigger={<span>{dataset.DatasetTitle}</span>}
-                      content={description}
-                      basic
-                      className="custom"
-                      style={{ transform: 'translateX(-5.5rem)' }}
-                    />
-                  ) : (
-                    <span>{dataset.DatasetTitle}</span>
-                  )}
+                  <legend className="ccl-form-legend">
+                    {description ? (
+                      <Popup
+                        trigger={
+                          (checkedLayers &&
+                            checkedLayers.includes(dataset.Layer.LayerId) &&
+                            dataset.ProductId ===
+                              '8474c3b080fa42cc837f1d2338fcf096') ||
+                          dataset.Product === 'Snow and Ice Parameters' ? (
+                            <div class="zoom-in-message-container">
+                              <span>{dataset.DatasetTitle}</span>
+                              <div class="zoom-in-message zoom-in-message-dataset">
+                                Zoom in to view on map
+                              </div>
+                            </div>
+                          ) : (
+                            <span>{dataset.DatasetTitle}</span>
+                          )
+                        }
+                        content={description}
+                        basic
+                        className="custom"
+                        style={{ transform: 'translateX(-4rem)' }}
+                      />
+                    ) : dataset.ProductId ===
+                        '8474c3b080fa42cc837f1d2338fcf096' ||
+                      dataset.Product ===
+                        'High Resolution Snow and Ice Parameters' ? (
+                      <div class="zoom-in-message-container">
+                        <span>{dataset.DatasetTitle}</span>
+                        <div class="zoom-in-message">
+                          Zoom in to view on map
+                        </div>
+                      </div>
+                    ) : (
+                      <span>{dataset.DatasetTitle}</span>
+                    )}
+                  </legend>
                 </label>
                 <div className="map-menu-icons">
                   {!this.props.download && dataset.IsTimeSeries && (
@@ -1253,8 +1290,8 @@ class MenuWidget extends React.Component {
 
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
     datasetCheck.checked = trueChecks > 0;
-
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
+    this.showZoomMessageOnDataset(datasetCheck);
   }
 
   /**
@@ -1556,6 +1593,24 @@ class MenuWidget extends React.Component {
     // update DOM
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
+  }
+
+  //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
+
+  showZoomMessageOnDataset(dataset) {
+    if (this.props.download) return;
+    let snowAndIceParameters = this.compCfg[2].Products[1];
+    let node = document.getElementById(dataset.id).nextElementSibling
+      .lastElementChild.lastChild.lastElementChild;
+    snowAndIceParameters.Datasets.forEach((set) => {
+      if (set.DatasetTitle.includes(dataset.title)) {
+        if (dataset.checked) {
+          node.style.display = 'block';
+        } else {
+          node.style.display = 'none';
+        }
+      }
+    });
   }
 
   /**
@@ -2516,6 +2571,17 @@ class MenuWidget extends React.Component {
             panelsElem.scrollTop = scrollPosition;
           }
         }
+      }
+    }
+  }
+
+  showZoomMessageForDatasets() {
+    if (!this.props.download) {
+      let nodes = document.querySelectorAll('.zoom-in-message-dataset');
+      if (nodes) {
+        nodes.forEach((node) => {
+          node.style.display = 'none';
+        });
       }
     }
   }
