@@ -744,7 +744,7 @@ class MenuWidget extends React.Component {
     });
   }
 
-  /**
+  /**elem
    * Processes the JSON file containing layers info
    * @returns
    */
@@ -1568,7 +1568,7 @@ class MenuWidget extends React.Component {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
-      this.deleteFilteredLayer();
+      this.deleteFilteredLayer(elem.id);
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
       let mapLayer = this.map.findLayerById(elem.id);
@@ -1582,7 +1582,6 @@ class MenuWidget extends React.Component {
     this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
-
     // toggle custom legend for WMTS and TMS
     if (
       this.layers[elem.id].ViewService.toLowerCase().includes('wmts') ||
@@ -2506,12 +2505,12 @@ class MenuWidget extends React.Component {
     }
   }
 
-  deleteFilteredLayer() {
+  deleteFilteredLayer(layer) {
     let layers = this.layers;
-    if (layers['lcc_filter']) {
+    if (layers['lcc_filter'] && layer.includes('all_lcc')) {
       layers['lcc_filter'].visible = false;
       delete layers['lcc_filter'];
-    } else if (layers['lc_filter']) {
+    } else if (layers['lc_filter'] && layer.includes('all_present_lc')) {
       layers['lc_filter'].visible = false;
       delete layers['lc_filter'];
     }
