@@ -333,11 +333,15 @@ class MenuWidget extends React.Component {
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       if (isStationary) {
-        let nodes = document.querySelectorAll('.zoom-in-message-general');
-        if (nodes) {
+        let node = document.getElementById('snow-and-ice-zoom-message');
+        let nodes = document.querySelectorAll('.zoom-in-message-dataset');
+        if (node || nodes) {
           let zoom = this.view.get('zoom');
+          node.style.display = zoom > 6 ? 'none' : 'block';
           nodes.forEach((node) => {
-            node.style.display = zoom > 6 ? 'none' : 'block';
+            let isChecked = node.parentElement.offsetParent.offsetParent.querySelector('input').checked;
+            if (isChecked)
+              node.style.display = zoom > 6 ? 'none' : 'block';
           });
         }
       }
@@ -616,6 +620,7 @@ class MenuWidget extends React.Component {
     this.openMenu();
     this.expandDropdowns();
     this.loadLayers();
+    this.showZoomMessageForDatasets()
     this.loadOpacity();
     this.loadVisibility();
   }
@@ -931,7 +936,7 @@ class MenuWidget extends React.Component {
                             <div class="zoom-in-message-container">
                               <span>{product.ProductTitle}</span>
                               <div
-                                class="zoom-in-message zoom-in-message-general"
+                                class="zoom-in-message"
                                 id="snow-and-ice-zoom-message"
                               >
                                 Zoom in to view on map
@@ -1003,11 +1008,11 @@ class MenuWidget extends React.Component {
     var index = 0;
     var inheritedIndexDataset = inheritedIndex + '_' + datIndex;
     var checkIndex = 'map_dataset_' + inheritedIndexDataset;
+    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     var description =
       dataset.DatasetDescription && dataset.DatasetDescription.length >= 300
         ? dataset.DatasetDescription.substr(0, 300) + '...'
         : dataset.DatasetDescription;
-
     let style = this.props.download
       ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
       : {};
@@ -1161,13 +1166,14 @@ class MenuWidget extends React.Component {
                   <legend className="ccl-form-legend">
                     {description ? (
                       <Popup
-                        trigger={
+                        trigger={ 
+                          checkedLayers && checkedLayers.includes(dataset.Layer.LayerId) &&
                           dataset.ProductId ===
                             '8474c3b080fa42cc837f1d2338fcf096' ||
                           dataset.Product === 'Snow and Ice Parameters' ? (
                             <div class="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
-                              <div class="zoom-in-message zoom-in-message-general">
+                              <div class="zoom-in-message zoom-in-message-dataset">
                                 Zoom in to view on map
                               </div>
                             </div>
@@ -1180,7 +1186,8 @@ class MenuWidget extends React.Component {
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
-                    ) : dataset.ProductId ===
+                    ) : 
+                      dataset.ProductId ===
                         '8474c3b080fa42cc837f1d2338fcf096' ||
                       dataset.Product ===
                         'High Resolution Snow and Ice Parameters' ? (
@@ -1280,8 +1287,8 @@ class MenuWidget extends React.Component {
 
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
     datasetCheck.checked = trueChecks > 0;
-
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
+    this.showZoomMessageOnDataset(datasetCheck);
   }
 
   /**
@@ -1584,6 +1591,24 @@ class MenuWidget extends React.Component {
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
   }
+  
+  //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
+
+  showZoomMessageOnDataset(dataset) {
+    let snowAndIceParameters = this.compCfg[2].Products[1];
+    let node = document.getElementById(dataset.id).nextElementSibling.lastElementChild.lastChild.lastElementChild;
+    snowAndIceParameters.Datasets.forEach(set => {
+      if (set.DatasetTitle.includes(dataset.title)) {
+          if (dataset.checked) {
+          node.style.display = 'block';
+        } else {
+          node.style.display = 'none';
+        }
+      }
+    })
+  }
+
+  
 
   /**
    * Hide or show the hotspot widget for a hotspot layer
@@ -2546,6 +2571,16 @@ class MenuWidget extends React.Component {
       }
     }
   }
+  
+
+  showZoomMessageForDatasets() {
+    let nodes = document.querySelectorAll('.zoom-in-message-dataset');
+    if (nodes) {
+      nodes.forEach((node) => {
+        node.style.display = 'none';
+      });
+    }
+  };
 
   /**
    * Method to change between tabs
