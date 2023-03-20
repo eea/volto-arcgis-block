@@ -127,7 +127,7 @@ class HotspotWidget extends React.Component {
             ? 'all_lcc_a_pol'
             : 'all_lcc_b_pol';
         if (this.esriLayer_lcc !== null) {
-          if (this.esriLayer_lcc2 != null){
+          if (this.esriLayer_lcc2 != null) {
             this.props.map.remove(this.esriLayer_lcc2);
           }
 
@@ -147,7 +147,7 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_lcc);
           this.props.selectedLayers['lcc_filter'] = this.esriLayer_lcc;
           this.props.selectedLayers['lcc_filter'].visible = true;
-          this.esriLayer_lcc2=this.esriLayer_lcc
+          this.esriLayer_lcc2 = this.esriLayer_lcc;
           this.layerModelInit();
         }
       }
@@ -162,7 +162,7 @@ class HotspotWidget extends React.Component {
           .value.match(/\d+/g)
           .map(Number)[0];
         if (this.esriLayer_lc !== null) {
-          if (this.esriLayer_lc2 != null){
+          if (this.esriLayer_lc2 != null) {
             this.props.map.remove(this.esriLayer_lc2);
           }
           this.esriLayer_lc.sublayers.items[0].name = this.addLegendName(
@@ -181,7 +181,7 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_lc);
           this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
           this.props.selectedLayers['lc_filter'].visible = true;
-          this.esriLayer_lc2=this.esriLayer_lc
+          this.esriLayer_lc2 = this.esriLayer_lc;
           this.layerModelInit();
         }
       }
