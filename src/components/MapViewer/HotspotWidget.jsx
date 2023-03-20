@@ -36,6 +36,7 @@ class HotspotWidget extends React.Component {
     this.layerModelInit = this.layerModelInit.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
     //this.getLayerParameters();
+    this.selectedArea = null;
   }
 
   loader() {
@@ -196,7 +197,7 @@ class HotspotWidget extends React.Component {
 
   openMenu() {
     if (this.state.showMapMenu) {
-      this.getKLCNames(this.dataJSONNames, this.dataJSONNames[0].node.klc_name);
+      this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -212,10 +213,7 @@ class HotspotWidget extends React.Component {
     } else {
       this.getLayerParameters();
       if (this.getLayerParameters.length !== 0)
-        this.getKLCNames(
-          this.dataJSONNames,
-          this.dataJSONNames[0].node.klc_name,
-        );
+        this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
@@ -242,7 +240,10 @@ class HotspotWidget extends React.Component {
       })
       .then((data) => {
         this.dataJSONNames = data.nodes;
-        this.getKLCNames(data.nodes, data.nodes[0].node.klc_name);
+        if (this.selectedArea == null) {
+          this.selectedArea = data.nodes[0].node.klc_name;
+        }
+        this.getKLCNames(data.nodes, this.selectedArea);
       })
       .catch(function (error) {
         /* console.log('error while getting data'); */
@@ -315,6 +316,7 @@ class HotspotWidget extends React.Component {
     var selectBoxLcTime;
     var selectBoxHighlightsLcc;
     var selectBoxLccTime;
+    this.selectedArea = selectedOption;
 
     selectBox = document.getElementById('select-klc-area');
     selectBoxHighlightsLcc = document.getElementById(
@@ -323,7 +325,6 @@ class HotspotWidget extends React.Component {
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxHighlightsLc = document.getElementById('select-klc-highlights-lc');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
-
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
       if (option === selectedOption) {
