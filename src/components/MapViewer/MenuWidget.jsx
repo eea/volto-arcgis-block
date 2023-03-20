@@ -339,9 +339,10 @@ class MenuWidget extends React.Component {
           let zoom = this.view.get('zoom');
           node.style.display = zoom > 6 ? 'none' : 'block';
           nodes.forEach((node) => {
-            let isChecked = node.parentElement.offsetParent.offsetParent.querySelector('input').checked;
-            if (isChecked)
-              node.style.display = zoom > 6 ? 'none' : 'block';
+            let isChecked = node.parentElement.offsetParent.offsetParent.querySelector(
+              'input',
+            ).checked;
+            if (isChecked) node.style.display = zoom > 6 ? 'none' : 'block';
           });
         }
       }
@@ -620,7 +621,7 @@ class MenuWidget extends React.Component {
     this.openMenu();
     this.expandDropdowns();
     this.loadLayers();
-    this.showZoomMessageForDatasets()
+    this.showZoomMessageForDatasets();
     this.loadOpacity();
     this.loadVisibility();
   }
@@ -1166,10 +1167,11 @@ class MenuWidget extends React.Component {
                   <legend className="ccl-form-legend">
                     {description ? (
                       <Popup
-                        trigger={ 
-                          checkedLayers && checkedLayers.includes(dataset.Layer.LayerId) &&
-                          dataset.ProductId ===
-                            '8474c3b080fa42cc837f1d2338fcf096' ||
+                        trigger={
+                          (checkedLayers &&
+                            checkedLayers.includes(dataset.Layer.LayerId) &&
+                            dataset.ProductId ===
+                              '8474c3b080fa42cc837f1d2338fcf096') ||
                           dataset.Product === 'Snow and Ice Parameters' ? (
                             <div class="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
@@ -1186,8 +1188,7 @@ class MenuWidget extends React.Component {
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
-                    ) : 
-                      dataset.ProductId ===
+                    ) : dataset.ProductId ===
                         '8474c3b080fa42cc837f1d2338fcf096' ||
                       dataset.Product ===
                         'High Resolution Snow and Ice Parameters' ? (
@@ -1591,24 +1592,23 @@ class MenuWidget extends React.Component {
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
   }
-  
+
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
   showZoomMessageOnDataset(dataset) {
     let snowAndIceParameters = this.compCfg[2].Products[1];
-    let node = document.getElementById(dataset.id).nextElementSibling.lastElementChild.lastChild.lastElementChild;
-    snowAndIceParameters.Datasets.forEach(set => {
+    let node = document.getElementById(dataset.id).nextElementSibling
+      .lastElementChild.lastChild.lastElementChild;
+    snowAndIceParameters.Datasets.forEach((set) => {
       if (set.DatasetTitle.includes(dataset.title)) {
-          if (dataset.checked) {
+        if (dataset.checked) {
           node.style.display = 'block';
         } else {
           node.style.display = 'none';
         }
       }
-    })
+    });
   }
-
-  
 
   /**
    * Hide or show the hotspot widget for a hotspot layer
@@ -2571,7 +2571,6 @@ class MenuWidget extends React.Component {
       }
     }
   }
-  
 
   showZoomMessageForDatasets() {
     let nodes = document.querySelectorAll('.zoom-in-message-dataset');
@@ -2580,7 +2579,7 @@ class MenuWidget extends React.Component {
         node.style.display = 'none';
       });
     }
-  };
+  }
 
   /**
    * Method to change between tabs
