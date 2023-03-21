@@ -2303,8 +2303,16 @@ class MenuWidget extends React.Component {
     //     ).dataset.opacity = value;
     //   });
     // } else {
-    this.layers[layer].opacity = value / 100;
-    this.saveOpacity(layer, value / 100);
+    if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
+      this.layers['lcc_filter'].opacity = value / 100;
+      this.saveOpacity(this.layers['lcc_filter'], value / 100);
+    } else if (this.layers['lc_filter'] && layer.includes('all_present')) {
+      this.layers['lc_filter'].opacity = value / 100;
+      this.saveOpacity(this.layers['lc_filter'], value / 100);
+    } else {
+      this.layers[layer].opacity = value / 100;
+      this.saveOpacity(this.layer, value / 100);
+    }
     document.querySelector(
       '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
     ).dataset.opacity = value;
@@ -2372,8 +2380,19 @@ class MenuWidget extends React.Component {
     if (this.visibleLayers[elem.id][1] === 'eye') {
       this.layers[elem.id].visible = false;
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
+      if (this.layers['lcc_filter'] && elem.id.includes('all_lcc')) {
+        this.map.remove(this.layers['lcc_filter']);
+      } else if (this.layers['lc_filter'] && elem.id.includes('all_present')) {
+        this.map.remove(this.layers['lc_filter']);
+      }
     } else {
-      this.map.add(this.layers[elem.id]);
+      if (this.layers['lcc_filter'] && elem.id.includes('all_lcc')) {
+        this.map.add(this.layers['lcc_filter']);
+      } else if (this.layers['lc_filter'] && elem.id.includes('all_present')) {
+        this.map.add(this.layers['lc_filter']);
+      } else {
+        this.map.add(this.layers[elem.id]);
+      }
       this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
