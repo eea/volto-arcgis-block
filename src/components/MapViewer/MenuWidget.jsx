@@ -332,25 +332,29 @@ class MenuWidget extends React.Component {
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
-      let dropDownActive = sessionStorage.getItem('expandedDropdowns')
+      let dropDownActive = sessionStorage.getItem('expandedDropdowns');
       if (isStationary && dropDownActive) {
         let zoom = this.view.get('zoom');
         if (dropDownActive.includes('dropdown_2')) {
           let node = document.getElementById('snow-and-ice-zoom-message');
           if (node && node !== null) {
-              node.style.display = zoom > 6 ? 'none' : 'block';
-            }
+            node.style.display = zoom > 6 ? 'none' : 'block';
+          }
         }
         if (dropDownActive.includes('dropdown_2_0')) {
-          let checks = document.getElementById('dropdown_2_0').nextSibling.querySelectorAll('[parentid="map_product_2_0"]');
+          let checks = document
+            .getElementById('dropdown_2_0')
+            .nextSibling.querySelectorAll('[parentid="map_product_2_0"]');
           let checksList = Array.prototype.slice.call(checks);
           if (checksList && checksList !== null) {
             checksList.forEach((check) => {
-              if (check !== null)
-              {
-                let isChecked = check.checked;
-                if (isChecked) {
-                  let node = Array.prototype.slice.call(check.nextSibling.getElementsByClassName('zoom-in-message-dataset'))[0];
+              if (check !== null) {
+                if (check.checked) {
+                  let node = Array.prototype.slice.call(
+                    check.nextSibling.getElementsByClassName(
+                      'zoom-in-message-dataset',
+                    ),
+                  )[0];
                   node.style.display = zoom > 6 ? 'none' : 'block';
                 }
               }
