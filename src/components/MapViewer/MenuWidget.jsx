@@ -58,6 +58,16 @@ export const AddCartItem = ({
     let data = checkCartData(cartData, area, dataset);
     addCartItem(data).then(() => {
       showMessageTimer('Added to cart', 'success', 'Success');
+      if (dataset.IsTimeSeries) {
+        let id = dataset.DatasetId;
+        let datasetElem = document.querySelector('[datasetid="' + id + '"]');
+        let datasetInput = document.querySelector(
+          '#active_' +
+            datasetElem.querySelector('.map-menu-layer input:checked').id,
+        );
+        datasetInput.removeAttribute('time-start');
+        datasetInput.removeAttribute('time-end');
+      }
     });
   };
 
@@ -1305,7 +1315,7 @@ class MenuWidget extends React.Component {
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
     datasetCheck.checked = trueChecks > 0;
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
-    this.showZoomMessageOnDataset(datasetCheck);
+    //this.showZoomMessageOnDataset(datasetCheck);
   }
 
   /**
