@@ -108,6 +108,22 @@ export const AddCartItem = ({
     document.querySelector('.drawRectanglePopup-block').style.display = 'block';
   };
 
+  const openCalendar = (dataset) => {
+    document.getElementById('active_label').click();
+    if (!document.querySelector('.timeslider-container')) {
+      let layerId = document.querySelector(
+        '[datasetid="' +
+          dataset.DatasetId +
+          '"] .map-menu-layer input:checked',
+      ).id;
+      document
+        .querySelector(
+          "[layer-id='" + layerId + "'] .active-layer-time",
+        )
+        .click();
+    }
+  };
+
   const showMessageTimer = (msg, type, title) => {
     toast[type](<Toast autoClose={4000} title={title} content={msg} />, {
       position: 'top-center',
@@ -180,13 +196,15 @@ export const AddCartItem = ({
           >
             Add to cart
           </button>
-          <button
-            id="map_download_cancel"
-            className="ccl-button ccl-button--default"
-            onClick={() => downloadCancel(mapViewer)}
-          >
-            Cancel
-          </button>
+          {dataset.IsTimeSeries && (
+            <button
+              id="map_download_cancel"
+              className="ccl-button ccl-button--default"
+              onClick={() => openCalendar(dataset)}
+            >
+              Open calendar
+            </button>
+          )}
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <Popup
@@ -1315,7 +1333,7 @@ class MenuWidget extends React.Component {
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
     datasetCheck.checked = trueChecks > 0;
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
-    //this.showZoomMessageOnDataset(datasetCheck);
+    this.showZoomMessageOnDataset(datasetCheck);
   }
 
   /**
