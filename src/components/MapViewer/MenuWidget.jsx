@@ -101,25 +101,14 @@ export const AddCartItem = ({
     return data;
   };
 
-  const downloadCancel = (mapViewer) => {
-    mapViewer.view.popup.close();
-    mapViewer.view.graphics.removeAll();
-    props.updateArea('');
-    document.querySelector('.drawRectanglePopup-block').style.display = 'block';
-  };
-
   const openCalendar = (dataset) => {
     document.getElementById('active_label').click();
     if (!document.querySelector('.timeslider-container')) {
       let layerId = document.querySelector(
-        '[datasetid="' +
-          dataset.DatasetId +
-          '"] .map-menu-layer input:checked',
+        '[datasetid="' + dataset.DatasetId + '"] .map-menu-layer input:checked',
       ).id;
       document
-        .querySelector(
-          "[layer-id='" + layerId + "'] .active-layer-time",
-        )
+        .querySelector("[layer-id='" + layerId + "'] .active-layer-time")
         .click();
     }
   };
@@ -1936,6 +1925,7 @@ class MenuWidget extends React.Component {
               }}
               tabIndex="0"
               role="button"
+              data-download={fromDownload ? true : false}
             >
               <Popup
                 trigger={<FontAwesomeIcon icon={this.timeLayers[elem.id]} />}
@@ -2220,10 +2210,30 @@ class MenuWidget extends React.Component {
           document
             .querySelector('#map_remove_layers')
             .classList.remove('locked');
-          if (this.props.download)
+          if (this.props.download) {
             document
               .querySelector('#download_label')
               .classList.remove('locked');
+            if (
+              document.querySelector(
+                '.active-layer[layer-id="' +
+                  elem.id +
+                  '"] .map-menu-icon.active-layer-time',
+              ).dataset.download === 'true'
+            ) {
+              document.getElementById('download_label').click();
+            }
+          } else {
+            if (
+              document.querySelector(
+                '.active-layer[layer-id="' +
+                  elem.id +
+                  '"] .map-menu-icon.active-layer-time',
+              ).dataset.download === 'true'
+            ) {
+              document.getElementById('products_label').click();
+            }
+          }
           if (
             document.contains(document.querySelector('.timeslider-container'))
           )
