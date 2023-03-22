@@ -293,7 +293,7 @@ class AreaWidget extends React.Component {
     popup.innerHTML =
       '<div class="drawRectanglePopup-content">' +
       '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
-      '<div class="drawRectanglePopup-text">Select an area of interest to download a dataset</div>' +
+      '<div class="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
       '</div>';
     this.props.download && this.props.view.ui.add(popup, 'top-right');
   }
@@ -447,7 +447,8 @@ class AreaWidget extends React.Component {
                         <span className="esri-icon-cursor-marquee"></span>
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Select an area of interest to download a dataset
+                        Select or draw an area of interest in the map to
+                        continue
                       </div>
                     </>
                   )}
@@ -457,8 +458,8 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'download']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Click on the download icon of the "Menu of products" to
-                        download the dataset
+                        Click on the download icon on “Products and datasets” to
+                        add to cart
                       </div>
                     </>
                   )}
