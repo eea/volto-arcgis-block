@@ -2382,18 +2382,22 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
       if (this.layers['lcc_filter'] && elem.id.includes('all_lcc')) {
         this.map.remove(this.layers['lcc_filter']);
+        this.layers['lcc_filter'].visible = false;
       } else if (this.layers['lc_filter'] && elem.id.includes('all_present')) {
         this.map.remove(this.layers['lc_filter']);
+        this.layers['lc_filter'].visible = false;
       }
     } else {
       if (this.layers['lcc_filter'] && elem.id.includes('all_lcc')) {
         this.map.add(this.layers['lcc_filter']);
+        this.layers['lcc_filter'].visible = true;
       } else if (this.layers['lc_filter'] && elem.id.includes('all_present')) {
         this.map.add(this.layers['lc_filter']);
+        this.layers['lc_filter'].visible = true;
       } else {
         this.map.add(this.layers[elem.id]);
+        this.layers[elem.id].visible = true;
       }
-      this.layers[elem.id].visible = true;
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
 
