@@ -810,7 +810,7 @@ class MenuWidget extends React.Component {
       // CLMS-1544
       // dont show the product if all of its datasets has the auxiliary service as its ViewService URL
       const isAuxiliary = (dataset) =>
-      dataset.MarkAsDownloadableNoServiceToVisualize;
+        dataset.MarkAsDownloadableNoServiceToVisualize;
       if (!component.Products[i].Datasets.every(isAuxiliary)) {
         products.push(
           this.metodProcessProduct(
@@ -887,9 +887,7 @@ class MenuWidget extends React.Component {
       }
 
       // CLMS-1545
-      if (
-      !product.Datasets[i].MarkAsDownloadableNoServiceToVisualize
-      ) {
+      if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
         datasets.push(
           this.metodProcessDataset(
             product.Datasets[i],
