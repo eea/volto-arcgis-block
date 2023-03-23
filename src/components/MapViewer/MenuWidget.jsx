@@ -819,7 +819,11 @@ class MenuWidget extends React.Component {
       // CLMS-1544
       // dont show the product if all of its datasets has the auxiliary service as its ViewService URL
       const isAuxiliary = (dataset) =>
-        !dataset.MarkAsDownloadableNoServiceToVisualize;
+        dataset.ViewService.toLowerCase() ===
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver' ||
+        dataset.ViewService.toLowerCase() ===
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver?';
+
       if (!component.Products[i].Datasets.every(isAuxiliary)) {
         products.push(
           this.metodProcessProduct(
@@ -894,8 +898,14 @@ class MenuWidget extends React.Component {
         var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
         dataset_def.push(idDataset);
       }
+
       // CLMS-1545
-      if (product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
+      if (
+        product.Datasets[i].ViewService.toLowerCase() !==
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver' &&
+        product.Datasets[i].ViewService.toLowerCase() !==
+          'https://trial.discomap.eea.europa.eu/arcgis/services/clms/worldcountries/mapserver/wmsserver?'
+      ) {
         datasets.push(
           this.metodProcessDataset(
             product.Datasets[i],
@@ -1891,7 +1901,7 @@ class MenuWidget extends React.Component {
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
    */
-  addActiveLayer(elem, order, fromDownload, hideCalendar) {
+  addActiveLayer(elem, order, fromDownload) {
     return (
       <div
         className="active-layer"
@@ -1982,12 +1992,7 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(
-              elem,
-              this.layers[elem.id],
-              fromDownload,
-              hideCalendar,
-            )}
+            this.renderTimeslider(elem, this.layers[elem.id], fromDownload)}
         </div>
       </div>
     );
@@ -2123,7 +2128,7 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
 
-  showTimeSlider(elem, fromDownload, hideCalendar) {
+  showTimeSlider(elem, fromDownload) {
     if (
       sessionStorage.key('timeSliderTag') &&
       sessionStorage.getItem('timeSliderTag') === 'true'
@@ -2163,7 +2168,6 @@ class MenuWidget extends React.Component {
             elem,
             order,
             fromDownload,
-            hideCalendar,
           );
         } else {
           if (
@@ -2737,7 +2741,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  renderTimeslider(elem, layer, fromDownload, hideCalendar) {
+  renderTimeslider(elem, layer, fromDownload) {
     if (this.props.view && layer) {
       let activeLayer = document.querySelector('#active_' + elem.id);
       let time = { elem: activeLayer };
@@ -2761,7 +2765,6 @@ class MenuWidget extends React.Component {
           logged={isLoggedIn}
           fromDownload={fromDownload}
           area={this.props.area}
-          hideCalendar={hideCalendar}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
@@ -2782,7 +2785,7 @@ class MenuWidget extends React.Component {
         .querySelector('[datasetid="' + id + '"] input')
         .getAttribute('defcheck');
       setTimeout(() => {
-        this.showTimeSlider(document.getElementById(layerId), true, true);
+        this.showTimeSlider(document.getElementById(layerId), false);
       }, 100);
     }
   }
