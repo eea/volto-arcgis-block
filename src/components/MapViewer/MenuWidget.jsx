@@ -809,6 +809,8 @@ class MenuWidget extends React.Component {
     for (var i in component.Products) {
       // CLMS-1544
       // dont show the product if all of its datasets has the auxiliary service as its ViewService URL
+      //CLMS-1756
+      //don´t show the product if MarkAsDownloadableNoServiceToVisualize is true
       const isAuxiliary = (dataset) =>
         dataset.MarkAsDownloadableNoServiceToVisualize;
       if (!component.Products[i].Datasets.every(isAuxiliary)) {
