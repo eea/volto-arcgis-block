@@ -58,6 +58,16 @@ export const AddCartItem = ({
     let data = checkCartData(cartData, area, dataset);
     addCartItem(data).then(() => {
       showMessageTimer('Added to cart', 'success', 'Success');
+      if (dataset.IsTimeSeries) {
+        let id = dataset.DatasetId;
+        let datasetElem = document.querySelector('[datasetid="' + id + '"]');
+        let datasetInput = document.querySelector(
+          '#active_' +
+            datasetElem.querySelector('.map-menu-layer input:checked').id,
+        );
+        datasetInput.removeAttribute('time-start');
+        datasetInput.removeAttribute('time-end');
+      }
     });
   };
 
@@ -91,11 +101,16 @@ export const AddCartItem = ({
     return data;
   };
 
-  const downloadCancel = (mapViewer) => {
-    mapViewer.view.popup.close();
-    mapViewer.view.graphics.removeAll();
-    props.updateArea('');
-    document.querySelector('.drawRectanglePopup-block').style.display = 'block';
+  const openCalendar = (dataset) => {
+    document.getElementById('active_label').click();
+    if (!document.querySelector('.timeslider-container')) {
+      let layerId = document.querySelector(
+        '[datasetid="' + dataset.DatasetId + '"] .map-menu-layer input:checked',
+      ).id;
+      document
+        .querySelector("[layer-id='" + layerId + "'] .active-layer-time")
+        .click();
+    }
   };
 
   const showMessageTimer = (msg, type, title) => {
@@ -170,13 +185,15 @@ export const AddCartItem = ({
           >
             Add to cart
           </button>
-          <button
-            id="map_download_cancel"
-            className="ccl-button ccl-button--default"
-            onClick={() => downloadCancel(mapViewer)}
-          >
-            Cancel
-          </button>
+          {dataset.IsTimeSeries && (
+            <button
+              id="map_download_cancel"
+              className="ccl-button ccl-button--default"
+              onClick={() => openCalendar(dataset)}
+            >
+              Open calendar
+            </button>
+          )}
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <Popup
@@ -333,32 +350,41 @@ class MenuWidget extends React.Component {
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let dropDownActive = sessionStorage.getItem('expandedDropdowns');
-      if (isStationary && dropDownActive) {
+      let node;
+      if (isStationary) {
         let zoom = this.view.get('zoom');
-        if (dropDownActive.includes('dropdown_2')) {
-          let node = document.getElementById('snow-and-ice-zoom-message');
+        if (this.props.download) {
+          node = document.querySelector('.zoom-in-message-dataset');
           if (node && node !== null) {
             node.style.display = zoom > 6 ? 'none' : 'block';
           }
         }
-        if (dropDownActive.includes('dropdown_2_0')) {
-          let checks = document
-            .getElementById('dropdown_2_0')
-            .nextSibling.querySelectorAll('[parentid="map_product_2_0"]');
-          let checksList = Array.prototype.slice.call(checks);
-          if (checksList && checksList !== null) {
-            checksList.forEach((check) => {
-              if (check !== null) {
-                if (check.checked) {
-                  let node = Array.prototype.slice.call(
-                    check.nextSibling.getElementsByClassName(
-                      'zoom-in-message-dataset',
-                    ),
-                  )[0];
-                  node.style.display = zoom > 6 ? 'none' : 'block';
+        if (!this.props.download && dropDownActive) {
+          if (dropDownActive.includes('dropdown_2')) {
+            node = document.getElementById('snow-and-ice-zoom-message');
+            if (node && node !== null) {
+              node.style.display = zoom > 6 ? 'none' : 'block';
+            }
+          }
+          if (dropDownActive.includes('dropdown_2_0')) {
+            let checks = document
+              .getElementById('dropdown_2_0')
+              .nextSibling.querySelectorAll('[parentid="map_product_2_0"]');
+            let checksList = Array.prototype.slice.call(checks);
+            if (checksList && checksList !== null) {
+              checksList.forEach((check) => {
+                if (check !== null) {
+                  if (check.checked) {
+                    let node = Array.prototype.slice.call(
+                      check.nextSibling.getElementsByClassName(
+                        'zoom-in-message-dataset',
+                      ),
+                    )[0];
+                    node.style.display = zoom > 6 ? 'none' : 'block';
+                  }
                 }
-              }
-            });
+              });
+            }
           }
         }
       }
@@ -1898,6 +1924,7 @@ class MenuWidget extends React.Component {
               }}
               tabIndex="0"
               role="button"
+              data-download={fromDownload ? true : false}
             >
               <Popup
                 trigger={<FontAwesomeIcon icon={this.timeLayers[elem.id]} />}
@@ -2182,10 +2209,30 @@ class MenuWidget extends React.Component {
           document
             .querySelector('#map_remove_layers')
             .classList.remove('locked');
-          if (this.props.download)
+          if (this.props.download) {
             document
               .querySelector('#download_label')
               .classList.remove('locked');
+            if (
+              document.querySelector(
+                '.active-layer[layer-id="' +
+                  elem.id +
+                  '"] .map-menu-icon.active-layer-time',
+              ).dataset.download === 'true'
+            ) {
+              document.getElementById('download_label').click();
+            }
+          } else {
+            if (
+              document.querySelector(
+                '.active-layer[layer-id="' +
+                  elem.id +
+                  '"] .map-menu-icon.active-layer-time',
+              ).dataset.download === 'true'
+            ) {
+              document.getElementById('products_label').click();
+            }
+          }
           if (
             document.contains(document.querySelector('.timeslider-container'))
           )

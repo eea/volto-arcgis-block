@@ -269,6 +269,13 @@ class TimesliderWidget extends React.Component {
       .querySelector('#timeslider_close')
       .addEventListener('click', () => {
         this.props.time.elem.querySelector('.active-layer-time').click();
+        if (this.props.fromDownload) {
+          if (this.props.download) {
+            document.getElementById('download_label').click();
+          } else {
+            document.getElementById('products_label').click();
+          }
+        }
       });
 
     this.props.view
