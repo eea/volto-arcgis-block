@@ -26,8 +26,7 @@ class TimesliderWidget extends React.Component {
       timeSelectedValuesC: [], //To compare time slider stored values with new selected values
       showDatePanel: false,
       lockDatePanel: true,
-      showCalendar:
-        this.props.fromDownload && !this.props.hideCalendar ? true : false,
+      showCalendar: this.props.fromDownload ? true : false,
       dateStart: this.props.time.start ? new Date(this.props.time.start) : null,
       dateEnd: this.props.time.end ? new Date(this.props.time.end) : null,
       periodicity: null,
