@@ -366,10 +366,10 @@ class MenuWidget extends React.Component {
               node.style.display = zoom > 6 ? 'none' : 'block';
             }
           }
-          if (dropDownActive.includes('dropdown_2_0')) {
+          if (dropDownActive.includes('dropdown_2_1')) {
             let checks = document
-              .getElementById('dropdown_2_0')
-              .nextSibling.querySelectorAll('[parentid="map_product_2_0"]');
+              .getElementById('dropdown_2_1')
+              .nextSibling.querySelectorAll('[parentid="map_product_2_1"]');
             let checksList = Array.prototype.slice.call(checks);
             if (checksList && checksList !== null) {
               checksList.forEach((check) => {
@@ -667,6 +667,7 @@ class MenuWidget extends React.Component {
     this.loadOpacity();
     this.loadVisibility();
   }
+  
 
   setSliderTag(val) {
     if (!sessionStorage.key('timeSliderTag'))
