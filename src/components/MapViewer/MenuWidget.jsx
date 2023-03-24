@@ -366,10 +366,10 @@ class MenuWidget extends React.Component {
               node.style.display = zoom > 6 ? 'none' : 'block';
             }
           }
-          if (dropDownActive.includes('dropdown_2_0')) {
+          if (dropDownActive.includes('dropdown_2_1')) {
             let checks = document
-              .getElementById('dropdown_2_0')
-              .nextSibling.querySelectorAll('[parentid="map_product_2_0"]');
+              .getElementById('dropdown_2_1')
+              .nextSibling.querySelectorAll('[parentid="map_product_2_1"]');
             let checksList = Array.prototype.slice.call(checks);
             if (checksList && checksList !== null) {
               checksList.forEach((check) => {
@@ -417,9 +417,17 @@ class MenuWidget extends React.Component {
     );
   }
 
+  waitForDataFill = async () => {
+    while (this.compCfg.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return this.compCfg;
+  };
+
   // get custom TMS layer JSON
   getTMSLayersJSON() {
     let promises = []; // download JSON file calls
+    this.waitForDataFill();
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
@@ -1894,7 +1902,7 @@ class MenuWidget extends React.Component {
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
    */
-  addActiveLayer(elem, order, fromDownload) {
+  addActiveLayer(elem, order, fromDownload, hideCalendar) {
     return (
       <div
         className="active-layer"
@@ -1985,7 +1993,12 @@ class MenuWidget extends React.Component {
             />
           </span>
           {this.timeLayers[elem.id][1] === 'stop' &&
-            this.renderTimeslider(elem, this.layers[elem.id], fromDownload)}
+            this.renderTimeslider(
+              elem,
+              this.layers[elem.id],
+              fromDownload,
+              hideCalendar,
+            )}
         </div>
       </div>
     );
@@ -2121,7 +2134,7 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
 
-  showTimeSlider(elem, fromDownload) {
+  showTimeSlider(elem, fromDownload, hideCalendar) {
     if (
       sessionStorage.key('timeSliderTag') &&
       sessionStorage.getItem('timeSliderTag') === 'true'
@@ -2161,6 +2174,7 @@ class MenuWidget extends React.Component {
             elem,
             order,
             fromDownload,
+            hideCalendar,
           );
         } else {
           if (
@@ -2734,7 +2748,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  renderTimeslider(elem, layer, fromDownload) {
+  renderTimeslider(elem, layer, fromDownload, hideCalendar) {
     if (this.props.view && layer) {
       let activeLayer = document.querySelector('#active_' + elem.id);
       let time = { elem: activeLayer };
@@ -2758,6 +2772,7 @@ class MenuWidget extends React.Component {
           logged={isLoggedIn}
           fromDownload={fromDownload}
           area={this.props.area}
+          hideCalendar={hideCalendar}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
@@ -2778,7 +2793,7 @@ class MenuWidget extends React.Component {
         .querySelector('[datasetid="' + id + '"] input')
         .getAttribute('defcheck');
       setTimeout(() => {
-        this.showTimeSlider(document.getElementById(layerId), false);
+        this.showTimeSlider(document.getElementById(layerId), true, true);
       }, 100);
     }
   }
