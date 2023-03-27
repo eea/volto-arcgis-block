@@ -360,12 +360,14 @@ class MenuWidget extends React.Component {
           }
         }
         if (!this.props.download && dropDownActive) {
-            node = document.getElementById('snow-and-ice-zoom-message');
-            if (node && node !== null) {
-              node.style.display = zoom > 6 ? 'none' : 'block';
+          node = document.getElementById('snow-and-ice-zoom-message');
+          if (node && node !== null) {
+            node.style.display = zoom > 6 ? 'none' : 'block';
           }
           if (dropDownActive.includes('dropdown_2_')) {
-            let innerDropdown = document.getElementsByClassName('map-product-checkbox');
+            let innerDropdown = document.getElementsByClassName(
+              'map-product-checkbox',
+            );
             let items = [...innerDropdown];
             let snowAndIce = null;
             for (let item of items) {
@@ -380,7 +382,11 @@ class MenuWidget extends React.Component {
               checksList.forEach((check) => {
                 if (check !== null) {
                   if (check.querySelector('[type="checkbox"]').checked) {
-                    let node = [...check.getElementsByClassName('zoom-in-message-dataset')][0];
+                    let node = [
+                      ...check.getElementsByClassName(
+                        'zoom-in-message-dataset',
+                      ),
+                    ][0];
                     node.style.display = zoom > 6 ? 'none' : 'block';
                   }
                 }
