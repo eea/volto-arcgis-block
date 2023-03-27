@@ -360,26 +360,27 @@ class MenuWidget extends React.Component {
           }
         }
         if (!this.props.download && dropDownActive) {
-          if (dropDownActive.includes('dropdown_2')) {
             node = document.getElementById('snow-and-ice-zoom-message');
             if (node && node !== null) {
               node.style.display = zoom > 6 ? 'none' : 'block';
-            }
           }
-          if (dropDownActive.includes('dropdown_2_1')) {
-            let checks = document
-              .getElementById('dropdown_2_1')
-              .nextSibling.querySelectorAll('[parentid="map_product_2_1"]');
-            let checksList = Array.prototype.slice.call(checks);
+          if (dropDownActive.includes('dropdown_2_')) {
+            let innerDropdown = document.getElementsByClassName('map-product-checkbox');
+            let items = [...innerDropdown];
+            let snowAndIce = null;
+            for (let item of items) {
+              if (item.innerText.includes('Snow and Ice')) {
+                snowAndIce = item;
+                break;
+              }
+            }
+            let checks = snowAndIce.offsetParent.nextSibling.children;
+            let checksList = [...checks];
             if (checksList && checksList !== null) {
               checksList.forEach((check) => {
                 if (check !== null) {
-                  if (check.checked) {
-                    let node = Array.prototype.slice.call(
-                      check.nextSibling.getElementsByClassName(
-                        'zoom-in-message-dataset',
-                      ),
-                    )[0];
+                  if (check.querySelector('[type="checkbox"]').checked) {
+                    let node = [...check.getElementsByClassName('zoom-in-message-dataset')][0];
                     node.style.display = zoom > 6 ? 'none' : 'block';
                   }
                 }
