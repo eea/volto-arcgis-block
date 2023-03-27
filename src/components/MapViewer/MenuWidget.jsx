@@ -376,6 +376,7 @@ class MenuWidget extends React.Component {
                 break;
               }
             }
+            if (snowAndIce === null) return;
             let checks = snowAndIce.offsetParent.nextSibling.children;
             let checksList = [...checks];
             if (checksList && checksList !== null) {
