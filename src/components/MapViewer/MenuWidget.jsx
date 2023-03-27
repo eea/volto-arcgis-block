@@ -425,12 +425,14 @@ class MenuWidget extends React.Component {
     );
   }
 
-  waitForDataFill = async () => {
-    while (this.compCfg.length === 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return this.compCfg;
-  };
+//  waitForDataFill = async () => {
+//    if (!this.props.download) {
+//      while (this.compCfg.length === 0) {
+//        await new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+//      }
+//      return this.compCfg;
+//    };
+//  }
 
   // get custom TMS layer JSON
   getTMSLayersJSON() {
