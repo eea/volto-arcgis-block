@@ -559,7 +559,6 @@ class MenuWidget extends React.Component {
               });
               let el = document.getElementById('active_label');
               el.dispatchEvent(event);
-
               //open time slider
               let layerElem = document.getElementById(layerid);
               this.showTimeSlider(layerElem, true);
@@ -603,7 +602,6 @@ class MenuWidget extends React.Component {
               });
               let el = document.getElementById('active_label');
               el.dispatchEvent(event);
-
               //open time slider
               let layerElem = document.getElementById(layerid);
               this.showTimeSlider(layerElem, true);
@@ -633,7 +631,6 @@ class MenuWidget extends React.Component {
             });
             let el = document.getElementById('active_label');
             el.dispatchEvent(event);
-
             //open time slider
             let layerElem = document.getElementById(layerid);
             this.showTimeSlider(layerElem, true);
@@ -1252,8 +1249,12 @@ class MenuWidget extends React.Component {
                       trigger={
                         <span
                           className="map-menu-icon"
-                          onClick={() => this.checkTimeLayer(dataset)}
-                          onKeyDown={() => this.checkTimeLayer(dataset)}
+                          onClick={() =>
+                            this.checkTimeLayer(dataset, checkedLayers)
+                          }
+                          onKeyDown={() =>
+                            this.checkTimeLayer(dataset, checkedLayers)
+                          }
                           tabIndex="0"
                           role="button"
                         >
@@ -2778,8 +2779,16 @@ class MenuWidget extends React.Component {
       );
     }
   }
-
-  checkTimeLayer(dataset) {
+  findCheckedLayer(dataset, checkedLayers) {
+    for (let i = 0; i < dataset.Layer.length; i++) {
+      for (let j = 0; j < checkedLayers.length; j++) {
+        if (checkedLayers[j].includes(dataset.Layer[i].LayerId)) {
+          return checkedLayers[j];
+        }
+      }
+    }
+  }
+  checkTimeLayer(dataset, checkedLayers) {
     let id = dataset.DatasetId;
     let checkbox = document
       .querySelector('[datasetid="' + id + '"]')
@@ -2789,9 +2798,7 @@ class MenuWidget extends React.Component {
     }
     document.getElementById('active_label').click();
     if (!document.querySelector('.timeslider-container')) {
-      let layerId = document
-        .querySelector('[datasetid="' + id + '"] input')
-        .getAttribute('defcheck');
+      let layerId = this.findCheckedLayer(dataset, checkedLayers);
       setTimeout(() => {
         this.showTimeSlider(document.getElementById(layerId), true, true);
       }, 100);
