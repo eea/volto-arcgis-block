@@ -95,11 +95,11 @@ class MapViewer extends React.Component {
    */
 
   waitForDataFill() {
-      while (this.compCfg.length === 0) {
-        new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-      }
-      return this.compCfg;
-  };
+    while (this.compCfg.length === 0) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return this.compCfg;
+  }
 
   async componentDidMount() {
     loadCss();
