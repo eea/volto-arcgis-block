@@ -360,26 +360,34 @@ class MenuWidget extends React.Component {
           }
         }
         if (!this.props.download && dropDownActive) {
-          if (dropDownActive.includes('dropdown_2')) {
-            node = document.getElementById('snow-and-ice-zoom-message');
-            if (node && node !== null) {
-              node.style.display = zoom > 6 ? 'none' : 'block';
-            }
+          node = document.getElementById('snow-and-ice-zoom-message');
+          if (node && node !== null) {
+            node.style.display = zoom > 6 ? 'none' : 'block';
           }
-          if (dropDownActive.includes('dropdown_2_1')) {
-            let checks = document
-              .getElementById('dropdown_2_1')
-              .nextSibling.querySelectorAll('[parentid="map_product_2_1"]');
-            let checksList = Array.prototype.slice.call(checks);
+          if (dropDownActive.includes('dropdown_2_')) {
+            let innerDropdown = document.getElementsByClassName(
+              'map-product-checkbox',
+            );
+            let items = [...innerDropdown];
+            let snowAndIce = null;
+            for (let item of items) {
+              if (item.innerText.includes('Snow and Ice')) {
+                snowAndIce = item;
+                break;
+              }
+            }
+            if (snowAndIce === null) return;
+            let checks = snowAndIce.offsetParent.nextSibling.children;
+            let checksList = [...checks];
             if (checksList && checksList !== null) {
               checksList.forEach((check) => {
                 if (check !== null) {
-                  if (check.checked) {
-                    let node = Array.prototype.slice.call(
-                      check.nextSibling.getElementsByClassName(
+                  if (check.querySelector('[type="checkbox"]').checked) {
+                    let node = [
+                      ...check.getElementsByClassName(
                         'zoom-in-message-dataset',
                       ),
-                    )[0];
+                    ][0];
                     node.style.display = zoom > 6 ? 'none' : 'block';
                   }
                 }
@@ -417,17 +425,9 @@ class MenuWidget extends React.Component {
     );
   }
 
-  waitForDataFill = async () => {
-    while (this.compCfg.length === 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return this.compCfg;
-  };
-
   // get custom TMS layer JSON
   getTMSLayersJSON() {
     let promises = []; // download JSON file calls
-    this.waitForDataFill();
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
@@ -559,7 +559,6 @@ class MenuWidget extends React.Component {
               });
               let el = document.getElementById('active_label');
               el.dispatchEvent(event);
-
               //open time slider
               let layerElem = document.getElementById(layerid);
               this.showTimeSlider(layerElem, true);
@@ -603,7 +602,6 @@ class MenuWidget extends React.Component {
               });
               let el = document.getElementById('active_label');
               el.dispatchEvent(event);
-
               //open time slider
               let layerElem = document.getElementById(layerid);
               this.showTimeSlider(layerElem, true);
@@ -633,7 +631,6 @@ class MenuWidget extends React.Component {
             });
             let el = document.getElementById('active_label');
             el.dispatchEvent(event);
-
             //open time slider
             let layerElem = document.getElementById(layerid);
             this.showTimeSlider(layerElem, true);
@@ -1252,8 +1249,12 @@ class MenuWidget extends React.Component {
                       trigger={
                         <span
                           className="map-menu-icon"
-                          onClick={() => this.checkTimeLayer(dataset)}
-                          onKeyDown={() => this.checkTimeLayer(dataset)}
+                          onClick={() =>
+                            this.checkTimeLayer(dataset, checkedLayers)
+                          }
+                          onKeyDown={() =>
+                            this.checkTimeLayer(dataset, checkedLayers)
+                          }
                           tabIndex="0"
                           role="button"
                         >
@@ -2778,8 +2779,16 @@ class MenuWidget extends React.Component {
       );
     }
   }
-
-  checkTimeLayer(dataset) {
+  findCheckedLayer(dataset, checkedLayers) {
+    for (let i = 0; i < dataset.Layer.length; i++) {
+      for (let j = 0; j < checkedLayers.length; j++) {
+        if (checkedLayers[j].includes(dataset.Layer[i].LayerId)) {
+          return checkedLayers[j];
+        }
+      }
+    }
+  }
+  checkTimeLayer(dataset, checkedLayers) {
     let id = dataset.DatasetId;
     let checkbox = document
       .querySelector('[datasetid="' + id + '"]')
@@ -2789,9 +2798,7 @@ class MenuWidget extends React.Component {
     }
     document.getElementById('active_label').click();
     if (!document.querySelector('.timeslider-container')) {
-      let layerId = document
-        .querySelector('[datasetid="' + id + '"] input')
-        .getAttribute('defcheck');
+      let layerId = this.findCheckedLayer(dataset, checkedLayers);
       setTimeout(() => {
         this.showTimeSlider(document.getElementById(layerId), true, true);
       }, 100);

@@ -93,10 +93,18 @@ class MapViewer extends React.Component {
    * will be executed, so we can access to the DOM elements, since
    * they are already mounted
    */
+
+  waitForDataFill() {
+    while (this.compCfg.length === 0) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return this.compCfg;
+  }
+
   async componentDidMount() {
     loadCss();
     await this.loader();
-
+    await this.waitForDataFill();
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
