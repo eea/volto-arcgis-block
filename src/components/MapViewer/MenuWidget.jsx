@@ -425,17 +425,9 @@ class MenuWidget extends React.Component {
     );
   }
 
-  waitForDataFill = async () => {
-    while (this.compCfg.length === 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return this.compCfg;
-  };
-
   // get custom TMS layer JSON
   getTMSLayersJSON() {
     let promises = []; // download JSON file calls
-    this.waitForDataFill();
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
