@@ -96,10 +96,8 @@ class MapViewer extends React.Component {
 
   waitForDataFill() {
       while (this.compCfg.length === 0) {
-        console.log("waiting for data");
         new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
       }
-      console.log("data filled");
       return this.compCfg;
   };
 
