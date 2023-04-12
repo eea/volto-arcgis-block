@@ -349,7 +349,8 @@ class MenuWidget extends React.Component {
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
-      let dropDownActive = sessionStorage.getItem('expandedDropdowns');
+      let snowAndIceInSessionStorage =
+        sessionStorage.getItem('snowAndIce') || null;
       let node;
       if (isStationary) {
         let zoom = this.view.get('zoom');
@@ -359,40 +360,36 @@ class MenuWidget extends React.Component {
             node.style.display = zoom > 6 ? 'none' : 'block';
           }
         }
-        if (!this.props.download && dropDownActive) {
+        if (!this.props.download && snowAndIceInSessionStorage === 'true') {
           node = document.getElementById('snow-and-ice-zoom-message');
           if (node && node !== null) {
             node.style.display = zoom > 6 ? 'none' : 'block';
           }
-          if (dropDownActive.includes('dropdown_2_')) {
-            let innerDropdown = document.getElementsByClassName(
-              'map-product-checkbox',
-            );
-            let items = [...innerDropdown];
-            let snowAndIce = null;
-            for (let item of items) {
-              if (item.innerText.includes('Snow and Ice')) {
-                snowAndIce = item;
-                break;
-              }
+          let innerDropdown = document.getElementsByClassName(
+            'map-product-checkbox',
+          );
+          let items = [...innerDropdown];
+          let snowAndIce = null;
+          for (let item of items) {
+            if (item.innerText.includes('Snow and Ice')) {
+              snowAndIce = item;
+              break;
             }
-            if (snowAndIce === null) return;
-            let checks = snowAndIce.offsetParent.nextSibling.children;
-            let checksList = [...checks];
-            if (checksList && checksList !== null) {
-              checksList.forEach((check) => {
-                if (check !== null) {
-                  if (check.querySelector('[type="checkbox"]').checked) {
-                    let node = [
-                      ...check.getElementsByClassName(
-                        'zoom-in-message-dataset',
-                      ),
-                    ][0];
-                    node.style.display = zoom > 6 ? 'none' : 'block';
-                  }
+          }
+          if (snowAndIce === null) return;
+          let checks = snowAndIce.offsetParent.nextSibling.children;
+          let checksList = [...checks];
+          if (checksList && checksList !== null) {
+            checksList.forEach((check) => {
+              if (check !== null) {
+                if (check.querySelector('[type="checkbox"]').checked) {
+                  let node = [
+                    ...check.getElementsByClassName('zoom-in-message-dataset'),
+                  ][0];
+                  node.style.display = zoom > 6 ? 'none' : 'block';
                 }
-              });
-            }
+              }
+            });
           }
         }
       }
@@ -1638,9 +1635,34 @@ class MenuWidget extends React.Component {
 
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
+  setSnowAndIceIntoSessionStorage(bool) {
+    if (sessionStorage.getItem('snowAndIce') === null) {
+      sessionStorage.setItem('snowAndIce', false);
+    }
+    let snowAndIce = sessionStorage.getItem('snowAndIce');
+    if (bool && snowAndIce === 'false') {
+      sessionStorage.setItem('snowAndIce', true);
+    }
+  }
+
   showZoomMessageOnDataset(dataset) {
     if (this.props.download) return;
-    let snowAndIceParameters = this.compCfg[2].Products[1];
+    let snowAndIceParameters;
+    for (let i = 0; i < this.compCfg.length; i++) {
+      if (this.compCfg[i].ComponentTitle === 'Bio-geophysical Parameters') {
+        for (let j = 0; j < this.compCfg[i].Products.length; j++) {
+          if (
+            this.compCfg[i].Products[j].ProductId ===
+            '8474c3b080fa42cc837f1d2338fcf096'
+          ) {
+            this.setSnowAndIceIntoSessionStorage(true);
+            snowAndIceParameters = this.compCfg[i].Products[j];
+            break;
+          }
+        }
+        break;
+      }
+    }
     let node = document.getElementById(dataset.id).nextElementSibling
       .lastElementChild.lastChild.lastElementChild;
     snowAndIceParameters.Datasets.forEach((set) => {
