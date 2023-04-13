@@ -1,8 +1,8 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var BasemapGallery;
-// var Basemap;
-// var WebTileLayer;
+var Basemap;
+var WebTileLayer;
 // var LocalBasemapsSource;
 
 class BasemapWidget extends React.Component {
@@ -30,10 +30,10 @@ class BasemapWidget extends React.Component {
       'esri/widgets/BasemapGallery/support/LocalBasemapsSource',
     ]).then(
       ([_BasemapGallery, _Basemap, _WebTileLayer, _LocalBasemapsSource]) => {
-        BasemapGallery = _BasemapGallery;
-        // Basemap = _Basemap;
-        // WebTileLayer = _WebTileLayer;
-        // LocalBasemapsSource = _LocalBasemapsSource;
+        [BasemapGallery] = [_BasemapGallery];
+        [Basemap] = [_Basemap];
+        [WebTileLayer] = [_WebTileLayer];
+        // [LocalBasemapsSource] = [_LocalBasemapsSource];
       },
     );
   }
@@ -107,23 +107,17 @@ class BasemapWidget extends React.Component {
     await this.loader();
     if (!this.container.current) return;
 
-    // custom basemaps
-    // let basemaps = [Basemap.fromId('topo-vector'), Basemap.fromId('hybrid')];
-    // basemaps.push(
-    //   new Basemap({
-    //     baseLayers: [
-    //       new WebTileLayer({
-    //         urlTemplate:
-    //           'https://gisco-services.ec.europa.eu/maps/wmts/OSMCartoV4CompositeEN/EPSG3857/{z}/{x}/{y}.png',
-    //       }),
-    //     ],
-    //     title: 'OSM GISCO',
-    //     id: 'osm-gisco',
-    //   }),
-    // );
-
-    // let customSource = new LocalBasemapsSource({
-    //      basemaps,
+    // this.positronCompositeBasemap = new Basemap({
+    //   title: "Positron composite",
+    // // thumbnailUrl: "./css/img/Positron.PNG",
+    //   baseLayers: [
+    //     new WebTileLayer({        
+    //       urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png",
+    //     })
+    //   ],    
+    //   // referenceLayers: [
+    //   //   new _WebTileLayer(...)
+    //   // ],
     // });
 
     this.basemapGallery = new BasemapGallery({

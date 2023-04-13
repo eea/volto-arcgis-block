@@ -1665,6 +1665,7 @@ class MenuWidget extends React.Component {
     }
     let node = document.getElementById(dataset.id).nextElementSibling
       .lastElementChild.lastChild.lastElementChild;
+    if (snowAndIceParameters === undefined) return;
     snowAndIceParameters.Datasets.forEach((set) => {
       if (set.DatasetTitle.includes(dataset.title)) {
         if (dataset.checked) {
