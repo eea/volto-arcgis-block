@@ -45,11 +45,13 @@ class BasemapWidget extends React.Component {
    */
   openMenu() {
     if (this.loadFirst) {
+      console.log('Basemap gallery open');
+      // Add styles to selected basemap, but fails if not exist
       document
-        .querySelectorAll('.esri-basemap-gallery__item')[3]
+        .querySelectorAll('.esri-basemap-gallery__item')[0]
         .setAttribute('aria-selected', true);
       document
-        .querySelectorAll('.esri-basemap-gallery__item')[3]
+        .querySelectorAll('.esri-basemap-gallery__item')[0]
         .classList.add('esri-basemap-gallery__item--selected');
       this.loadFirst = false;
 
@@ -59,16 +61,16 @@ class BasemapWidget extends React.Component {
           'click',
           (e) => {
             document
-              .querySelectorAll('.esri-basemap-gallery__item')[3]
+              .querySelectorAll('.esri-basemap-gallery__item')[0]
               .setAttribute('aria-selected', false);
             document
-              .querySelectorAll('.esri-basemap-gallery__item')[3]
+              .querySelectorAll('.esri-basemap-gallery__item')[0]
               .classList.remove('esri-basemap-gallery__item--selected');
           },
           {
             once: true,
           },
-        );
+      );
     }
 
     if (this.state.showMapMenu) {
@@ -107,23 +109,61 @@ class BasemapWidget extends React.Component {
     await this.loader();
     if (!this.container.current) return;
 
-    // this.positronCompositeBasemap = new Basemap({
-    //   title: "Positron composite",
-    // // thumbnailUrl: "./css/img/Positron.PNG",
-    //   baseLayers: [
-    //     new WebTileLayer({        
-    //       urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png",
-    //     })
-    //   ],    
-    //   // referenceLayers: [
-    //   //   new _WebTileLayer(...)
-    //   // ],
-    // });
+    this.positronCompositeBasemap = new Basemap({
+      title: "Positron composite",
+    // thumbnailUrl: "./css/img/Positron.PNG",
+      baseLayers: [
+        new WebTileLayer({        
+          urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png",
+        })
+      ],    
+      // referenceLayers: [
+      //   new _WebTileLayer(...)
+      // ],
+    });
+
+    this.blossomCompositeBasemap = new Basemap({
+      title: "Blossom composite",
+      // thumbnailUrl: "./css/img/Blossom.PNG",
+      baseLayers: [
+        new WebTileLayer({        
+          urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomComposite/EPSG3857/{z}/{x}/{y}.png",
+        })
+      ],    
+      // referenceLayers: [
+      //   new WebTileLayer(...)
+      // ],
+    });
+  
+  
+    this.worldBoundariesBasemap = new Basemap({
+      title: "World boundaries",
+      // thumbnailUrl: "./css/img/WorldBoundaries.PNG",
+      baseLayers: [
+        new WebTileLayer({        
+          urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png",
+        })
+      ],    
+      // referenceLayers: [
+      //   new WebTileLayer(...)
+      // ],
+    });  
 
     this.basemapGallery = new BasemapGallery({
       view: this.props.view,
       container: this.container.current.querySelector('.basemap-panel'),
-      // source: customSource
+      source: [
+        // If this array is empty the app fails in line 48.
+
+        ////// Esri BaseMaps
+        Basemap.fromId("topo-vector"), 
+        Basemap.fromId("hybrid"), 
+        
+        ////// GISCO BaseMaps
+        this.positronCompositeBasemap, 
+        this.worldBoundariesBasemap,
+        this.blossomCompositeBasemap       
+      ]
     });
     this.props.view.ui.add(this.container.current, 'top-right');
   }
