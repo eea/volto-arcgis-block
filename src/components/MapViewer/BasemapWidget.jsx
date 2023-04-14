@@ -110,8 +110,8 @@ class BasemapWidget extends React.Component {
     if (!this.container.current) return;
 
     this.positronCompositeBasemap = new Basemap({
-      title: "Positron composite",
-    // thumbnailUrl: "./css/img/Positron.PNG",
+      title: "Positron composite",  
+      thumbnailUrl: "https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png",
       baseLayers: [
         new WebTileLayer({        
           urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png",
@@ -123,8 +123,8 @@ class BasemapWidget extends React.Component {
     });
 
     this.blossomCompositeBasemap = new Basemap({
-      title: "Blossom composite",
-      // thumbnailUrl: "./css/img/Blossom.PNG",
+      title: "Blossom composite",      
+      thumbnailUrl: "https://gisco-services.ec.europa.eu/maps/wmts/OSMBlossomComposite/EPSG3857/0/0/0.png",
       baseLayers: [
         new WebTileLayer({        
           urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomComposite/EPSG3857/{z}/{x}/{y}.png",
@@ -137,8 +137,8 @@ class BasemapWidget extends React.Component {
   
   
     this.worldBoundariesBasemap = new Basemap({
-      title: "World boundaries",
-      // thumbnailUrl: "./css/img/WorldBoundaries.PNG",
+      title: "World boundaries",      
+      thumbnailUrl: "https://gisco-services.ec.europa.eu/maps/wmts/CountriesWorld/EPSG3857/0/0/0.png",
       baseLayers: [
         new WebTileLayer({        
           urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png",
@@ -152,8 +152,7 @@ class BasemapWidget extends React.Component {
     this.basemapGallery = new BasemapGallery({
       view: this.props.view,
       container: this.container.current.querySelector('.basemap-panel'),
-      source: [
-        // If this array is empty the app fails in line 48.
+      source: [        
 
         ////// Esri BaseMaps
         Basemap.fromId("topo-vector"), 
