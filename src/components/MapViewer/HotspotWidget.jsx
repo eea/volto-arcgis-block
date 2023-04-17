@@ -60,12 +60,24 @@ class HotspotWidget extends React.Component {
     return esriRequest(url, {
       responseType: "json"
     }).then((response) => {
-      const responseJSON = JSON.stringify(response.data);
+      const responseJSON = response.data;
       this.dataBBox = responseJSON;
       console.log(this.dataBBox);
     });
   };
-  
+
+  setBBoxCoordinates = (data) => {
+    let klc_array = data.find((e) => e.klc_code === this.dataKlc_code);
+    let klc_bbox_coordinates = klc_array.bbox.split(',');
+    let xmin_ymin = klc_bbox_coordinates[0].split(' ');
+    let xmax_ymax = klc_bbox_coordinates[1].split(' ');
+    this.props.view.extent.xmin = xmin_ymin[0];
+    this.props.view.extent.ymin = xmin_ymin[1];
+    this.props.view.extent.xmax = xmax_ymax[0];
+    this.props.view.extent.ymax = xmax_ymax[1];
+    debugger;
+  }
+
   addLegendName(legend) {
     let name = legend;
     return name;
@@ -201,6 +213,8 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_lc);
           this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
           this.props.selectedLayers['lc_filter'].visible = true;
+          debugger;
+          this.setBBoxCoordinates(this.dataBBox);
           this.esriLayer_lc2 = this.esriLayer_lc;
           this.layerModelInit();
         }
