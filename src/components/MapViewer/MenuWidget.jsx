@@ -376,21 +376,21 @@ class MenuWidget extends React.Component {
               break;
             }
           }
-          if (snowAndIce === null) return;
-          let checks = snowAndIce.offsetParent.nextSibling.children;
-          let checksList = [...checks];
-          if (checksList && checksList !== null) {
-            checksList.forEach((check) => {
-              if (check !== null) {
-                if (check.querySelector('[type="checkbox"]').checked) {
-                  let node = [
-                    ...check.getElementsByClassName('zoom-in-message-dataset'),
-                  ][0];
-                  node.style.display = zoom > 6 ? 'none' : 'block';
-                }
-              }
-            });
-          }
+          if (snowAndIce === undefined) return;
+          //let checks = snowAndIce.offsetParent.nextSibling.children;
+          //let checksList = [...checks];
+          //if (checksList && checksList !== null) {
+          //  checksList.forEach((check) => {
+          //    if (check !== null) {
+          //      if (check.querySelector('[type="checkbox"]').checked) {
+          //        let node = [
+          //          ...check.getElementsByClassName('zoom-in-message-dataset'),
+          //        ][0];
+          //        node.style.display = zoom > 6 ? 'none' : 'block';
+          //      }
+          //    }
+          //  });
+          //}
         }
       }
     });

@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 
-var WMSLayer, esriRequest;
+var WMSLayer, esriRequest, Extent;
 
 class HotspotWidget extends React.Component {
   /**
@@ -47,11 +47,13 @@ class HotspotWidget extends React.Component {
     return loadModules([
       'esri/layers/WMSLayer',
       'esri/request',
+      'esri/geometry/Extent',
   ]).then(([
     _WMSLayer,
-    _esriRequest,]) => {
+    _esriRequest, _Extent]) => {
       WMSLayer = _WMSLayer;
       esriRequest = _esriRequest;
+      Extent = _Extent;
     });
   }
 
@@ -62,7 +64,6 @@ class HotspotWidget extends React.Component {
     }).then((response) => {
       const responseJSON = response.data;
       this.dataBBox = responseJSON;
-      console.log(this.dataBBox);
     });
   };
 
@@ -71,11 +72,14 @@ class HotspotWidget extends React.Component {
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
-    this.props.view.extent.xmin = xmin_ymin[0];
-    this.props.view.extent.ymin = xmin_ymin[1];
-    this.props.view.extent.xmax = xmax_ymax[0];
-    this.props.view.extent.ymax = xmax_ymax[1];
-    debugger;
+
+    const regionExtent = new Extent ({
+      xmin: (Number(xmin_ymin[0]) * 0.99),
+      ymin: (Number(xmin_ymin[1]) * 0.99),
+      xmax: (Number(xmax_ymax[0]) * 1.01),
+      ymax: (Number(xmax_ymax[1]) * 1.01),
+    });
+    this.props.view.goTo(regionExtent);
   }
 
   addLegendName(legend) {
@@ -213,7 +217,6 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_lc);
           this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
           this.props.selectedLayers['lc_filter'].visible = true;
-          debugger;
           this.setBBoxCoordinates(this.dataBBox);
           this.esriLayer_lc2 = this.esriLayer_lc;
           this.layerModelInit();
