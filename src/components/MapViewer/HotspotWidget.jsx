@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 
-var WMSLayer;
+var WMSLayer, esriRequest;
 
 class HotspotWidget extends React.Component {
   /**
@@ -29,6 +29,7 @@ class HotspotWidget extends React.Component {
     this.checkedLayers = this.props.layers
       ? this.props.layers.checkedLayers
       : '';
+    this.dataBBox = [];
     this.dataJSONNames = [];
     this.klcHighlightsArray = [];
     this.renderPresentLandCover = this.renderPresentLandCover.bind(this);
@@ -36,17 +37,35 @@ class HotspotWidget extends React.Component {
     this.getLayerParameters = this.getLayerParameters.bind(this);
     this.getKLCNames = this.getKLCNames.bind(this);
     this.layerModelInit = this.layerModelInit.bind(this);
+    this.getBBoxData = this.getBBoxData.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
     //this.getLayerParameters();
     this.selectedArea = null;
   }
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer']).then(([_WMSLayer]) => {
+    return loadModules([
+      'esri/layers/WMSLayer',
+      'esri/request',
+  ]).then(([
+    _WMSLayer,
+    _esriRequest,]) => {
       WMSLayer = _WMSLayer;
+      esriRequest = _esriRequest;
     });
   }
 
+  getBBoxData = () => {
+    const url = 'https://land.copernicus.eu/global/hsm/php/klc_bbox.php';
+    return esriRequest(url, {
+      responseType: "json"
+    }).then((response) => {
+      const responseJSON = JSON.stringify(response.data);
+      this.dataBBox = responseJSON;
+      console.log(this.dataBBox);
+    });
+  };
+  
   addLegendName(legend) {
     let name = legend;
     return name;
@@ -526,6 +545,7 @@ class HotspotWidget extends React.Component {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
+    this.getBBoxData();
   }
 }
 export default HotspotWidget;
