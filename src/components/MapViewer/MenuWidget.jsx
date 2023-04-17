@@ -338,6 +338,9 @@ class MenuWidget extends React.Component {
     };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
+    this.mapCfg = this.props.mapCfg
+    this.compCfg2 = this.props.compCfg
+    this.url = this.props.url
     this.map = this.props.map;
     this.view = this.props.view;
     this.menuClass =
@@ -346,6 +349,7 @@ class MenuWidget extends React.Component {
     this.layers = this.props.layers;
     this.activeLayersJSON = {};
     this.layerGroups = {};
+    this.xml=null;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -377,19 +381,21 @@ class MenuWidget extends React.Component {
             }
           }
           if (snowAndIce === null) return;
-          let checks = snowAndIce.offsetParent.nextSibling.children;
-          let checksList = [...checks];
-          if (checksList && checksList !== null) {
-            checksList.forEach((check) => {
-              if (check !== null) {
-                if (check.querySelector('[type="checkbox"]').checked) {
-                  let node = [
-                    ...check.getElementsByClassName('zoom-in-message-dataset'),
-                  ][0];
-                  node.style.display = zoom > 6 ? 'none' : 'block';
+          if(snowAndIce.offsetParent && snowAndIce.offsetParent !== null){
+            let checks = snowAndIce.offsetParent.nextSibling.children;
+            let checksList = [...checks];
+            if (checksList && checksList !== null) {
+              checksList.forEach((check) => {
+                if (check !== null) {
+                  if (check.querySelector('[type="checkbox"]').checked) {
+                    let node = [
+                      ...check.getElementsByClassName('zoom-in-message-dataset'),
+                    ][0];
+                    node.style.display = zoom > 6 ? 'none' : 'block';
+                  }
                 }
-              }
-            });
+              });
+            }
           }
         }
       }
@@ -1921,6 +1927,107 @@ class MenuWidget extends React.Component {
     }
   }
 
+  findCheckedDatasetNoServiceToVisualize(elem){
+    debugger;
+    //let checkedLayers=JSON.parse(sessionStorage.getItem('checkedDatasets'));
+    let parentId=elem.getAttribute('parentid');
+    let selectedDataset = document.querySelector('[id="' + parentId + '"]');
+    this.compCfg.forEach( component => {
+      component.Products.forEach(product => {
+        product.Datasets.forEach(dataset => {
+          if (dataset.DatasetTitle.match(selectedDataset.title)) {
+            debugger;
+            return dataset.MarkAsDownloadableNoServiceToVisualize;
+            //selectedDataset=dataset;
+
+          }
+        });
+      });
+    });
+    debugger;
+  }
+  findCheckedDataset(elem){
+    debugger;
+    //let checkedLayers=JSON.parse(sessionStorage.getItem('checkedDatasets'));
+    let parentId=elem.getAttribute('parentid');
+    let selectedDataset = document.querySelector('[id="' + parentId + '"]');
+    this.compCfg.forEach( component => {
+      component.Products.forEach(product => {
+        product.Datasets.forEach(dataset => {
+          if (dataset.DatasetTitle.match(selectedDataset.title)) {
+            debugger;
+            return dataset.ViewService;
+            //selectedDataset=dataset;
+
+          }
+        });
+      });
+    });
+    debugger;
+  }
+  getCapabilities = (url, serviceType) => {
+  debugger;
+  // Get the coordinates of the click on the view    
+  return esriRequest(url, {
+    responseType: 'xml',
+    sync: 'true',
+    query: {
+      request: 'GetCapabilities',
+      service: serviceType,
+    },
+  }).then((response) => {
+    debugger;
+    const xmlDoc = response.data;
+    const parser = new DOMParser();
+    this.xml = parser.parseFromString(xmlDoc, 'application/xml');
+    //this.xml = response.data; // assign the response data to this.xml
+  }).catch((err) => {
+    console.log(err);
+  });
+}
+  async fullExtent(elem){
+    this.layers;
+    debugger;
+
+    this.activeLayers;
+    this.activeLayer;
+    this.compCfg;
+    this.mapCfg;
+    this.compCfg2;
+    this.url;
+    this.map;
+    debugger;
+    await this.getCapabilities('https://viewer.globalland.vgt.vito.be/mapcache/wmts','wmts');
+    //let xml2=this.getCapabilities('https://viewer.globalland.vgt.vito.be/mapcache/wmts','wmts');
+    debugger;
+
+
+    // get the price element
+    //var priceElement = xml2.getElementsByTagName("price")[0];
+
+    // get the currency attribute value
+    //var currency = priceElement.getAttribute("currency");
+
+    /*let layers = Array.from(xml2.querySelectorAll('Layer')).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );*/
+    let bounding= this.xml.getElementsByTagName('BoundingBox');
+    //let bounding2=xml2.getAttribute('BoundingBox');
+    //let dimension = xml2.querySelector('Dimension');
+    if (this.layers[elem.id].fullExtent && this.layers[elem.id].fullExtent !== null) {
+      debugger;
+      this.view.goTo(this.layers[elem.id].fullExtent);
+    }
+    else if (this.layers[elem.id].fullExtents && this.layers[elem.id].fullExtents !== null) {
+      debugger;
+      this.view.goTo(this.layers[elem.id].fullExtents[0]);
+    }
+    else {
+      debugger;
+      let url = this.findCheckedDataset(elem)
+      let xml=this.getCapabilities(url, 'wms')
+    }
+  }
   /**
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
@@ -1943,6 +2050,21 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
+        {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
+            <span
+              className="map-menu-icon active-layer-extent"
+              onClick={() => this.fullExtent(elem)}
+              onKeyDown={() => this.fullExtent(elem)}
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />}
+                content='Full extent'
+                {...popupSettings}
+              />
+            </span>
+          )}
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"

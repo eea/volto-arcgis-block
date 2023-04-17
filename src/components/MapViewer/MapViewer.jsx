@@ -267,6 +267,9 @@ class MapViewer extends React.Component {
           area={this.state.area}
           layers={this.layers}
           activeLayersHandler={this.activeLayersHandler}
+          mapCfg = {this.mapCfg}
+          compCfg2 = {this.compCfg}
+          url = {this.url}
         />
       ); //call conf
   }
