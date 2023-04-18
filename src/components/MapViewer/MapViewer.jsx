@@ -177,6 +177,8 @@ class MapViewer extends React.Component {
       this.view.destroy();
       delete this.view;
     }
+    //mapStatus = {};
+    //sessionStorage.clear();
   }
 
   setWidgetState() {}
