@@ -136,6 +136,7 @@ class AreaWidget extends React.Component {
   loadNutsService(id, level) {
     this.clearWidget();
 
+    //'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/NUTS_2021_Improved/MapServer/'
     var url =
       'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0';
     var layer = new FeatureLayer({
@@ -234,6 +235,7 @@ class AreaWidget extends React.Component {
     await this.loader();
     this.nutsGroupLayer = new GroupLayer({
       title: 'nuts',
+     // Unai take this opcaity out after implementing improved nuts service
       opacity: 0.5,
     });
     this.props.map.add(this.nutsGroupLayer);
