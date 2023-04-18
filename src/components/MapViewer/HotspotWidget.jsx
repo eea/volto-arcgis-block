@@ -48,9 +48,7 @@ class HotspotWidget extends React.Component {
       'esri/layers/WMSLayer',
       'esri/request',
       'esri/geometry/Extent',
-  ]).then(([
-    _WMSLayer,
-    _esriRequest, _Extent]) => {
+    ]).then(([_WMSLayer, _esriRequest, _Extent]) => {
       WMSLayer = _WMSLayer;
       esriRequest = _esriRequest;
       Extent = _Extent;
@@ -60,7 +58,7 @@ class HotspotWidget extends React.Component {
   getBBoxData = () => {
     const url = 'https://land.copernicus.eu/global/hsm/php/klc_bbox.php';
     return esriRequest(url, {
-      responseType: "json"
+      responseType: 'json',
     }).then((response) => {
       const responseJSON = response.data;
       this.dataBBox = responseJSON;
@@ -73,14 +71,14 @@ class HotspotWidget extends React.Component {
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
 
-    const regionExtent = new Extent ({
-      xmin: (Number(xmin_ymin[0]) * 0.99),
-      ymin: (Number(xmin_ymin[1]) * 0.99),
-      xmax: (Number(xmax_ymax[0]) * 1.01),
-      ymax: (Number(xmax_ymax[1]) * 1.01),
+    const regionExtent = new Extent({
+      xmin: Number(xmin_ymin[0]) * 0.99,
+      ymin: Number(xmin_ymin[1]) * 0.99,
+      xmax: Number(xmax_ymax[0]) * 1.01,
+      ymax: Number(xmax_ymax[1]) * 1.01,
     });
     this.props.view.goTo(regionExtent);
-  }
+  };
 
   addLegendName(legend) {
     let name = legend;

@@ -349,8 +349,7 @@ class MenuWidget extends React.Component {
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
-      let snowAndIceInSessionStorage =
-        sessionStorage.getItem('snowAndIce');
+      let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
       let node;
       if (isStationary) {
         let zoom = this.view.get('zoom');
@@ -376,7 +375,13 @@ class MenuWidget extends React.Component {
               break;
             }
           }
-          if (snowAndIce === null || snowAndIce === undefined || snowAndIce.offsetParent.nextSibling === undefined || snowAndIce.offsetParent.nextSibling === null) return;
+          if (
+            snowAndIce === null ||
+            snowAndIce === undefined ||
+            snowAndIce.offsetParent.nextSibling === undefined ||
+            snowAndIce.offsetParent.nextSibling === null
+          )
+            return;
           let checks = snowAndIce.offsetParent.nextSibling.children;
           let checksList = [...checks];
           if (checksList && checksList !== null) {
@@ -1028,7 +1033,7 @@ class MenuWidget extends React.Component {
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
-    
+
     productCheck.checked = trueCheck > 0;
     let productCheckLabel = productCheck.labels[0].innerText;
     if (productCheckLabel.includes('Snow and Ice Parameters')) {
@@ -1658,10 +1663,11 @@ class MenuWidget extends React.Component {
         break;
       }
     }
-    
+
     snowAndIceParameters.Datasets.forEach((set) => {
       if (set.DatasetTitle.includes(dataset.title)) {
-        let node = document.getElementById(dataset.id).nextElementSibling.lastElementChild.lastChild.lastElementChild;
+        let node = document.getElementById(dataset.id).nextElementSibling
+          .lastElementChild.lastChild.lastElementChild;
         if (dataset.checked) {
           node.style.display = 'block';
         } else {
