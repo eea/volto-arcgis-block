@@ -350,7 +350,7 @@ class MenuWidget extends React.Component {
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage =
-        sessionStorage.getItem('snowAndIce') || null;
+        sessionStorage.getItem('snowAndIce');
       let node;
       if (isStationary) {
         let zoom = this.view.get('zoom');
@@ -376,10 +376,8 @@ class MenuWidget extends React.Component {
               break;
             }
           }
-          debugger;
-          if (snowAndIce === undefined) return;
-          let checks = snowAndIce.offsetParent.nextSibling.children || null;
-          if (checks === null) return;
+          if (snowAndIce === null || snowAndIce === undefined || snowAndIce.offsetParent.nextSibling === undefined || snowAndIce.offsetParent.nextSibling === null) return;
+          let checks = snowAndIce.offsetParent.nextSibling.children;
           let checksList = [...checks];
           if (checksList && checksList !== null) {
             checksList.forEach((check) => {
@@ -1030,8 +1028,14 @@ class MenuWidget extends React.Component {
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
-
+    
     productCheck.checked = trueCheck > 0;
+    let productCheckLabel = productCheck.labels[0].innerText;
+    if (productCheckLabel.includes('Snow and Ice Parameters')) {
+      sessionStorage.setItem('snowAndIce', true);
+    } else {
+      sessionStorage.setItem('snowAndIce', false);
+    }
   }
 
   /**
@@ -1637,16 +1641,6 @@ class MenuWidget extends React.Component {
 
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
-  setSnowAndIceIntoSessionStorage(bool) {
-    if (sessionStorage.getItem('snowAndIce') === null) {
-      sessionStorage.setItem('snowAndIce', false);
-    }
-    let snowAndIce = sessionStorage.getItem('snowAndIce');
-    if (bool && snowAndIce === 'false') {
-      sessionStorage.setItem('snowAndIce', true);
-    }
-  }
-
   showZoomMessageOnDataset(dataset) {
     if (this.props.download) return;
     let snowAndIceParameters;
@@ -1657,7 +1651,6 @@ class MenuWidget extends React.Component {
             this.compCfg[i].Products[j].ProductId ===
             '8474c3b080fa42cc837f1d2338fcf096'
           ) {
-            this.setSnowAndIceIntoSessionStorage(true);
             snowAndIceParameters = this.compCfg[i].Products[j];
             break;
           }
@@ -1665,10 +1658,10 @@ class MenuWidget extends React.Component {
         break;
       }
     }
-    let node = document.getElementById(dataset.id).nextElementSibling
-      .lastElementChild.lastChild.lastElementChild;
+    
     snowAndIceParameters.Datasets.forEach((set) => {
       if (set.DatasetTitle.includes(dataset.title)) {
+        let node = document.getElementById(dataset.id).nextElementSibling.lastElementChild.lastChild.lastElementChild;
         if (dataset.checked) {
           node.style.display = 'block';
         } else {
