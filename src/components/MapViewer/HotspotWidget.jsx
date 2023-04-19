@@ -215,11 +215,11 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_lc);
           this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
           this.props.selectedLayers['lc_filter'].visible = true;
-          this.setBBoxCoordinates(this.dataBBox);
           this.esriLayer_lc2 = this.esriLayer_lc;
           this.layerModelInit();
         }
       }
+      this.setBBoxCoordinates(this.dataBBox);
     });
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
