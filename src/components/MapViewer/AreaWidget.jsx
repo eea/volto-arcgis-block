@@ -122,32 +122,37 @@ class AreaWidget extends React.Component {
     }
   }
   nuts0handler(e) {
-    this.loadNutsService(e.target.value, 0);
+    this.loadNutsService(e.target.value, [0]);
   }
   nuts1handler(e) {
-    this.loadNutsService(e.target.value, 1);
+    this.loadNutsService(e.target.value, [1, 2]);
   }
   nuts2handler(e) {
-    this.loadNutsService(e.target.value, 2);
+    this.loadNutsService(e.target.value, [3, 4, 5]);
   }
   nuts3handler(e) {
-    this.loadNutsService(e.target.value, 3);
+    this.loadNutsService(e.target.value, [6, 7, 8]);
   }
-  loadNutsService(id, level) {
+  loadNutsService(id, levels) {
     this.clearWidget();
 
-    var url =
-      'https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/NUTS_2021/MapServer/0';
-    var layer = new FeatureLayer({
-      url: url,
-      id: id,
-      outFields: ['*'],
-      popupEnabled: false,
-      definitionExpression: 'LEVL_CODE=' + level,
+    levels.forEach((level) => {
+      var url = `https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/NUTS_2021_Improved/MapServer/`;
+      var layer = new FeatureLayer({
+        id: id,
+        url: url,
+        layerId: level,
+        outFields: ['*'],
+        popupEnabled: false,
+        //definitionExpression: 'LEVL_CODE=' + level,
+      });
+
+      this.nutsGroupLayer.add(layer);
+
+      let index = this.getHighestIndex();
+
+      this.props.map.reorder(this.nutsGroupLayer, index + 1);
     });
-    this.nutsGroupLayer.add(layer);
-    let index = this.getHighestIndex();
-    this.props.map.reorder(this.nutsGroupLayer, index + 1);
   }
   getHighestIndex() {
     let index = 0;
@@ -234,7 +239,7 @@ class AreaWidget extends React.Component {
     await this.loader();
     this.nutsGroupLayer = new GroupLayer({
       title: 'nuts',
-      opacity: 0.5,
+      //opacity: 0.5,
     });
     this.props.map.add(this.nutsGroupLayer);
     this.props.view.on('click', (event) => {
