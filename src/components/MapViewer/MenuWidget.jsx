@@ -2387,6 +2387,12 @@ class MenuWidget extends React.Component {
     } else if (this.layers['lc_filter'] && layer.includes('all_present')) {
       this.layers['lc_filter'].opacity = value / 100;
       this.saveOpacity(this.layers['lc_filter'], value / 100);
+    } else if (this.layers['klc_filter'] && layer.includes('cop_klc')) {
+      this.layers['klc_filter'].opacity = value / 100;
+      this.saveOpacity(this.layers['klc_filter'], value / 100);
+    } else if (this.layers['pa_filter'] && layer.includes('protected_areas')) {
+      this.layers['pa_filter'].opacity = value / 100;
+      this.saveOpacity(this.layers['pa_filter'], value / 100);
     } else {
       this.layers[layer].opacity = value / 100;
       this.saveOpacity(this.layer, value / 100);
@@ -2464,6 +2470,15 @@ class MenuWidget extends React.Component {
       } else if (this.layers['lc_filter'] && elem.id.includes('all_present')) {
         this.map.remove(this.layers['lc_filter']);
         this.layers['lc_filter'].visible = false;
+      } else if (this.layers['klc_filter'] && elem.id.includes('cop_klc')) {
+        this.map.remove(this.layers['klc_filter']);
+        this.layers['klc_filter'].visible = false;
+      } else if (
+        this.layers['pa_filter'] &&
+        elem.id.includes('protected_areas')
+      ) {
+        this.map.remove(this.layers['pa_filter']);
+        this.layers['pa_filter'].visible = false;
       }
     } else {
       if (this.layers['lcc_filter'] && elem.id.includes('all_lcc')) {
@@ -2472,6 +2487,15 @@ class MenuWidget extends React.Component {
       } else if (this.layers['lc_filter'] && elem.id.includes('all_present')) {
         this.map.add(this.layers['lc_filter']);
         this.layers['lc_filter'].visible = true;
+      } else if (this.layers['klc_filter'] && elem.id.includes('cop_klc')) {
+        this.map.add(this.layers['klc_filter']);
+        this.layers['klc_filter'].visible = true;
+      } else if (
+        this.layers['pa_filter'] &&
+        elem.id.includes('protected_areas')
+      ) {
+        this.map.add(this.layers['pa_filter']);
+        this.layers['pa_filter'].visible = true;
       } else {
         this.map.add(this.layers[elem.id]);
         this.layers[elem.id].visible = true;
@@ -2628,6 +2652,12 @@ class MenuWidget extends React.Component {
     } else if (layers['lc_filter'] && layer.includes('all_present_lc')) {
       layers['lc_filter'].visible = false;
       delete layers['lc_filter'];
+    } else if (layers['klc_filter'] && layer.includes('cop_klc')) {
+      layers['klc_filter'].visible = false;
+      delete layers['klc_filter'];
+    } else if (layers['pa_filter'] && layer.includes('protected_areas')) {
+      layers['pa_filter'].visible = false;
+      delete layers['pa_filter'];
     }
   }
 
