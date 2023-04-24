@@ -1584,7 +1584,19 @@ class MenuWidget extends React.Component {
     let parentId = elem.getAttribute('parentid');
     let group = this.getGroup(elem);
     if (elem.checked) {
-      this.map.add(this.layers[elem.id]);
+      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+        if (elem.id.includes('cop_klc')) {
+          this.layers['klc_filter'].visible = true;
+          this.map.add(this.layers['klc_filter']);
+        } else if (elem.id.includes('protected_areas')) {
+          this.layers['pa_filter'].visible = true;
+          this.map.add(this.layers['pa_filter']);
+        } else {
+          this.map.add(this.layers[elem.id]);
+        }
+      } else {
+        this.map.add(this.layers[elem.id]);
+      }
       this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
@@ -2654,10 +2666,8 @@ class MenuWidget extends React.Component {
       delete layers['lc_filter'];
     } else if (layers['klc_filter'] && layer.includes('cop_klc')) {
       layers['klc_filter'].visible = false;
-      delete layers['klc_filter'];
     } else if (layers['pa_filter'] && layer.includes('protected_areas')) {
       layers['pa_filter'].visible = false;
-      delete layers['pa_filter'];
     }
   }
 
