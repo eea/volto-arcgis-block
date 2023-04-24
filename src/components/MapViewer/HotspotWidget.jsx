@@ -269,29 +269,29 @@ class HotspotWidget extends React.Component {
           this.layerModelInit();
         }
       }
+      this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
+        "klc_code LIKE '" + this.dataKlc_code + "'";
+      this.props.selectedLayers['klc_filter'] = this.esriLayer_klc;
       if (type === 'klc') {
         if (this.esriLayer_klc !== null) {
           if (this.esriLayer_klc2 !== null) {
             this.props.map.remove(this.esriLayer_klc2);
           }
-          this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
-            "klc_code LIKE '" + this.dataKlc_code + "'";
           this.props.map.add(this.esriLayer_klc);
-          this.props.selectedLayers['klc_filter'] = this.esriLayer_klc;
           this.props.selectedLayers['klc_filter'].visible = true;
           this.esriLayer_klc2 = this.esriLayer_klc;
           this.layerModelInit();
         }
       }
+      this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
+        "klc_code LIKE '" + this.dataKlc_code + "'";
+      this.props.selectedLayers['pa_filter'] = this.esriLayer_pa;
       if (type === 'pa') {
         if (this.esriLayer_pa !== null) {
           if (this.esriLayer_pa2 !== null) {
             this.props.map.remove(this.esriLayer_pa2);
           }
-          this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
-            "klc_code LIKE '" + this.dataKlc_code + "'";
           this.props.map.add(this.esriLayer_pa);
-          this.props.selectedLayers['pa_filter'] = this.esriLayer_pa;
           this.props.selectedLayers['pa_filter'].visible = true;
           this.esriLayer_pa2 = this.esriLayer_pa;
           this.layerModelInit();
