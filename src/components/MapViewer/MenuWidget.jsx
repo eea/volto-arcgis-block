@@ -1584,20 +1584,17 @@ class MenuWidget extends React.Component {
     let parentId = elem.getAttribute('parentid');
     let group = this.getGroup(elem);
     if (elem.checked) {
-      if ((this.layers['lc_filter'] || this.layers['lcc_filter'])) {
+      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
         if (elem.id.includes('cop_klc')) {
           this.layers['klc_filter'].visible = true;
           this.map.add(this.layers['klc_filter']);
-        }
-        else if (elem.id.includes('protected_areas')) {
+        } else if (elem.id.includes('protected_areas')) {
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
-        }
-        else {
+        } else {
           this.map.add(this.layers[elem.id]);
         }
-      } 
-      else {
+      } else {
         this.map.add(this.layers[elem.id]);
       }
       this.layers[elem.id].visible = true; //layer id

@@ -270,7 +270,7 @@ class HotspotWidget extends React.Component {
         }
       }
       this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
-      "klc_code LIKE '" + this.dataKlc_code + "'";
+        "klc_code LIKE '" + this.dataKlc_code + "'";
       this.props.selectedLayers['klc_filter'] = this.esriLayer_klc;
       if (type === 'klc') {
         if (this.esriLayer_klc !== null) {
@@ -284,7 +284,7 @@ class HotspotWidget extends React.Component {
         }
       }
       this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
-      "klc_code LIKE '" + this.dataKlc_code + "'";
+        "klc_code LIKE '" + this.dataKlc_code + "'";
       this.props.selectedLayers['pa_filter'] = this.esriLayer_pa;
       if (type === 'pa') {
         if (this.esriLayer_pa !== null) {
