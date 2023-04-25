@@ -8,7 +8,7 @@ import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
 import { Toast } from '@plone/volto/components';
 import { toast } from 'react-toastify';
-var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest;
+var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest, Extent;
 
 const popupSettings = {
   basic: true,
@@ -346,6 +346,8 @@ class MenuWidget extends React.Component {
     this.layers = this.props.layers;
     this.activeLayersJSON = {};
     this.layerGroups = {};
+    this.xml=null;
+    this.dataBBox=null;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -410,6 +412,7 @@ class MenuWidget extends React.Component {
       'esri/layers/FeatureLayer',
       'esri/layers/BaseTileLayer',
       'esri/request',
+      'esri/geometry/Extent',
     ]).then(
       ([
         _WMSLayer,
@@ -417,12 +420,14 @@ class MenuWidget extends React.Component {
         _FeatureLayer,
         _BaseTileLayer,
         _esriRequest,
+        _Extent,
       ]) => {
         WMSLayer = _WMSLayer;
         WMTSLayer = _WMTSLayer;
         FeatureLayer = _FeatureLayer;
         BaseTileLayer = _BaseTileLayer;
         esriRequest = _esriRequest;
+        Extent = _Extent;
       },
     );
   }
@@ -1933,7 +1938,159 @@ class MenuWidget extends React.Component {
       );
     }
   }
+  findCheckedDatasetNoServiceToVisualize(elem){
+    let parentId=elem.getAttribute('parentid');
+    let selectedDataset = document.querySelector('[id="' + parentId + '"]');
+    this.compCfg.forEach( component => {
+      component.Products.forEach(product => {
+        product.Datasets.forEach(dataset => {
+          if (dataset.DatasetTitle.includes(selectedDataset.title)) {
+            debugger;
+            return dataset.MarkAsDownloadableNoServiceToVisualize;
+          }
+        });
+      });
+    });
+    debugger;
+  }
+  findCheckedDataset(elem){
+    let parentId=elem.getAttribute('parentid');
+    let selectedDataset = document.querySelector('[id="' + parentId + '"]');
+    this.compCfg.forEach( component => {
+      component.Products.forEach(product => {
+        product.Datasets.forEach(dataset => {
+          if (dataset.DatasetTitle.match(selectedDataset.title)) {
+            debugger;
+            return dataset.ViewService;
+          }
+        });
+      });
+    });
+    debugger;
+  }
+  parseBBOXWMS(xml) {    
+    const layerParentNode = xml.querySelectorAll('Layer')
+    let layersChildren = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );            
+    let layerParent = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length !== 0,
+    );     
+    
+    let BBoxes = {};    
+    for (let i in layersChildren) {      
+      let layerGeoGraphic = {};
+      if (layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null){
+        // If the layer has BBOX
+        layerGeoGraphic = layersChildren[i].querySelector('EX_GeographicBoundingBox');     
+      } else {
+        // If the layer has no BBOX, it was assigned dataset BBOX
+        layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');     
+      }
 
+      BBoxes[layersChildren[i].querySelector('Name').innerText] = {
+        xmin: Number(layerGeoGraphic.querySelector('westBoundLongitude').innerText),
+        ymin: Number(layerGeoGraphic.querySelector('southBoundLatitude').innerText),
+        xmax: Number(layerGeoGraphic.querySelector('eastBoundLongitude').innerText),
+        ymax: Number(layerGeoGraphic.querySelector('northBoundLatitude').innerText)
+      }       
+    }
+    return BBoxes;
+  }// function parseWMS
+
+
+  // Web Map Tiled Services WMTS
+  parseBBOXWMTS(xml) {    
+    const layerParentNode = xml.querySelectorAll('Layer')
+    let layersChildren = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );            
+    let layerParent = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length !== 0,
+    );      
+
+
+    let BBoxes = {};    
+    for (let i in layersChildren) {         
+      let LowerCorner, UpperCorner = [];
+      if (parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !== 0){
+        // If the layer has BBOX
+        LowerCorner = parseCapabilities(layersChildren[i], 'ows:LowerCorner')[0].innerText.split(' ');
+        UpperCorner = parseCapabilities(layersChildren[i], 'ows:UpperCorner')[0].innerText.split(' '); 
+      } else {
+        // If the layer has no BBOX, it was assigned dataset BBOX
+        LowerCorner = parseCapabilities(layerParent, 'ows:LowerCorner')[0].innerText.split(' ');
+        UpperCorner = parseCapabilities(layerParent, 'ows:UpperCorner')[0].innerText.split(' '); 
+      }
+
+      BBoxes[parseCapabilities(layersChildren[i], 'ows:Title')[0].innerText] = {
+        xmin: Number(LowerCorner[0]),
+        ymin: Number(LowerCorner[1]),
+        xmax: Number(UpperCorner[0]),
+        ymax: Number(UpperCorner[1])
+      }           
+    }
+    return BBoxes;    
+  }
+
+  parseCapabilities(xml, tag) {
+    return xml.getElementsByTagName(tag);
+  }
+
+  getCapabilities = (url, serviceType) => {
+    debugger;
+    // Get the coordinates of the click on the view    
+    return esriRequest(url, {
+      responseType: 'xml',
+      sync: 'true',
+      query: {
+        request: 'GetCapabilities',
+        service: serviceType,
+      },
+    }).then((response) => {
+      debugger;
+      const xmlDoc = response.data;
+      const parser = new DOMParser();
+      this.xml = parser.parseFromString(xmlDoc, 'application/xml');
+      //this.xml = response.data; // assign the response data to this.xml
+    }).catch((err) => {
+      console.log(err);
+    });
+  }
+  async fullExtent(elem){
+    debugger;
+    this.url = this.findCheckedDataset(elem)
+    let BBoxes = {};
+    if (this.url.includes('wms')) {
+      await this.getCapabilities(this.url, 'wms')
+      BBoxes = parseBBOXWMS(this.xml);          
+    } else if (this.url.includes('wmts')) {
+      await this.getCapabilities(this.url, 'wmts')
+      BBoxes = parseBBOXWMTS(this.xml);          
+    }  
+    this.view.goTo(BBoxes);
+    /*if (this.layers[elem.id].fullExtent && this.layers[elem.id].fullExtent !== null) {
+      debugger;
+      this.view.goTo(this.layers[elem.id].fullExtent);
+    }
+    else if (this.layers[elem.id].fullExtents && this.layers[elem.id].fullExtents !== null) {
+      debugger;
+      this.view.goTo(this.layers[elem.id].fullExtents[0]);
+    }
+    else {
+      this.url = this.findCheckedDataset(elem)
+      let BBoxes = {};
+      if (this.url.includes('wms')) {
+        await this.getCapabilities(this.url, 'wms')
+        BBoxes = parseBBOXWMS(this.xml);          
+      } else if (this.url.includes('wmts')) {
+        await this.getCapabilities(this.url, 'wmts')
+        BBoxes = parseBBOXWMTS(this.xml);          
+      }  
+      this.view.goTo(BBoxes);
+
+    }*/
+  }
   /**
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
@@ -1956,6 +2113,21 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
+          {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
+            <span
+              className="map-menu-icon active-layer-extent"
+              onClick={() => this.fullExtent(elem)}
+              onKeyDown={() => this.fullExtent(elem)}
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />}
+                content='Full extent'
+                {...popupSettings}
+              />
+            </span>
+          )}
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
