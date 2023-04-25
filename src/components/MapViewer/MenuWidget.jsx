@@ -346,8 +346,8 @@ class MenuWidget extends React.Component {
     this.layers = this.props.layers;
     this.activeLayersJSON = {};
     this.layerGroups = {};
-    this.xml=null;
-    this.dataBBox=null;
+    this.xml = null;
+    this.dataBBox = null;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -1938,99 +1938,120 @@ class MenuWidget extends React.Component {
       );
     }
   }
-  findCheckedDatasetNoServiceToVisualize(elem){
-    let parentId=elem.getAttribute('parentid');
+  findCheckedDatasetNoServiceToVisualize(elem) {
+    let parentId = elem.getAttribute('parentid');
     let selectedDataset = document.querySelector('[id="' + parentId + '"]');
-    this.compCfg.forEach( component => {
-      component.Products.forEach(product => {
-        product.Datasets.forEach(dataset => {
+    this.compCfg.forEach((component) => {
+      component.Products.forEach((product) => {
+        product.Datasets.forEach((dataset) => {
           if (dataset.DatasetTitle.includes(selectedDataset.title)) {
-            debugger;
             return dataset.MarkAsDownloadableNoServiceToVisualize;
           }
         });
       });
     });
-    debugger;
   }
-  findCheckedDataset(elem){
-    let parentId=elem.getAttribute('parentid');
+  findCheckedDataset(elem) {
+    let parentId = elem.getAttribute('parentid');
     let selectedDataset = document.querySelector('[id="' + parentId + '"]');
-    this.compCfg.forEach( component => {
-      component.Products.forEach(product => {
-        product.Datasets.forEach(dataset => {
-          if (dataset.DatasetTitle.match(selectedDataset.title)) {
-            debugger;
-            return dataset.ViewService;
+    this.compCfg.forEach((component) => {
+      component.Products.forEach((product) => {
+        product.Datasets.forEach((dataset) => {
+          if (dataset.DatasetTitle.includes(selectedDataset.title)) {
+            this.url = dataset.ViewService;
           }
         });
       });
     });
-    debugger;
   }
-  parseBBOXWMS(xml) {    
-    const layerParentNode = xml.querySelectorAll('Layer')
+  parseBBOXWMS(xml) {
+    const layerParentNode = xml.querySelectorAll('Layer');
     let layersChildren = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length === 0,
-    );            
+    );
     let layerParent = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length !== 0,
-    );     
-    
-    let BBoxes = {};    
-    for (let i in layersChildren) {      
+    );
+    let BBoxes = {};
+    for (let i in layersChildren) {
       let layerGeoGraphic = {};
-      if (layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null){
+      if (
+        layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
+      ) {
         // If the layer has BBOX
-        layerGeoGraphic = layersChildren[i].querySelector('EX_GeographicBoundingBox');     
+        layerGeoGraphic = layersChildren[i].querySelector(
+          'EX_GeographicBoundingBox',
+        );
       } else {
         // If the layer has no BBOX, it was assigned dataset BBOX
-        layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');     
+        layerGeoGraphic = layerParent[0].querySelector(
+          'EX_GeographicBoundingBox',
+        );
       }
-
       BBoxes[layersChildren[i].querySelector('Name').innerText] = {
-        xmin: Number(layerGeoGraphic.querySelector('westBoundLongitude').innerText),
-        ymin: Number(layerGeoGraphic.querySelector('southBoundLatitude').innerText),
-        xmax: Number(layerGeoGraphic.querySelector('eastBoundLongitude').innerText),
-        ymax: Number(layerGeoGraphic.querySelector('northBoundLatitude').innerText)
-      }       
+        xmin: Number(
+          layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+        ),
+        ymin: Number(
+          layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+        ),
+        xmax: Number(
+          layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+        ),
+        ymax: Number(
+          layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+        ),
+      };
     }
     return BBoxes;
-  }// function parseWMS
-
-
+  } // function parseWMS
   // Web Map Tiled Services WMTS
-  parseBBOXWMTS(xml) {    
-    const layerParentNode = xml.querySelectorAll('Layer')
+  parseBBOXWMTS(xml) {
+    const layerParentNode = xml.querySelectorAll('Layer');
     let layersChildren = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length === 0,
-    );            
+    );
     let layerParent = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length !== 0,
-    );      
-
-
-    let BBoxes = {};    
-    for (let i in layersChildren) {         
-      let LowerCorner, UpperCorner = [];
-      if (parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !== 0){
+    );
+    let BBoxes = {};
+    for (let i in layersChildren) {
+      let LowerCorner,
+        UpperCorner = [];
+      if (
+        this.parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !==
+        0
+      ) {
         // If the layer has BBOX
-        LowerCorner = parseCapabilities(layersChildren[i], 'ows:LowerCorner')[0].innerText.split(' ');
-        UpperCorner = parseCapabilities(layersChildren[i], 'ows:UpperCorner')[0].innerText.split(' '); 
+        LowerCorner = this.parseCapabilities(
+          layersChildren[i],
+          'ows:LowerCorner',
+        )[0].innerText.split(' ');
+        UpperCorner = this.parseCapabilities(
+          layersChildren[i],
+          'ows:UpperCorner',
+        )[0].innerText.split(' ');
       } else {
         // If the layer has no BBOX, it was assigned dataset BBOX
-        LowerCorner = parseCapabilities(layerParent, 'ows:LowerCorner')[0].innerText.split(' ');
-        UpperCorner = parseCapabilities(layerParent, 'ows:UpperCorner')[0].innerText.split(' '); 
+        LowerCorner = this.parseCapabilities(
+          layerParent,
+          'ows:LowerCorner',
+        )[0].innerText.split(' ');
+        UpperCorner = this.parseCapabilities(
+          layerParent,
+          'ows:UpperCorner',
+        )[0].innerText.split(' ');
       }
-
-      BBoxes[parseCapabilities(layersChildren[i], 'ows:Title')[0].innerText] = {
+      BBoxes[
+        this.parseCapabilities(layersChildren[i], 'ows:Title')[0].innerText
+      ] = {
         xmin: Number(LowerCorner[0]),
         ymin: Number(LowerCorner[1]),
         xmax: Number(UpperCorner[0]),
-        ymax: Number(UpperCorner[1])
-      }           
+        ymax: Number(UpperCorner[1]),
+      };
     }
-    return BBoxes;    
+    return BBoxes;
   }
 
   parseCapabilities(xml, tag) {
@@ -2038,58 +2059,42 @@ class MenuWidget extends React.Component {
   }
 
   getCapabilities = (url, serviceType) => {
-    debugger;
-    // Get the coordinates of the click on the view    
+    // Get the coordinates of the click on the view
     return esriRequest(url, {
-      responseType: 'xml',
+      responseType: 'html',
       sync: 'true',
       query: {
         request: 'GetCapabilities',
         service: serviceType,
       },
-    }).then((response) => {
-      debugger;
-      const xmlDoc = response.data;
-      const parser = new DOMParser();
-      this.xml = parser.parseFromString(xmlDoc, 'application/xml');
-      //this.xml = response.data; // assign the response data to this.xml
-    }).catch((err) => {
-      console.log(err);
-    });
-  }
-  async fullExtent(elem){
-    debugger;
-    this.url = this.findCheckedDataset(elem)
+    })
+      .then((response) => {
+        const xmlDoc = response.data;
+        const parser = new DOMParser();
+        this.xml = parser.parseFromString(xmlDoc, 'text/html');
+        //this.xml = response.data; // assign the response data to this.xml
+      })
+      .catch(() => {});
+  };
+  async fullExtent(elem) {
+    this.findCheckedDataset(elem);
     let BBoxes = {};
-    if (this.url.includes('wms')) {
-      await this.getCapabilities(this.url, 'wms')
-      BBoxes = parseBBOXWMS(this.xml);          
-    } else if (this.url.includes('wmts')) {
-      await this.getCapabilities(this.url, 'wmts')
-      BBoxes = parseBBOXWMTS(this.xml);          
-    }  
-    this.view.goTo(BBoxes);
-    /*if (this.layers[elem.id].fullExtent && this.layers[elem.id].fullExtent !== null) {
-      debugger;
-      this.view.goTo(this.layers[elem.id].fullExtent);
+    if (this.url.toLowerCase().includes('wms')) {
+      await this.getCapabilities(this.url, 'wms');
+      BBoxes = this.parseBBOXWMS(this.xml);
+    } else if (this.url.toLowerCase().includes('wmts')) {
+      await this.getCapabilities(this.url, 'wmts');
+      BBoxes = this.parseBBOXWMTS(this.xml);
     }
-    else if (this.layers[elem.id].fullExtents && this.layers[elem.id].fullExtents !== null) {
-      debugger;
-      this.view.goTo(this.layers[elem.id].fullExtents[0]);
-    }
-    else {
-      this.url = this.findCheckedDataset(elem)
-      let BBoxes = {};
-      if (this.url.includes('wms')) {
-        await this.getCapabilities(this.url, 'wms')
-        BBoxes = parseBBOXWMS(this.xml);          
-      } else if (this.url.includes('wmts')) {
-        await this.getCapabilities(this.url, 'wmts')
-        BBoxes = parseBBOXWMTS(this.xml);          
-      }  
-      this.view.goTo(BBoxes);
-
-    }*/
+    const firstLayer = BBoxes[Object.keys(BBoxes)[0]];
+    let myExtent = new Extent({
+      xmin: firstLayer.xmin,
+      ymin: firstLayer.ymin,
+      xmax: firstLayer.xmax,
+      ymax: firstLayer.ymax,
+      // spatialReference: 4326 // by default wkid 4326
+    });
+    this.view.goTo(myExtent);
   }
   /**
    * Method to show Active Layers of the map
@@ -2122,8 +2127,10 @@ class MenuWidget extends React.Component {
               role="button"
             >
               <Popup
-                trigger={<FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />}
-                content='Full extent'
+                trigger={
+                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
+                }
+                content="Full extent"
                 {...popupSettings}
               />
             </span>
