@@ -155,7 +155,6 @@ class MapViewer extends React.Component {
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);
       });
-
       this.view.popup.autoOpenEnabled = false;
       // After launching the MapViewerConfig action
       // we will have stored the json response here:

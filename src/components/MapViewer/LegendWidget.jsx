@@ -16,8 +16,31 @@ class LegendWidget extends React.Component {
     //Initially, we set the state of the component to
     //not be showing the basemap panel
     this.state = { showMapMenu: false };
+    this.view = this.props.view;
+    this.mapViewer = this.props.mapViewer;
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
+
+      this.view.watch('updating', () => {
+        const collection = document.getElementsByClassName("esri-legend__symbol");
+        //  let brokenLinksElements = Array.from(collection).filter((img) => !(img.complete && img.naturalHeight !== 0));    
+        
+        Array.prototype.forEach.call(collection, function(element) {
+          let img = {};
+    
+          if (element.hasChildNodes()) {
+            img = element.childNodes[0];
+          } else {
+            img = element;
+          }               
+          
+      // If it is broken link
+      
+          if (!(img.complete && img.naturalHeight !== 0)) {
+            img.style.display = 'none';             
+          }
+        });
+      });
   }
 
   loader() {
@@ -70,7 +93,11 @@ class LegendWidget extends React.Component {
       view: this.props.view,
       container: document.querySelector('.legend-panel'),
     });
+    window.addEventListener('storage', (event) => {
+      console.log(`CHANGED!!! ${event}`);
+    });
   }
+
   /**
    * This method renders the component
    * @returns jsx

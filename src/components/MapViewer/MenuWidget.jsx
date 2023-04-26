@@ -648,6 +648,22 @@ class MenuWidget extends React.Component {
     }, 1000);
   }
 
+  setLegendOpacity = () => {
+    const collection = document.getElementsByClassName("esri-legend__symbol");
+    
+    Array.prototype.forEach.call(collection, function(element) {
+      let img = {};
+      
+      if (element.hasChildNodes()) {
+        img = element.childNodes[0];
+      } else {
+        img = element;
+      }                     
+      // Set Legend opacity back to 1;
+      img.style.opacity = "1 !important";
+    });
+  };
+
   /**
    * This method is executed after the render method is executed
    */
@@ -2594,6 +2610,7 @@ class MenuWidget extends React.Component {
       '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
     ).dataset.opacity = value;
     // }
+    this.setLegendOpacity();
   }
 
   /**
