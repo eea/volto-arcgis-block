@@ -660,7 +660,7 @@ class MenuWidget extends React.Component {
         img = element;
       }                     
       // Set Legend opacity back to 1;
-      img.style.opacity = "1 !important";
+      img.setAttribute("style","opacity:1; -moz-opacity:1; filter:alpha(opacity=100)");
     });
   };
 
