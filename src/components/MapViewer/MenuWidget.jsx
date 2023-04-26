@@ -3186,8 +3186,8 @@ class MenuWidget extends React.Component {
                       </div>
                       <Modal.Content>
                         <p>
-                          This dataset cannot be visualised on the map, only
-                          downloaded.
+                          This dataset can be downloaded, although it cannot be
+                          visualized on the map.
                         </p>
                       </Modal.Content>
                       <Modal.Actions>
