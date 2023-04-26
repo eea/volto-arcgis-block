@@ -380,6 +380,8 @@ class MenuWidget extends React.Component {
           if (
             snowAndIce === null ||
             snowAndIce === undefined ||
+            snowAndIce.offsetParent === undefined ||
+            snowAndIce.offsetParent === null ||
             snowAndIce.offsetParent.nextSibling === undefined ||
             snowAndIce.offsetParent.nextSibling === null
           )
