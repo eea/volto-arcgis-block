@@ -2012,23 +2012,13 @@ class MenuWidget extends React.Component {
     let BBoxes = {};
     let layersChildren = null;
     let layerParent = null;
-    const tileMatrixParentNode = xml.querySelectorAll('TileMatrixSet');
-    if (tileMatrixParentNode && tileMatrixParentNode !== null) {
-      layersChildren = Array.from(tileMatrixParentNode).filter(
-        (v) => v.querySelectorAll('TileMatrixSet').length === 0,
-      );
-      layerParent = Array.from(tileMatrixParentNode).filter(
-        (v) => v.querySelectorAll('TileMatrixSet').length !== 0,
-      );
-    } else {
-      const layerParentNode = xml.querySelectorAll('Layer');
-      layersChildren = Array.from(layerParentNode).filter(
-        (v) => v.querySelectorAll('Layer').length === 0,
-      );
-      layerParent = Array.from(layerParentNode).filter(
-        (v) => v.querySelectorAll('Layer').length !== 0,
-      );
-    }
+    const layerParentNode = xml.querySelectorAll('Layer');
+    layersChildren = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );
+    layerParent = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length !== 0,
+    );
     for (let i in layersChildren) {
       let LowerCorner,
         UpperCorner = [];
