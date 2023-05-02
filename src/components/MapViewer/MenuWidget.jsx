@@ -2010,8 +2010,8 @@ class MenuWidget extends React.Component {
   // Web Map Tiled Services WMTS
   parseBBOXWMTS(xml) {
     let BBoxes = {};
-    let layersChildren  = null;
-    let layerParent  = null;
+    let layersChildren = null;
+    let layerParent = null;
     const tileMatrixParentNode = xml.querySelectorAll('TileMatrixSet');
     if (tileMatrixParentNode && tileMatrixParentNode !== null) {
       layersChildren = Array.from(tileMatrixParentNode).filter(
@@ -2020,9 +2020,7 @@ class MenuWidget extends React.Component {
       layerParent = Array.from(tileMatrixParentNode).filter(
         (v) => v.querySelectorAll('TileMatrixSet').length !== 0,
       );
-      
-    }
-    else {
+    } else {
       const layerParentNode = xml.querySelectorAll('Layer');
       layersChildren = Array.from(layerParentNode).filter(
         (v) => v.querySelectorAll('Layer').length === 0,
@@ -2047,7 +2045,9 @@ class MenuWidget extends React.Component {
           layersChildren[i],
           'ows:UpperCorner',
         )[0].innerText.split(' ');
-      } else if (this.parseCapabilities(layerParent, 'ows:LowerCorner').length !== 0) {
+      } else if (
+        this.parseCapabilities(layerParent, 'ows:LowerCorner').length !== 0
+      ) {
         // If the layer has no BBOX, it was assigned dataset BBOX
         LowerCorner = this.parseCapabilities(
           layerParent,
@@ -2094,7 +2094,10 @@ class MenuWidget extends React.Component {
   };
   async fullExtent(elem) {
     let parentId = elem.getAttribute('parentid');
-    if (parentId.includes('map_dataset_2_4') || parentId.includes('map_dataset_2_3')) {
+    if (
+      parentId.includes('map_dataset_2_4') ||
+      parentId.includes('map_dataset_2_3')
+    ) {
       this.view.goTo(this.layers[elem.id].fullExtents[0]);
     } else {
       this.findCheckedDataset(elem);
@@ -2110,24 +2113,24 @@ class MenuWidget extends React.Component {
       if (elem.title.includes('Corine Land Cover')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
-        }
-        else if (elem.title.includes('French Guiana')) {
+        } else if (elem.title.includes('French Guiana')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[1]];
-        }
-        else if (elem.title.includes('Martinique')) {
+        } else if (elem.title.includes('Martinique')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[2]];
-        }
-        else if (elem.title.includes('Mayotte')) {
+        } else if (elem.title.includes('Mayotte')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[3]];
-        }
-        else if (elem.title.includes('Reunion')) {
+        } else if (elem.title.includes('Reunion')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[4]];
+        } else {
+          firstLayer =
+            BBoxes[Object.keys(BBoxes)[Object.keys(BBoxes).length - 1]];
         }
-        else {
-          firstLayer = BBoxes[Object.keys(BBoxes)[Object.keys(BBoxes).length-1]];
-        }
-      }
-      else if (elem.id.includes('all_present') || elem.id.includes('all_lcc') || elem.id.includes('cop_klc') || elem.id.includes('protected_areas') ) {
+      } else if (
+        elem.id.includes('all_present') ||
+        elem.id.includes('all_lcc') ||
+        elem.id.includes('cop_klc') ||
+        elem.id.includes('protected_areas')
+      ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else {
         firstLayer = BBoxes[Object.keys(BBoxes)[0]];
