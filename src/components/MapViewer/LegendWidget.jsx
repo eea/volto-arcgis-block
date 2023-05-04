@@ -2,7 +2,7 @@ import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
-var Legend;
+var Legend, LegendViewModel, watchUtils;
 
 class LegendWidget extends React.Component {
   /**
@@ -16,36 +16,34 @@ class LegendWidget extends React.Component {
     //Initially, we set the state of the component to
     //not be showing the basemap panel
     this.state = { showMapMenu: false };
-    this.view = this.props.view;
     this.mapViewer = this.props.mapViewer;
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
 
-      this.view.watch('updating', () => {
-        const collection = document.getElementsByClassName("esri-legend__symbol");
-        //  let brokenLinksElements = Array.from(collection).filter((img) => !(img.complete && img.naturalHeight !== 0));    
-        
-        Array.prototype.forEach.call(collection, function(element) {
-          let img = {};
-    
-          if (element.hasChildNodes()) {
-            img = element.childNodes[0];
-          } else {
-            img = element;
-          }               
-          
-      // If it is broken link
-      
-          if (!(img.complete && img.naturalHeight !== 0)) {
-            img.style.display = 'none';             
-          }
-        });
-      });
+    // This event fires each time a layer's LayerView is created for the specified view instance
+    this.props.view.on("layerview-create", (event) => {
+        console.log("LayerView created!", event.layerView);
+    });
+    // This event fires each time a layer's LayerView is destroyed for the specified view instance
+    this.props.view.on("layerview-destroy", (event) => {
+        console.log("LayerView destroyed!", event.layerView);
+    });
   }
 
   loader() {
-    return loadModules(['esri/widgets/Legend']).then(([_Legend]) => {
+    return loadModules([
+      'esri/widgets/Legend',
+      'esri/widgets/Legend/LegendViewModel',
+      'esri/core/watchUtils',
+    ])
+      .then(([
+        _Legend,
+        _LegendViewModel,
+        _watchUtils,
+      ]) => {
       Legend = _Legend;
+      LegendViewModel = _LegendViewModel;
+      watchUtils = _watchUtils;
     });
   }
 
@@ -83,6 +81,57 @@ class LegendWidget extends React.Component {
       this.setState({ showMapMenu: true });
     }
   }
+
+  legendImageUpdater() {
+    console.log('legendImageUpdater running');
+      
+      
+      const legendDiv = document.querySelectorAll('.esri-widget.esri-legend');
+      
+      
+      if (legendDiv) {
+      
+      let collection = document.getElementsByClassName("esri-legend__symbol");
+      
+      
+      Array.prototype.forEach.call(collection, function(element, index) {
+      
+      let img = {};
+      if (element.hasChildNodes()) {
+        
+        img = element.childNodes[0];
+        
+      } else {
+        
+        img = element;
+        
+      }               
+      
+      
+      // If img src returns a broken link
+      if (!(img.complete && img.naturalHeight !== 0)) {
+        
+        
+        // set to display "none"
+        img.style.display = 'none';
+        
+        // change legend message
+        const legendMessage = document.querySelectorAll(
+          '.esri-legend__message',
+          )[0];
+          
+          // add 'Legend is not available for this layer' to legendMessage text that already exists
+          if (legendMessage) {
+        
+        legendMessage.innerHTML =
+        legendMessage.innerHTML +
+        '<br><br>Legend is not available for this layer';
+      }
+    }
+  });
+}
+};
+
   /**
    * This method is executed after the rener method is executed
    */
@@ -91,11 +140,12 @@ class LegendWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.LegendWidget = new Legend({
       view: this.props.view,
+      viewModel: new LegendViewModel({
+        view: this.props.view,
+      }),
       container: document.querySelector('.legend-panel'),
     });
-    window.addEventListener('storage', (event) => {
-      console.log(`CHANGED!!! ${event}`);
-    });
+    await this.LegendWidget.view.when("container");
   }
 
   /**
