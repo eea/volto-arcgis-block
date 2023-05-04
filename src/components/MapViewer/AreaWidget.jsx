@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
   Extent,
-  FeatureLayer,
+  WMSLayer,
   GroupLayer,
   Color,
   SimpleLineSymbol,
@@ -38,7 +38,7 @@ class AreaWidget extends React.Component {
     return loadModules([
       'esri/Graphic',
       'esri/geometry/Extent',
-      'esri/layers/FeatureLayer',
+      'esri/layers/WMSLayer',
       'esri/layers/GroupLayer',
       'esri/Color',
       'esri/symbols/SimpleLineSymbol',
@@ -47,7 +47,7 @@ class AreaWidget extends React.Component {
       ([
         _Graphic,
         _Extent,
-        _FeatureLayer,
+        _WMSLayer,
         _GroupLayer,
         _Color,
         _SimpleLineSymbol,
@@ -56,7 +56,7 @@ class AreaWidget extends React.Component {
         [
           Graphic,
           Extent,
-          FeatureLayer,
+          WMSLayer,
           GroupLayer,
           Color,
           SimpleLineSymbol,
@@ -64,7 +64,7 @@ class AreaWidget extends React.Component {
         ] = [
           _Graphic,
           _Extent,
-          _FeatureLayer,
+          _WMSLayer,
           _GroupLayer,
           _Color,
           _SimpleLineSymbol,
@@ -137,13 +137,14 @@ class AreaWidget extends React.Component {
     this.clearWidget();
 
     levels.forEach((level) => {
-      var url = `https://trial.discomap.eea.europa.eu/arcgis/rest/services/CLMS/NUTS_2021_Improved/MapServer/`;
-      var layer = new FeatureLayer({
-        id: id,
+      var url = `https://land.discomap.eea.europa.eu/arcgis/services/CLMS_Portal/NUTS_2021_Improved/MapServer/WMSServer?`;
+      var layer = new WMSLayer({
+        //id: id,
         url: url,
-        layerId: level,
-        outFields: ['*'],
-        popupEnabled: false,
+        id: level,
+        //layerId: level,
+        //outFields: ['*'],
+        //popupEnabled: false,
         //definitionExpression: 'LEVL_CODE=' + level,
       });
 
