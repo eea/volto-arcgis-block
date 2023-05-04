@@ -141,13 +141,17 @@ class AreaWidget extends React.Component {
       var layer = new WMSLayer({
         //id: id,
         url: url,
-        id: level,
+        id: id,
         //layerId: level,
+        portalItem: {
+          id: level,
+        }
         //outFields: ['*'],
         //popupEnabled: false,
         //definitionExpression: 'LEVL_CODE=' + level,
       });
 
+      console.log(layer);
       this.nutsGroupLayer.add(layer);
 
       let index = this.getHighestIndex();
