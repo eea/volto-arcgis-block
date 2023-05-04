@@ -22,13 +22,69 @@ class LegendWidget extends React.Component {
 
     // This event fires each time a layer's LayerView is created for the specified view instance
     this.props.view.on("layerview-create", (event) => {
-        console.log("LayerView created!", event.layerView);
-    });
-    // This event fires each time a layer's LayerView is destroyed for the specified view instance
-    this.props.view.on("layerview-destroy", (event) => {
-        console.log("LayerView destroyed!", event.layerView);
+        console.log("LayerView created! LayerView: ", event.layerView);
+
+        // update the legend
+        this.legendImageUpdater(event.layer, event.layerView);
+      });
+      // This event fires each time a layer's LayerView is destroyed for the specified view instance
+      this.props.view.on("layerview-destroy", (event) => {
+        console.log("LayerView destroyed! LayerView: ", event.layerView);
+        this.legendImageUpdater(event.layer, event.layerView);
     });
   }
+
+  legendImageUpdater(layer) {
+    console.log('legendImageUpdater running. Layer: ', layer);
+    
+    debugger;
+    const legendServices = document.getElementsByClassName("esri-legend__service");
+    
+    debugger;
+    const layerTitle = layer.allSublayers._collections[0]._items[0].title;
+    
+    debugger;
+    Array.prototype.find.call(legendServices, function(element) {
+      debugger;
+      let legendLabel = element.QuerySelector(".esri-legend__layer-caption");
+
+      debugger;
+      if (legendLabel.innerHTML === layerTitle) return true;
+      else return false;
+    }).then (legendService => {
+      
+      debugger;    
+      const legendImg = legendService.querySelector("esri-legend__symbol");
+      
+      let img = {};
+      
+      debugger;    
+      if (legendImg.hasChildNodes()) img = legendImg.childNodes[0];
+      else img = legendImg;
+      
+      debugger;
+      // If img src returns a broken link
+      if (!(img.complete && img.naturalHeight !== 0)) {
+        
+        
+        debugger;
+        // set to display "none"
+        img.style.display = 'none';
+        
+        // change legend message
+        //const legendMessage = document.querySelectorAll(
+        //  '.esri-legend__message',
+        //  )[0];
+          
+        // add 'Legend is not available for this layer' to legendMessage text that already exists
+        //if (legendMessage) {
+        
+        //legendMessage.innerHTML =
+        //legendMessage.innerHTML +
+        //'<br><br>Legend is not available for this layer';
+      }
+    });
+  };
 
   loader() {
     return loadModules([
@@ -81,56 +137,6 @@ class LegendWidget extends React.Component {
       this.setState({ showMapMenu: true });
     }
   }
-
-  legendImageUpdater() {
-    console.log('legendImageUpdater running');
-      
-      
-      const legendDiv = document.querySelectorAll('.esri-widget.esri-legend');
-      
-      
-      if (legendDiv) {
-      
-      let collection = document.getElementsByClassName("esri-legend__symbol");
-      
-      
-      Array.prototype.forEach.call(collection, function(element, index) {
-      
-      let img = {};
-      if (element.hasChildNodes()) {
-        
-        img = element.childNodes[0];
-        
-      } else {
-        
-        img = element;
-        
-      }               
-      
-      
-      // If img src returns a broken link
-      if (!(img.complete && img.naturalHeight !== 0)) {
-        
-        
-        // set to display "none"
-        img.style.display = 'none';
-        
-        // change legend message
-        const legendMessage = document.querySelectorAll(
-          '.esri-legend__message',
-          )[0];
-          
-          // add 'Legend is not available for this layer' to legendMessage text that already exists
-          if (legendMessage) {
-        
-        legendMessage.innerHTML =
-        legendMessage.innerHTML +
-        '<br><br>Legend is not available for this layer';
-      }
-    }
-  });
-}
-};
 
   /**
    * This method is executed after the rener method is executed
