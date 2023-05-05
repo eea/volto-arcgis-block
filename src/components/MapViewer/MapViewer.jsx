@@ -18,7 +18,7 @@ import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl;
+var Map, MapView, Zoom, intl, Basemap, WebTileLayer;;
 let mapStatus = {};
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -83,8 +83,10 @@ class MapViewer extends React.Component {
       'esri/views/MapView',
       'esri/widgets/Zoom',
       'esri/intl',
-    ]).then(([_Map, _MapView, _Zoom, _intl]) => {
-      [Map, MapView, Zoom, intl] = [_Map, _MapView, _Zoom, _intl];
+      'esri/Basemap',
+      'esri/layers/WebTileLayer',
+    ]).then(([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer,]) => {
+      [Map, MapView, Zoom, intl, Basemap, WebTileLayer,] = [_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer,];
     });
   }
 
@@ -107,8 +109,23 @@ class MapViewer extends React.Component {
     await this.waitForDataFill();
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
+
+    this.positronCompositeBasemap = new Basemap({
+      title: "Positron composite",  
+      thumbnailUrl: "https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png",
+      baseLayers: [
+        new WebTileLayer({        
+          urlTemplate: "https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png",
+        })
+      ],    
+      // referenceLayers: [
+      //   new _WebTileLayer(...)
+      // ],
+    });
+
     this.map = new Map({
-      basemap: 'topo',
+      // basemap: 'topo',
+      basemap: this.positronCompositeBasemap,
     });
 
     mapStatus = this.recoverState();
