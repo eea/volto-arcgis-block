@@ -1961,10 +1961,30 @@ class MenuWidget extends React.Component {
         product.Datasets.forEach((dataset) => {
           if (dataset.DatasetTitle.includes(selectedDataset.title)) {
             this.url = dataset.ViewService;
+            this.productTitle = product.ProductTitle;
           }
         });
       });
     });
+  }
+  findDatasetBoundingBox(elem) {
+    this.compCfg.forEach((component) => {
+      component.Products.forEach((product) => {
+        product.Datasets.forEach((dataset) => {
+          dataset.Layer.forEach((layer) => {
+            if (layer.Title.includes(elem.title)) {
+              this.dataBBox = layer.bbox;
+            }
+          });
+        });
+      });
+    });
+  }
+  parseBBOXJSON(bboxJson) {
+    let bbox = JSON.parse(bboxJson);
+    let BBoxes = [];
+    BBoxes[0] = { xmin: bbox[0], ymin: bbox[1], xmax: bbox[2], ymax: bbox[3] };
+    return BBoxes;
   }
   parseBBOXWMS(xml) {
     const layerParentNode = xml.querySelectorAll('Layer');
@@ -2083,23 +2103,44 @@ class MenuWidget extends React.Component {
       .catch(() => {});
   };
   async fullExtent(elem) {
-    let parentId = elem.getAttribute('parentid');
-    if (
-      parentId.includes('map_dataset_2_4') ||
-      parentId.includes('map_dataset_2_3')
+    this.findCheckedDataset(elem);
+    let BBoxes = {};
+    let firstLayer;
+    if (this.productTitle.includes('Global Dynamic Land Cover')) {
+      this.findDatasetBoundingBox(elem);
+      BBoxes = this.parseBBOXJSON(this.dataBBox);
+    } else if (
+      this.productTitle.includes('Low Resolution Vegetation Parameters') ||
+      this.productTitle.includes('Water Parameters')
     ) {
-      this.view.goTo(this.layers[elem.id].fullExtents[0]);
-    } else {
-      this.findCheckedDataset(elem);
-      let BBoxes = {};
-      let firstLayer;
-      if (this.url.toLowerCase().includes('wms')) {
-        await this.getCapabilities(this.url, 'wms');
-        BBoxes = this.parseBBOXWMS(this.xml);
-      } else if (this.url.toLowerCase().includes('wmts')) {
-        await this.getCapabilities(this.url, 'wmts');
-        BBoxes = this.parseBBOXWMTS(this.xml);
+      if (
+        this.layers[elem.id].fullExtents &&
+        this.layers[elem.id].fullExtents !== null
+      ) {
+        this.view.goTo(this.layers[elem.id].fullExtents[0]);
+      } else {
+        let myExtent = new Extent({
+          xmin: -20037508.342789,
+          ymin: -20037508.342789,
+          xmax: 20037508.342789,
+          ymax: 20037508.342789,
+          // spatialReference: 4326 // by default wkid 4326
+        });
+        this.view.goTo(myExtent);
       }
+    } else if (this.url.toLowerCase().includes('wms')) {
+      await this.getCapabilities(this.url, 'wms');
+      BBoxes = this.parseBBOXWMS(this.xml);
+    } else if (this.url.toLowerCase().includes('wmts')) {
+      await this.getCapabilities(this.url, 'wmts');
+      BBoxes = this.parseBBOXWMTS(this.xml);
+    }
+    if (
+      BBoxes &&
+      BBoxes !== null &&
+      BBoxes[Object.keys(BBoxes)[0]] &&
+      BBoxes[Object.keys(BBoxes)[0]] !== null
+    ) {
       if (elem.title.includes('Corine Land Cover')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
