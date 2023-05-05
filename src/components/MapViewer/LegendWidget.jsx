@@ -19,15 +19,6 @@ class LegendWidget extends React.Component {
     this.mapViewer = this.props.mapViewer;
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
-
-    // This event fires each time a layer's LayerView is created for the specified view instance
-      Promise.resolve(this.props.view.on("layerview-create", (event) => {
-        console.log("LayerView created! LayerView: ", event.layerView);
-      })).then(() => this.legendImageUpdater());
-      // This event fires each time a layer's LayerView is destroyed for the specified view instance
-      Promise.resolve(this.props.view.on("layerview-destroy", (event) => {
-        console.log("LayerView destroyed! LayerView: ", event.layerView);
-    })).then(() => this.legendImageUpdater());
   }
 
   legendImageUpdater() {
@@ -48,7 +39,7 @@ class LegendWidget extends React.Component {
         
         
         // set to display "none"
-        img.style.display = 'none';S
+        img.style.display = 'none';
         
         // change legend message
         //const legendMessage = document.querySelectorAll(
@@ -131,6 +122,22 @@ class LegendWidget extends React.Component {
       container: document.querySelector('.legend-panel'),
     });
     await this.LegendWidget.view.when("container");
+    // This event fires each time a layer's LayerView is created for the specified view instance
+    this.props.view.on("layerview-create", (event) => {
+      console.log("LayerView created! LayerView: ", event.layerView);
+      if (event.layerView) {
+        event.layerView.watch("updating", (updating) => {
+          if (!updating) {
+            this.legendImageUpdater();
+          }
+        });
+      }
+    });
+    // This event fires each time a layer's LayerView is destroyed for the specified view instance
+    this.props.view.on("layerview-destroy", (event) => {
+      console.log("LayerView destroyed! LayerView: ", event.layerView);
+      this.legendImageUpdater();
+    });
   }
 
   /**
