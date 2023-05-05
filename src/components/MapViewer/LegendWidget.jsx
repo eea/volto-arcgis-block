@@ -21,55 +21,34 @@ class LegendWidget extends React.Component {
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
 
     // This event fires each time a layer's LayerView is created for the specified view instance
-    this.props.view.on("layerview-create", (event) => {
+      Promise.resolve(this.props.view.on("layerview-create", (event) => {
         console.log("LayerView created! LayerView: ", event.layerView);
-
-        // update the legend
-        this.legendImageUpdater(event.layer, event.layerView);
-      });
+      })).then(() => this.legendImageUpdater());
       // This event fires each time a layer's LayerView is destroyed for the specified view instance
-      this.props.view.on("layerview-destroy", (event) => {
+      Promise.resolve(this.props.view.on("layerview-destroy", (event) => {
         console.log("LayerView destroyed! LayerView: ", event.layerView);
-        this.legendImageUpdater(event.layer, event.layerView);
-    });
+    })).then(() => this.legendImageUpdater());
   }
 
-  legendImageUpdater(layer) {
-    console.log('legendImageUpdater running. Layer: ', layer);
-    
+  legendImageUpdater() {
     debugger;
-    const legendServices = document.getElementsByClassName("esri-legend__service");
+    console.log('legendImageUpdater running. Layer: ');
     
-    debugger;
-    const layerTitle = layer.allSublayers._collections[0]._items[0].title;
+    const collection = document.getElementsByClassName("esri-legend__symbol");
     
-    debugger;
-    Array.prototype.find.call(legendServices, function(element) {
-      debugger;
-      let legendLabel = element.QuerySelector(".esri-legend__layer-caption");
-
-      debugger;
-      if (legendLabel.innerHTML === layerTitle) return true;
-      else return false;
-    }).then (legendService => {
-      
-      debugger;    
-      const legendImg = legendService.querySelector("esri-legend__symbol");
+    Array.prototype.forEach.call(collection, (element) => {
       
       let img = {};
       
-      debugger;    
-      if (legendImg.hasChildNodes()) img = legendImg.childNodes[0];
-      else img = legendImg;
+      if (element.hasChildNodes()) img = element.childNodes[0];
+      else img = element;
       
-      debugger;
       // If img src returns a broken link
       if (!(img.complete && img.naturalHeight !== 0)) {
         
         
-        debugger;
         // set to display "none"
-        img.style.display = 'none';
+        img.style.display = 'none';S
         
         // change legend message
         //const legendMessage = document.querySelectorAll(
