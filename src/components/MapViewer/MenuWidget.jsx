@@ -2109,7 +2109,10 @@ class MenuWidget extends React.Component {
     if (this.productTitle.includes('Global Dynamic Land Cover')) {
       this.findDatasetBoundingBox(elem);
       BBoxes = this.parseBBOXJSON(this.dataBBox);
-    } else if (this.productTitle.includes('Low Resolution Vegetation Parameters') || this.productTitle.includes('Water Parameters')) {
+    } else if (
+      this.productTitle.includes('Low Resolution Vegetation Parameters') ||
+      this.productTitle.includes('Water Parameters')
+    ) {
       if (
         this.layers[elem.id].fullExtents &&
         this.layers[elem.id].fullExtents !== null
