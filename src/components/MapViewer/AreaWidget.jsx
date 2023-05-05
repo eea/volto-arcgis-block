@@ -137,7 +137,7 @@ class AreaWidget extends React.Component {
     this.clearWidget();
 
     levels.forEach((level) => {
-      var url = `https://land.discomap.eea.europa.eu/arcgis/services/CLMS_Portal/NUTS_2021_Improved/MapServer/WMSServer?`;
+      var url = `https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/`;
       var layer = new FeatureLayer({
         id: id,
         url: url,
