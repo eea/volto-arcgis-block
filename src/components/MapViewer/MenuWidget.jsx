@@ -1961,6 +1961,7 @@ class MenuWidget extends React.Component {
         product.Datasets.forEach((dataset) => {
           if (dataset.DatasetTitle.includes(selectedDataset.title)) {
             this.url = dataset.ViewService;
+            this.productTitle = product.ProductTitle;
           }
         });
       });
@@ -2105,10 +2106,13 @@ class MenuWidget extends React.Component {
     this.findCheckedDataset(elem);
     let BBoxes = {};
     let firstLayer;
-    if (this.url.toLowerCase().includes('globaldynamiclandcover')) {
+    if (this.productTitle.includes('Global Dynamic Land Cover')) {
       this.findDatasetBoundingBox(elem);
       BBoxes = this.parseBBOXJSON(this.dataBBox);
-    } else if (this.url.toLowerCase().includes('globalland.vgt.vito')) {
+    } else if (
+      this.productTitle.includes('Low Resolution Vegetation Parameters') ||
+      this.productTitle.includes('Water Parameters')
+    ) {
       if (
         this.layers[elem.id].fullExtents &&
         this.layers[elem.id].fullExtents !== null
