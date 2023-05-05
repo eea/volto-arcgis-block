@@ -151,11 +151,12 @@ class BasemapWidget extends React.Component {
         let url = '';
 
         let epsgArray = [];
-        Array.from(layers[0].querySelectorAll('tilematrixset')).map(function (
-          element,
-        ) {
-          epsgArray.push(element.innerText);
-        });
+        Array.from(layers[0].querySelectorAll('tilematrixset')).map(
+          (element) => {
+            epsgArray.push(element.innerText);
+            return element;
+          },
+        );
         let proj = 'EPSG3857'; //default projection
         for (let i = 0; i < layers.length; i++) {
           if (!epsgArray.includes(proj)) {
@@ -163,28 +164,20 @@ class BasemapWidget extends React.Component {
           }
           url = this.parseCapabilities(layers[i], 'ResourceURL')[0].attributes
             .template.textContent;
-          eval(
-            '\
-          let basemap' +
-              i.toString() +
-              " = new Basemap({\
-            title: this.parseCapabilities(layers[i], 'ows:title')[0].innerText,  \
-            thumbnailUrl: url.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/" +
-              proj +
-              "/0/0/0'),\
-            baseLayers: [\
-              new WebTileLayer({\
-                urlTemplate: url.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/" +
-              proj +
-              "/{z}/{x}/{y}'),\
-              })\
-            ],\
-          });\
-          this.layerArray.push(basemap" +
-              i.toString() +
-              ');\
-          ',
-          );
+          let basemapCode = `
+            let basemap${i} = new Basemap({
+              title: this.parseCapabilities(layers[${i}], 'ows:title')[0].innerText,
+              thumbnailUrl: ${url}.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/${proj}/0/0/0'),
+              baseLayers: [
+                new WebTileLayer({
+                  urlTemplate: ${url}.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/${proj}/{z}/{x}/{y}')
+                })
+              ]
+            });
+            this.layerArray.push(basemap${i});
+          `;
+
+          Function.apply(null, [basemapCode]).call(this);
         }
         this.basemapGallery = new BasemapGallery({
           view: this.props.view,
