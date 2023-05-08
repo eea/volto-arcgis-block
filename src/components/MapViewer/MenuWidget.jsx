@@ -1977,10 +1977,30 @@ class MenuWidget extends React.Component {
         product.Datasets.forEach((dataset) => {
           if (dataset.DatasetTitle.includes(selectedDataset.title)) {
             this.url = dataset.ViewService;
+            this.productTitle = product.ProductTitle;
           }
         });
       });
     });
+  }
+  findDatasetBoundingBox(elem) {
+    this.compCfg.forEach((component) => {
+      component.Products.forEach((product) => {
+        product.Datasets.forEach((dataset) => {
+          dataset.Layer.forEach((layer) => {
+            if (layer.Title.includes(elem.title)) {
+              this.dataBBox = layer.bbox;
+            }
+          });
+        });
+      });
+    });
+  }
+  parseBBOXJSON(bboxJson) {
+    let bbox = JSON.parse(bboxJson);
+    let BBoxes = [];
+    BBoxes[0] = { xmin: bbox[0], ymin: bbox[1], xmax: bbox[2], ymax: bbox[3] };
+    return BBoxes;
   }
   parseBBOXWMS(xml) {
     const layerParentNode = xml.querySelectorAll('Layer');
@@ -2025,14 +2045,16 @@ class MenuWidget extends React.Component {
   } // function parseWMS
   // Web Map Tiled Services WMTS
   parseBBOXWMTS(xml) {
+    let BBoxes = {};
+    let layersChildren = null;
+    let layerParent = null;
     const layerParentNode = xml.querySelectorAll('Layer');
-    let layersChildren = Array.from(layerParentNode).filter(
+    layersChildren = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length === 0,
     );
-    let layerParent = Array.from(layerParentNode).filter(
+    layerParent = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length !== 0,
     );
-    let BBoxes = {};
     for (let i in layersChildren) {
       let LowerCorner,
         UpperCorner = [];
@@ -2049,7 +2071,9 @@ class MenuWidget extends React.Component {
           layersChildren[i],
           'ows:UpperCorner',
         )[0].innerText.split(' ');
-      } else {
+      } else if (
+        this.parseCapabilities(layerParent, 'ows:LowerCorner').length !== 0
+      ) {
         // If the layer has no BBOX, it was assigned dataset BBOX
         LowerCorner = this.parseCapabilities(
           layerParent,
@@ -2097,22 +2121,76 @@ class MenuWidget extends React.Component {
   async fullExtent(elem) {
     this.findCheckedDataset(elem);
     let BBoxes = {};
-    if (this.url.toLowerCase().includes('wms')) {
+    let firstLayer;
+    if (this.productTitle.includes('Global Dynamic Land Cover')) {
+      this.findDatasetBoundingBox(elem);
+      BBoxes = this.parseBBOXJSON(this.dataBBox);
+    } else if (
+      this.productTitle.includes('Low Resolution Vegetation Parameters') ||
+      this.productTitle.includes('Water Parameters')
+    ) {
+      if (
+        this.layers[elem.id].fullExtents &&
+        this.layers[elem.id].fullExtents !== null
+      ) {
+        this.view.goTo(this.layers[elem.id].fullExtents[0]);
+      } else {
+        let myExtent = new Extent({
+          xmin: -20037508.342789,
+          ymin: -20037508.342789,
+          xmax: 20037508.342789,
+          ymax: 20037508.342789,
+          // spatialReference: 4326 // by default wkid 4326
+        });
+        this.view.goTo(myExtent);
+      }
+    } else if (this.url.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
-    const firstLayer = BBoxes[Object.keys(BBoxes)[0]];
-    let myExtent = new Extent({
-      xmin: firstLayer.xmin,
-      ymin: firstLayer.ymin,
-      xmax: firstLayer.xmax,
-      ymax: firstLayer.ymax,
-      // spatialReference: 4326 // by default wkid 4326
-    });
-    this.view.goTo(myExtent);
+    if (
+      BBoxes &&
+      BBoxes !== null &&
+      BBoxes[Object.keys(BBoxes)[0]] &&
+      BBoxes[Object.keys(BBoxes)[0]] !== null
+    ) {
+      if (elem.title.includes('Corine Land Cover')) {
+        if (elem.title.includes('Guadeloupe')) {
+          firstLayer = BBoxes[Object.keys(BBoxes)[0]];
+        } else if (elem.title.includes('French Guiana')) {
+          firstLayer = BBoxes[Object.keys(BBoxes)[1]];
+        } else if (elem.title.includes('Martinique')) {
+          firstLayer = BBoxes[Object.keys(BBoxes)[2]];
+        } else if (elem.title.includes('Mayotte')) {
+          firstLayer = BBoxes[Object.keys(BBoxes)[3]];
+        } else if (elem.title.includes('Reunion')) {
+          firstLayer = BBoxes[Object.keys(BBoxes)[4]];
+        } else {
+          firstLayer =
+            BBoxes[Object.keys(BBoxes)[Object.keys(BBoxes).length - 1]];
+        }
+      } else if (
+        elem.id.includes('all_present') ||
+        elem.id.includes('all_lcc') ||
+        elem.id.includes('cop_klc') ||
+        elem.id.includes('protected_areas')
+      ) {
+        firstLayer = BBoxes['all_present_lc_a_pol'];
+      } else {
+        firstLayer = BBoxes[Object.keys(BBoxes)[0]];
+      }
+      let myExtent = new Extent({
+        xmin: firstLayer.xmin,
+        ymin: firstLayer.ymin,
+        xmax: firstLayer.xmax,
+        ymax: firstLayer.ymax,
+        // spatialReference: 4326 // by default wkid 4326
+      });
+      this.view.goTo(myExtent);
+    }
   }
   /**
    * Method to show Active Layers of the map
