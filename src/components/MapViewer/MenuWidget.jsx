@@ -3187,7 +3187,7 @@ class MenuWidget extends React.Component {
                 tabIndex="0"
                 style={this.props.download ? { width: '33.333%' } : {}}
               >
-                Active on map
+                Active layers
               </span>
               {this.props.download && (
                 <span
