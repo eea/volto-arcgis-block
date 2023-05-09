@@ -2,7 +2,7 @@ import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
-var Legend, LegendViewModel, watchUtils;
+var Legend, LegendViewModel;
 
 class LegendWidget extends React.Component {
   /**
@@ -24,18 +24,16 @@ class LegendWidget extends React.Component {
   }
 
   brokenLegendImagePatch() {
-    const collection = document.getElementsByClassName("esri-legend__symbol");
-    
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+
     Array.prototype.forEach.call(collection, (element) => {
-      
       let img = {};
-      
+
       if (element.hasChildNodes()) img = element.childNodes[0];
       else img = element;
-      
+
       // If img src returns a broken link
       if (!(img.complete && img.naturalHeight !== 0)) {
-      
         img.style.display = 'none';
 
         let span = document.createElement('span');
@@ -43,36 +41,15 @@ class LegendWidget extends React.Component {
         element.parentNode.appendChild(span);
       }
     });
-  };
-
-  correctlegendImageOpacity() {
-    const collection = document.getElementsByClassName("esri-legend__symbol");
-    
-    Array.prototype.forEach.call(collection, (element) => {
-      
-      let img = {};
-      
-      if (element.hasChildNodes()) img = element.childNodes[0];
-      else img = element;
-      
-      img.style.opacity = 1;
-    });
-  };
+  }
 
   loader() {
     return loadModules([
       'esri/widgets/Legend',
       'esri/widgets/Legend/LegendViewModel',
-      'esri/core/watchUtils',
-    ])
-      .then(([
-        _Legend,
-        _LegendViewModel,
-        _watchUtils,
-      ]) => {
+    ]).then(([_Legend, _LegendViewModel]) => {
       Legend = _Legend;
       LegendViewModel = _LegendViewModel;
-      watchUtils = _watchUtils;
     });
   }
 
@@ -125,20 +102,12 @@ class LegendWidget extends React.Component {
       container: document.querySelector('.legend-panel'),
     });
 
-      this.props.view.allLayerViews.watch("length", () => {
-          setTimeout(() => {
-          this.brokenLegendImagePatch();
-          }, 1000);
-
-        });
-      
-      this.LegendWidget.activeLayerInfos.on("change" , (activeLayerInfo) => {
-        setTimeout(() => {
-          activeLayerInfo.opacity.set(1);
-        //  this.brokenLegendImagePatch();
-        }, 1000);
-      });
-}
+    this.props.view.allLayerViews.watch('length', () => {
+      setTimeout(() => {
+        this.brokenLegendImagePatch();
+      }, 1000);
+    });
+  }
 
   /**
    * This method renders the component

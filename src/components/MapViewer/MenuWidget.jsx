@@ -649,18 +649,21 @@ class MenuWidget extends React.Component {
   }
 
   setLegendOpacity = () => {
-    const collection = document.getElementsByClassName("esri-legend__symbol");
-    
-    Array.prototype.forEach.call(collection, function(element) {
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+
+    Array.prototype.forEach.call(collection, function (element) {
       let img = {};
-      
+
       if (element.hasChildNodes()) {
         img = element.childNodes[0];
       } else {
         img = element;
-      }                     
+      }
       // Set Legend opacity back to 1;
-      img.setAttribute("style","opacity:1; -moz-opacity:1; filter:alpha(opacity=100)");
+      img.setAttribute(
+        'style',
+        'opacity:1; -moz-opacity:1; filter:alpha(opacity=100)',
+      );
     });
   };
 
