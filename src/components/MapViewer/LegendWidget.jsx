@@ -17,17 +17,13 @@ class LegendWidget extends React.Component {
     //not be showing the basemap panel
     this.state = {
       showMapMenu: false,
-      layerViewLength: 0,
     };
     this.mapViewer = this.props.mapViewer;
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
   }
 
-  legendImageUpdater() {
-    debugger;
-    console.log('legendImageUpdater running. Layer: ');
-    
+  brokenLegendImagePatch() {
     const collection = document.getElementsByClassName("esri-legend__symbol");
     
     Array.prototype.forEach.call(collection, (element) => {
@@ -39,23 +35,27 @@ class LegendWidget extends React.Component {
       
       // If img src returns a broken link
       if (!(img.complete && img.naturalHeight !== 0)) {
-        
-        
-        // set to display "none"
+      
         img.style.display = 'none';
-        
-        // change legend message
-        //const legendMessage = document.querySelectorAll(
-        //  '.esri-legend__message',
-        //  )[0];
-          
-        // add 'Legend is not available for this layer' to legendMessage text that already exists
-        //if (legendMessage) {
-        
-        //legendMessage.innerHTML =
-        //legendMessage.innerHTML +
-        //'<br><br>Legend is not available for this layer';
+
+        let span = document.createElement('span');
+        span.innerHTML = 'No legend available';
+        element.parentNode.appendChild(span);
       }
+    });
+  };
+
+  correctlegendImageOpacity() {
+    const collection = document.getElementsByClassName("esri-legend__symbol");
+    
+    Array.prototype.forEach.call(collection, (element) => {
+      
+      let img = {};
+      
+      if (element.hasChildNodes()) img = element.childNodes[0];
+      else img = element;
+      
+      img.style.opacity = 1;
     });
   };
 
@@ -124,33 +124,21 @@ class LegendWidget extends React.Component {
       }),
       container: document.querySelector('.legend-panel'),
     });
-    await this.LegendWidget.view.when("container");
-    // This event fires each time a layer's LayerView is created for the specified view instance
-    this.props.view.on("layerview-create", (event) => {
-      console.log("LayerView created! LayerView: ", event.layerView);
 
-      event.layerView.watch("updating", (updating) => {
-        if (!updating) {
-          ++this.state.layerViewLength;
-          console.log("update-end");
-          console.log("layerViewLength: ", this.state.layerViewLength);
-        } else {
-          console.log("update-start");
-        }
+      this.props.view.allLayerViews.watch("length", () => {
+          setTimeout(() => {
+          this.brokenLegendImagePatch();
+          }, 1000);
+
+        });
+      
+      this.LegendWidget.activeLayerInfos.on("change" , (activeLayerInfo) => {
+        setTimeout(() => {
+          activeLayerInfo.opacity.set(1);
+        //  this.brokenLegendImagePatch();
+        }, 1000);
       });
-    });
-
-      this.props.view.allLayerViews.watch("length", (evt) => {
-        debugger;
-        console.log("allLayerViews length changed", evt);
-        if (this.state.layerViewLength === evt) {
-          console.log("all layer views equal");
-      //  this.legendImageUpdater();
-        } else {
-          console.log("all layer views not equal");
-        }
-    });
-  }
+}
 
   /**
    * This method renders the component
