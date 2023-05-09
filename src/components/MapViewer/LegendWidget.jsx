@@ -15,7 +15,10 @@ class LegendWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = {
+      showMapMenu: false,
+      layerViewLength: 0,
+    };
     this.mapViewer = this.props.mapViewer;
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
@@ -125,18 +128,27 @@ class LegendWidget extends React.Component {
     // This event fires each time a layer's LayerView is created for the specified view instance
     this.props.view.on("layerview-create", (event) => {
       console.log("LayerView created! LayerView: ", event.layerView);
-      if (event.layerView) {
-        event.layerView.watch("updating", (updating) => {
-          if (!updating) {
-            this.legendImageUpdater();
-          }
-        });
-      }
+
+      event.layerView.watch("updating", (updating) => {
+        if (!updating) {
+          ++this.state.layerViewLength;
+          console.log("update-end");
+          console.log("layerViewLength: ", this.state.layerViewLength);
+        } else {
+          console.log("update-start");
+        }
+      });
     });
-    // This event fires each time a layer's LayerView is destroyed for the specified view instance
-    this.props.view.on("layerview-destroy", (event) => {
-      console.log("LayerView destroyed! LayerView: ", event.layerView);
-      this.legendImageUpdater();
+
+      this.props.view.allLayerViews.watch("length", (evt) => {
+        debugger;
+        console.log("allLayerViews length changed", evt);
+        if (this.state.layerViewLength === evt) {
+          console.log("all layer views equal");
+      //  this.legendImageUpdater();
+        } else {
+          console.log("all layer views not equal");
+        }
     });
   }
 
