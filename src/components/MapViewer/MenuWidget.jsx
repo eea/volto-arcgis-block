@@ -2668,7 +2668,15 @@ class MenuWidget extends React.Component {
       this.saveOpacity(this.layers['pa_filter'], value / 100);
     } else {
       this.layers[layer].opacity = value / 100;
-      this.saveOpacity(this.layer, value / 100);
+      this.saveOpacity(layer, value / 100);
+    }
+    if (
+      this.map.findLayerById(layer) &&
+      this.map.findLayerById(layer) !== null &&
+      this.map.findLayerById(layer).opacity &&
+      this.map.findLayerById(layer).opacity !== null
+    ) {
+      this.map.findLayerById(layer).opacity = value / 100;
     }
     document.querySelector(
       '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
@@ -2734,6 +2742,7 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
+    this.findCheckedDataset(elem);
     if (this.visibleLayers[elem.id][1] === 'eye') {
       this.layers[elem.id].visible = false;
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
@@ -2783,6 +2792,23 @@ class MenuWidget extends React.Component {
     this.saveLayerOrder();
     this.checkInfoWidget();
     this.setState({});
+    if (this.productTitle.includes('Global Dynamic Land Cover')) {
+      if (this.visibleLayers[elem.id][1] === 'eye-slash') {
+        this.map.findLayerById(elem.id).visible = false;
+      } else {
+        let layerOpacityes = JSON.parse(
+          sessionStorage.getItem('layerOpacities'),
+        );
+        if (
+          layerOpacityes &&
+          layerOpacityes !== null &&
+          layerOpacityes[elem.id] &&
+          layerOpacityes[elem.id] !== null
+        ) {
+          this.map.findLayerById(elem.id).opacity = layerOpacityes[elem.id];
+        }
+      }
+    }
   }
 
   /**
@@ -3163,7 +3189,7 @@ class MenuWidget extends React.Component {
                 tabIndex="0"
                 style={this.props.download ? { width: '33.333%' } : {}}
               >
-                Active on map
+                Active layers
               </span>
               {this.props.download && (
                 <span
