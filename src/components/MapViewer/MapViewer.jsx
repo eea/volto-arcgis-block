@@ -51,6 +51,7 @@ class MapViewer extends React.Component {
     this.layers = {};
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
+    this.props.mapviewer_config.loading = true;
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -311,22 +312,30 @@ class MapViewer extends React.Component {
   render() {
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
-    return (
-      <div className={this.mapClass}>
-        <div ref={this.mapdiv} className="map">
-          {this.appLanguage()}
-          {this.renderBasemap()}
-          {this.renderLegend()}
-          {this.renderMeasurement()}
-          {this.renderPrint()}
-          {this.renderArea()}
-          {this.renderScale()}
-          {this.renderInfo()}
-          {this.renderHotspot()}
-          {this.renderMenu()}
+    if ('loading' in this.props.mapviewer_config) {
+      return (
+        <div className={this.mapClass}>
+          <div ref={this.mapdiv} className="map"></div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <div className={this.mapClass}>
+          <div ref={this.mapdiv} className="map">
+            {this.appLanguage()}
+            {this.renderBasemap()}
+            {this.renderLegend()}
+            {this.renderMeasurement()}
+            {this.renderPrint()}
+            {this.renderArea()}
+            {this.renderScale()}
+            {this.renderInfo()}
+            {this.renderHotspot()}
+            {this.renderMenu()}
+          </div>
+        </div>
+      );
+    }
   }
 }
 
