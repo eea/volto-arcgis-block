@@ -2,7 +2,7 @@ import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
-var Legend;
+var Legend, LegendViewModel;
 
 class LegendWidget extends React.Component {
   /**
@@ -15,14 +15,41 @@ class LegendWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = { showMapMenu: false };
+    this.state = {
+      showMapMenu: false,
+    };
+    this.mapViewer = this.props.mapViewer;
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
   }
 
+  brokenLegendImagePatch() {
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+
+    Array.prototype.forEach.call(collection, (element) => {
+      let img = {};
+
+      if (element.hasChildNodes()) img = element.childNodes[0];
+      else img = element;
+
+      // If img src returns a broken link
+      if (!(img.complete && img.naturalHeight !== 0)) {
+        img.style.display = 'none';
+
+        let span = document.createElement('span');
+        span.innerHTML = 'No legend available';
+        element.parentNode.appendChild(span);
+      }
+    });
+  }
+
   loader() {
-    return loadModules(['esri/widgets/Legend']).then(([_Legend]) => {
+    return loadModules([
+      'esri/widgets/Legend',
+      'esri/widgets/Legend/LegendViewModel',
+    ]).then(([_Legend, _LegendViewModel]) => {
       Legend = _Legend;
+      LegendViewModel = _LegendViewModel;
     });
   }
 
@@ -60,6 +87,7 @@ class LegendWidget extends React.Component {
       this.setState({ showMapMenu: true });
     }
   }
+
   /**
    * This method is executed after the rener method is executed
    */
@@ -68,9 +96,19 @@ class LegendWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.LegendWidget = new Legend({
       view: this.props.view,
+      viewModel: new LegendViewModel({
+        view: this.props.view,
+      }),
       container: document.querySelector('.legend-panel'),
     });
+
+    this.props.view.allLayerViews.watch('length', () => {
+      setTimeout(() => {
+        this.brokenLegendImagePatch();
+      }, 1000);
+    });
   }
+
   /**
    * This method renders the component
    * @returns jsx
