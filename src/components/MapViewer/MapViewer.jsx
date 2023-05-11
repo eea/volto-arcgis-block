@@ -113,7 +113,7 @@ class MapViewer extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
-    await this.waitForDataFill();
+    await this.waitForDataFill();       
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
 
@@ -134,9 +134,10 @@ class MapViewer extends React.Component {
 
     this.map = new Map({
       // basemap: 'topo',
-      basemap: this.positronCompositeBasemap,
+      basemap: this.positronCompositeBasemap,     
+      logo: false 
     });
-
+    
     mapStatus = this.recoverState();
 
     if (
@@ -145,6 +146,9 @@ class MapViewer extends React.Component {
       Object.entries(mapStatus).length === 0
     ) {
       mapStatus = {};
+      console.log(this.mapCfg.zoom);
+      console.log(this.mapCfg.center);
+      console.log(this.mapCfg);
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
       mapStatus.activeLayers = this.mapCfg.activeLayers;
@@ -155,7 +159,7 @@ class MapViewer extends React.Component {
 
     this.view = new MapView({
       container: this.mapdiv.current,
-      map: this.map,
+      map: this.map,      
       center: mapStatus.center,
       zoom: mapStatus.zoom,
       constraints: {
@@ -173,14 +177,58 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
+
+    // this.map.on('extent-change', function(event) {
+    //     //If the map has moved to the point where it's center is 
+    //     //outside the initial boundaries, then move it back to the 
+    //     //edge where it moved out
+    //     var currentCenter = this.map.extent.getCenter();
+    //     if (!initialExtent.contains(currentCenter) && 
+    //         event.delta.x !== 0 && event.delta.y !== 0) {
+
+    //         var newCenter = this.map.extent.getCenter();
+
+    //         //check each side of the initial extent and if the 
+    //         //current center is outside that extent, 
+    //         //set the new center to be on the edge that it went out on
+    //         if (currentCenter.x < initialExtent.xmin) {
+    //             newCenter.x = initialExtent.xmin;
+    //         }
+    //         if (currentCenter.x > initialExtent.xmax) {
+    //             newCenter.x = initialExtent.xmax;
+    //         }
+    //         if (currentCenter.y < initialExtent.ymin) {
+    //             newCenter.y = initialExtent.ymin;
+    //         }
+    //         if (currentCenter.y > initialExtent.ymax) {
+    //             newCenter.y = initialExtent.ymax;
+    //         }
+    //         this.map.centerAt(newCenter);
+    //     }
+    // });
+
     this.view.when(() => {
+      const logoDiv = document.getElementsByClassName("esri-attribution__powered-by");
+      console.log(logoDiv[0]);
+      // logoDiv.style.opacity = 0;
+
+
       this.view.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);
       });
 
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
-        this.setZoomState(newValue);
+        this.setZoomState(newValue);        
       });
+
+      this.view.watch('stationary', (newValue, oldValue, property, object) => {        
+        if (mapStatus.zoom <= this.mapCfg.minZoom) {
+          console.log(this.view.extent.xmin, this.view.extent.ymin, this.view.extent.xmax, this.view.extent.ymax);
+          console.log(mapStatus.center);
+          //this.view.extent = new Extent ()
+        }
+      });
+
 
       this.view.popup.autoOpenEnabled = false;
       // After launching the MapViewerConfig action
