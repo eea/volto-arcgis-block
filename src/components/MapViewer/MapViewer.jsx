@@ -285,7 +285,8 @@ class MapViewer extends React.Component {
       //this.setState({});      
     });
 
-    window.onload = (event) => {      
+    window.onload = (event) => {    
+      console.log('Ventana cargada');
       document.getElementsByClassName("esri-attribution__powered-by")[0].innerText = ' ';
     };
   }
