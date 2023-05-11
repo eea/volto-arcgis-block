@@ -18,7 +18,7 @@ import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl, Basemap, WebTileLayer;
+var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -85,14 +85,16 @@ class MapViewer extends React.Component {
       'esri/intl',
       'esri/Basemap',
       'esri/layers/WebTileLayer',
-    ]).then(([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer]) => {
-      [Map, MapView, Zoom, intl, Basemap, WebTileLayer] = [
+      "esri/geometry/Extent"
+    ]).then(([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent]) => {
+      [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
         _Map,
         _MapView,
         _Zoom,
         _intl,
         _Basemap,
         _WebTileLayer,
+        _Extent
       ];
     });
   }
@@ -145,10 +147,7 @@ class MapViewer extends React.Component {
       (mapStatus.zoom === null && mapStatus.center === null) ||
       Object.entries(mapStatus).length === 0
     ) {
-      mapStatus = {};
-      console.log(this.mapCfg.zoom);
-      console.log(this.mapCfg.center);
-      console.log(this.mapCfg);
+      mapStatus = {};     
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
       mapStatus.activeLayers = this.mapCfg.activeLayers;
@@ -165,6 +164,14 @@ class MapViewer extends React.Component {
       constraints: {
         minZoom: this.mapCfg.minZoom,
         maxZoom: this.mapCfg.maxZoom,
+        rotationEnabled: false,
+        geometry: { // Constrain lateral movement to Lower Manhattan
+          type: "extent",
+          xmin: -90,
+          ymin:  -45, //set in configuration
+          xmax: 90,
+          ymax:  45
+        },
       },
       ui: {
         components: ['attribution'],
@@ -207,28 +214,63 @@ class MapViewer extends React.Component {
     //     }
     // });
 
-    this.view.when(() => {
-      const logoDiv = document.getElementsByClassName("esri-attribution__powered-by");
-      console.log(logoDiv[0]);
-      // logoDiv.style.opacity = 0;
-
+    this.view.when(() => {     
+      let constraintExtent = new Extent ({
+        xmin: -90,
+        ymin: -45,
+        xmax: 90,
+        ymax: 45,
+        spatialReference: 4326
+      })//-34181823.72082071 -7556972.773181698 37162663.991865456 15924482.316018358
 
       this.view.watch('center', (newValue, oldValue, property, object) => {
-        this.setCenterState(newValue);
+        this.setCenterState(newValue);        
       });
 
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
-        this.setZoomState(newValue);        
-      });
-
-      this.view.watch('stationary', (newValue, oldValue, property, object) => {        
+        this.setZoomState(newValue);  
         if (mapStatus.zoom <= this.mapCfg.minZoom) {
-          console.log(this.view.extent.xmin, this.view.extent.ymin, this.view.extent.xmax, this.view.extent.ymax);
-          console.log(mapStatus.center);
-          //this.view.extent = new Extent ()
-        }
+          this.view.constraints.geometry = constraintExtent;
+        } else {
+          this.view.constraints.geometry = null;         // PROBAR A PONER AQUI UN LIMITE MAS PEQUEÑO                             
+        }     
       });
 
+
+      // this.view.on("drag", function(event) {
+      //   // prevents panning with the mouse drag event
+      //     if (mapStatus.zoom <= this.mapCfg.minZoom) {
+      //       console.log('Pan Locked');
+      //       event.stopPropagation();
+      //       // this.view.extent = constraintExtent;
+      //       // this.setCenterState(constraintExtent.center);
+            
+      //     }        
+      // });
+
+      // this.view.on("key-down", function(event) {
+      //   // prevents panning with the arrow keys
+      //   if (mapStatus.zoom <= this.mapCfg.minZoom) {
+      //     var keyPressed = event.key;
+      //     if (keyPressed.slice(0, 5) === "Arrow") {
+      //       console.log('Keyboard Locked');
+      //       event.stopPropagation();
+      //     }
+      //   }
+      // });
+
+     
+
+      // this.view.watch('stationary', (newValue, oldValue, property, object) => {        
+      //   if (mapStatus.zoom <= this.mapCfg.minZoom) {
+      //     // console.log(this.view.extent.xmin, this.view.extent.ymin, this.view.extent.xmax, this.view.extent.ymax);
+      //     // console.log(mapStatus.center.x, mapStatus.center.y);
+         
+      //     this.view.extent = constraintExtent;
+      //     this.setCenterState(constraintExtent.center);
+      //     //this.view.extent = new Extent ()
+      //   }
+      // });
 
       this.view.popup.autoOpenEnabled = false;
       // After launching the MapViewerConfig action
@@ -240,8 +282,12 @@ class MapViewer extends React.Component {
       //trigger the renderization again, and to trigger the renderization
       //we invoke the setState method, that changes the state and forces a
       //react component to render itself again
-      //this.setState({});
+      //this.setState({});      
     });
+
+    window.onload = (event) => {      
+      document.getElementsByClassName("esri-attribution__powered-by")[0].innerText = ' ';
+    };
   }
 
   componentWillUnmount() {
