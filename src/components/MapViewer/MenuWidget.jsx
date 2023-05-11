@@ -2673,8 +2673,8 @@ class MenuWidget extends React.Component {
     if (
       this.map.findLayerById(layer) &&
       this.map.findLayerById(layer) !== null &&
-      this.map.findLayerById(layer).opacity &&
-      this.map.findLayerById(layer).opacity !== null
+      (this.map.findLayerById(layer).opacity ||
+        this.map.findLayerById(layer).opacity === 0)
     ) {
       this.map.findLayerById(layer).opacity = value / 100;
     }
@@ -2796,16 +2796,15 @@ class MenuWidget extends React.Component {
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
         this.map.findLayerById(elem.id).visible = false;
       } else {
-        let layerOpacityes = JSON.parse(
+        let layerOpacities = JSON.parse(
           sessionStorage.getItem('layerOpacities'),
         );
         if (
-          layerOpacityes &&
-          layerOpacityes !== null &&
-          layerOpacityes[elem.id] &&
-          layerOpacityes[elem.id] !== null
+          layerOpacities &&
+          layerOpacities !== null &&
+          (layerOpacities[elem.id] || layerOpacities[elem.id] === 0)
         ) {
-          this.map.findLayerById(elem.id).opacity = layerOpacityes[elem.id];
+          this.map.findLayerById(elem.id).opacity = layerOpacities[elem.id];
         }
       }
     }
