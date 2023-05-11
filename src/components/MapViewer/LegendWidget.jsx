@@ -34,7 +34,11 @@ class LegendWidget extends React.Component {
 
       // If img src returns a broken link
       if (!(img.complete && img.naturalHeight !== 0)) {
-        img.style.display = 'none';
+        if (img.style) {
+          img.style.display = 'none';
+        }
+
+        if (element.parentNode.querySelector('span')) return;
 
         let span = document.createElement('span');
         span.innerHTML = 'No legend available';
