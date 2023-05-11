@@ -36,13 +36,13 @@ class LegendWidget extends React.Component {
       if (!(img.complete && img.naturalHeight !== 0)) {
         if (img.style) {
           img.style.display = 'none';
+
+          if (element.parentNode.querySelector('span')) return;
+
+          let span = document.createElement('span');
+          span.innerHTML = 'No legend available';
+          element.parentNode.appendChild(span);
         }
-
-        if (element.parentNode.querySelector('span')) return;
-
-        let span = document.createElement('span');
-        span.innerHTML = 'No legend available';
-        element.parentNode.appendChild(span);
       }
     });
   }
