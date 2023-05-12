@@ -2682,6 +2682,30 @@ class MenuWidget extends React.Component {
       '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
     ).dataset.opacity = value;
     // }
+    setTimeout(() => {
+      this.setLegendOpacity();
+    }, 100);
+  }
+
+  setLegendOpacity() {
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+
+    Array.prototype.forEach.call(collection, function (element) {
+      let img = {};
+
+      if (element.hasChildNodes()) {
+        img = element.childNodes[0];
+      } else {
+        img = element;
+      }
+      // Set Legend opacity back to 1;
+      if (img) {
+        img.setAttribute(
+          'style',
+          'opacity:1; -moz-opacity:1; filter:alpha(opacity=100)',
+        );
+      }
+    });
   }
 
   /**
