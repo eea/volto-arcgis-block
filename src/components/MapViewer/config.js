@@ -5,6 +5,13 @@ const config = {
     zoom: 3,
     minZoom: 2,
     maxZoom: 20,
+    geometry: {
+      type: "extent",
+      xmin: -90,
+      ymin: -45,
+      xmax: 90,
+      ymax: 45
+    },
     activeLayers: [],
   },
   Components: [

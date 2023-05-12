@@ -165,13 +165,7 @@ class MapViewer extends React.Component {
         minZoom: this.mapCfg.minZoom,
         maxZoom: this.mapCfg.maxZoom,
         rotationEnabled: false,
-        geometry: { // Constrain lateral movement to Lower Manhattan
-          type: "extent",
-          xmin: -90,
-          ymin:  -45, //set in configuration
-          xmax: 90,
-          ymax:  45
-        },
+        geometry: this.mapCfg.geometry
       },
       ui: {
         components: ['attribution'],
@@ -184,114 +178,33 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
-
-    // this.map.on('extent-change', function(event) {
-    //     //If the map has moved to the point where it's center is 
-    //     //outside the initial boundaries, then move it back to the 
-    //     //edge where it moved out
-    //     var currentCenter = this.map.extent.getCenter();
-    //     if (!initialExtent.contains(currentCenter) && 
-    //         event.delta.x !== 0 && event.delta.y !== 0) {
-
-    //         var newCenter = this.map.extent.getCenter();
-
-    //         //check each side of the initial extent and if the 
-    //         //current center is outside that extent, 
-    //         //set the new center to be on the edge that it went out on
-    //         if (currentCenter.x < initialExtent.xmin) {
-    //             newCenter.x = initialExtent.xmin;
-    //         }
-    //         if (currentCenter.x > initialExtent.xmax) {
-    //             newCenter.x = initialExtent.xmax;
-    //         }
-    //         if (currentCenter.y < initialExtent.ymin) {
-    //             newCenter.y = initialExtent.ymin;
-    //         }
-    //         if (currentCenter.y > initialExtent.ymax) {
-    //             newCenter.y = initialExtent.ymax;
-    //         }
-    //         this.map.centerAt(newCenter);
-    //     }
-    // });
-
-    this.view.when(() => {     
-      // let constraintExtent = new Extent ({
-      //   xmin: -90,
-      //   ymin: -45,
-      //   xmax: 90,
-      //   ymax: 45,
-      //   spatialReference: 4326
-      // })// -7556972.773181698 37162663.991865456 15924482.316018358
-
+    this.view.when(() => {         
       this.view.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);        
       });
 
+      let constraintExtent = null;
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);  
         if (mapStatus.zoom <= this.mapCfg.minZoom) {
-          let constraintExtent = new Extent ({
+          constraintExtent = new Extent ({
             xmin: -90,
             ymin: -45,
             xmax: 90,
             ymax: 45,
             spatialReference: 4326
-          })
-          this.view.constraints.geometry = constraintExtent;
+          })          
         } else {
-          let constraintExtent = new Extent ({
+          constraintExtent = new Extent ({
             xmin: -90,
             ymin: -85,
             xmax: 90,
             ymax: 85,
             spatialReference: 4326
-          })
-          // let constraintExtent = new Extent ({
-          //   xmin: -20037508.34,
-          //   ymin: -20048966.1,
-          //   xmax: 20037508.34,
-          //   ymax: 20048966.1,
-          //   spatialReference: 3857
-          // })
-          this.view.constraints.geometry = constraintExtent;         // PROBAR A PONER AQUI UN LIMITE MAS PEQUEÑO                             
+          })         
         }     
+        this.view.constraints.geometry = constraintExtent;
       });
-
-
-      // this.view.on("drag", function(event) {
-      //   // prevents panning with the mouse drag event
-      //     if (mapStatus.zoom <= this.mapCfg.minZoom) {
-      //       console.log('Pan Locked');
-      //       event.stopPropagation();
-      //       // this.view.extent = constraintExtent;
-      //       // this.setCenterState(constraintExtent.center);
-            
-      //     }        
-      // });
-
-      // this.view.on("key-down", function(event) {
-      //   // prevents panning with the arrow keys
-      //   if (mapStatus.zoom <= this.mapCfg.minZoom) {
-      //     var keyPressed = event.key;
-      //     if (keyPressed.slice(0, 5) === "Arrow") {
-      //       console.log('Keyboard Locked');
-      //       event.stopPropagation();
-      //     }
-      //   }
-      // });
-
-     
-
-      // this.view.watch('stationary', (newValue, oldValue, property, object) => {        
-      //   if (mapStatus.zoom <= this.mapCfg.minZoom) {
-      //     // console.log(this.view.extent.xmin, this.view.extent.ymin, this.view.extent.xmax, this.view.extent.ymax);
-      //     // console.log(mapStatus.center.x, mapStatus.center.y);
-         
-      //     this.view.extent = constraintExtent;
-      //     this.setCenterState(constraintExtent.center);
-      //     //this.view.extent = new Extent ()
-      //   }
-      // });
 
       this.view.popup.autoOpenEnabled = false;
       // After launching the MapViewerConfig action
