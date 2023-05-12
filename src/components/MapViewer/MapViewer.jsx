@@ -18,7 +18,7 @@ import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl, Basemap, WebTileLayer;
+var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -86,14 +86,16 @@ class MapViewer extends React.Component {
       'esri/intl',
       'esri/Basemap',
       'esri/layers/WebTileLayer',
-    ]).then(([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer]) => {
-      [Map, MapView, Zoom, intl, Basemap, WebTileLayer] = [
+      "esri/geometry/Extent"
+    ]).then(([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent]) => {
+      [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
         _Map,
         _MapView,
         _Zoom,
         _intl,
         _Basemap,
         _WebTileLayer,
+        _Extent
       ];
     });
   }
@@ -114,7 +116,7 @@ class MapViewer extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
-    await this.waitForDataFill();
+    await this.waitForDataFill();       
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
 
@@ -135,9 +137,10 @@ class MapViewer extends React.Component {
 
     this.map = new Map({
       // basemap: 'topo',
-      basemap: this.positronCompositeBasemap,
+      basemap: this.positronCompositeBasemap,     
+      logo: false 
     });
-
+    
     mapStatus = this.recoverState();
 
     if (
@@ -145,7 +148,7 @@ class MapViewer extends React.Component {
       (mapStatus.zoom === null && mapStatus.center === null) ||
       Object.entries(mapStatus).length === 0
     ) {
-      mapStatus = {};
+      mapStatus = {};     
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
       mapStatus.activeLayers = this.mapCfg.activeLayers;
@@ -156,12 +159,14 @@ class MapViewer extends React.Component {
 
     this.view = new MapView({
       container: this.mapdiv.current,
-      map: this.map,
+      map: this.map,      
       center: mapStatus.center,
       zoom: mapStatus.zoom,
       constraints: {
         minZoom: this.mapCfg.minZoom,
         maxZoom: this.mapCfg.maxZoom,
+        rotationEnabled: false,
+        geometry: this.mapCfg.geometry
       },
       ui: {
         components: ['attribution'],
@@ -174,13 +179,32 @@ class MapViewer extends React.Component {
       position: 'top-right',
     });
 
-    this.view.when(() => {
+    this.view.when(() => {         
       this.view.watch('center', (newValue, oldValue, property, object) => {
-        this.setCenterState(newValue);
+        this.setCenterState(newValue);        
       });
 
+      let constraintExtent = null;
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
-        this.setZoomState(newValue);
+        this.setZoomState(newValue);  
+        if (mapStatus.zoom <= this.mapCfg.minZoom) {
+          constraintExtent = new Extent ({
+            xmin: -90,
+            ymin: -45,
+            xmax: 90,
+            ymax: 45,
+            spatialReference: 4326
+          })          
+        } else {
+          constraintExtent = new Extent ({
+            xmin: -90,
+            ymin: -85,
+            xmax: 90,
+            ymax: 85,
+            spatialReference: 4326
+          })         
+        }     
+        this.view.constraints.geometry = constraintExtent;
       });
       this.view.popup.autoOpenEnabled = false;
       // After launching the MapViewerConfig action
@@ -192,8 +216,15 @@ class MapViewer extends React.Component {
       //trigger the renderization again, and to trigger the renderization
       //we invoke the setState method, that changes the state and forces a
       //react component to render itself again
-      //this.setState({});
-    });
+      //this.setState({});  
+      
+
+      // SET TIME OUT 100ms
+      let esriAttributionDiv = document.getElementsByClassName("esri-attribution__powered-by")
+      if (esriAttributionDiv.length > 0) {           
+        document.getElementsByClassName("esri-attribution__powered-by")[0].innerText = ' ';
+      }      
+    });    
   }
 
   componentWillUnmount() {
