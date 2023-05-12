@@ -215,13 +215,13 @@ class MapViewer extends React.Component {
     // });
 
     this.view.when(() => {     
-      let constraintExtent = new Extent ({
-        xmin: -90,
-        ymin: -45,
-        xmax: 90,
-        ymax: 45,
-        spatialReference: 4326
-      })//-34181823.72082071 -7556972.773181698 37162663.991865456 15924482.316018358
+      // let constraintExtent = new Extent ({
+      //   xmin: -90,
+      //   ymin: -45,
+      //   xmax: 90,
+      //   ymax: 45,
+      //   spatialReference: 4326
+      // })// -7556972.773181698 37162663.991865456 15924482.316018358
 
       this.view.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);        
@@ -230,9 +230,30 @@ class MapViewer extends React.Component {
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);  
         if (mapStatus.zoom <= this.mapCfg.minZoom) {
+          let constraintExtent = new Extent ({
+            xmin: -90,
+            ymin: -45,
+            xmax: 90,
+            ymax: 45,
+            spatialReference: 4326
+          })
           this.view.constraints.geometry = constraintExtent;
         } else {
-          this.view.constraints.geometry = null;         // PROBAR A PONER AQUI UN LIMITE MAS PEQUEÑO                             
+          let constraintExtent = new Extent ({
+            xmin: -90,
+            ymin: -85,
+            xmax: 90,
+            ymax: 85,
+            spatialReference: 4326
+          })
+          // let constraintExtent = new Extent ({
+          //   xmin: -20037508.34,
+          //   ymin: -20048966.1,
+          //   xmax: 20037508.34,
+          //   ymax: 20048966.1,
+          //   spatialReference: 3857
+          // })
+          this.view.constraints.geometry = constraintExtent;         // PROBAR A PONER AQUI UN LIMITE MAS PEQUEÑO                             
         }     
       });
 
@@ -286,7 +307,7 @@ class MapViewer extends React.Component {
     });
 
     window.onload = (event) => {    
-      console.log('Ventana cargada');
+      console.log('Ventana cargada');      
       document.getElementsByClassName("esri-attribution__powered-by")[0].innerText = ' ';
     };
   }
