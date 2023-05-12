@@ -216,13 +216,15 @@ class MapViewer extends React.Component {
       //trigger the renderization again, and to trigger the renderization
       //we invoke the setState method, that changes the state and forces a
       //react component to render itself again
-      //this.setState({});      
-    });
+      //this.setState({});  
+      
 
-    window.onload = (event) => {    
-      console.log('Ventana cargada');      
-      document.getElementsByClassName("esri-attribution__powered-by")[0].innerText = ' ';
-    };
+      // SET TIME OUT 100ms
+      let esriAttributionDiv = document.getElementsByClassName("esri-attribution__powered-by")
+      if (esriAttributionDiv.length > 0) {           
+        document.getElementsByClassName("esri-attribution__powered-by")[0].innerText = ' ';
+      }      
+    });    
   }
 
   componentWillUnmount() {
