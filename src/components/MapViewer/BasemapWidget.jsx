@@ -231,29 +231,11 @@ class BasemapWidget extends React.Component {
         //   new WebTileLayer(...)
         // ],
       });
-
-      this.naturalEarthBasemap = new Basemap({
-        title: 'Natural Earth',
-        thumbnailUrl:
-          'https://gisco-services.ec.europa.eu/maps/wmts/NaturalEarth/EPSG3857/0/0/0.png',
-        baseLayers: [
-          new WebTileLayer({
-            urlTemplate:
-              'https://gisco-services.ec.europa.eu/maps/tiles/NaturalEarth/EPSG3857/{z}/{x}/{y}.png',
-          }),
-        ],
-        referenceLayers: [
-          new WebTileLayer({
-            urlTemplate: 'https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomLabels/EPSG3857/{z}/{x}/{y}.png',
-          }),
-        ],
-      });
-
+     
       this.basemapGallery = new BasemapGallery({
         view: this.props.view,
         container: this.container.current.querySelector('.basemap-panel'),
-        source: [
-          this.naturalEarthBasemap,
+        source: [          
           this.worldBoundariesBasemap,
           this.blossomCompositeBasemap,
           this.positronCompositeBasemap,

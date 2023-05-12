@@ -119,26 +119,24 @@ class MapViewer extends React.Component {
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
 
-    this.naturalEarthBasemap = new Basemap({
-      title: 'Natural Earth',
+    this.positronCompositeBasemap = new Basemap({
+      title: 'Positron composite',
       thumbnailUrl:
-        'https://gisco-services.ec.europa.eu/maps/wmts/NaturalEarth/EPSG3857/0/0/0.png',
+        'https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png',
       baseLayers: [
         new WebTileLayer({
           urlTemplate:
-            'https://gisco-services.ec.europa.eu/maps/tiles/NaturalEarth/EPSG3857/{z}/{x}/{y}.png',
+            'https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png',
         }),
       ],
-      referenceLayers: [
-        new WebTileLayer({
-          urlTemplate: 'https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomLabels/EPSG3857/{z}/{x}/{y}.png',
-        }),
-      ],
+      // referenceLayers: [
+      //   new _WebTileLayer(...)
+      // ],
     });
 
     this.map = new Map({
       // basemap: 'topo',
-      basemap: this.naturalEarthBasemap,     
+      basemap: this.positronCompositeBasemap,     
       logo: false 
     });
     
