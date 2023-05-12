@@ -18,7 +18,7 @@ import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl, Basemap, WebTileLayer;
+var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -86,16 +86,20 @@ class MapViewer extends React.Component {
       'esri/intl',
       'esri/Basemap',
       'esri/layers/WebTileLayer',
-    ]).then(([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer]) => {
-      [Map, MapView, Zoom, intl, Basemap, WebTileLayer] = [
-        _Map,
-        _MapView,
-        _Zoom,
-        _intl,
-        _Basemap,
-        _WebTileLayer,
-      ];
-    });
+      'esri/geometry/Extent',
+    ]).then(
+      ([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent]) => {
+        [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
+          _Map,
+          _MapView,
+          _Zoom,
+          _intl,
+          _Basemap,
+          _WebTileLayer,
+          _Extent,
+        ];
+      },
+    );
   }
 
   /**
@@ -136,6 +140,7 @@ class MapViewer extends React.Component {
     this.map = new Map({
       // basemap: 'topo',
       basemap: this.positronCompositeBasemap,
+      logo: false,
     });
 
     mapStatus = this.recoverState();
@@ -162,6 +167,8 @@ class MapViewer extends React.Component {
       constraints: {
         minZoom: this.mapCfg.minZoom,
         maxZoom: this.mapCfg.maxZoom,
+        rotationEnabled: false,
+        geometry: this.mapCfg.geometry,
       },
       ui: {
         components: ['attribution'],
@@ -179,8 +186,27 @@ class MapViewer extends React.Component {
         this.setCenterState(newValue);
       });
 
+      let constraintExtent = null;
       this.view.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);
+        if (mapStatus.zoom <= this.mapCfg.minZoom) {
+          constraintExtent = new Extent({
+            xmin: -90,
+            ymin: -45,
+            xmax: 90,
+            ymax: 45,
+            spatialReference: 4326,
+          });
+        } else {
+          constraintExtent = new Extent({
+            xmin: -90,
+            ymin: -85,
+            xmax: 90,
+            ymax: 85,
+            spatialReference: 4326,
+          });
+        }
+        this.view.constraints.geometry = constraintExtent;
       });
       this.view.popup.autoOpenEnabled = false;
       // After launching the MapViewerConfig action
@@ -193,6 +219,7 @@ class MapViewer extends React.Component {
       //we invoke the setState method, that changes the state and forces a
       //react component to render itself again
       //this.setState({});
+      this.view.ui._removeComponents(['attribution']);
     });
   }
 
