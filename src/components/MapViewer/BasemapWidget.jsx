@@ -231,11 +231,11 @@ class BasemapWidget extends React.Component {
         //   new WebTileLayer(...)
         // ],
       });
-     
+
       this.basemapGallery = new BasemapGallery({
         view: this.props.view,
         container: this.container.current.querySelector('.basemap-panel'),
-        source: [          
+        source: [
           this.worldBoundariesBasemap,
           this.blossomCompositeBasemap,
           this.positronCompositeBasemap,

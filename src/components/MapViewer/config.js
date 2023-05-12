@@ -6,11 +6,11 @@ const config = {
     minZoom: 2,
     maxZoom: 20,
     geometry: {
-      type: "extent",
+      type: 'extent',
       xmin: -90,
       ymin: -45,
       xmax: 90,
-      ymax: 45
+      ymax: 45,
     },
     activeLayers: [],
   },
