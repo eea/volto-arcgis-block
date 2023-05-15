@@ -403,7 +403,7 @@ class MenuWidget extends React.Component {
         }
       }
     });
-
+    
     this.activeLayersHandler = this.props.activeLayersHandler;
   }
 
@@ -1593,6 +1593,11 @@ class MenuWidget extends React.Component {
     let parentId = elem.getAttribute('parentid');
     let group = this.getGroup(elem);
     if (elem.checked) {
+      if (this.props.download) {
+        setTimeout(() => {
+          this.fullExtent(elem);
+        }, 1000);
+      }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
         if (elem.id.includes('cop_klc')) {
           this.layers['klc_filter'].visible = true;
@@ -1660,6 +1665,11 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
+//    debugger;
+//    if (this.props.download) {
+//      this.fullExtent(elem);
+//      debugger;
+//    }
     // update DOM
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
