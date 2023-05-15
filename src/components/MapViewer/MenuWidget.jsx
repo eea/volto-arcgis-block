@@ -403,7 +403,7 @@ class MenuWidget extends React.Component {
         }
       }
     });
-    
+
     this.activeLayersHandler = this.props.activeLayersHandler;
   }
 
@@ -1665,11 +1665,11 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-//    debugger;
-//    if (this.props.download) {
-//      this.fullExtent(elem);
-//      debugger;
-//    }
+    //    debugger;
+    //    if (this.props.download) {
+    //      this.fullExtent(elem);
+    //      debugger;
+    //    }
     // update DOM
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
