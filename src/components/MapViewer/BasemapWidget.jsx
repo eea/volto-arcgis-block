@@ -242,7 +242,6 @@ class BasemapWidget extends React.Component {
         ],
       });
     }
-
     this.props.view.ui.add(this.container.current, 'top-right');
   }
   /**
