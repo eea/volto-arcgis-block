@@ -1963,7 +1963,7 @@ class MenuWidget extends React.Component {
         product.Datasets.forEach((dataset) => {
           if (dataset.DatasetTitle.includes(selectedDataset.title)) {
             this.url = dataset.ViewService;
-            this.productTitle = product.ProductTitle;
+            this.productId = product.ProductId;
           }
         });
       });
@@ -2108,12 +2108,12 @@ class MenuWidget extends React.Component {
     this.findCheckedDataset(elem);
     let BBoxes = {};
     let firstLayer;
-    if (this.productTitle.includes('Global Dynamic Land Cover')) {
+    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
       this.findDatasetBoundingBox(elem);
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
-      this.productTitle.includes('Low Resolution Vegetation Parameters') ||
-      this.productTitle.includes('Water Parameters')
+      this.productId.includes('fe8209dffe13454891cea05998c8e456') ||
+      this.productId.includes('8914fde2241a4035818af8f0264fd55e')
     ) {
       if (
         this.layers[elem.id].fullExtents &&
@@ -2143,7 +2143,7 @@ class MenuWidget extends React.Component {
       BBoxes[Object.keys(BBoxes)[0]] &&
       BBoxes[Object.keys(BBoxes)[0]] !== null
     ) {
-      if (elem.title.includes('Corine Land Cover')) {
+      if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
         } else if (elem.title.includes('French Guiana')) {
@@ -2816,7 +2816,7 @@ class MenuWidget extends React.Component {
     this.saveLayerOrder();
     this.checkInfoWidget();
     this.setState({});
-    if (this.productTitle.includes('Global Dynamic Land Cover')) {
+    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
         this.map.findLayerById(elem.id).visible = false;
       } else {
