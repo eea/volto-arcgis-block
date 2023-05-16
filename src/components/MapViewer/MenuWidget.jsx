@@ -1655,7 +1655,7 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
-    this.toggleHotspotWidget();
+    //this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
@@ -3096,7 +3096,9 @@ class MenuWidget extends React.Component {
       if (
         /* layer.visible && */
         key.includes('all_present_lc_a_pol') ||
-        key.includes('all_lcc_a_pol')
+        key.includes('all_present_lc_b_pol') ||
+        key.includes('all_lcc_a_pol') ||
+        key.includes('all_lcc_b_pol')
       ) {
         hotspotLayers.push(layer);
       }
