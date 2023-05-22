@@ -62,6 +62,7 @@ class LegendWidget extends React.Component {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
             'none';
         } else if (img.style) {
+          //we hide the name of the layer
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
             'none';
           img.style.display = 'none';
