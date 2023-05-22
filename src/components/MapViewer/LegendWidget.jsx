@@ -34,7 +34,23 @@ class LegendWidget extends React.Component {
 
       // If img src returns a broken link
       if (!(img.complete && img.naturalHeight !== 0)) {
-        if (img.style) {
+        if (img?.src?.includes('all_present_lc_a_pol')) {
+          img.src =
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-reference-land-cover.png';
+          return;
+        } else if (img?.src?.includes('all_present_lc_b_pol')) {
+          img.src =
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-reference-land-cover.png';
+        } else if (img?.src?.includes('all_lcc_a_pol')) {
+          img.src =
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-land-cover-change.png';
+        } else if (img?.src?.includes('all_lcc_b_pol')) {
+          img.src =
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-land-cover-change.png';
+        } else if (img?.src?.includes('cop_klc')) {
+          img.src =
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/key-landscapes-for-conservation-borders.png';
+        } else if (img.style) {
           img.style.display = 'none';
 
           if (element.parentNode.querySelector('span')) return;
