@@ -1596,7 +1596,7 @@ class MenuWidget extends React.Component {
       if (this.props.download) {
         setTimeout(() => {
           this.fullExtent(elem);
-        }, 1000);
+        }, 2000);
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
         if (elem.id.includes('cop_klc')) {
@@ -1665,11 +1665,6 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    //    debugger;
-    //    if (this.props.download) {
-    //      this.fullExtent(elem);
-    //      debugger;
-    //    }
     // update DOM
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
