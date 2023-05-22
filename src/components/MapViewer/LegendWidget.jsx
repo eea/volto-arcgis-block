@@ -36,20 +36,20 @@ class LegendWidget extends React.Component {
       if (!(img.complete && img.naturalHeight !== 0)) {
         if (img?.src?.includes('all_present_lc_a_pol')) {
           img.src =
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-reference-land-cover.png';
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-reference-land-cover.png/@@images/image-283-df1c7b022cfd505c9bab4b4be08cd4f5.png';
           return;
         } else if (img?.src?.includes('all_present_lc_b_pol')) {
           img.src =
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-reference-land-cover.png';
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-reference-land-cover.png/@@images/image-312-a552fdf4af5b831c1af6cd039ad9ae2b.png';
         } else if (img?.src?.includes('all_lcc_a_pol')) {
           img.src =
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-land-cover-change.png';
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-land-cover-change.png/@@images/image-324-83819bb107020e7fdab5764d199b000d.png';
         } else if (img?.src?.includes('all_lcc_b_pol')) {
           img.src =
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-land-cover-change.png';
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-land-cover-change.png/@@images/image-314-30a9e6f64333da441b830fc31875c011.png';
         } else if (img?.src?.includes('cop_klc')) {
           img.src =
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/key-landscapes-for-conservation-borders.png';
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/key-landscapes-for-conservation-borders.png/@@images/image-278-ebd9539bdc95d6a1028a01cd59efd680.png';
         } else if (img.style) {
           img.style.display = 'none';
 
