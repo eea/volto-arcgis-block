@@ -38,26 +38,32 @@ class LegendWidget extends React.Component {
           img.src =
             'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-reference-land-cover.png/@@images/image-283-df1c7b022cfd505c9bab4b4be08cd4f5.png';
 
-            img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
+            'none';
           return;
         } else if (img?.src?.includes('all_present_lc_b_pol')) {
           img.src =
             'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-reference-land-cover.png/@@images/image-312-a552fdf4af5b831c1af6cd039ad9ae2b.png';
-            img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
+            'none';
         } else if (img?.src?.includes('all_lcc_a_pol')) {
           img.src =
             'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-land-cover-change.png/@@images/image-324-83819bb107020e7fdab5764d199b000d.png';
-            img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
+            'none';
         } else if (img?.src?.includes('all_lcc_b_pol')) {
           img.src =
             'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-land-cover-change.png/@@images/image-314-30a9e6f64333da441b830fc31875c011.png';
-            img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
+            'none';
         } else if (img?.src?.includes('cop_klc')) {
           img.src =
             'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/key-landscapes-for-conservation-borders.png/@@images/image-278-ebd9539bdc95d6a1028a01cd59efd680.png';
-            img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
+            'none';
         } else if (img.style) {
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
+            'none';
           img.style.display = 'none';
 
           if (element.parentNode.querySelector('span')) return;
