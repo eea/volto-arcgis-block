@@ -13,6 +13,7 @@ const config = {
       ymax: 45,
     },
     activeLayers: [],
+    viewType: '3d',
   },
   Components: [
     {

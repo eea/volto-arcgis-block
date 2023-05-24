@@ -70,6 +70,11 @@ class MapViewer extends React.Component {
     sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
   }
 
+  setViewState(viewType) {
+    mapStatus.viewType = viewType;
+    sessionStorage.setItem('viewType', JSON.stringify(mapStatus));
+  }
+
   recoverState() {
     return JSON.parse(sessionStorage.getItem('mapStatus'));
   }
@@ -77,18 +82,7 @@ class MapViewer extends React.Component {
   updateArea(shared_value) {
     this.mapViewer.setState({ area: shared_value });
   }
-
-  createView(params, type) {
-    let view;
-    if (type === '2d') {
-      view = new MapView(params);
-      return view;
-    } else {
-      view = new SceneView(params);
-    }
-    return view;
-  }
-
+  
   loader() {
     return loadModules([
       'esri/WebMap',
@@ -140,7 +134,7 @@ class MapViewer extends React.Component {
   switchView() {
     const is3D = this.view.type === '3d';
     const activeViewpoint = this.view.viewpoint.clone();
-
+    console.log(activeViewpoint);
     // remove the reference to the container for the previous view
     this.view.container = null;
 
@@ -151,10 +145,12 @@ class MapViewer extends React.Component {
       this.mapView.viewpoint = activeViewpoint;
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;
+      this.setViewState(this.view.type);
     } else {
       this.sceneView.viewpoint = activeViewpoint;
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
+      this.setViewState(this.view.type);
     }
   }
 
@@ -162,6 +158,9 @@ class MapViewer extends React.Component {
     loadCss();
     await this.loader();
     await this.waitForDataFill();
+    console.log(this.props.mapviewer_config);
+    console.log(this.mapdiv);
+    console.log(this.mapClass);
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
 
@@ -187,7 +186,8 @@ class MapViewer extends React.Component {
     });
 
     mapStatus = this.recoverState();
-
+    this.view = null;        
+    // Load configuration if no session information is available
     if (
       mapStatus === null ||
       (mapStatus.zoom === null && mapStatus.center === null) ||
@@ -196,24 +196,36 @@ class MapViewer extends React.Component {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
-      mapStatus.activeLayers = this.mapCfg.activeLayers;
+      console.log(this.mapCfg.viewType);
+      mapStatus.viewType = this.mapCfg.viewType;
+      mapStatus.activeLayers = this.mapCfg.activeLayers;      
       this.setCenterState(this.mapCfg.center);
       this.setZoomState(this.mapCfg.zoom);
+      this.setViewState(this.mapCfg.viewType);
       this.activeLayersHandler(this.mapCfg.activeLayers);
+
     }
     
+    // 3D
     this.sceneView = new SceneView({
-      container: this.mapdiv.current,
+      container: null,
       map: this.map,
       center: mapStatus.center,
       zoom: mapStatus.zoom,
       ui: {
         components: ['attribution'],
       },
-    });
-    // Set mapView as ActiveView
-    this.view = this.sceneView;
+    });    
+    console.log(mapStatus.viewType);
+    console.log(this.sceneView.type);
+    if (mapStatus.viewType === '3d') {      
+      console.log('3D');
+      this.sceneView.container = this.mapdiv.current;      
+      this.view = this.sceneView;
+      this.setViewState(this.view.type);
+    }
 
+    // 2D
     this.mapView = new MapView({
       container: null,
       map: this.map,
@@ -230,6 +242,13 @@ class MapViewer extends React.Component {
       },
     });
 
+    if (mapStatus.viewType === '2d') {
+      console.log('2D');
+      this.mapView.container = this.mapdiv.current;
+      this.view = this.mapView;
+      this.setViewState(this.view.type);
+    }
+
     this.zoom = new Zoom({
       view: this.view,
     });
@@ -245,7 +264,7 @@ class MapViewer extends React.Component {
 
       this.sceneView.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);
-        if (newValue < 4) {
+        if (newValue <= 4) {
           if (this.view.type === '2d') {
             this.switchView();            
           }
@@ -350,13 +369,13 @@ class MapViewer extends React.Component {
    * returns the jsx allowing such a render (if conditions are ok)
    * @returns jsx
    */
-  renderBasemap() {
-    if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
+  renderBasemap(view) {
+    if (this.props.mapviewer_config.Download) return;    
+    if (view) return <BasemapWidget view={view} mapViewer={this} />;    
   }
 
-  renderLegend() {
-    if (this.view) return <LegendWidget view={this.view} mapViewer={this} />;
+  renderLegend(view) {
+    if (view) return <LegendWidget view={view} mapViewer={this} />;
   }
 
   renderMeasurement() {
@@ -439,8 +458,10 @@ class MapViewer extends React.Component {
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
             {this.appLanguage()}
-            {this.renderBasemap()}
-            {this.renderLegend()}
+            {this.renderBasemap(this.sceneView)}
+            {this.renderBasemap(this.mapView)}
+            {this.renderLegend(this.sceneView)}
+            {this.renderLegend(this.mapView)}
             {this.renderMeasurement()}
             {this.renderPrint()}
             {this.renderArea()}
