@@ -119,8 +119,6 @@ class MapViewer extends React.Component {
     loadCss();
     await this.loader();
     await this.waitForDataFill();
-    // this.mapdiv.current is the reference to the current DOM element of
-    // this.mapdiv after it was mounted by the render() method
 
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
@@ -320,6 +318,7 @@ class MapViewer extends React.Component {
           area={this.state.area}
           layers={this.layers}
           activeLayersHandler={this.activeLayersHandler}
+          previousURL={this.props.url}
         />
       ); //call conf
   }

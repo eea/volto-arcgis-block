@@ -1592,8 +1592,9 @@ class MenuWidget extends React.Component {
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
     let group = this.getGroup(elem);
+    debugger;
     if (elem.checked) {
-      if (this.props.download) {
+      if (this.props.download || this.props.previousURL !== "http://localhost:3000/en" || this.props.previousURL !== "https://clmsdemo.devel6cph.eea.europa.eu/en" || this.props.previousURL !== "https://clms-prod.eea.europa.eu/en") {
         setTimeout(() => {
           this.fullExtent(elem);
         }, 2000);
