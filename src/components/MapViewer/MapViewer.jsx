@@ -227,7 +227,7 @@ class MapViewer extends React.Component {
       this.view.container = null;
       this.view.destroy();
       delete this.view;
-      sessionStorage.clear();
+      sessionStorage.removeItem('mapStatus');
     }
   }
 

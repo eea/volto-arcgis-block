@@ -686,12 +686,6 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
   }
 
-  componentWillUnmount() {
-    if (this.state.url) {
-      delete this.state.url;
-    }
-  }
-
   setSliderTag(val) {
     if (!sessionStorage.key('timeSliderTag'))
       sessionStorage.setItem('timeSliderTag', 'true');
