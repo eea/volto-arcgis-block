@@ -227,6 +227,7 @@ class MapViewer extends React.Component {
       this.view.container = null;
       this.view.destroy();
       delete this.view;
+      sessionStorage.clear();
     }
   }
 
@@ -318,7 +319,6 @@ class MapViewer extends React.Component {
           area={this.state.area}
           layers={this.layers}
           activeLayersHandler={this.activeLayersHandler}
-          previousURL={this.props.url}
         />
       ); //call conf
   }

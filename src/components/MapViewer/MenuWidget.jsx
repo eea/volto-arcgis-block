@@ -335,6 +335,7 @@ class MenuWidget extends React.Component {
       showMapMenu: false,
       noServiceModal: true,
       setNoServiceModal: true,
+      extentIniated: false,
     };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
@@ -654,6 +655,7 @@ class MenuWidget extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
+    this.state.url = window.location.href;
     await this.getTMSLayersJSON();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
@@ -682,6 +684,12 @@ class MenuWidget extends React.Component {
     this.showZoomMessageForDatasets();
     this.loadOpacity();
     this.loadVisibility();
+  }
+
+  componentWillUnmount() {
+    if (this.state.url) {
+      delete this.state.url;
+    }
   }
 
   setSliderTag(val) {
@@ -1592,12 +1600,22 @@ class MenuWidget extends React.Component {
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
     let group = this.getGroup(elem);
-    debugger;
     if (elem.checked) {
-      if (this.props.download || this.props.previousURL !== "http://localhost:3000/en" || this.props.previousURL !== "https://clmsdemo.devel6cph.eea.europa.eu/en" || this.props.previousURL !== "https://clms-prod.eea.europa.eu/en") {
-        setTimeout(() => {
-          this.fullExtent(elem);
-        }, 2000);
+      if (
+        this.props.download ||
+        !(
+          this.state.url === 'http://localhost:3000/en/map-viewer' ||
+          this.state.url ===
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+        )
+      ) {
+        if (this.state.extentIniated === false) {
+          this.setState({ extentIniated: true });
+          setTimeout(() => {
+            this.fullExtent(elem);
+          }, 2000);
+        }
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
         if (elem.id.includes('cop_klc')) {
