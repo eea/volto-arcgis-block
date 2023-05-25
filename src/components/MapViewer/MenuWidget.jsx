@@ -335,6 +335,7 @@ class MenuWidget extends React.Component {
       showMapMenu: false,
       noServiceModal: true,
       setNoServiceModal: true,
+      extentIniated: false,
     };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
@@ -654,6 +655,7 @@ class MenuWidget extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
+    this.state.url = window.location.href;
     await this.getTMSLayersJSON();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
@@ -1593,10 +1595,21 @@ class MenuWidget extends React.Component {
     let parentId = elem.getAttribute('parentid');
     let group = this.getGroup(elem);
     if (elem.checked) {
-      if (this.props.download) {
-        setTimeout(() => {
-          this.fullExtent(elem);
-        }, 1000);
+      if (
+        this.props.download ||
+        !(
+          this.state.url === 'http://localhost:3000/en/map-viewer' ||
+          this.state.url ===
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+        )
+      ) {
+        if (this.state.extentIniated === false) {
+          this.setState({ extentIniated: true });
+          setTimeout(() => {
+            this.fullExtent(elem);
+          }, 2000);
+        }
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
         if (elem.id.includes('cop_klc')) {
@@ -1665,11 +1678,6 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    //    debugger;
-    //    if (this.props.download) {
-    //      this.fullExtent(elem);
-    //      debugger;
-    //    }
     // update DOM
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
