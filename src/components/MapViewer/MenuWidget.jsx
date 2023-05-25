@@ -1589,7 +1589,7 @@ class MenuWidget extends React.Component {
    * @param {*} elem Is the checkbox
    */
 
-  toggleLayer(elem) {
+  async toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
@@ -2015,8 +2015,8 @@ class MenuWidget extends React.Component {
       (v) => v.querySelectorAll('Layer').length !== 0,
     );
     let BBoxes = {};
+    let layerGeoGraphic = {};
     for (let i in layersChildren) {
-      let layerGeoGraphic = {};
       if (
         layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
       ) {
@@ -2045,6 +2045,22 @@ class MenuWidget extends React.Component {
         ),
       };
     }
+    // Add dataset bbox
+    layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
+    BBoxes['dataset'] = {
+      xmin: Number(
+        layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+      ),
+      ymin: Number(
+        layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+      ),
+      xmax: Number(
+        layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+      ),
+      ymax: Number(
+        layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+      ),
+    };
     return BBoxes;
   } // function parseWMS
   // Web Map Tiled Services WMTS
@@ -2059,9 +2075,9 @@ class MenuWidget extends React.Component {
     layerParent = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length !== 0,
     );
+    let LowerCorner,
+      UpperCorner = [];
     for (let i in layersChildren) {
-      let LowerCorner,
-        UpperCorner = [];
       if (
         this.parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !==
         0
@@ -2097,6 +2113,21 @@ class MenuWidget extends React.Component {
         ymax: Number(UpperCorner[1]),
       };
     }
+    LowerCorner = this.parseCapabilities(
+      layerParent,
+      'ows:LowerCorner',
+    )[0].innerText.split(' ');
+    UpperCorner = this.parseCapabilities(
+      layerParent,
+      'ows:UpperCorner',
+    )[0].innerText.split(' ');
+
+    BBoxes['dataset'] = {
+      xmin: Number(LowerCorner[0]),
+      ymin: Number(LowerCorner[1]),
+      xmax: Number(UpperCorner[0]),
+      ymax: Number(UpperCorner[1]),
+    };
     return BBoxes;
   }
 
@@ -2144,7 +2175,7 @@ class MenuWidget extends React.Component {
           ymin: -20037508.342789,
           xmax: 20037508.342789,
           ymax: 20037508.342789,
-          // spatialReference: 4326 // by default wkid 4326
+          spatialReference: 3857, // by default wkid 4326
         });
         this.view.goTo(myExtent);
       }
@@ -2183,6 +2214,8 @@ class MenuWidget extends React.Component {
         elem.id.includes('protected_areas')
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
+      } else if (this.state.extentIniated) {
+        firstLayer = BBoxes.dataset;
       } else {
         firstLayer = BBoxes[Object.keys(BBoxes)[0]];
       }
