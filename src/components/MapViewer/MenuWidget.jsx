@@ -335,7 +335,6 @@ class MenuWidget extends React.Component {
       showMapMenu: false,
       noServiceModal: true,
       setNoServiceModal: true,
-      extentIniated: false,
     };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
@@ -349,6 +348,7 @@ class MenuWidget extends React.Component {
     this.layerGroups = {};
     this.xml = null;
     this.dataBBox = null;
+    this.extentInitiated = false;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -1604,8 +1604,8 @@ class MenuWidget extends React.Component {
           this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
       ) {
-        if (this.state.extentIniated === false) {
-          this.setState({ extentIniated: true });
+        if (this.extentInitiated === false) {
+          this.extentInitiated = true;
           setTimeout(() => {
             this.fullExtent(elem);
           }, 2000);
@@ -2157,8 +2157,10 @@ class MenuWidget extends React.Component {
     this.findCheckedDataset(elem);
     let BBoxes = {};
     let firstLayer;
+
     if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
       this.findDatasetBoundingBox(elem);
+
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
       this.productId.includes('fe8209dffe13454891cea05998c8e456') ||
@@ -2177,13 +2179,16 @@ class MenuWidget extends React.Component {
           ymax: 20037508.342789,
           spatialReference: 3857, // by default wkid 4326
         });
+
         this.view.goTo(myExtent);
       }
     } else if (this.url.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
+
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
+
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
     if (
@@ -2193,13 +2198,8 @@ class MenuWidget extends React.Component {
       BBoxes[Object.keys(BBoxes)[0]] !== null
     ) {
       if (
-        this.props.download ||
-        !(
-          this.state.url === 'http://localhost:3000/en/map-viewer' ||
-          this.state.url ===
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-        )
+        this.extentInitiated &&
+        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
       ) {
         firstLayer = BBoxes.dataset;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
@@ -2224,11 +2224,10 @@ class MenuWidget extends React.Component {
         elem.id.includes('protected_areas')
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
-      } else if (this.state.extentIniated) {
-        firstLayer = BBoxes.dataset;
       } else {
         firstLayer = BBoxes[Object.keys(BBoxes)[0]];
       }
+
       let myExtent = new Extent({
         xmin: firstLayer.xmin,
         ymin: firstLayer.ymin,
