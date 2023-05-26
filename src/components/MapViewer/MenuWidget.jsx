@@ -2192,7 +2192,17 @@ class MenuWidget extends React.Component {
       BBoxes[Object.keys(BBoxes)[0]] &&
       BBoxes[Object.keys(BBoxes)[0]] !== null
     ) {
-      if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
+      if (
+        this.props.download ||
+        !(
+          this.state.url === 'http://localhost:3000/en/map-viewer' ||
+          this.state.url ===
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+        )
+      ) {
+        firstLayer = BBoxes.dataset;
+      } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
         } else if (elem.title.includes('French Guiana')) {
