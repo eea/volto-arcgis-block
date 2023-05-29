@@ -72,7 +72,7 @@ class MapViewer extends React.Component {
 
   setViewState(viewType) {
     mapStatus.viewType = viewType;
-    sessionStorage.setItem('viewType', JSON.stringify(mapStatus));
+    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
   }
 
   recoverState() {
@@ -143,12 +143,12 @@ class MapViewer extends React.Component {
       // it as the active view
       this.mapView.viewpoint = activeViewpoint;
       this.mapView.container = this.mapdiv.current;
-      this.view = this.mapView;
+      this.view = this.mapView;      
       this.setViewState(this.view.type);
     } else {
       this.sceneView.viewpoint = activeViewpoint;
       this.sceneView.container = this.mapdiv.current;
-      this.view = this.sceneView;
+      this.view = this.sceneView;            
       this.setViewState(this.view.type);
     }
   }
@@ -190,12 +190,36 @@ class MapViewer extends React.Component {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
+      debugger;
       mapStatus.viewType = this.mapCfg.viewType;
       mapStatus.activeLayers = this.mapCfg.activeLayers;
       this.setCenterState(this.mapCfg.center);
       this.setZoomState(this.mapCfg.zoom);
       this.setViewState(this.mapCfg.viewType);
       this.activeLayersHandler(this.mapCfg.activeLayers);
+    }
+
+
+    // 2D
+    this.mapView = new MapView({
+      container: null,
+      map: this.map,
+      center: mapStatus.center,
+      zoom: mapStatus.zoom,
+      constraints: {
+        minZoom: this.mapCfg.minZoom,
+        maxZoom: this.mapCfg.maxZoom,
+        rotationEnabled: false,
+        geometry: this.mapCfg.geometry,
+      },
+      ui: {
+        components: ['attribution'],
+      },
+    });
+    if (mapStatus.viewType === '2d') {
+      this.mapView.container = this.mapdiv.current;
+      this.view = this.mapView;
+      this.setViewState(this.view.type);
     }
 
     // 3D
@@ -214,28 +238,8 @@ class MapViewer extends React.Component {
       this.setViewState(this.view.type);
     }
 
-    // 2D
-    this.mapView = new MapView({
-      container: null,
-      map: this.map,
-      center: mapStatus.center,
-      zoom: mapStatus.zoom,
-      constraints: {
-        minZoom: this.mapCfg.minZoom,
-        maxZoom: this.mapCfg.maxZoom,
-        rotationEnabled: false,
-        geometry: this.mapCfg.geometry,
-      },
-      ui: {
-        components: ['attribution'],
-      },
-    });
 
-    if (mapStatus.viewType === '2d') {
-      this.mapView.container = this.mapdiv.current;
-      this.view = this.mapView;
-      this.setViewState(this.view.type);
-    }
+    
 
     this.zoom = new Zoom({
       view: this.view,
@@ -322,13 +326,13 @@ class MapViewer extends React.Component {
       this.view.container = null;
       this.view.destroy();
       delete this.view;
-      sessionStorage.removeItem('mapStatus');
       this.mapView.container = null;
       this.mapView.destroy();
       delete this.mapView;
       this.sceneView.container = null;
       this.sceneView.destroy();
       delete this.sceneView;
+      sessionStorage.removeItem('mapStatus');
     }
   }
 
@@ -358,13 +362,13 @@ class MapViewer extends React.Component {
    * returns the jsx allowing such a render (if conditions are ok)
    * @returns jsx
    */
-  renderBasemap(view) {
+  renderBasemap() {
     if (this.props.mapviewer_config.Download) return;
-    if (view) return <BasemapWidget view={view} mapViewer={this} />;
+    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
   }
 
-  renderLegend(view) {
-    if (view) return <LegendWidget view={view} mapViewer={this} />;
+  renderLegend() {
+    if (this.view) return <LegendWidget view={this.view} mapViewer={this} />;
   }
 
   renderMeasurement() {
@@ -447,10 +451,8 @@ class MapViewer extends React.Component {
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
             {this.appLanguage()}
-            {this.renderBasemap(this.sceneView)}
-            {this.renderBasemap(this.mapView)}
-            {this.renderLegend(this.sceneView)}
-            {this.renderLegend(this.mapView)}
+            {this.renderBasemap()}
+            {this.renderLegend()}            
             {this.renderMeasurement()}
             {this.renderPrint()}
             {this.renderArea()}
