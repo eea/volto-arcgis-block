@@ -348,6 +348,8 @@ class MenuWidget extends React.Component {
     this.layerGroups = {};
     this.xml = null;
     this.dataBBox = null;
+    this.datasetCount = 0;
+    this.extentCount = 0;
     this.extentInitiated = false;
 
     // add zoomend listener to map to show/hide zoom in message
@@ -1604,7 +1606,8 @@ class MenuWidget extends React.Component {
           this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
       ) {
-        if (this.fullExtentForDataAndProdPages === false) {
+        if (this.extentInitiated === false) {
+          this.extentInitiated = true;
           setTimeout(() => {
             this.fullExtent(elem);
           }, 2000);
@@ -2203,11 +2206,16 @@ class MenuWidget extends React.Component {
       BBoxes[Object.keys(BBoxes)[0]] !== null
     ) {
       if (
-        this.extentInitiated &&
-        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
+        this.extentInitiated === false &&
+        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
+        !(
+          this.state.url === 'http://localhost:3000/en/map-viewer' ||
+          this.state.url ===
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+        )
       ) {
         firstLayer = BBoxes.dataset;
-        this.fullExtentForDataAndProdPages = true;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];

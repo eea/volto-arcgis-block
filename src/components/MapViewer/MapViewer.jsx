@@ -120,17 +120,6 @@ class MapViewer extends React.Component {
     await this.loader();
     await this.waitForDataFill();
 
-    //    if (
-    //      !(
-    //        this.state.url === 'http://localhost:3000/en/map-viewer' ||
-    //        this.state.url ===
-    //          'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-    //        this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-    //      )
-    //    ) {
-    //      sessionStorage.clear();
-    //    }
-
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl:
@@ -238,7 +227,6 @@ class MapViewer extends React.Component {
       this.view.container = null;
       this.view.destroy();
       delete this.view;
-      //sessionStorage.removeItem('mapStatus');
     }
   }
 
