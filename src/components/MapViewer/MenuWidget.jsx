@@ -348,8 +348,6 @@ class MenuWidget extends React.Component {
     this.layerGroups = {};
     this.xml = null;
     this.dataBBox = null;
-    this.datasetCount = 0;
-    this.extentCount = 0;
     this.extentInitiated = false;
 
     // add zoomend listener to map to show/hide zoom in message
