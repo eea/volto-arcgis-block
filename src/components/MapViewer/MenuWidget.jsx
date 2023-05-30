@@ -348,7 +348,7 @@ class MenuWidget extends React.Component {
     this.layerGroups = {};
     this.xml = null;
     this.dataBBox = null;
-    this.fullExtentForDataAndProdPages = false;
+    this.extentInitiated = false;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -1604,7 +1604,8 @@ class MenuWidget extends React.Component {
           this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
       ) {
-        if (this.fullExtentForDataAndProdPages === false) {
+        if (this.extentInitiated === false) {
+          this.extentInitiated = true;
           setTimeout(() => {
             this.fullExtent(elem);
           }, 2000);
@@ -2112,21 +2113,27 @@ class MenuWidget extends React.Component {
         ymax: Number(UpperCorner[1]),
       };
     }
-    LowerCorner = this.parseCapabilities(
-      layerParent,
-      'ows:LowerCorner',
-    )[0].innerText.split(' ');
-    UpperCorner = this.parseCapabilities(
-      layerParent,
-      'ows:UpperCorner',
-    )[0].innerText.split(' ');
+    if (
+      typeof layerParent === 'object' &&
+      layerParent !== null &&
+      'getElementsByTagName' in layerParent
+    ) {
+      LowerCorner = this.parseCapabilities(
+        layerParent,
+        'ows:LowerCorner',
+      )[0]?.innerText.split(' ');
+      UpperCorner = this.parseCapabilities(
+        layerParent,
+        'ows:UpperCorner',
+      )[0].innerText.split(' ');
 
-    BBoxes['dataset'] = {
-      xmin: Number(LowerCorner[0]),
-      ymin: Number(LowerCorner[1]),
-      xmax: Number(UpperCorner[0]),
-      ymax: Number(UpperCorner[1]),
-    };
+      BBoxes['dataset'] = {
+        xmin: Number(LowerCorner[0]),
+        ymin: Number(LowerCorner[1]),
+        xmax: Number(UpperCorner[0]),
+        ymax: Number(UpperCorner[1]),
+      };
+    }
     return BBoxes;
   }
 
@@ -2197,15 +2204,16 @@ class MenuWidget extends React.Component {
       BBoxes[Object.keys(BBoxes)[0]] !== null
     ) {
       if (
-        this.fullExtentForDataAndProdPages === false &&
+        this.extentInitiated === false &&
+        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
         !(
-          this.productId.includes('333e4100b79045daa0ff16466ac83b7f') ||
-          this.productId.includes('fe8209dffe13454891cea05998c8e456') ||
-          this.productId.includes('8914fde2241a4035818af8f0264fd55e')
+          this.state.url === 'http://localhost:3000/en/map-viewer' ||
+          this.state.url ===
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
       ) {
         firstLayer = BBoxes.dataset;
-        this.fullExtentForDataAndProdPages = true;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
