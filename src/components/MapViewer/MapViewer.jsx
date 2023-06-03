@@ -262,7 +262,14 @@ class MapViewer extends React.Component {
   }
 
   renderLegend() {
-    if (this.view) return <LegendWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <LegendWidget
+          view={this.view}
+          mapViewer={this}
+          download={this.props.mapviewer_config.Download}
+        />
+      );
   }
 
   renderMeasurement() {

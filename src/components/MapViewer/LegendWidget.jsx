@@ -23,6 +23,27 @@ class LegendWidget extends React.Component {
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
   }
 
+  hideNutsLegend() {
+    //debugger;
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+
+    Array.prototype.forEach.call(collection, (element) => {
+      let img = {};
+
+      if (element.hasChildNodes()) img = element.childNodes[0];
+      else img = element;
+
+      //if img is type of svg
+      if (img?.children?.[0]?.localName?.includes('svg') ?? false) {
+        img.closest(
+          '.esri-legend__service.esri-legend__group-layer',
+        ).style.display = 'none';
+        //img.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display = 'none';
+        //img.style.display = 'none';
+      }
+    });
+  }
+
   brokenLegendImagePatch() {
     const collection = document.getElementsByClassName('esri-legend__symbol');
 
@@ -32,8 +53,8 @@ class LegendWidget extends React.Component {
       if (element.hasChildNodes()) img = element.childNodes[0];
       else img = element;
 
-      // If img src returns a broken link
       if (!(img.complete && img.naturalHeight !== 0)) {
+        // If img src returns a broken link
         if (img?.src?.includes('all_present_lc_a_pol')) {
           //img.src =
           //  'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-reference-land-cover.png/@@images/image-283-df1c7b022cfd505c9bab4b4be08cd4f5.png';
@@ -158,10 +179,12 @@ class LegendWidget extends React.Component {
       }),
       container: document.querySelector('.legend-panel'),
     });
-
     this.props.view.allLayerViews.watch('length', () => {
       setTimeout(() => {
         this.brokenLegendImagePatch();
+        if (this.props.download) {
+          this.hideNutsLegend();
+        }
       }, 1000);
     });
   }
