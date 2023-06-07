@@ -17,6 +17,7 @@ import LegendWidget from './LegendWidget';
 import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
+import PanWidget from './PanWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
@@ -299,6 +300,11 @@ class MapViewer extends React.Component {
       return <InfoWidget view={this.view} map={this.map} mapViewer={this} />;
   }
 
+  renderPan() {
+    if (this.view)
+      return <PanWidget view={this.view} map={this.map} mapViewer={this} />;
+  }
+
   renderHotspot() {
     if (this.view)
       return (
@@ -357,6 +363,7 @@ class MapViewer extends React.Component {
             {this.renderMeasurement()}
             {this.renderPrint()}
             {this.renderArea()}
+            {this.renderPan()}
             {this.renderScale()}
             {this.renderInfo()}
             {this.renderHotspot()}
