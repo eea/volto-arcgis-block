@@ -166,6 +166,7 @@ class AreaWidget extends React.Component {
   }
   rectanglehandler() {
     this.clearWidget();
+    window.document.querySelector('.pan-container').style.display = 'flex';
     var fillSymbol = {
       type: 'simple-fill',
       color: [255, 255, 255, 0.5],
@@ -178,6 +179,7 @@ class AreaWidget extends React.Component {
     let extentGraphic = null;
     let origin = null;
     const drawGraphics = this.props.view.on('drag', (e) => {
+      if (this.props.mapViewer.pan_enabled) return;
       e.stopPropagation();
       if (e.action === 'start') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
@@ -215,6 +217,7 @@ class AreaWidget extends React.Component {
     });
   }
   clearWidget() {
+    window.document.querySelector('.pan-container').style.display = 'none';
     this.props.mapViewer.view.popup.close();
     if (this.state.ShowGraphics) {
       this.state.ShowGraphics.remove();
@@ -443,7 +446,7 @@ class AreaWidget extends React.Component {
             </div>
           </div>
           {!this.props.download && this.state.showInfoPopup && (
-            <div className="map-container">
+            <div className="map-container popup-block">
               <div className="drawRectanglePopup-block">
                 <div className="drawRectanglePopup-content">
                   {this.state.infoPopupType === 'area' && (
