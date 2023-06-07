@@ -614,7 +614,9 @@ class HotspotWidget extends React.Component {
                         }
                         id="select-klc-area"
                         className="esri-select"
-                      ></select>
+                      >
+                        <option value="" disabled selected>Select a KLC Area from the dropdown list</option>
+                      </select>
                     </label>
                   </div>
                 </div>
