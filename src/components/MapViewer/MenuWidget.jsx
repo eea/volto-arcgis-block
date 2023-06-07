@@ -335,7 +335,6 @@ class MenuWidget extends React.Component {
       showMapMenu: false,
       noServiceModal: true,
       setNoServiceModal: true,
-      extentIniated: false,
     };
     // call the props of the layers list (mapviewer.jsx)
     this.compCfg = this.props.conf;
@@ -349,6 +348,7 @@ class MenuWidget extends React.Component {
     this.layerGroups = {};
     this.xml = null;
     this.dataBBox = null;
+    this.extentInitiated = false;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -1589,7 +1589,7 @@ class MenuWidget extends React.Component {
    * @param {*} elem Is the checkbox
    */
 
-  toggleLayer(elem) {
+  async toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
@@ -1604,8 +1604,8 @@ class MenuWidget extends React.Component {
           this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
       ) {
-        if (this.state.extentIniated === false) {
-          this.setState({ extentIniated: true });
+        if (this.extentInitiated === false) {
+          this.extentInitiated = true;
           setTimeout(() => {
             this.fullExtent(elem);
           }, 2000);
@@ -2015,8 +2015,8 @@ class MenuWidget extends React.Component {
       (v) => v.querySelectorAll('Layer').length !== 0,
     );
     let BBoxes = {};
+    let layerGeoGraphic = {};
     for (let i in layersChildren) {
-      let layerGeoGraphic = {};
       if (
         layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
       ) {
@@ -2045,6 +2045,22 @@ class MenuWidget extends React.Component {
         ),
       };
     }
+    // Add dataset bbox
+    layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
+    BBoxes['dataset'] = {
+      xmin: Number(
+        layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+      ),
+      ymin: Number(
+        layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+      ),
+      xmax: Number(
+        layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+      ),
+      ymax: Number(
+        layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+      ),
+    };
     return BBoxes;
   } // function parseWMS
   // Web Map Tiled Services WMTS
@@ -2059,9 +2075,9 @@ class MenuWidget extends React.Component {
     layerParent = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length !== 0,
     );
+    let LowerCorner,
+      UpperCorner = [];
     for (let i in layersChildren) {
-      let LowerCorner,
-        UpperCorner = [];
       if (
         this.parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !==
         0
@@ -2097,6 +2113,27 @@ class MenuWidget extends React.Component {
         ymax: Number(UpperCorner[1]),
       };
     }
+    if (
+      typeof layerParent === 'object' &&
+      layerParent !== null &&
+      'getElementsByTagName' in layerParent
+    ) {
+      LowerCorner = this.parseCapabilities(
+        layerParent,
+        'ows:LowerCorner',
+      )[0]?.innerText.split(' ');
+      UpperCorner = this.parseCapabilities(
+        layerParent,
+        'ows:UpperCorner',
+      )[0].innerText.split(' ');
+
+      BBoxes['dataset'] = {
+        xmin: Number(LowerCorner[0]),
+        ymin: Number(LowerCorner[1]),
+        xmax: Number(UpperCorner[0]),
+        ymax: Number(UpperCorner[1]),
+      };
+    }
     return BBoxes;
   }
 
@@ -2126,8 +2163,10 @@ class MenuWidget extends React.Component {
     this.findCheckedDataset(elem);
     let BBoxes = {};
     let firstLayer;
+
     if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
       this.findDatasetBoundingBox(elem);
+
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
       this.productId.includes('fe8209dffe13454891cea05998c8e456') ||
@@ -2144,15 +2183,18 @@ class MenuWidget extends React.Component {
           ymin: -20037508.342789,
           xmax: 20037508.342789,
           ymax: 20037508.342789,
-          // spatialReference: 4326 // by default wkid 4326
+          spatialReference: 3857, // by default wkid 4326
         });
+
         this.view.goTo(myExtent);
       }
     } else if (this.url.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
+
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
+
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
     if (
@@ -2161,7 +2203,18 @@ class MenuWidget extends React.Component {
       BBoxes[Object.keys(BBoxes)[0]] &&
       BBoxes[Object.keys(BBoxes)[0]] !== null
     ) {
-      if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
+      if (
+        this.extentInitiated === false &&
+        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
+        !(
+          this.state.url === 'http://localhost:3000/en/map-viewer' ||
+          this.state.url ===
+            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+        )
+      ) {
+        firstLayer = BBoxes.dataset;
+      } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
         if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
         } else if (elem.title.includes('French Guiana')) {
@@ -2186,6 +2239,7 @@ class MenuWidget extends React.Component {
       } else {
         firstLayer = BBoxes[Object.keys(BBoxes)[0]];
       }
+
       let myExtent = new Extent({
         xmin: firstLayer.xmin,
         ymin: firstLayer.ymin,

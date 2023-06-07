@@ -365,8 +365,15 @@ class MapViewer extends React.Component {
     if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />         
   }
 
-  renderLegend() {    
-    if (this.view) return <LegendWidget view={this.view} mapViewer={this} />;
+  renderLegend() {
+    if (this.view)
+      return (
+        <LegendWidget
+          view={this.view}
+          mapViewer={this}
+          download={this.props.mapviewer_config.Download}
+        />
+      );
   }
 
   renderMeasurement() {
