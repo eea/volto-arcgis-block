@@ -10,7 +10,7 @@ import config from '@eeacms/volto-arcgis-block/components/MapViewer/config';
 
 const Edit = (props) => {
   const { block, data, onChangeBlock, selected } = props;
-
+  debugger;
   const MapViewer = loadable(
     () => import('@eeacms/volto-arcgis-block/components/MapViewer/MapViewer'),
     {

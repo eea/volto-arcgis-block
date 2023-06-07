@@ -127,7 +127,7 @@ class MapViewer extends React.Component {
   waitForDataFill() {
     while (this.compCfg.length === 0) {
       new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
+    }    
     return this.compCfg;
   }
 
@@ -144,20 +144,20 @@ class MapViewer extends React.Component {
       this.mapView.viewpoint = activeViewpoint;
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;      
-      this.setViewState(this.view.type);
+      this.setViewState(this.view.type);           
     } else {
       this.sceneView.viewpoint = activeViewpoint;
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;            
-      this.setViewState(this.view.type);
-    }
+      this.setViewState(this.view.type);      
+    }        
+    // console.log(this.view.ui);
   }
 
   async componentDidMount() {
     loadCss();
     await this.loader();
-    await this.waitForDataFill();
-
+    await this.waitForDataFill();    
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl:
@@ -171,8 +171,7 @@ class MapViewer extends React.Component {
       // referenceLayers: [
       //   new _WebTileLayer(...)
       // ],
-    });
-
+    });    
     this.map = new Map({
       // basemap: 'topo',
       basemap: this.positronCompositeBasemap,
@@ -180,7 +179,7 @@ class MapViewer extends React.Component {
     });
 
     mapStatus = this.recoverState();
-    this.view = null;
+    // this.view = null;
     // Load configuration if no session information is available
     if (
       mapStatus === null ||
@@ -189,8 +188,7 @@ class MapViewer extends React.Component {
     ) {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
-      mapStatus.center = this.mapCfg.center;
-      debugger;
+      mapStatus.center = this.mapCfg.center;      
       mapStatus.viewType = this.mapCfg.viewType;
       mapStatus.activeLayers = this.mapCfg.activeLayers;
       this.setCenterState(this.mapCfg.center);
@@ -198,10 +196,27 @@ class MapViewer extends React.Component {
       this.setViewState(this.mapCfg.viewType);
       this.activeLayersHandler(this.mapCfg.activeLayers);
     }
+  
 
+    // 3D
+    this.sceneView = new SceneView({
+      container: null,
+      map: this.map,
+      center: mapStatus.center,
+      zoom: mapStatus.zoom,
+      ui: {
+        components: ['attribution'],
+      },
+    });
+    if (mapStatus.viewType === '3d') {
+      this.sceneView.container = this.mapdiv.current;
+      this.view = this.sceneView;
+      this.setViewState(this.view.type);
+    }
+ 
 
-    // 2D
-    this.mapView = new MapView({
+     // 2D
+     this.mapView = new MapView({
       container: null,
       map: this.map,
       center: mapStatus.center,
@@ -221,25 +236,6 @@ class MapViewer extends React.Component {
       this.view = this.mapView;
       this.setViewState(this.view.type);
     }
-
-    // 3D
-    this.sceneView = new SceneView({
-      container: null,
-      map: this.map,
-      center: mapStatus.center,
-      zoom: mapStatus.zoom,
-      ui: {
-        components: ['attribution'],
-      },
-    });
-    if (mapStatus.viewType === '3d') {
-      this.sceneView.container = this.mapdiv.current;
-      this.view = this.sceneView;
-      this.setViewState(this.view.type);
-    }
-
-
-    
 
     this.zoom = new Zoom({
       view: this.view,
@@ -268,6 +264,7 @@ class MapViewer extends React.Component {
       });
     });
 
+    
     this.mapView.when(() => {
       this.mapView.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);
@@ -302,7 +299,7 @@ class MapViewer extends React.Component {
             spatialReference: 4326,
           });
         }
-        this.view.constraints.geometry = constraintExtent;
+        this.mapView.constraints.geometry = constraintExtent;
       });
 
       this.view.popup.autoOpenEnabled = false;
@@ -317,8 +314,9 @@ class MapViewer extends React.Component {
       //react component to render itself again
       //this.setState({});
       this.view.ui._removeComponents(['attribution']);
-    });
-  }
+    });    
+
+  } // componentDisMount
 
   componentWillUnmount() {
     // clean up
@@ -363,11 +361,11 @@ class MapViewer extends React.Component {
    * @returns jsx
    */
   renderBasemap() {
-    if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
+    if (this.props.mapviewer_config.Download) return;    
+    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />         
   }
 
-  renderLegend() {
+  renderLegend() {    
     if (this.view) return <LegendWidget view={this.view} mapViewer={this} />;
   }
 
@@ -446,7 +444,7 @@ class MapViewer extends React.Component {
           <div ref={this.mapdiv} className="map"></div>
         </div>
       );
-    } else {
+    } else {            
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
