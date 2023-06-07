@@ -75,24 +75,32 @@ class PanWidget extends React.Component {
             <div
               id="pan_left_button"
               className="esri-icon-left-arrow-circled esri-widget--button"
+              role="button"
+              tabIndex="0"
               onClick={this.moveLeft.bind(this)}
+              onKeyDown={this.moveLeft.bind(this)}
             ></div>
           </div>
           <div>
             <div
               id="pan_up_button"
               className="esri-icon-up-arrow-circled esri-widget--button"
+              role="button"
+              tabIndex="0"
               onClick={this.moveUp.bind(this)}
+              onKeyDown={this.moveUp.bind(this)}
             ></div>
             <div
               id="pan_toogle_button"
               className="esri-widget--button esri-widget esri-interactive"
               role="button"
+              tabIndex="0"
               aria-label="Toogle pan"
               tooltip="Toogle pan"
               direction="left"
               type="widget"
               onClick={this.togglePan.bind(this)}
+              onKeyDown={this.togglePan.bind(this)}
             >
               <span
                 aria-hidden="true"
@@ -103,14 +111,20 @@ class PanWidget extends React.Component {
             <div
               id="pan_down_button"
               className="esri-icon-down-arrow-circled esri-widget--button"
+              role="button"
+              tabIndex="0"
               onClick={this.moveDown.bind(this)}
+              onKeyDown={this.moveDown.bind(this)}
             ></div>
           </div>
           <div>
             <div
               id="pan_right_button"
               className="esri-icon-right-arrow-circled esri-widget--button"
+              role="button"
+              tabIndex="0"
               onClick={this.moveRight.bind(this)}
+              onKeyDown={this.moveRight.bind(this)}
             ></div>
           </div>
         </div>
