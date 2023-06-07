@@ -3200,13 +3200,13 @@ class MenuWidget extends React.Component {
       document.querySelector('.hotspot-container').style.display = 'none';
     } else if (this.props.view && hotspotLayers.length > 0) {
       document.querySelector('.hotspot-container').style.display = 'flex';
-      if (sessionStorage.checkedLayers.includes('all_present_lc_a_pol'))
+      if (sessionStorage.checkedLayers.includes('all_present_lc_a_pol') || sessionStorage.checkedLayers.includes('all_present_lc_b_pol'))
         document.querySelector('.presentLandCoverContainer').style.display =
           'block';
       else
         document.querySelector('.presentLandCoverContainer').style.display =
           'none';
-      if (sessionStorage.checkedLayers.includes('all_lcc_a_pol'))
+      if (sessionStorage.checkedLayers.includes('all_lcc_a_pol') || sessionStorage.checkedLayers.includes('all_lcc_b_pol'))
         document.querySelector('.landCoverChangeContainer').style.display =
           'block';
       else {
