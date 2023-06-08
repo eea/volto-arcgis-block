@@ -51,7 +51,7 @@ class MapViewer extends React.Component {
     this.layers = {};
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
-    this.props.mapviewer_config.loading = true;
+    this.props.mapviewer_config.loading = true;    
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -144,20 +144,21 @@ class MapViewer extends React.Component {
       this.mapView.viewpoint = activeViewpoint;
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;      
-      this.setViewState(this.view.type);           
+      this.setViewState(this.view.type);
     } else {
       this.sceneView.viewpoint = activeViewpoint;
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;            
-      this.setViewState(this.view.type);      
+      this.setViewState(this.view.type);
     }        
-    // console.log(this.view.ui);
+    this.view.ui._components.map(item => console.log(item));     
   }
 
   async componentDidMount() {
     loadCss();
     await this.loader();
     await this.waitForDataFill();    
+    
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl:
@@ -194,7 +195,7 @@ class MapViewer extends React.Component {
       this.setCenterState(this.mapCfg.center);
       this.setZoomState(this.mapCfg.zoom);
       this.setViewState(this.mapCfg.viewType);
-      this.activeLayersHandler(this.mapCfg.activeLayers);
+      this.activeLayersHandler(this.mapCfg.activeLayers);      
     }
   
 
@@ -211,7 +212,7 @@ class MapViewer extends React.Component {
     if (mapStatus.viewType === '3d') {
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
-      this.setViewState(this.view.type);
+      this.setViewState(this.view.type);      
     }
  
 
@@ -234,7 +235,7 @@ class MapViewer extends React.Component {
     if (mapStatus.viewType === '2d') {
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;
-      this.setViewState(this.view.type);
+      this.setViewState(this.view.type);      
     }
 
     this.zoom = new Zoom({
@@ -261,7 +262,7 @@ class MapViewer extends React.Component {
             this.switchView();
           }
         }
-      });
+      });      
     });
 
     
@@ -300,23 +301,28 @@ class MapViewer extends React.Component {
           });
         }
         this.mapView.constraints.geometry = constraintExtent;
-      });
-
-      this.view.popup.autoOpenEnabled = false;
-      // After launching the MapViewerConfig action
-      // we will have stored the json response here:
-      // this.props.mapviewer_config
-      this.props.MapViewerConfig(flattenToAppURL(this.props.url));
-      //Once we have created the MapView, we need to ensure that the map div
-      //is refreshed in order to show the map on it. To do so, we need to
-      //trigger the renderization again, and to trigger the renderization
-      //we invoke the setState method, that changes the state and forces a
-      //react component to render itself again
-      //this.setState({});
-      this.view.ui._removeComponents(['attribution']);
+      });      
     });    
 
-  } // componentDisMount
+    ///// NOTA  con estas líneas he logrado que aparezcan los widgets en la vista 3D
+    this.view.popup.autoOpenEnabled = false;
+    // After launching the MapViewerConfig action
+    // we will have stored the json response here:
+    // this.props.mapviewer_config
+    this.props.MapViewerConfig(flattenToAppURL(this.props.url));
+    //Once we have created the MapView, we need to ensure that the map div
+    //is refreshed in order to show the map on it. To do so, we need to
+    //trigger the renderization again, and to trigger the renderization
+    //we invoke the setState method, that changes the state and forces a
+    //react component to render itself again
+    //this.setState({});
+    this.sceneView.ui._removeComponents(['attribution']);
+    this.mapView.ui._removeComponents(['attribution']);
+  } // componentDidMount
+
+  componentDidUpdate () {
+    console.log('Se actualizo');
+  }
 
   componentWillUnmount() {
     // clean up
@@ -360,31 +366,31 @@ class MapViewer extends React.Component {
    * returns the jsx allowing such a render (if conditions are ok)
    * @returns jsx
    */
-  renderBasemap() {
+  renderBasemap(view) {
     if (this.props.mapviewer_config.Download) return;    
-    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />         
+    if (view) return <BasemapWidget view={view} mapViewer={this} />         
   }
 
-  renderLegend() {
-    if (this.view)
+  renderLegend(view) {
+    if (view)
       return (
         <LegendWidget
-          view={this.view}
+          view={view}
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
         />
       );
   }
 
-  renderMeasurement() {
+  renderMeasurement(view) {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view)
-      return <MeasurementWidget view={this.view} mapViewer={this} />;
+    if (view)
+      return <MeasurementWidget view={view} mapViewer={this} />;
   }
 
-  renderPrint() {
+  renderPrint(view) {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
+    if (view) return <PrintWidget view={view} mapViewer={this} />;
   }
 
   renderArea() {
@@ -416,7 +422,7 @@ class MapViewer extends React.Component {
       );
   }
 
-  renderMenu() {
+  renderMenu() {    
     if (this.view)
       return (
         <MenuWidget
@@ -445,29 +451,35 @@ class MapViewer extends React.Component {
   render() {
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
-    if ('loading' in this.props.mapviewer_config) {
+    if ('loading' in this.props.mapviewer_config) {      
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map"></div>
         </div>
       );
-    } else {            
+    } else {   
+          //
+          // print soes not support scenView      
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
             {this.appLanguage()}
-            {this.renderBasemap()}
-            {this.renderLegend()}            
-            {this.renderMeasurement()}
-            {this.renderPrint()}
-            {this.renderArea()}
-            {this.renderScale()}
+            {this.renderBasemap(this.sceneView)}
+            {this.renderBasemap(this.mapView)}
+            {this.renderLegend(this.sceneView)}
+            {this.renderLegend(this.mapView)}
+            {this.renderMeasurement(this.sceneView)}
+            {this.renderMeasurement(this.mapView)}
+            {this.renderPrint(this.mapView)} 
+            {this.renderArea(this.sceneView)}
+            {this.renderArea(this.mapView)}
+            {this.renderScale()}            
             {this.renderInfo()}
             {this.renderHotspot()}
             {this.renderMenu()}
           </div>
         </div>
-      );
+      );    
     }
   }
 }
