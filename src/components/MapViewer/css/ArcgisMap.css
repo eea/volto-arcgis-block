@@ -1293,10 +1293,19 @@ input[type='range']::-ms-track {
   background-color: #a0b128;
 }
 
-.hotspot-container .esri-button:hover {
+.hotspot-container .esri-button:enabled:hover,
+.hotspot-container .esri-button[enabled]:hover {
   border-color: #a0b128;
   background-color: white;
   color: #a0b128;
+}
+
+.hotspot-container .esri-button#applyFilterButton:disabled,
+.hotspot-container .esri-button#applyFilterButton[disabled] {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
 }
 
 /*.hotspot-container .esri-select{

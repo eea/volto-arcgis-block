@@ -1604,6 +1604,7 @@ class MenuWidget extends React.Component {
       if (siblingInput && siblingInput.checked) {
         siblingInput.click();
       }
+      this.setState({});
     };
   };
 
@@ -3213,6 +3214,9 @@ class MenuWidget extends React.Component {
         document.querySelector('.landCoverChangeContainer').style.display =
           'none';
       }
+      document.querySelector('#applyFilterButton').disabled = true;
+      let klcSelect = document.querySelector('#select-klc-area');
+      klcSelect.value = 'default';
     }
   }
 
