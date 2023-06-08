@@ -3230,7 +3230,11 @@ class MenuWidget extends React.Component {
       }
       document.querySelector('#applyFilterButton').disabled = true;
       let klcSelect = document.querySelector('#select-klc-area');
+      let LcTimeSelect = document.querySelector('#select-klc-lcTime');
+      let LccTimeSelect = document.querySelector('#select-klc-lccTime');
       klcSelect.value = 'default';
+      LcTimeSelect.value = 'default';
+      LccTimeSelect.value = 'default';
     }
   }
 

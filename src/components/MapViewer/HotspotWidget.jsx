@@ -412,19 +412,37 @@ class HotspotWidget extends React.Component {
         layer.includes('all_lcc_b_pol')
       );
     });
-    if (foundModular) {
+    let klcSelect = document.querySelector('#select-klc-area');
+    let lcContainer = document.querySelector('.presentLandCoverContainer');
+    let lccContainer = document.querySelector('.landCoverChangeContainer');
+    let lccTimeSelect = document.querySelector('#select-klc-lccTime');
+    let lcTimeSelect = document.querySelector('#select-klc-lcTime');
+    if (
+      (lcContainer.style.display === 'block' &&
+        lcTimeSelect.value === 'default') ||
+      (lccContainer.style.display === 'block' &&
+        lccTimeSelect.value === 'default') ||
+      klcSelect.value === 'default' ||
+      foundModular
+    ) {
       for (let i = 0; i < data.length; i++) {
         let klcName = data[i].node.klc_name;
-        if (klcName === selectedArea) {
-          if (
-            data[i].node.keymap_info.toLowerCase().includes('b_classes":false')
-          ) {
-            document.querySelector('#applyFilterButton').disabled = true;
-            return;
-          }
+        if (
+          Number.isInteger(Number(selectedArea)) ||
+          (klcName === selectedArea &&
+            data[i].node.keymap_info
+              .toLowerCase()
+              .includes('b_classes":false')) ||
+          klcSelect.value === 'default' ||
+          lcTimeSelect.value === 'default' ||
+          lccTimeSelect.value === 'default'
+        ) {
+          document.querySelector('#applyFilterButton').disabled = true;
+          return;
         }
       }
     }
+
     document.querySelector('#applyFilterButton').disabled = false;
   }
 
@@ -451,6 +469,9 @@ class HotspotWidget extends React.Component {
                 id="select-klc-lcTime"
                 className="esri-select"
                 data-target-property="layout"
+                onBlur={(e) =>
+                  this.disableButton(this.dataJSONNames, e.target.value)
+                }
               ></select>
             </label>
           </div>
@@ -476,9 +497,17 @@ class HotspotWidget extends React.Component {
         //reset all selected options
         if (selectBoxLcTime) {
           this.removeOptions(selectBoxLcTime);
+          selectBoxLcTime.options.add(
+            new Option('Select a year', 'default', true, true),
+          );
+          selectBoxLcTime.options[0].disabled = true;
         }
         if (selectBoxLccTime) {
           this.removeOptions(selectBoxLccTime);
+          selectBoxLccTime.options.add(
+            new Option('Select a year', 'default', true, true),
+          );
+          selectBoxLccTime.options[0].disabled = true;
         }
 
         if (
@@ -551,6 +580,9 @@ class HotspotWidget extends React.Component {
                 id="select-klc-lccTime"
                 className="esri-select"
                 data-target-property="layout"
+                onBlur={(e) =>
+                  this.disableButton(this.dataJSONNames, e.target.value)
+                }
               ></select>
             </label>
           </div>
