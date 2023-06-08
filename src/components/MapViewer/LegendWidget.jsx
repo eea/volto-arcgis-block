@@ -24,7 +24,6 @@ class LegendWidget extends React.Component {
   }
 
   hideNutsLegend() {
-    //debugger;
     const collection = document.getElementsByClassName('esri-legend__symbol');
 
     Array.prototype.forEach.call(collection, (element) => {

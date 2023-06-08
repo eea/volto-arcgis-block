@@ -1589,10 +1589,35 @@ class MenuWidget extends React.Component {
    * @param {*} elem Is the checkbox
    */
 
+  checkForHotspots(elem, productContainerId) {
+    let elemContainer = document
+      .getElementById(elem.id)
+      .closest('.ccl-form-group');
+    let nextElemSibling = elemContainer.nextElementSibling;
+    let previousElemSibling = elemContainer.previousElementSibling;
+    let siblingInput;
+
+    if (productContainerId === 'd764e020485a402598551fa461bf1db2') {
+      if (nextElemSibling) {
+        siblingInput = nextElemSibling.querySelector('input');
+      } else if (previousElemSibling) {
+        siblingInput = previousElemSibling.querySelector('input');
+      }
+      if (siblingInput && siblingInput.checked) {
+        siblingInput.click();
+      }
+      this.setState({});
+    }
+  }
+
   async toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
+    let productContainerId = document
+      .getElementById(parentId)
+      .closest('.map-menu-product-dropdown')
+      .getAttribute('productid');
     let group = this.getGroup(elem);
     if (elem.checked) {
       if (
@@ -1604,7 +1629,10 @@ class MenuWidget extends React.Component {
           this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
       ) {
-        if (this.extentInitiated === false) {
+        if (
+          this.extentInitiated === false &&
+          productContainerId !== 'd764e020485a402598551fa461bf1db2'
+        ) {
           this.extentInitiated = true;
           setTimeout(() => {
             this.fullExtent(elem);
@@ -1678,6 +1706,7 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
+    this.checkForHotspots(elem, productContainerId);
     // update DOM
     this.setState({});
     //this.activeLayersHandler(this.activeLayersAsArray);
@@ -3180,19 +3209,28 @@ class MenuWidget extends React.Component {
       document.querySelector('.hotspot-container').style.display = 'none';
     } else if (this.props.view && hotspotLayers.length > 0) {
       document.querySelector('.hotspot-container').style.display = 'flex';
-      if (sessionStorage.checkedLayers.includes('all_present_lc_a_pol'))
+      if (
+        sessionStorage.checkedLayers.includes('all_present_lc_a_pol') ||
+        sessionStorage.checkedLayers.includes('all_present_lc_b_pol')
+      )
         document.querySelector('.presentLandCoverContainer').style.display =
           'block';
       else
         document.querySelector('.presentLandCoverContainer').style.display =
           'none';
-      if (sessionStorage.checkedLayers.includes('all_lcc_a_pol'))
+      if (
+        sessionStorage.checkedLayers.includes('all_lcc_a_pol') ||
+        sessionStorage.checkedLayers.includes('all_lcc_b_pol')
+      )
         document.querySelector('.landCoverChangeContainer').style.display =
           'block';
       else {
         document.querySelector('.landCoverChangeContainer').style.display =
           'none';
       }
+      document.querySelector('#applyFilterButton').disabled = true;
+      let klcSelect = document.querySelector('#select-klc-area');
+      klcSelect.value = 'default';
     }
   }
 
