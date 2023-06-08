@@ -209,11 +209,11 @@ class HotspotWidget extends React.Component {
           .value.match(/\d+/g)
           .map(Number)[0];
         checkedLayers.forEach((layer) => {
-          layer.includes('all_lcc_a_pol') ?
-            typeLegend = 'all_lcc_a_pol' :
-            typeLegend = 'all_lcc_b_pol';
+          layer.includes('all_lcc_a_pol')
+            ? (typeLegend = 'all_lcc_a_pol')
+            : (typeLegend = 'all_lcc_b_pol');
         });
-          if (this.esriLayer_lcc !== null) {
+        if (this.esriLayer_lcc !== null) {
           if (this.esriLayer_lcc2 !== null) {
             this.props.map.remove(this.esriLayer_lcc2);
           }
@@ -240,9 +240,9 @@ class HotspotWidget extends React.Component {
       }
       if (type === 'lc') {
         checkedLayers.forEach((layer) => {
-          layer.includes('all_present_lc_a_pol') ?
-            typeLegend = 'all_present_lc_a_pol' :
-            typeLegend = 'all_present_lc_b_pol'
+          layer.includes('all_present_lc_a_pol')
+            ? (typeLegend = 'all_present_lc_a_pol')
+            : (typeLegend = 'all_present_lc_b_pol');
         });
         var selectBoxHighlightsLc = document
           .getElementById('select-klc-lcTime')
@@ -407,21 +407,26 @@ class HotspotWidget extends React.Component {
   disableButton(data, selectedArea) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     let foundModular = checkedLayers.some((layer) => {
-      return layer.includes('all_present_lc_b_pol') || layer.includes('all_lcc_b_pol')
+      return (
+        layer.includes('all_present_lc_b_pol') ||
+        layer.includes('all_lcc_b_pol')
+      );
     });
     if (foundModular) {
-      for(let i = 0; i < data.length; i++) {
+      for (let i = 0; i < data.length; i++) {
         let klcName = data[i].node.klc_name;
-        if(klcName === selectedArea) {
-          if (data[i].node.keymap_info.toLowerCase().includes('b_classes":false')) {
+        if (klcName === selectedArea) {
+          if (
+            data[i].node.keymap_info.toLowerCase().includes('b_classes":false')
+          ) {
             document.querySelector('#applyFilterButton').disabled = true;
             return;
           }
-        };
+        }
       }
     }
     document.querySelector('#applyFilterButton').disabled = false;
-  };
+  }
 
   renderPresentLandCover() {
     return (
@@ -458,7 +463,7 @@ class HotspotWidget extends React.Component {
     var selectBox;
     var selectBoxLcTime;
     var selectBoxLccTime;
-    
+
     this.selectedArea = selectedOption;
 
     selectBox = document.getElementById('select-klc-area');
@@ -507,9 +512,9 @@ class HotspotWidget extends React.Component {
           );
         }
       }
-        if (selectBox.options.length <= data.length) {
-          selectBox.options.add(new Option(option, option, option));
-        }
+      if (selectBox.options.length <= data.length) {
+        selectBox.options.add(new Option(option, option, option));
+      }
     }
   }
 
@@ -589,13 +594,16 @@ class HotspotWidget extends React.Component {
                       <select
                         onBlur={(e) => {
                           this.getKLCNames(this.dataJSONNames, e.target.value);
-                        }
-                        }
+                        }}
                         id="select-klc-area"
                         className="esri-select"
-                        onChange={(e) => this.disableButton(this.dataJSONNames, e.target.value)}
+                        onChange={(e) =>
+                          this.disableButton(this.dataJSONNames, e.target.value)
+                        }
                       >
-                        <option value="default" disabled selected>Select a KLC Area from the dropdown list</option>
+                        <option value="default" disabled selected>
+                          Select a KLC Area from the dropdown list
+                        </option>
                       </select>
                     </label>
                   </div>
