@@ -119,6 +119,7 @@ class MapViewer extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
+    this.state.url = window.location.href;
     await this.waitForDataFill();
 
     this.positronCompositeBasemap = new Basemap({
@@ -220,6 +221,35 @@ class MapViewer extends React.Component {
       //this.setState({});
       this.view.ui._removeComponents(['attribution']);
     });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      !(
+        this.state.url === 'http://localhost:3000/en/map-viewer' ||
+        this.state.url ===
+          'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+        this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+      )
+    ) {
+      sessionStorage.clear();
+    }
+
+    mapStatus = this.recoverState();
+
+    if (
+      mapStatus === null ||
+      (mapStatus.zoom === null && mapStatus.center === null) ||
+      Object.entries(mapStatus).length === 0
+    ) {
+      mapStatus = {};
+      mapStatus.zoom = this.mapCfg.zoom;
+      mapStatus.center = this.mapCfg.center;
+      mapStatus.activeLayers = this.mapCfg.activeLayers;
+      this.setCenterState(this.mapCfg.center);
+      this.setZoomState(this.mapCfg.zoom);
+      this.activeLayersHandler(this.mapCfg.activeLayers);
+    }
   }
 
   componentWillUnmount() {
