@@ -492,6 +492,30 @@ class MenuWidget extends React.Component {
     return decodeURI(dc.substring(begin + prefix.length, end));
   }
 
+  storePanelScroll() {
+    let paneles = document.querySelector('#paneles');
+    var selected_tab = document.querySelector('.tab-selected');
+    let toc_panel_scrolls =
+      JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) || {};
+    toc_panel_scrolls[selected_tab.id] = paneles.scrollTop;
+    sessionStorage.setItem(
+      'toc_panel_scrolls',
+      JSON.stringify(toc_panel_scrolls),
+    );
+  }
+
+  restorePanelScroll() {
+    let paneles = document.querySelector('#paneles');
+    var selected_tab = document.querySelector('.tab-selected');
+    let toc_panel_scrolls =
+      JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) || {};
+    let scroll = toc_panel_scrolls[selected_tab.id];
+    if (scroll) {
+      scroll = parseInt(scroll);
+      paneles.scrollTop = scroll;
+    }
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
@@ -532,6 +556,7 @@ class MenuWidget extends React.Component {
         if (document.contains(document.querySelector('.timeslider-container')))
           document.querySelector('.timeslider-container').style.display =
             'block';
+        this.restorePanelScroll();
 
         // By invoking the setState, we notify the state we want to reach
         // and ensure that the component is rendered again
@@ -3156,6 +3181,7 @@ class MenuWidget extends React.Component {
    */
   toggleTab(e) {
     if (!e.currentTarget.classList.contains('tab-selected')) {
+      this.storePanelScroll();
       var tabsel = document.querySelector('.tab-selected');
       var tab = e.currentTarget;
       var panelsel = document.querySelector('.panel-selected');
@@ -3177,6 +3203,7 @@ class MenuWidget extends React.Component {
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
       }
+      this.restorePanelScroll();
     }
   }
 
