@@ -129,7 +129,7 @@ class MapViewer extends React.Component {
       new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
     }    
     return this.compCfg;
-  }
+  } 
 
   switchView() {
     const is3D = this.view.type === '3d';
@@ -151,7 +151,7 @@ class MapViewer extends React.Component {
       this.view = this.sceneView;            
       this.setViewState(this.view.type);
     }        
-    this.view.ui._components.map(item => console.log(item));     
+    // this.view.ui._components.map(item => console.log(item));     
   }
 
   async componentDidMount() {
@@ -253,15 +253,15 @@ class MapViewer extends React.Component {
 
       this.sceneView.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);
-        if (newValue <= 4) {
-          if (this.view.type === '2d') {
-            this.switchView();
-          }
-        } else {
-          if (this.view.type === '3d') {
-            this.switchView();
-          }
-        }
+        // if (newValue <= 4) {
+        //   if (this.view.type === '2d') {
+        //     this.switchView();
+        //   }
+        // } else {
+        //   if (this.view.type === '3d') {
+        //     this.switchView();
+        //   }
+        // }
       });      
     });
 
@@ -274,15 +274,15 @@ class MapViewer extends React.Component {
       let constraintExtent = null;
       this.mapView.watch('zoom', (newValue, oldValue, property, object) => {
         this.setZoomState(newValue);
-        if (newValue < 4) {
-          if (this.view.type === '2d') {
-            this.switchView();
-          }
-        } else {
-          if (this.view.type === '3d') {
-            this.switchView();
-          }
-        }
+        // if (newValue < 4) {
+        //   if (this.view.type === '2d') {
+        //     this.switchView();
+        //   }
+        // } else {
+        //   if (this.view.type === '3d') {
+        //     this.switchView();
+        //   }
+        // }
         if (mapStatus.zoom <= this.mapCfg.minZoom) {
           constraintExtent = new Extent({
             xmin: -90,
@@ -366,31 +366,31 @@ class MapViewer extends React.Component {
    * returns the jsx allowing such a render (if conditions are ok)
    * @returns jsx
    */
-  renderBasemap(view) {
+  renderBasemap() {
     if (this.props.mapviewer_config.Download) return;    
-    if (view) return <BasemapWidget view={view} mapViewer={this} />         
+    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />         
   }
 
-  renderLegend(view) {
-    if (view)
+  renderLegend() {
+    if (this.view)
       return (
         <LegendWidget
-          view={view}
+          view={this.view}
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
         />
       );
   }
 
-  renderMeasurement(view) {
+  renderMeasurement() {
     if (this.props.mapviewer_config.Download) return;
-    if (view)
-      return <MeasurementWidget view={view} mapViewer={this} />;
+    if (this.view)
+      return <MeasurementWidget view={this.view} mapViewer={this} />;
   }
 
-  renderPrint(view) {
+  renderPrint() {
     if (this.props.mapviewer_config.Download) return;
-    if (view) return <PrintWidget view={view} mapViewer={this} />;
+    if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
   }
 
   renderArea() {
@@ -464,15 +464,15 @@ class MapViewer extends React.Component {
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
             {this.appLanguage()}
-            {this.renderBasemap(this.sceneView)}
-            {this.renderBasemap(this.mapView)}
-            {this.renderLegend(this.sceneView)}
-            {this.renderLegend(this.mapView)}
-            {this.renderMeasurement(this.sceneView)}
-            {this.renderMeasurement(this.mapView)}
+            {this.renderBasemap()}
+            
+            {this.renderLegend()}
+            
+            {this.renderMeasurement()}
+            
             {this.renderPrint(this.mapView)} 
-            {this.renderArea(this.sceneView)}
-            {this.renderArea(this.mapView)}
+            
+            {this.renderArea()}
             {this.renderScale()}            
             {this.renderInfo()}
             {this.renderHotspot()}
