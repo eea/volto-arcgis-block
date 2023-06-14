@@ -1263,8 +1263,19 @@ input[type='range']::-ms-track {
   font-size: 0.875rem;
 }
 
-.area-container .drawRectanglePopup-content {
-  transform: translate(-34vw, -214%);
+div.map-container.popup-block {
+  position: absolute;
+  top: 0px;
+  left: -34vw;
+  height: auto;
+}
+
+.esri-ui-corner .esri-component.pan-container {
+  display: none;
+  flex-direction: row;
+  align-items: center;
+  margin-left: -72px;
+  box-shadow: none;
 }
 
 .esri-component.drawRectanglePopup-block {
@@ -1293,10 +1304,19 @@ input[type='range']::-ms-track {
   background-color: #a0b128;
 }
 
-.hotspot-container .esri-button:hover {
+.hotspot-container .esri-button:enabled:hover,
+.hotspot-container .esri-button[enabled]:hover {
   border-color: #a0b128;
   background-color: white;
   color: #a0b128;
+}
+
+.hotspot-container .esri-button#applyFilterButton:disabled,
+.hotspot-container .esri-button#applyFilterButton[disabled] {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
 }
 
 /*.hotspot-container .esri-select{

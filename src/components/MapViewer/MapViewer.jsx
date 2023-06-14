@@ -17,6 +17,7 @@ import LegendWidget from './LegendWidget';
 import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
+import PanWidget from './PanWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
@@ -156,9 +157,10 @@ class MapViewer extends React.Component {
 
   async componentDidMount() {
     loadCss();
-    await this.loader();
-    await this.waitForDataFill();    
-    
+    await this.loader();       
+    this.state.url = window.location.href;
+    await this.waitForDataFill();
+
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl:
@@ -324,6 +326,35 @@ class MapViewer extends React.Component {
     console.log('Se actualizo');
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      !(
+        this.state.url === 'http://localhost:3000/en/map-viewer' ||
+        this.state.url ===
+          'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
+        this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
+      )
+    ) {
+      sessionStorage.clear();
+    }
+
+    mapStatus = this.recoverState();
+
+    if (
+      mapStatus === null ||
+      (mapStatus.zoom === null && mapStatus.center === null) ||
+      Object.entries(mapStatus).length === 0
+    ) {
+      mapStatus = {};
+      mapStatus.zoom = this.mapCfg.zoom;
+      mapStatus.center = this.mapCfg.center;
+      mapStatus.activeLayers = this.mapCfg.activeLayers;
+      this.setCenterState(this.mapCfg.center);
+      this.setZoomState(this.mapCfg.zoom);
+      this.activeLayersHandler(this.mapCfg.activeLayers);
+    }
+  }
+
   componentWillUnmount() {
     // clean up
     if (this.view) {
@@ -409,6 +440,11 @@ class MapViewer extends React.Component {
       return <InfoWidget view={this.view} map={this.map} mapViewer={this} />;
   }
 
+  renderPan() {
+    if (this.view)
+      return <PanWidget view={this.view} map={this.map} mapViewer={this} />;
+  }
+
   renderHotspot() {
     if (this.view)
       return (
@@ -474,6 +510,7 @@ class MapViewer extends React.Component {
             
             {this.renderArea()}
             {this.renderScale()}            
+            {this.renderPan()}            
             {this.renderInfo()}
             {this.renderHotspot()}
             {this.renderMenu()}
