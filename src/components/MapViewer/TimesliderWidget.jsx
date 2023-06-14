@@ -685,6 +685,7 @@ class TimesliderWidget extends React.Component {
                     showYearDropdown
                     dropdownMode="select"
                   />
+                  
                 </div>
                 <button
                   className="ccl-button ccl-button-white"
