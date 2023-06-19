@@ -111,6 +111,18 @@ class HotspotWidget extends React.Component {
         },
       ],
     });
+    this.esriLayer_lcc = new WMSLayer({
+      url: serviceUrl,
+      //featureInfoFormat: "application/json",
+      customLayerParameters: {},
+      sublayers: [
+        // LAND COVER CHANGE DATASET ________________________________________________________________________________________________________________
+        {
+          name: this.addLegendName('all_lcc_b_pol'),
+          legendUrl: this.addLegendNameToUrl('all_lcc_b_pol'),
+        },
+      ],
+    });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
       //featureInfoFormat: "application/json",
@@ -120,6 +132,18 @@ class HotspotWidget extends React.Component {
         {
           name: this.addLegendName('all_present_lc_a_pol'),
           legendUrl: this.addLegendNameToUrl('all_present_lc_a_pol'),
+        },
+      ],
+    });
+    this.esriLayer_lc = new WMSLayer({
+      url: serviceUrl,
+      //featureInfoFormat: "application/json",
+      customLayerParameters: {},
+      sublayers: [
+        // PRESENT LAND COVER DATASET ________________________________________________________________________________________________________________
+        {
+          name: this.addLegendName('all_present_lc_b_pol'),
+          legendUrl: this.addLegendNameToUrl('all_present_lc_b_pol'),
         },
       ],
     });

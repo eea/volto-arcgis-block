@@ -337,6 +337,7 @@ class MenuWidget extends React.Component {
       setNoServiceModal: true,
     };
     // call the props of the layers list (mapviewer.jsx)
+    this.location = this.props.location;
     this.compCfg = this.props.conf;
     this.map = this.props.map;
     this.view = this.props.view;
@@ -1643,16 +1644,16 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
+    let modularLC;
+      if (elem.id.includes('all_present_lc_b_pol')) {
+      modularLC = elem.id;
+    }
+    
     let group = this.getGroup(elem);
     if (elem.checked) {
       if (
         this.props.download ||
-        !(
-          this.state.url === 'http://localhost:3000/en/map-viewer' ||
-          this.state.url ===
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-        )
+        this.location.search !== ''
       ) {
         if (
           this.extentInitiated === false &&
@@ -1674,6 +1675,12 @@ class MenuWidget extends React.Component {
         } else {
           this.map.add(this.layers[elem.id]);
         }
+      } else if (this.layers[modularLC]) {
+        let previousElem = document
+        .getElementById(elem.id)
+        .closest('.ccl-form-group')
+        .previousElementSibling.querySelector('input');
+        this.map.add(this.layers[previousElem.id]);
       } else {
         this.map.add(this.layers[elem.id]);
       }
