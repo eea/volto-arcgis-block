@@ -35,11 +35,11 @@ const config = {
   },
   Services: {
     Highlight_service:
-      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/UseCasesWorldCountries/MapServer/',
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/UseCasesWorldCountries/MapServer/1',
     RegionLayer:
-      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/UseCasesRegion_count/MapServer/',
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/UseCasesRegion_count/MapServer/0',
     SpatialCoverageLayer:
-      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/UseCasesSpatialCoverage/MapServer/',
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/UseCasesSpatialCoverage/MapServer/0',
   },
   Thumbnail:
     'https://clmsdemo.devel6cph.eea.europa.eu/static/media/ccl-thumbnail-placeholder.2ccfd334.jpg',
