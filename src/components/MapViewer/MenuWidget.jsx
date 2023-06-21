@@ -67,7 +67,6 @@ export const AddCartItem = ({
         );
         datasetInput.removeAttribute('time-start');
         datasetInput.removeAttribute('time-end');
-        debugger;
       }
     });
   };
@@ -76,28 +75,13 @@ export const AddCartItem = ({
     if (!dataset) {
       dataset = cartData[0].Products[0].Datasets[0];
     }
-    let id = dataset.DatasetId;
-    // let datasetElem = document.querySelector('[datasetid="' + id + '"]');
+    let id = dataset.DatasetId;    
     let datasetData = {
       id: id,
       UID: id,
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
-    };
-    // if (dataset.IsTimeSeries) {
-    //   let hasTimeStart = checkTimeData(dataset);
-    //   if (hasTimeStart) {
-    //     let datasetInput = document.querySelector(
-    //       '#active_' +
-    //         datasetElem.querySelector('.map-menu-layer input:checked').id,
-    //     );
-    //     let time = {
-    //       start: parseInt(datasetInput.getAttribute('time-start')),
-    //       end: parseInt(datasetInput.getAttribute('time-end')),
-    //     };
-    //     datasetData.timeExtent = [time.start, time.end];
-    //   }
-    // }
+    };   
     let data = [datasetData];
     return data;
   };
@@ -159,45 +143,16 @@ export const AddCartItem = ({
                 !dataset.MarkAsDownloadableNoServiceToVisualize
               ) {
                 document.getElementById('products_label').click();
-              } else {
-                debugger;
-                if (
-                  dataset.IsTimeSeries &&
-                  !checkTimeData(dataset) &&
-                  !dataset.MarkAsDownloadableNoServiceToVisualize
-                ) {
-                  document.getElementById('active_label').click();
-                  if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document.querySelector(
-                      '[datasetid="' +
-                        dataset.DatasetId +
-                        '"] .map-menu-layer input:checked',
-                    ).id;
-                    debugger;
-                    document
-                      .querySelector(
-                        "[layer-id='" + layerId + "'] .active-layer-time",
-                      )
-                      .click(e);                      
-                  }
-                } else if (areaData) {
-                  debugger;
+              } else {              
+                if (areaData) {
                   checkArea(e);
                 }
               }
-            }}
+            }
+          }
           >
             Add to cart
-          </button>
-          {/* {dataset.IsTimeSeries && (
-            <button
-              id="map_download_cancel"
-              className="ccl-button ccl-button--default"
-              onClick={() => openCalendar(dataset)}
-            >
-              Open calendar
-            </button>
-          )} */}
+          </button>        
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <Popup
@@ -207,24 +162,7 @@ export const AddCartItem = ({
                 'map-menu-icon map-menu-icon-login' +
                 (isLoggedIn ? ' logged' : '')
               }
-              onClick={(e) => {
-                // if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
-                //   debugger;
-                //   document.getElementById('active_label').click();
-                //   if (!document.querySelector('.timeslider-container')) {
-                //     let layerId = document.querySelector(
-                //       '[datasetid="' +
-                //         dataset.DatasetId +
-                //         '"] .map-menu-layer input:checked',
-                //     ).id;
-                //     debugger;
-                //     document
-                //       .querySelector(
-                //         "[layer-id='" + layerId + "'] .active-layer-time",
-                //       )
-                //       .click(e);
-                //   }
-                // }
+              onClick={(e) => {               
                 if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
@@ -238,22 +176,7 @@ export const AddCartItem = ({
                   checkArea(e);
                 }
               }}
-              onKeyDown={(e) => {
-                // if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
-                //   document.getElementById('active_label').click();
-                //   if (!document.querySelector('.timeslider-container')) {
-                //     let layerId = document.querySelector(
-                //       '[datasetid="' +
-                //         dataset.DatasetId +
-                //         '"] .map-menu-layer input:checked',
-                //     ).id;
-                //     document
-                //       .querySelector(
-                //         "[layer-id='" + layerId + "'] .active-layer-time",
-                //       )
-                //       .click(e);
-                //   }
-                // }
+              onKeyDown={(e) => {             
                 if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
@@ -261,7 +184,6 @@ export const AddCartItem = ({
                       'area-container',
                     )
                   ) {
-                    debugger;
                     document.querySelector('#map_area_button').click();
                   }
                 } else {
@@ -600,22 +522,15 @@ class MenuWidget extends React.Component {
                 view: window,
                 bubbles: true,
                 cancelable: false,
-              });
-              // let el = document.getElementById('active_label');
+              });              
               let el = document.getElementById('download_label');
-              el.dispatchEvent(event);
-              //open time slider
-              let layerElem = document.getElementById(layerid);
-              debugger;
-              // this.showTimeSlider(layerElem, true);
-              // document.getElementById('map_area_button').click();
+              el.dispatchEvent(event);                           
               break;
             }
           }
         }
         // "Area widget" opened by default if user is logged in and downloadTag is true
         else if (authToken && downloadTag) {
-          debugger;
           for (let i = 0; i < checkedLayers.length; i++) {
             let layerid = checkedLayers[i];
             if (
@@ -647,15 +562,9 @@ class MenuWidget extends React.Component {
                 view: window,
                 bubbles: true,
                 cancelable: false,
-              });
-              // let el = document.getElementById('active_label');
+              });              
               let el = document.getElementById('download_label');
-              el.dispatchEvent(event);
-              //open time slider
-              let layerElem = document.getElementById(layerid);
-              debugger;
-              // this.showTimeSlider(layerElem, true);
-              // document.getElementById('map_area_button').click();
+              el.dispatchEvent(event);                            
               break;
             }
           }
@@ -685,7 +594,6 @@ class MenuWidget extends React.Component {
             el.dispatchEvent(event);
             //open time slider
             let layerElem = document.getElementById(layerid);
-            debugger;
             // this.showTimeSlider(layerElem, true);
             // document.getElementById('map_area_button').click();
           }
@@ -1702,10 +1610,7 @@ class MenuWidget extends React.Component {
       this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
-      if (group) {
-        // let dataset = document
-        //   .querySelector('[datasetid="' + group + '"]')
-        //   .querySelector('input');
+      if (group) {    
         elem.title = this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
@@ -1741,8 +1646,7 @@ class MenuWidget extends React.Component {
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
     }
-    this.updateCheckDataset(parentId);
-    //this.toggleHotspotWidget();
+    this.updateCheckDataset(parentId);    
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
@@ -1754,8 +1658,7 @@ class MenuWidget extends React.Component {
     }
     this.checkForHotspots(elem, productContainerId);
     // update DOM
-    this.setState({});
-    //this.activeLayersHandler(this.activeLayersAsArray);
+    this.setState({});    
   }
 
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
@@ -1930,8 +1833,7 @@ class MenuWidget extends React.Component {
       (a, b) =>
         activeLayers.indexOf(a.props['layer-id']) -
         activeLayers.indexOf(b.props['layer-id']),
-    );
-    //this.props.mapDispatchToProps(activeLayersArray);
+    );    
     this.activeLayersHandler(activeLayersArray);
     return data;
   }
@@ -2229,8 +2131,7 @@ class MenuWidget extends React.Component {
       .then((response) => {
         const xmlDoc = response.data;
         const parser = new DOMParser();
-        this.xml = parser.parseFromString(xmlDoc, 'text/html');
-        //this.xml = response.data; // assign the response data to this.xml
+        this.xml = parser.parseFromString(xmlDoc, 'text/html');        
       })
       .catch(() => {});
   };
@@ -2367,15 +2268,13 @@ class MenuWidget extends React.Component {
           {elem.parentElement.dataset.timeseries === 'true' && (            
             <span
               className="map-menu-icon active-layer-time"
-              onClick={(e) => {
-                // document.getElementById('map_area_button').click();
+              onClick={(e) => {                
                 e.isTrusted
                   ? this.showTimeSlider(elem)
                   : this.showTimeSlider(elem, true);
 
               }}
-              onKeyDown={(e) => {
-                // document.getElementById('map_area_button').click();
+              onKeyDown={(e) => {                
                 e.isTrusted
                   ? this.showTimeSlider(elem)
                   : this.showTimeSlider(elem, true);
@@ -2464,34 +2363,13 @@ class MenuWidget extends React.Component {
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
-    // let group = this.getGroup(
-    //   document.getElementById(this.draggingElement.getAttribute('layer-id')),
-    // )
-    //   ? this.getGroup(
-    //       document.getElementById(
-    //         this.draggingElement.getAttribute('layer-id'),
-    //       ),
-    //     )
-    //   : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
-    //let groupLayers = this.getGroupLayers(group);
+   
     if (init_ord > dst_ord) {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
     } else {
       dst.parentElement.insertBefore(this.draggingElement, dst);
     }
-    // if (group && groupLayers.length > 1) {
-    //   groupLayers.forEach((item, index) => {
-    //     if (
-    //       this.draggingElement.getAttribute('layer-id') !== item ||
-    //       dst.getAttribute('layer-id') !== item
-    //     ) {
-    //       dst.parentElement.insertBefore(
-    //         document.getElementById('active_' + item),
-    //         this.draggingElement.nextSibling,
-    //       );
-    //     }
-    //   });
-    // }
+   
     this.layersReorder();
     this.saveLayerOrder();
   }
@@ -2582,7 +2460,6 @@ class MenuWidget extends React.Component {
    */
 
   showTimeSlider(elem, fromDownload, hideCalendar) {
-    debugger;
     if (
       sessionStorage.key('timeSliderTag') &&
       sessionStorage.getItem('timeSliderTag') === 'true'
@@ -2794,17 +2671,7 @@ class MenuWidget extends React.Component {
   setOpacity() {
     let layer = document.querySelector('.opacity-slider input').dataset.layer;
     let value = document.querySelector('.opacity-panel input').value;
-    // let group = this.getGroup(document.getElementById(layer));
-    // let groupLayers = this.getGroupLayers(group);
-    // if (group && groupLayers.length > 1) {
-    //   groupLayers.forEach((item) => {
-    //     this.layers[item].opacity = value / 100;
-    //     this.saveOpacity(item, value / 100);
-    //     document.querySelector(
-    //       '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
-    //     ).dataset.opacity = value;
-    //   });
-    // } else {
+  
     if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
       this.layers['lcc_filter'].opacity = value / 100;
       this.saveOpacity(this.layers['lcc_filter'], value / 100);
@@ -3029,20 +2896,7 @@ class MenuWidget extends React.Component {
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
-  deleteCrossEvent(elem) {
-    // let group = this.getGroup(elem);
-    // let groupLayers = this.getGroupLayers(group);
-    // if (group && groupLayers.length > 1) {
-    //   // are we sure we want to delete all sublayers when one is deleted?
-    //   groupLayers.forEach((item) => {
-    //     elem = document.getElementById(item);
-    //     // elem has to be unchecked
-    //     elem.checked = false;
-    //     this.toggleLayer(elem);
-    //     delete this.activeLayersJSON[elem.id];
-    //   });
-    // } else {
-    // elem has to be unchecked
+  deleteCrossEvent(elem) {   
     elem.checked = false;
     this.toggleLayer(elem);
     delete this.activeLayersJSON[elem.id];
@@ -3153,12 +3007,7 @@ class MenuWidget extends React.Component {
    * Method to load previously checked layers
    */
   loadLayers() {
-    // let event = new MouseEvent('click', {
-    //   view: window,
-    //   bubbles: true,
-    //   cancelable: false,
-    // });
-
+  
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
       for (var i = layers.length - 1; i >= 0; i--) {
@@ -3337,7 +3186,6 @@ class MenuWidget extends React.Component {
       let layerId = this.findCheckedLayer(dataset, checkedLayers);
       setTimeout(() => {
         // Display timeslider with no calendar.
-        debugger;
         this.showTimeSlider(document.getElementById(layerId), true, true);
       }, 100);
     }
