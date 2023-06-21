@@ -75,13 +75,13 @@ export const AddCartItem = ({
     if (!dataset) {
       dataset = cartData[0].Products[0].Datasets[0];
     }
-    let id = dataset.DatasetId;    
+    let id = dataset.DatasetId;
     let datasetData = {
       id: id,
       UID: id,
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
-    };   
+    };
     let data = [datasetData];
     return data;
   };
@@ -109,7 +109,7 @@ export const AddCartItem = ({
       progress: undefined,
     });
   };
-  
+
   const checkTimeData = (dataset) => {
     let id = dataset.DatasetId;
     let datasetElem = document.querySelector('[datasetid="' + id + '"]');
@@ -143,16 +143,15 @@ export const AddCartItem = ({
                 !dataset.MarkAsDownloadableNoServiceToVisualize
               ) {
                 document.getElementById('products_label').click();
-              } else {              
+              } else {
                 if (areaData) {
                   checkArea(e);
                 }
               }
-            }
-          }
+            }}
           >
             Add to cart
-          </button>        
+          </button>
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <Popup
@@ -162,7 +161,7 @@ export const AddCartItem = ({
                 'map-menu-icon map-menu-icon-login' +
                 (isLoggedIn ? ' logged' : '')
               }
-              onClick={(e) => {               
+              onClick={(e) => {
                 if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
@@ -176,7 +175,7 @@ export const AddCartItem = ({
                   checkArea(e);
                 }
               }}
-              onKeyDown={(e) => {             
+              onKeyDown={(e) => {
                 if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
@@ -522,9 +521,9 @@ class MenuWidget extends React.Component {
                 view: window,
                 bubbles: true,
                 cancelable: false,
-              });              
+              });
               let el = document.getElementById('download_label');
-              el.dispatchEvent(event);                           
+              el.dispatchEvent(event);
               break;
             }
           }
@@ -562,9 +561,9 @@ class MenuWidget extends React.Component {
                 view: window,
                 bubbles: true,
                 cancelable: false,
-              });              
+              });
               let el = document.getElementById('download_label');
-              el.dispatchEvent(event);                            
+              el.dispatchEvent(event);
               break;
             }
           }
@@ -1214,7 +1213,7 @@ class MenuWidget extends React.Component {
                     )}
                   </legend>
                 </label>
-                
+
                 <div className="map-menu-icons">
                   {!this.props.download && dataset.IsTimeSeries && (
                     <Popup
@@ -1278,7 +1277,6 @@ class MenuWidget extends React.Component {
                     </span>
                   )}
                 </div>
-
               </div>
             </div>
           </div>
@@ -1610,7 +1608,7 @@ class MenuWidget extends React.Component {
       this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
-      if (group) {    
+      if (group) {
         elem.title = this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
@@ -1620,7 +1618,7 @@ class MenuWidget extends React.Component {
           elem,
           Object.keys(this.activeLayersJSON).length,
         );
-      } else {        
+      } else {
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
           Object.keys(this.activeLayersJSON).length,
@@ -1646,7 +1644,7 @@ class MenuWidget extends React.Component {
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
     }
-    this.updateCheckDataset(parentId);    
+    this.updateCheckDataset(parentId);
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
@@ -1658,7 +1656,7 @@ class MenuWidget extends React.Component {
     }
     this.checkForHotspots(elem, productContainerId);
     // update DOM
-    this.setState({});    
+    this.setState({});
   }
 
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
@@ -1833,7 +1831,7 @@ class MenuWidget extends React.Component {
       (a, b) =>
         activeLayers.indexOf(a.props['layer-id']) -
         activeLayers.indexOf(b.props['layer-id']),
-    );    
+    );
     this.activeLayersHandler(activeLayersArray);
     return data;
   }
@@ -2131,7 +2129,7 @@ class MenuWidget extends React.Component {
       .then((response) => {
         const xmlDoc = response.data;
         const parser = new DOMParser();
-        this.xml = parser.parseFromString(xmlDoc, 'text/html');        
+        this.xml = parser.parseFromString(xmlDoc, 'text/html');
       })
       .catch(() => {});
   };
@@ -2264,17 +2262,16 @@ class MenuWidget extends React.Component {
                 {...popupSettings}
               />
             </span>
-          )}                    
-          {elem.parentElement.dataset.timeseries === 'true' && (            
+          )}
+          {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
-              onClick={(e) => {                
+              onClick={(e) => {
                 e.isTrusted
                   ? this.showTimeSlider(elem)
                   : this.showTimeSlider(elem, true);
-
               }}
-              onKeyDown={(e) => {                
+              onKeyDown={(e) => {
                 e.isTrusted
                   ? this.showTimeSlider(elem)
                   : this.showTimeSlider(elem, true);
@@ -2363,13 +2360,13 @@ class MenuWidget extends React.Component {
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
-   
+
     if (init_ord > dst_ord) {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
     } else {
       dst.parentElement.insertBefore(this.draggingElement, dst);
     }
-   
+
     this.layersReorder();
     this.saveLayerOrder();
   }
@@ -2494,7 +2491,7 @@ class MenuWidget extends React.Component {
           document.querySelector('#products_label').classList.add('locked');
           document.querySelector('#map_remove_layers').classList.add('locked');
           if (this.props.download)
-            document.querySelector('#download_label').classList.add('locked');          
+            document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(
             elem,
             order,
@@ -2513,7 +2510,7 @@ class MenuWidget extends React.Component {
             document
               .querySelector('.active-layer[layer-id="' + layerId + '"]')
               .classList.add('locked');
-          }          
+          }
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
             order,
@@ -2532,7 +2529,7 @@ class MenuWidget extends React.Component {
           elem = document.getElementById(layerId);
         }
         if (elem.id === layerId) {
-          this.timeLayers[elem.id] = ['far', 'clock'];          
+          this.timeLayers[elem.id] = ['far', 'clock'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(
             elem,
             order,
@@ -2587,7 +2584,7 @@ class MenuWidget extends React.Component {
         } else {
           if (this.visibleLayers[layerId][1] === 'eye-slash') {
             this.layers[layerId].visible = true;
-            this.visibleLayers[layerId] = ['fas', 'eye'];            
+            this.visibleLayers[layerId] = ['fas', 'eye'];
             this.activeLayersJSON[layerId] = this.addActiveLayer(
               document.getElementById(layerId),
               order,
@@ -2599,7 +2596,7 @@ class MenuWidget extends React.Component {
             .classList.remove('locked');
         }
       });
-    }    
+    }
     this.setState({});
   }
 
@@ -2671,7 +2668,7 @@ class MenuWidget extends React.Component {
   setOpacity() {
     let layer = document.querySelector('.opacity-slider input').dataset.layer;
     let value = document.querySelector('.opacity-panel input').value;
-  
+
     if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
       this.layers['lcc_filter'].opacity = value / 100;
       this.saveOpacity(this.layers['lcc_filter'], value / 100);
@@ -2827,7 +2824,7 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
 
-    this.saveVisibility();    
+    this.saveVisibility();
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
     this.saveLayerOrder();
@@ -2896,7 +2893,7 @@ class MenuWidget extends React.Component {
    * @param {*} e From the click event
    * @param {*} id id from elem
    */
-  deleteCrossEvent(elem) {   
+  deleteCrossEvent(elem) {
     elem.checked = false;
     this.toggleLayer(elem);
     delete this.activeLayersJSON[elem.id];
@@ -3007,7 +3004,6 @@ class MenuWidget extends React.Component {
    * Method to load previously checked layers
    */
   loadLayers() {
-  
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
       for (var i = layers.length - 1; i >= 0; i--) {

@@ -588,7 +588,7 @@ class TimesliderWidget extends React.Component {
           onDragStart={(e) => this.onDragStart(e)}
           style={this.state.styles}
         >
-          <div className="timeslider-panel"></div>       
+          <div className="timeslider-panel"></div>
         </div>
       </>
     );
