@@ -589,7 +589,7 @@ class TimesliderWidget extends React.Component {
           style={this.state.styles}
         >
           <div className="timeslider-panel"></div>
-          {this.state.showDatePanel && (
+          {/* {this.state.showDatePanel && (
             <div className="timeslider-calendar-button">
               {this.props.logged || this.props.download ? (
                 <button
@@ -685,7 +685,6 @@ class TimesliderWidget extends React.Component {
                     showYearDropdown
                     dropdownMode="select"
                   />
-                  
                 </div>
                 <button
                   className="ccl-button ccl-button-white"
@@ -697,7 +696,7 @@ class TimesliderWidget extends React.Component {
                 </button>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </>
     );
