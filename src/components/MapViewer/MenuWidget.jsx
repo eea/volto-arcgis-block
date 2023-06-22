@@ -76,41 +76,14 @@ export const AddCartItem = ({
       dataset = cartData[0].Products[0].Datasets[0];
     }
     let id = dataset.DatasetId;
-    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
     let datasetData = {
       id: id,
       UID: id,
       unique_id: `${id}-${new Date().getTime()}`,
       area: area,
     };
-    if (dataset.IsTimeSeries) {
-      let hasTimeStart = checkTimeData(dataset);
-      if (hasTimeStart) {
-        let datasetInput = document.querySelector(
-          '#active_' +
-            datasetElem.querySelector('.map-menu-layer input:checked').id,
-        );
-        let time = {
-          start: parseInt(datasetInput.getAttribute('time-start')),
-          end: parseInt(datasetInput.getAttribute('time-end')),
-        };
-        datasetData.timeExtent = [time.start, time.end];
-      }
-    }
     let data = [datasetData];
     return data;
-  };
-
-  const openCalendar = (dataset) => {
-    document.getElementById('active_label').click();
-    if (!document.querySelector('.timeslider-container')) {
-      let layerId = document.querySelector(
-        '[datasetid="' + dataset.DatasetId + '"] .map-menu-layer input:checked',
-      ).id;
-      document
-        .querySelector("[layer-id='" + layerId + "'] .active-layer-time")
-        .click();
-    }
   };
 
   const showMessageTimer = (msg, type, title) => {
@@ -123,16 +96,6 @@ export const AddCartItem = ({
       draggable: true,
       progress: undefined,
     });
-  };
-
-  const checkTimeData = (dataset) => {
-    let id = dataset.DatasetId;
-    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
-    let datasetActive = document.querySelector(
-      '#active_' +
-        datasetElem.querySelector('.map-menu-layer input:checked').id,
-    );
-    return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
   if (!dataset) {
@@ -159,25 +122,7 @@ export const AddCartItem = ({
               ) {
                 document.getElementById('products_label').click();
               } else {
-                if (
-                  dataset.IsTimeSeries &&
-                  !checkTimeData(dataset) &&
-                  !dataset.MarkAsDownloadableNoServiceToVisualize
-                ) {
-                  document.getElementById('active_label').click();
-                  if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document.querySelector(
-                      '[datasetid="' +
-                        dataset.DatasetId +
-                        '"] .map-menu-layer input:checked',
-                    ).id;
-                    document
-                      .querySelector(
-                        "[layer-id='" + layerId + "'] .active-layer-time",
-                      )
-                      .click(e);
-                  }
-                } else if (areaData) {
+                if (areaData) {
                   checkArea(e);
                 }
               }
@@ -185,15 +130,6 @@ export const AddCartItem = ({
           >
             Add to cart
           </button>
-          {dataset.IsTimeSeries && (
-            <button
-              id="map_download_cancel"
-              className="ccl-button ccl-button--default"
-              onClick={() => openCalendar(dataset)}
-            >
-              Open calendar
-            </button>
-          )}
         </div>
       ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
         <Popup
@@ -204,21 +140,7 @@ export const AddCartItem = ({
                 (isLoggedIn ? ' logged' : '')
               }
               onClick={(e) => {
-                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
-                  document.getElementById('active_label').click();
-                  if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document.querySelector(
-                      '[datasetid="' +
-                        dataset.DatasetId +
-                        '"] .map-menu-layer input:checked',
-                    ).id;
-                    document
-                      .querySelector(
-                        "[layer-id='" + layerId + "'] .active-layer-time",
-                      )
-                      .click(e);
-                  }
-                } else if (!areaData) {
+                if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
                     !mapViewer.activeWidget.container.current.classList.contains(
@@ -232,21 +154,7 @@ export const AddCartItem = ({
                 }
               }}
               onKeyDown={(e) => {
-                if (dataset.IsTimeSeries && !checkTimeData(dataset)) {
-                  document.getElementById('active_label').click();
-                  if (!document.querySelector('.timeslider-container')) {
-                    let layerId = document.querySelector(
-                      '[datasetid="' +
-                        dataset.DatasetId +
-                        '"] .map-menu-layer input:checked',
-                    ).id;
-                    document
-                      .querySelector(
-                        "[layer-id='" + layerId + "'] .active-layer-time",
-                      )
-                      .click(e);
-                  }
-                } else if (!areaData) {
+                if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
                     !mapViewer.activeWidget.container.current.classList.contains(
@@ -592,11 +500,8 @@ class MenuWidget extends React.Component {
                 bubbles: true,
                 cancelable: false,
               });
-              let el = document.getElementById('active_label');
+              let el = document.getElementById('download_label');
               el.dispatchEvent(event);
-              //open time slider
-              let layerElem = document.getElementById(layerid);
-              this.showTimeSlider(layerElem, true);
               break;
             }
           }
@@ -635,11 +540,8 @@ class MenuWidget extends React.Component {
                 bubbles: true,
                 cancelable: false,
               });
-              let el = document.getElementById('active_label');
+              let el = document.getElementById('download_label');
               el.dispatchEvent(event);
-              //open time slider
-              let layerElem = document.getElementById(layerid);
-              this.showTimeSlider(layerElem, true);
               break;
             }
           }
@@ -664,11 +566,9 @@ class MenuWidget extends React.Component {
               bubbles: true,
               cancelable: false,
             });
-            let el = document.getElementById('active_label');
+            // let el = document.getElementById('active_label');
+            let el = document.getElementById('download_label');
             el.dispatchEvent(event);
-            //open time slider
-            let layerElem = document.getElementById(layerid);
-            this.showTimeSlider(layerElem, true);
           }
         }
     }, 1000);
@@ -1287,6 +1187,7 @@ class MenuWidget extends React.Component {
                     )}
                   </legend>
                 </label>
+
                 <div className="map-menu-icons">
                   {!this.props.download && dataset.IsTimeSeries && (
                     <Popup
@@ -1328,6 +1229,7 @@ class MenuWidget extends React.Component {
                       />
                     </a>
                   )}
+
                   {!this.props.download &&
                   dataset.Downloadable &&
                   document.getElementById(checkIndex) &&
@@ -1681,15 +1583,11 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
-        // let dataset = document
-        //   .querySelector('[datasetid="' + group + '"]')
-        //   .querySelector('input');
         elem.title = this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
         }
-
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
           Object.keys(this.activeLayersJSON).length,
@@ -1721,7 +1619,6 @@ class MenuWidget extends React.Component {
       delete this.timeLayers[elem.id];
     }
     this.updateCheckDataset(parentId);
-    //this.toggleHotspotWidget();
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
@@ -1734,7 +1631,6 @@ class MenuWidget extends React.Component {
     this.checkForHotspots(elem, productContainerId);
     // update DOM
     this.setState({});
-    //this.activeLayersHandler(this.activeLayersAsArray);
   }
 
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
@@ -1910,7 +1806,6 @@ class MenuWidget extends React.Component {
         activeLayers.indexOf(a.props['layer-id']) -
         activeLayers.indexOf(b.props['layer-id']),
     );
-    //this.props.mapDispatchToProps(activeLayersArray);
     this.activeLayersHandler(activeLayersArray);
     return data;
   }
@@ -2209,7 +2104,6 @@ class MenuWidget extends React.Component {
         const xmlDoc = response.data;
         const parser = new DOMParser();
         this.xml = parser.parseFromString(xmlDoc, 'text/html');
-        //this.xml = response.data; // assign the response data to this.xml
       })
       .catch(() => {});
   };
@@ -2440,34 +2334,13 @@ class MenuWidget extends React.Component {
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
-    // let group = this.getGroup(
-    //   document.getElementById(this.draggingElement.getAttribute('layer-id')),
-    // )
-    //   ? this.getGroup(
-    //       document.getElementById(
-    //         this.draggingElement.getAttribute('layer-id'),
-    //       ),
-    //     )
-    //   : this.getGroup(document.getElementById(dst.getAttribute('layer-id')));
-    //let groupLayers = this.getGroupLayers(group);
+
     if (init_ord > dst_ord) {
       dst.parentElement.insertBefore(this.draggingElement, dst.nextSibling);
     } else {
       dst.parentElement.insertBefore(this.draggingElement, dst);
     }
-    // if (group && groupLayers.length > 1) {
-    //   groupLayers.forEach((item, index) => {
-    //     if (
-    //       this.draggingElement.getAttribute('layer-id') !== item ||
-    //       dst.getAttribute('layer-id') !== item
-    //     ) {
-    //       dst.parentElement.insertBefore(
-    //         document.getElementById('active_' + item),
-    //         this.draggingElement.nextSibling,
-    //       );
-    //     }
-    //   });
-    // }
+
     this.layersReorder();
     this.saveLayerOrder();
   }
@@ -2769,17 +2642,7 @@ class MenuWidget extends React.Component {
   setOpacity() {
     let layer = document.querySelector('.opacity-slider input').dataset.layer;
     let value = document.querySelector('.opacity-panel input').value;
-    // let group = this.getGroup(document.getElementById(layer));
-    // let groupLayers = this.getGroupLayers(group);
-    // if (group && groupLayers.length > 1) {
-    //   groupLayers.forEach((item) => {
-    //     this.layers[item].opacity = value / 100;
-    //     this.saveOpacity(item, value / 100);
-    //     document.querySelector(
-    //       '.active-layer[layer-id="' + item + '"] .active-layer-opacity',
-    //     ).dataset.opacity = value;
-    //   });
-    // } else {
+
     if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
       this.layers['lcc_filter'].opacity = value / 100;
       this.saveOpacity(this.layers['lcc_filter'], value / 100);
@@ -2936,7 +2799,6 @@ class MenuWidget extends React.Component {
     }
 
     this.saveVisibility();
-
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
     this.saveLayerOrder();
@@ -3006,19 +2868,6 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   deleteCrossEvent(elem) {
-    // let group = this.getGroup(elem);
-    // let groupLayers = this.getGroupLayers(group);
-    // if (group && groupLayers.length > 1) {
-    //   // are we sure we want to delete all sublayers when one is deleted?
-    //   groupLayers.forEach((item) => {
-    //     elem = document.getElementById(item);
-    //     // elem has to be unchecked
-    //     elem.checked = false;
-    //     this.toggleLayer(elem);
-    //     delete this.activeLayersJSON[elem.id];
-    //   });
-    // } else {
-    // elem has to be unchecked
     elem.checked = false;
     this.toggleLayer(elem);
     delete this.activeLayersJSON[elem.id];
@@ -3129,12 +2978,6 @@ class MenuWidget extends React.Component {
    * Method to load previously checked layers
    */
   loadLayers() {
-    // let event = new MouseEvent('click', {
-    //   view: window,
-    //   bubbles: true,
-    //   cancelable: false,
-    // });
-
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (layers && !this.props.download) {
       for (var i = layers.length - 1; i >= 0; i--) {
@@ -3312,6 +3155,7 @@ class MenuWidget extends React.Component {
     if (!document.querySelector('.timeslider-container')) {
       let layerId = this.findCheckedLayer(dataset, checkedLayers);
       setTimeout(() => {
+        // Display timeslider with no calendar.
         this.showTimeSlider(document.getElementById(layerId), true, true);
       }, 100);
     }
