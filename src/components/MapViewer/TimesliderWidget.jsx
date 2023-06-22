@@ -1,7 +1,5 @@
 import React, { createRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 var TimeSlider;
 var TimeExtent;
@@ -556,10 +554,12 @@ class TimesliderWidget extends React.Component {
    * @returns jsx
    */
   render() {
+    /* eslint-disable no-unused-vars */
     let inputStart;
     let inputEnd;
     let timeStart;
     let timeEnd;
+    /* eslint-disable no-unused-vars */
     if (!this.state.lockDatePanel && this.state.showCalendar) {
       inputStart = this.formatDate(
         this.state.inputStart
@@ -589,114 +589,6 @@ class TimesliderWidget extends React.Component {
           style={this.state.styles}
         >
           <div className="timeslider-panel"></div>
-          {this.state.showDatePanel && (
-            <div className="timeslider-calendar-button">
-              {this.props.logged || this.props.download ? (
-                <button
-                  onClick={() => {
-                    this.showCalendar();
-                  }}
-                  className={this.state.lockDatePanel ? 'locked' : ''}
-                >
-                  <FontAwesomeIcon icon={['fas', 'calendar']} />
-                  {this.state.dateStart && this.state.dateEnd ? (
-                    <>
-                      {new Date(this.state.dateStart).toLocaleDateString(
-                        'en-gb',
-                      )}{' '}
-                      -{' '}
-                      {new Date(this.state.dateEnd).toLocaleDateString('en-gb')}{' '}
-                    </>
-                  ) : (
-                    <>Select temporal interval to download</>
-                  )}
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    document.querySelector('.header-login-link').click();
-                  }}
-                >
-                  <FontAwesomeIcon icon={['fas', 'calendar']} />
-                  Login to select the temporal interval to download
-                </button>
-              )}
-            </div>
-          )}
-          {!this.state.lockDatePanel && this.state.showCalendar && (
-            <div className="timeslider-calendar-container">
-              <div className="timeslider-calendar-header">
-                <b>Select temporal interval to download</b>
-                <div
-                  className="esri-icon-close"
-                  id="timeslider_calendar_close"
-                  role="button"
-                  tabIndex="0"
-                  onClick={() => this.showCalendar()}
-                  onKeyDown={() => this.showCalendar()}
-                ></div>
-              </div>
-              <div className="timeslider-calendar-panel">
-                {this.state.periodicity && (
-                  <p>
-                    The periodicity of this dataset is {this.getPeriodicity()}
-                  </p>
-                )}
-                <div className="timeslider-calendar-row">
-                  <label htmlFor="start">From</label>
-                  <DatePicker
-                    id="date_start"
-                    minDate={new Date(timeStart)}
-                    maxDate={
-                      new Date(
-                        Date.parse(inputEnd) < Date.parse(timeEnd)
-                          ? inputEnd
-                          : timeEnd,
-                      )
-                    }
-                    selected={new Date(inputStart)}
-                    onChange={(e) => this.handleInputChange(e, 'date_start')}
-                    includeDates={this.TimesliderWidget.stops.dates}
-                    dateFormat="dd/MM/yyyy"
-                    calendarStartDay={1}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                </div>
-                <div className="timeslider-calendar-row">
-                  <label htmlFor="start">To</label>
-                  <DatePicker
-                    id="date_end"
-                    minDate={
-                      new Date(
-                        Date.parse(inputStart) > Date.parse(timeStart)
-                          ? inputStart
-                          : timeStart,
-                      )
-                    }
-                    maxDate={new Date(timeEnd)}
-                    selected={new Date(inputEnd)}
-                    onChange={(e) => this.handleInputChange(e, 'date_end')}
-                    includeDates={this.TimesliderWidget.stops.dates}
-                    dateFormat="dd/MM/yyyy"
-                    calendarStartDay={1}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                </div>
-                <button
-                  className="ccl-button ccl-button-white"
-                  onClick={() => {
-                    this.applyDate();
-                  }}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </>
     );
