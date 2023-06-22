@@ -86,18 +86,6 @@ export const AddCartItem = ({
     return data;
   };
 
-  const openCalendar = (dataset) => {
-    document.getElementById('active_label').click();
-    if (!document.querySelector('.timeslider-container')) {
-      let layerId = document.querySelector(
-        '[datasetid="' + dataset.DatasetId + '"] .map-menu-layer input:checked',
-      ).id;
-      document
-        .querySelector("[layer-id='" + layerId + "'] .active-layer-time")
-        .click();
-    }
-  };
-
   const showMessageTimer = (msg, type, title) => {
     toast[type](<Toast autoClose={4000} title={title} content={msg} />, {
       position: 'top-center',
@@ -108,16 +96,6 @@ export const AddCartItem = ({
       draggable: true,
       progress: undefined,
     });
-  };
-
-  const checkTimeData = (dataset) => {
-    let id = dataset.DatasetId;
-    let datasetElem = document.querySelector('[datasetid="' + id + '"]');
-    let datasetActive = document.querySelector(
-      '#active_' +
-        datasetElem.querySelector('.map-menu-layer input:checked').id,
-    );
-    return datasetActive ? datasetActive.hasAttribute('time-start') : false;
   };
 
   if (!dataset) {
@@ -591,10 +569,6 @@ class MenuWidget extends React.Component {
             // let el = document.getElementById('active_label');
             let el = document.getElementById('download_label');
             el.dispatchEvent(event);
-            //open time slider
-            let layerElem = document.getElementById(layerid);
-            // this.showTimeSlider(layerElem, true);
-            // document.getElementById('map_area_button').click();
           }
         }
     }, 1000);

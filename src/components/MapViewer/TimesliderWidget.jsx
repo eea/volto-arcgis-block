@@ -1,7 +1,5 @@
 import React, { createRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 var TimeSlider;
 var TimeExtent;
