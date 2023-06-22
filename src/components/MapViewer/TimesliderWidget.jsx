@@ -554,10 +554,12 @@ class TimesliderWidget extends React.Component {
    * @returns jsx
    */
   render() {
-    let inputStart = null;
-    let inputEnd = null;
-    let timeStart = null;
-    let timeEnd = null;
+    /* eslint-disable no-unused-vars */
+    let inputStart;
+    let inputEnd;
+    let timeStart;
+    let timeEnd;
+    /* eslint-disable no-unused-vars */
     if (!this.state.lockDatePanel && this.state.showCalendar) {
       inputStart = this.formatDate(
         this.state.inputStart
