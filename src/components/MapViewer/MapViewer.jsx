@@ -225,8 +225,7 @@ class MapViewer extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (
-      this.location.search !== '') {
+    if (this.location.search !== '') {
       sessionStorage.clear();
     }
 
