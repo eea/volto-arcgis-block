@@ -16,7 +16,7 @@ class HotspotWidget extends React.Component {
     //not be showing the basemap panel
     this.state = {
       showMapMenu: false,
-      avtiveLayers: sessionStorage.checkedLayers,
+      activeLayers: sessionStorage.checkedLayers,
     };
     this.menuClass =
       'esri-icon-filter esri-widget--button esri-widget esri-interactive';
@@ -30,9 +30,7 @@ class HotspotWidget extends React.Component {
     this.esriLayer_pa = null;
     this.esriLayer_pa2 = null;
     this.subscribedLayers = sessionStorage;
-    this.checkedLayers = this.props.layers
-      ? this.props.layers.checkedLayers
-      : '';
+    this.checkedLayers = [];
     this.dataBBox = [];
     this.dataJSONNames = [];
     this.klcHighlightsArray = [];
@@ -390,9 +388,9 @@ class HotspotWidget extends React.Component {
       })
       .then((data) => {
         this.dataJSONNames = data.nodes;
-        if (this.selectedArea == null) {
-          this.selectedArea = data.nodes[0].node.klc_name;
-        }
+        //if (this.selectedArea == null) {
+        //  this.selectedArea = data.nodes[0].node.klc_name;
+        //}
         this.getKLCNames(data.nodes, this.selectedArea);
       })
       .catch(function (error) {
@@ -508,14 +506,24 @@ class HotspotWidget extends React.Component {
     var selectBox;
     var selectBoxLcTime;
     var selectBoxLccTime;
+    let modularKLCAreas = [];
+    let dichotomousKLCAreas = [];
 
     this.selectedArea = selectedOption;
-
     selectBox = document.getElementById('select-klc-area');
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
+
+      let keyMapInfoObj = JSON.parse(data[i].node.keymap_info);
+
+      if (keyMapInfoObj.b_classes === true) {
+        modularKLCAreas.push(option);
+      }
+      if (keyMapInfoObj.a_classes === true) {
+        dichotomousKLCAreas.push(option);
+      }
       if (option === selectedOption) {
         this.dataKlc_code = data[i].node.klc_code;
         //reset all selected options
@@ -565,8 +573,43 @@ class HotspotWidget extends React.Component {
           );
         }
       }
-      if (selectBox.options.length <= data.length) {
-        selectBox.options.add(new Option(option, option, option));
+    }
+
+    if (selectBox.options.length > 0) {
+      this.removeOptions(selectBox);
+    }
+
+    let checkedLayers =
+      JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+
+    if (selectBox.options.length > 0) {
+      this.removeOptions(selectBox);
+    }
+    selectBox.options.add(
+      new Option(
+        'Select a KLC Area from the dropdown list',
+        'default',
+        true,
+        true,
+      ),
+    );
+
+    selectBox.options[0].disabled = true;
+    for (let a = 0; a < checkedLayers.length; a++) {
+      if (checkedLayers[a].includes('b_pol')) {
+        for (let i = 0; i < modularKLCAreas.length; i++) {
+          let option = modularKLCAreas[i];
+          selectBox.options.add(new Option(option, option, option));
+        }
+        this.checkedLayers = checkedLayers;
+        return;
+      } else {
+        for (let i = 0; i < dichotomousKLCAreas.length; i++) {
+          let option = dichotomousKLCAreas[i];
+          selectBox.options.add(new Option(option, option, option));
+        }
+        this.checkedLayers = checkedLayers;
+        return;
       }
     }
   }
@@ -656,11 +699,7 @@ class HotspotWidget extends React.Component {
                         onChange={(e) =>
                           this.disableButton(this.dataJSONNames, e.target.value)
                         }
-                      >
-                        <option value="default" disabled selected>
-                          Select a KLC Area from the dropdown list
-                        </option>
-                      </select>
+                      ></select>
                     </label>
                   </div>
                 </div>
@@ -689,11 +728,30 @@ class HotspotWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    this.checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     await this.getLayerParameters();
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
     this.getBBoxData();
+    // Listen for changes to sessionStorage
+    window.addEventListener('storage', this.handleStorageChange);
+  }
+
+  componentWillUnmount() {
+    // Remove the event listener when the component is unmounted
+    window.removeEventListener('storage', this.handleStorageChange);
+  }
+
+  handleStorageChange = () => {
+    this.checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    this.forceUpdate();
+  };
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.checkedLayers !== this.checkedLayers) {
+      this.getKLCNames(this.dataJSONNames, this.selectedArea);
+    }
   }
 }
 export default HotspotWidget;

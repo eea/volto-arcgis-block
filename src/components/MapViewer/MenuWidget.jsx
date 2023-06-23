@@ -764,6 +764,7 @@ class MenuWidget extends React.Component {
       }
       if (checkedLayers) {
         sessionStorage.setItem('checkedLayers', JSON.stringify([]));
+        window.dispatchEvent(new Event('storage'));
       }
       let event = new MouseEvent('click', {
         view: window,
@@ -2602,6 +2603,7 @@ class MenuWidget extends React.Component {
       newLayerOrder.push(activeLayers[i].getAttribute('layer-id'));
     }
     sessionStorage.setItem('checkedLayers', JSON.stringify(newLayerOrder));
+    window.dispatchEvent(new Event('storage'));
   }
 
   /**
@@ -3158,6 +3160,7 @@ class MenuWidget extends React.Component {
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     }
+    window.dispatchEvent(new Event('storage'));
   }
 
   /**
@@ -3173,6 +3176,7 @@ class MenuWidget extends React.Component {
         }
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+      window.dispatchEvent(new Event('storage'));
     }
 
     // delete layer opacity
