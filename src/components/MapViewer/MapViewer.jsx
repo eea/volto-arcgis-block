@@ -43,6 +43,7 @@ class MapViewer extends React.Component {
     this.mapCfg = props.cfg.Map;
     this.compCfg = this.props.cfg.Components;
     this.url = this.props.cfg.url || ''; // Get url or default
+    this.location = this.props.location;
     this.map = null;
     this.id = props.id;
     this.mapClass = classNames('map-container', {
@@ -327,14 +328,7 @@ class MapViewer extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (
-      !(
-        this.state.url === 'http://localhost:3000/en/map-viewer' ||
-        this.state.url ===
-          'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-        this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-      )
-    ) {
+    if (this.location.search !== '') {
       sessionStorage.clear();
     }
 
@@ -462,6 +456,7 @@ class MapViewer extends React.Component {
     if (this.view)
       return (
         <MenuWidget
+          location={this.props.location}
           view={this.view}
           conf={this.props.mapviewer_config.Components}
           download={this.props.mapviewer_config.Download}

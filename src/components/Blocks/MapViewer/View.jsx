@@ -13,6 +13,7 @@ const View = (props) => {
 
   return (
     <MapViewer
+      location={props.location}
       cfg={config}
       url={props.properties.parent['@id']}
       customClass={getClassName(data)}

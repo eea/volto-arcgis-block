@@ -245,6 +245,7 @@ class MenuWidget extends React.Component {
       setNoServiceModal: true,
     };
     // call the props of the layers list (mapviewer.jsx)
+    this.location = this.props.location;
     this.compCfg = this.props.conf;
     this.map = this.props.map;
     this.view = this.props.view;
@@ -663,6 +664,7 @@ class MenuWidget extends React.Component {
       }
       if (checkedLayers) {
         sessionStorage.setItem('checkedLayers', JSON.stringify([]));
+        window.dispatchEvent(new Event('storage'));
       }
       let event = new MouseEvent('click', {
         view: window,
@@ -1522,8 +1524,87 @@ class MenuWidget extends React.Component {
       .closest('.ccl-form-group');
     let nextElemSibling = elemContainer.nextElementSibling;
     let previousElemSibling = elemContainer.previousElementSibling;
-    let siblingInput;
 
+    let siblingInput;
+    let dataSetContainer = [];
+
+    let productContainer = document.querySelector(
+      '[productid="' + productContainerId + '"]',
+    );
+
+    let datasetArray = productContainer.querySelectorAll('[datasetid]');
+
+    for (let i = 0; i < datasetArray.length; i++) {
+      let dataset = datasetArray[i];
+      let datasetChildrenSpans = dataset.querySelectorAll('span');
+
+      for (let j = 0; j < datasetChildrenSpans.length; j++) {
+        let datasetChildSpan = datasetChildrenSpans[j];
+        let datasetChildSpanText = datasetChildSpan.innerText;
+        if (
+          datasetChildSpanText.includes('Dichotomous') ||
+          datasetChildSpanText.includes('Modular')
+        ) {
+          dataSetContainer.push(dataset);
+          j = datasetChildrenSpans.length + 1;
+        }
+      }
+    }
+
+    let dataSetContents;
+
+    for (let k = 0; k < dataSetContainer.length; k++) {
+      let elemContainerIdElement = elemContainer.closest('[datasetid]');
+      if (
+        dataSetContainer[k].getAttribute('datasetid') !==
+        elemContainerIdElement.getAttribute('datasetid')
+      ) {
+        dataSetContents = dataSetContainer[k].querySelectorAll('[parentid]');
+        break;
+      }
+    }
+    let dataSetLayerInput;
+    let currentDataSetLayer;
+    let currentDataSetLayerSpan;
+    let currentElemContainerSpan;
+
+    for (let g = 1; g < dataSetContents.length; g++) {
+      if (dataSetContents[g].checked) {
+        currentDataSetLayer = dataSetContents[g];
+        currentDataSetLayerSpan = currentDataSetLayer.nextSibling.querySelector(
+          'span',
+        );
+        currentElemContainerSpan = elemContainer.querySelector('span');
+
+        if (
+          (currentDataSetLayerSpan.innerText.includes('Modular') &&
+            currentElemContainerSpan.innerText.includes('Modular')) ||
+          (currentDataSetLayerSpan.innerText.includes('Dichotomous') &&
+            currentElemContainerSpan.innerText.includes('Dichotomous'))
+        ) {
+          continue;
+        } else {
+          let previousDataSetLayer;
+          let nextDataSetLayer;
+          if (g > 1) {
+            previousDataSetLayer = dataSetContents[g - 1];
+          } else {
+            previousDataSetLayer = null;
+          }
+          if (g < 3) {
+            nextDataSetLayer = dataSetContents[g + 1];
+          } else {
+            nextDataSetLayer = null;
+          }
+
+          if (previousDataSetLayer) {
+            dataSetLayerInput = previousDataSetLayer;
+          } else if (nextDataSetLayer) {
+            dataSetLayerInput = nextDataSetLayer;
+          }
+        }
+      }
+    }
     if (productContainerId === 'd764e020485a402598551fa461bf1db2') {
       if (nextElemSibling) {
         siblingInput = nextElemSibling.querySelector('input');
@@ -1533,8 +1614,30 @@ class MenuWidget extends React.Component {
       if (siblingInput && siblingInput.checked) {
         siblingInput.click();
       }
-      this.setState({});
+      if (!currentDataSetLayerSpan && !currentElemContainerSpan) {
+        this.setState({});
+        return;
+      } else {
+        if (
+          (currentDataSetLayerSpan.innerText.includes('Modular') &&
+            currentElemContainerSpan.innerText.includes('Modular')) ||
+          (currentDataSetLayerSpan.innerText.includes('Dichotomous') &&
+            currentElemContainerSpan.innerText.includes('Dichotomous'))
+        ) {
+          this.setState({});
+          return;
+        } else {
+          if (currentDataSetLayer && currentDataSetLayer.checked) {
+            currentDataSetLayer.click();
+          }
+          if (currentDataSetLayer && !currentDataSetLayer.checked) {
+            dataSetLayerInput.click();
+          }
+        }
+      }
     }
+
+    this.setState({});
   }
 
   async toggleLayer(elem) {
@@ -1545,17 +1648,14 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
+    let modularLC;
+    if (elem.id.includes('all_present_lc_b_pol')) {
+      modularLC = elem.id;
+    }
+
     let group = this.getGroup(elem);
     if (elem.checked) {
-      if (
-        this.props.download ||
-        !(
-          this.state.url === 'http://localhost:3000/en/map-viewer' ||
-          this.state.url ===
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-        )
-      ) {
+      if (this.props.download || this.location.search !== '') {
         if (
           this.extentInitiated === false &&
           productContainerId !== 'd764e020485a402598551fa461bf1db2'
@@ -1576,6 +1676,12 @@ class MenuWidget extends React.Component {
         } else {
           this.map.add(this.layers[elem.id]);
         }
+      } else if (this.layers[modularLC]) {
+        let previousElem = document
+          .getElementById(elem.id)
+          .closest('.ccl-form-group')
+          .previousElementSibling.querySelector('input');
+        this.map.add(this.layers[previousElem.id]);
       } else {
         this.map.add(this.layers[elem.id]);
       }
@@ -1604,6 +1710,7 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
+      this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
@@ -1628,7 +1735,6 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    this.checkForHotspots(elem, productContainerId);
     // update DOM
     this.setState({});
   }
@@ -2370,6 +2476,7 @@ class MenuWidget extends React.Component {
       newLayerOrder.push(activeLayers[i].getAttribute('layer-id'));
     }
     sessionStorage.setItem('checkedLayers', JSON.stringify(newLayerOrder));
+    window.dispatchEvent(new Event('storage'));
   }
 
   /**
@@ -2902,6 +3009,7 @@ class MenuWidget extends React.Component {
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     }
+    window.dispatchEvent(new Event('storage'));
   }
 
   /**
@@ -2917,6 +3025,7 @@ class MenuWidget extends React.Component {
         }
       }
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+      window.dispatchEvent(new Event('storage'));
     }
 
     // delete layer opacity
@@ -3100,7 +3209,11 @@ class MenuWidget extends React.Component {
       }
       document.querySelector('#applyFilterButton').disabled = true;
       let klcSelect = document.querySelector('#select-klc-area');
+      let LcTimeSelect = document.querySelector('#select-klc-lcTime');
+      let LccTimeSelect = document.querySelector('#select-klc-lccTime');
       klcSelect.value = 'default';
+      LcTimeSelect.value = 'default';
+      LccTimeSelect.value = 'default';
     }
   }
 
