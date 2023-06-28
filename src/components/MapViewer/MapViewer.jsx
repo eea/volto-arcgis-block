@@ -54,6 +54,7 @@ class MapViewer extends React.Component {
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
+    this.urlCfg = props.cfg.Urls;
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -411,6 +412,7 @@ export const CheckLogin = ({ reference }) => {
           mapViewer={reference}
           download={reference.props.mapviewer_config.Download}
           updateArea={reference.updateArea}
+          urls={reference.urlCfg}
         />
       )}
     </>

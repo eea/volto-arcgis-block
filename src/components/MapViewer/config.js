@@ -206,5 +206,11 @@ const config = {
       Products: [],
     },
   ],
+  Urls: {
+    nutsHandler:
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
+    outsideEu:
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
+  },
 };
 export default config;
