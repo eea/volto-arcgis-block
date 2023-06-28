@@ -647,7 +647,7 @@ class HotspotWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="hotspot-container">
-          <div tooltip="Hotspot" direction="left" type="widget">
+          <div tooltip="Filter Hot Spots" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="hotspot_button"
