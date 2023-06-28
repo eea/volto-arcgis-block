@@ -133,11 +133,15 @@ class AreaWidget extends React.Component {
   nuts3handler(e) {
     this.loadNutsService(e.target.value, [6, 7, 8]);
   }
+  countriesHandler(e) {
+    this.loadCountriesService(e.target.value);
+  }
+
   loadNutsService(id, levels) {
     this.clearWidget();
 
     levels.forEach((level) => {
-      var url = `https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/`;
+      var url = this.props.urls.nutsHandler;
       var layer = new FeatureLayer({
         id: id,
         url: url,
@@ -154,6 +158,24 @@ class AreaWidget extends React.Component {
       this.props.map.reorder(this.nutsGroupLayer, index + 1);
     });
   }
+
+  loadCountriesService(id) {
+    this.clearWidget();
+    var layer = new FeatureLayer({
+      id: id,
+      url: this.props.urls.outsideEu,
+      layerId: 0,
+      outFields: ['*'],
+      popupEnabled: false,
+    });
+
+    this.nutsGroupLayer.add(layer);
+
+    let index = this.getHighestIndex();
+
+    this.props.map.reorder(this.nutsGroupLayer, index + 1);
+  }
+
   getHighestIndex() {
     let index = 0;
     document.querySelectorAll('.active-layer').forEach((layer) => {
@@ -258,7 +280,11 @@ class AreaWidget extends React.Component {
           if (response.results.length > 0) {
             let graphic = response.results.filter((result) => {
               let layer;
-              if ('nuts0 nuts1 nuts2 nuts3'.includes(result.graphic.layer.id)) {
+              if (
+                'nuts0 nuts1 nuts2 nuts3 countries'.includes(
+                  result.graphic.layer.id,
+                )
+              ) {
                 layer = result.graphic;
               }
               return layer;
@@ -346,10 +372,6 @@ class AreaWidget extends React.Component {
                   For areas of interest in the EU, EFTA, candidate countries or
                   the United Kingdom: choose NUTS classification or draw a
                   rectangle on the map.
-                  <br></br>
-                  <br></br>
-                  For areas of interest outside the EU, EFTA, candidate
-                  countries and the United Kingdom: draw a rectangle on the map.
                 </div>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
@@ -418,6 +440,29 @@ class AreaWidget extends React.Component {
                         <span>NUTS 3</span>
                       </label>
                     </div>
+                    <div className="ccl-form-group">
+                      <div>
+                        For areas of interest outside{' '}
+                        <b>the above ones: choose a country or</b> draw a
+                        rectangle on the map.
+                      </div>
+                      <br></br>
+                      <input
+                        type="radio"
+                        id="download_area_select_countries"
+                        name="downloadAreaSelect"
+                        value="countries"
+                        className="ccl-radio ccl-required ccl-form-check-input"
+                        onClick={this.countriesHandler.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_area_select_countries"
+                      >
+                        <span>Country</span>
+                      </label>
+                    </div>
+                    <br></br>
                     <div className="ccl-form-group">
                       <input
                         type="radio"
