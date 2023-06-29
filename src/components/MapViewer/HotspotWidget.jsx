@@ -488,11 +488,14 @@ class HotspotWidget extends React.Component {
     var selectBoxLccTime;
     let modularKLCAreas = [];
     let dichotomousKLCAreas = [];
-
-    this.selectedArea = selectedOption;
     selectBox = document.getElementById('select-klc-area');
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
+
+    if (this.selectedArea === null) {
+      this.selectedArea = selectedOption;
+    }
+
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
 
@@ -504,6 +507,7 @@ class HotspotWidget extends React.Component {
       if (keyMapInfoObj.a_classes === true) {
         dichotomousKLCAreas.push(option);
       }
+
       if (option === selectedOption) {
         this.dataKlc_code = data[i].node.klc_code;
         //reset all selected options
@@ -552,8 +556,10 @@ class HotspotWidget extends React.Component {
             new Option(optionLcTime, optionLcTime, optionLcTime),
           );
         }
-        return;
       }
+      //      if (selectBox.length > 0) {
+      //        return;
+      //      }
     }
     if (selectBox) {
       this.removeOptions(selectBox);
@@ -568,9 +574,27 @@ class HotspotWidget extends React.Component {
 
       selectBox.options[0].disabled = true;
     }
+    if (selectBoxLcTime) {
+      this.removeOptions(selectBoxLcTime);
+      selectBoxLcTime.options.add(
+        new Option('Select a region first', 'default', true, true),
+      );
+      selectBoxLcTime.options[0].disabled = true;
+    }
+    if (selectBoxLccTime) {
+      this.removeOptions(selectBoxLccTime);
+      selectBoxLccTime.options.add(
+        new Option('Select a region first', 'default', true, true),
+      );
+      selectBoxLccTime.options[0].disabled = true;
+    }
+
     let checkedLayers =
       JSON.parse(sessionStorage.getItem('checkedLayers')) || {};
 
+    if (checkedLayers.length === 0) {
+      return;
+    }
     for (let a = 0; a < checkedLayers.length; a++) {
       if (
         checkedLayers[a].includes('all_lcc_b_pol') ||
@@ -581,6 +605,14 @@ class HotspotWidget extends React.Component {
           selectBox.options.add(new Option(option, option, option));
         }
         this.checkedLayers = checkedLayers;
+        for (let u = 0; u < selectBox.options.length; u++) {
+          if (selectBox.options[u].label.includes(this.selectedArea)) {
+            selectBox.value = this.selectedArea;
+            break;
+          } else {
+            selectBox.value = 'default';
+          }
+        }
         return;
       } else if (
         checkedLayers[a].includes('all_lcc_a_pol') ||
@@ -591,6 +623,14 @@ class HotspotWidget extends React.Component {
           selectBox.options.add(new Option(option, option, option));
         }
         this.checkedLayers = checkedLayers;
+        for (let u = 0; u < selectBox.options.length; u++) {
+          if (selectBox.options[u].label.includes(this.selectedArea)) {
+            selectBox.value = this.selectedArea;
+            break;
+          } else {
+            selectBox.value = 'default';
+          }
+        }
         return;
       } else {
         continue;
@@ -736,6 +776,10 @@ class HotspotWidget extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.checkedLayers !== this.checkedLayers) {
+      //      if (!((this.checkedLayers.includes('lcc_a_pol') && this.checkedLayers.includes('lc_a_pol')) ||
+      //        (this.checkedLayers.includes('lcc_b_pol') && this.checkedLayers.includes('lc_b_pol')))) {
+      //          this.selectedArea = null;
+      //      }
       this.getKLCNames(this.dataJSONNames, this.selectedArea);
     }
   }
