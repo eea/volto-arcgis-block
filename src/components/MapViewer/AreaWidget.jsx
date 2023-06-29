@@ -443,7 +443,7 @@ class AreaWidget extends React.Component {
                     <div className="ccl-form-group">
                       <div>
                         For areas of interest outside{' '}
-                        <b>the above ones: choose a country or</b> draw a
+                        <b>the above ones, choose a country or</b> draw a
                         rectangle on the map.
                       </div>
                       <br></br>
