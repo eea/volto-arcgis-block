@@ -458,7 +458,7 @@ class HotspotWidget extends React.Component {
           onClick={this.dropdownAnimation.bind(this)}
           onKeyDown={this.dropdownAnimation.bind(this)}
         >
-          <span>Present Land Cover</span>
+          <span>Reference Land Cover</span>
           <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
         </div>
         <div className="measurement-dropdown-container">
@@ -660,7 +660,7 @@ class HotspotWidget extends React.Component {
           </div>
           <div className="right-panel">
             <div className="right-panel-header">
-              <span>Hot-spots outside Europe filtering options</span>
+              <span>Hot Spots outside Europe filtering options</span>
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
