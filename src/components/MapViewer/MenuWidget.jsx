@@ -1568,39 +1568,41 @@ class MenuWidget extends React.Component {
     let currentDataSetLayerSpan;
     let currentElemContainerSpan;
 
-    for (let g = 1; g < dataSetContents.length; g++) {
-      if (dataSetContents[g].checked) {
-        currentDataSetLayer = dataSetContents[g];
-        currentDataSetLayerSpan = currentDataSetLayer.nextSibling.querySelector(
-          'span',
-        );
-        currentElemContainerSpan = elemContainer.querySelector('span');
+    if (dataSetContents) {
+      for (let g = 1; g < dataSetContents.length; g++) {
+        if (dataSetContents[g].checked) {
+          currentDataSetLayer = dataSetContents[g];
+          currentDataSetLayerSpan = currentDataSetLayer.nextSibling.querySelector(
+            'span',
+          );
+          currentElemContainerSpan = elemContainer.querySelector('span');
 
-        if (
-          (currentDataSetLayerSpan.innerText.includes('Modular') &&
-            currentElemContainerSpan.innerText.includes('Modular')) ||
-          (currentDataSetLayerSpan.innerText.includes('Dichotomous') &&
-            currentElemContainerSpan.innerText.includes('Dichotomous'))
-        ) {
-          continue;
-        } else {
-          let previousDataSetLayer;
-          let nextDataSetLayer;
-          if (g > 1) {
-            previousDataSetLayer = dataSetContents[g - 1];
+          if (
+            (currentDataSetLayerSpan.innerText.includes('Modular') &&
+              currentElemContainerSpan.innerText.includes('Modular')) ||
+            (currentDataSetLayerSpan.innerText.includes('Dichotomous') &&
+              currentElemContainerSpan.innerText.includes('Dichotomous'))
+          ) {
+            continue;
           } else {
-            previousDataSetLayer = null;
-          }
-          if (g < 3) {
-            nextDataSetLayer = dataSetContents[g + 1];
-          } else {
-            nextDataSetLayer = null;
-          }
+            let previousDataSetLayer;
+            let nextDataSetLayer;
+            if (g > 1) {
+              previousDataSetLayer = dataSetContents[g - 1];
+            } else {
+              previousDataSetLayer = null;
+            }
+            if (g < 3) {
+              nextDataSetLayer = dataSetContents[g + 1];
+            } else {
+              nextDataSetLayer = null;
+            }
 
-          if (previousDataSetLayer) {
-            dataSetLayerInput = previousDataSetLayer;
-          } else if (nextDataSetLayer) {
-            dataSetLayerInput = nextDataSetLayer;
+            if (previousDataSetLayer) {
+              dataSetLayerInput = previousDataSetLayer;
+            } else if (nextDataSetLayer) {
+              dataSetLayerInput = nextDataSetLayer;
+            }
           }
         }
       }
