@@ -54,7 +54,7 @@ class MapViewer extends React.Component {
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
-    this.urlCfg = props.cfg.Urls;
+    this.cfgUrls = this.props.cfg.Urls;
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -111,19 +111,18 @@ class MapViewer extends React.Component {
    * they are already mounted
    */
 
-  waitForDataFill() {
-    while (this.compCfg.length === 0) {
+  waitForDataFill(obj) {
+    while (obj.length === 0) {
       new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
     }
-    return this.compCfg;
+    return obj;
   }
 
   async componentDidMount() {
     loadCss();
     await this.loader();
-    this.state.url = window.location.href;
-    await this.waitForDataFill();
-
+    //    this.state.url = window.location.href;
+    await this.waitForDataFill(this.compCfg);
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl:
@@ -226,26 +225,10 @@ class MapViewer extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.location.search !== '') {
+    if (this.props.Download || (this.location && this.location.search !== '')) {
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
       sessionStorage.clear();
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
-    }
-
-    mapStatus = this.recoverState();
-
-    if (
-      mapStatus === null ||
-      (mapStatus.zoom === null && mapStatus.center === null) ||
-      Object.entries(mapStatus).length === 0
-    ) {
-      mapStatus = {};
-      mapStatus.zoom = this.mapCfg.zoom;
-      mapStatus.center = this.mapCfg.center;
-      mapStatus.activeLayers = this.mapCfg.activeLayers;
-      this.setCenterState(this.mapCfg.center);
-      this.setZoomState(this.mapCfg.zoom);
-      this.activeLayersHandler(this.mapCfg.activeLayers);
     }
   }
 
@@ -349,7 +332,7 @@ class MapViewer extends React.Component {
     if (this.view)
       return (
         <MenuWidget
-          location={this.props.location}
+          location={this.location}
           view={this.view}
           conf={this.props.mapviewer_config.Components}
           download={this.props.mapviewer_config.Download}
@@ -359,6 +342,7 @@ class MapViewer extends React.Component {
           area={this.state.area}
           layers={this.layers}
           activeLayersHandler={this.activeLayersHandler}
+          urls={this.cfgUrls}
         />
       ); //call conf
   }
@@ -414,7 +398,7 @@ export const CheckLogin = ({ reference }) => {
           mapViewer={reference}
           download={reference.props.mapviewer_config.Download}
           updateArea={reference.updateArea}
-          urls={reference.urlCfg}
+          urls={reference.cfgUrls}
         />
       )}
     </>

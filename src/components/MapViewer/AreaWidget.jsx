@@ -141,10 +141,11 @@ class AreaWidget extends React.Component {
     this.clearWidget();
 
     levels.forEach((level) => {
-      var url = this.props.urls.nutsHandler;
       var layer = new FeatureLayer({
         id: id,
-        url: url,
+        //url: this.props.urls.nutsHandler,
+        url:
+          'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
         layerId: level,
         outFields: ['*'],
         popupEnabled: false,
@@ -163,7 +164,9 @@ class AreaWidget extends React.Component {
     this.clearWidget();
     var layer = new FeatureLayer({
       id: id,
-      url: this.props.urls.outsideEu,
+      //url: this.props.urls.outsideEu,
+      url:
+        'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
       layerId: 0,
       outFields: ['*'],
       popupEnabled: false,
@@ -257,6 +260,7 @@ class AreaWidget extends React.Component {
         'block';
     }
   }
+
   /**
    * This method is executed after the rener method is executed
    */
