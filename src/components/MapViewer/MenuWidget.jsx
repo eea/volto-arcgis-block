@@ -1662,7 +1662,6 @@ class MenuWidget extends React.Component {
           this.extentInitiated === false &&
           productContainerId !== 'd764e020485a402598551fa461bf1db2' //hotspot
         ) {
-          debugger;
           this.extentInitiated = true;
           setTimeout(() => {
             this.fullExtent(elem);
@@ -1679,7 +1678,7 @@ class MenuWidget extends React.Component {
         } else {
           this.map.add(this.layers[elem.id]);
         }
-      } else if (this.layers[modularLC]) {        
+      } else if (this.layers[modularLC]) {
         let previousElem = document
           .getElementById(elem.id)
           .closest('.ccl-form-group')
@@ -1691,19 +1690,17 @@ class MenuWidget extends React.Component {
       this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
-      if (group) {        
+      if (group) {
         elem.title = this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = true;
-        }       
-        debugger;             
+        }
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
           Object.keys(this.activeLayersJSON).length,
         );
-      } else {    
-        debugger;    
+      } else {
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
           Object.keys(this.activeLayersJSON).length,
@@ -1928,7 +1925,6 @@ class MenuWidget extends React.Component {
    * @param {*} element
    */
   toggleDataset(value, id, e) {
-    debugger;
     let layerdef = e.getAttribute('defcheck');
     let splitdefCheck = layerdef.split(',');
     let layerChecks = [];
@@ -1941,10 +1937,9 @@ class MenuWidget extends React.Component {
     } else {
       layerChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
-    debugger;
     layerChecks.forEach((element) => {
       if (element) {
-        element.checked = value;        
+        element.checked = value;
         this.toggleLayer(element);
       }
     });
@@ -1975,7 +1970,6 @@ class MenuWidget extends React.Component {
     datasetChecks.forEach((element) => {
       if (element) {
         element.checked = value;
-        debugger;
         this.toggleDataset(value, element.id, element);
       }
     });
@@ -2080,7 +2074,7 @@ class MenuWidget extends React.Component {
     let BBoxes = {};
     let layerGeoGraphic = {};
     let xList = [];
-    let yList = [];    
+    let yList = [];
     for (let i in layersChildren) {
       if (
         layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
@@ -2109,10 +2103,18 @@ class MenuWidget extends React.Component {
           layerGeoGraphic.querySelector('northBoundLatitude').innerText,
         ),
       };
-      xList.push(BBoxes[layersChildren[i].querySelector('Name').innerText].xmin);
-      yList.push(BBoxes[layersChildren[i].querySelector('Name').innerText].ymin);
-      xList.push(BBoxes[layersChildren[i].querySelector('Name').innerText].xmax);
-      yList.push(BBoxes[layersChildren[i].querySelector('Name').innerText].ymax);          
+      xList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
+      );
+      yList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
+      );
+      xList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
+      );
+      yList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
+      );
     } // For loop
     // Add dataset bbox
     BBoxes['dataset'] = {
@@ -2120,7 +2122,7 @@ class MenuWidget extends React.Component {
       ymin: Math.min.apply(Math, yList),
       xmax: Math.max.apply(Math, xList),
       ymax: Math.max.apply(Math, yList),
-    }    
+    };
     // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
     // BBoxes['dataset'] = {
     //   xmin: Number(
@@ -2139,7 +2141,10 @@ class MenuWidget extends React.Component {
     return BBoxes;
   } // function parseWMS
 
-  
+  parseCapabilities(xml, tag) {
+    return xml.getElementsByTagName(tag);
+  }
+
   // Web Map Tiled Services WMTS
   parseBBOXWMTS(xml) {
     let BBoxes = {};
@@ -2153,10 +2158,10 @@ class MenuWidget extends React.Component {
       (v) => v.querySelectorAll('Layer').length !== 0,
     );
     let LowerCorner,
-      UpperCorner = [];      
-      let xList = [];
-      let yList = [];    
-      let title = '';
+      UpperCorner = [];
+    let xList = [];
+    let yList = [];
+    let title = '';
     for (let i in layersChildren) {
       if (
         this.parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !==
@@ -2184,28 +2189,26 @@ class MenuWidget extends React.Component {
           'ows:UpperCorner',
         )[0].innerText.split(' ');
       }
-      title = parseCapabilities(layersChildren[i], 'ows:Title')[0].innerText
+      title = this.parseCapabilities(layersChildren[i], 'ows:Title')[0]
+        .innerText;
       BBoxes[title] = {
         xmin: Number(LowerCorner[0]),
         ymin: Number(LowerCorner[1]),
         xmax: Number(UpperCorner[0]),
-        ymax: Number(UpperCorner[1])
-      }
+        ymax: Number(UpperCorner[1]),
+      };
       xList.push(BBoxes[title].xmin);
       yList.push(BBoxes[title].ymin);
       xList.push(BBoxes[title].xmax);
-      yList.push(BBoxes[title].ymax);        
+      yList.push(BBoxes[title].ymax);
     } // For loop
 
-    console.log(xList);
-    console.log(yList);
-    console.log(BBoxes);
     BBoxes['dataset'] = {
       xmin: Math.min.apply(Math, xList),
       ymin: Math.min.apply(Math, yList),
       xmax: Math.max.apply(Math, xList),
-      ymax: Math.max.apply(Math, yList),    
-    }
+      ymax: Math.max.apply(Math, yList),
+    };
 
     // if (
     //   typeof layerParent === 'object' &&
@@ -2231,10 +2234,6 @@ class MenuWidget extends React.Component {
     return BBoxes;
   }
 
-  parseCapabilities(xml, tag) {
-    return xml.getElementsByTagName(tag);
-  }
-
   getCapabilities = (url, serviceType) => {
     // Get the coordinates of the click on the view
     return esriRequest(url, {
@@ -2257,7 +2256,8 @@ class MenuWidget extends React.Component {
     let BBoxes = {};
     let firstLayer;
 
-    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) { //global dynamic landCover
+    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+      //global dynamic landCover
       this.findDatasetBoundingBox(elem);
 
       BBoxes = this.parseBBOXJSON(this.dataBBox);
@@ -2268,32 +2268,32 @@ class MenuWidget extends React.Component {
       if (
         this.layers[elem.id].fullExtents &&
         this.layers[elem.id].fullExtents !== null
-      ) {             
-        // this.view.goTo(this.layers[elem.id].fullExtents[0]);
-      } else {        
+      ) {
+        this.view.goTo(this.layers[elem.id].fullExtents[0]);
+      } else {
         let myExtent = new Extent({
           xmin: -20037508.342789,
           ymin: -20037508.342789,
           xmax: 20037508.342789,
           ymax: 20037508.342789,
           spatialReference: 3857, // by default wkid 4326
-        });        
-        // this.view.goTo(myExtent);
+        });
+        this.view.goTo(myExtent);
       }
     } else if (this.url.toLowerCase().includes('wms')) {
-      await this.getCapabilities(this.url, 'wms');      
+      await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
 
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
-    if (      
+    if (
       BBoxes &&
       BBoxes !== null &&
       BBoxes[Object.keys(BBoxes)[0]] &&
       BBoxes[Object.keys(BBoxes)[0]] !== null
-    ) {      
+    ) {
       if (
         this.extentInitiated === false &&
         !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') && //global dynamic land cover
@@ -2303,32 +2303,26 @@ class MenuWidget extends React.Component {
             'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
           this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
         )
-        // [ NOTA ] si vienes del custom
+        //
       ) {
         // firstLayer = BBoxes['dataset'];
         firstLayer = BBoxes.dataset;
-      } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) { //corine land cover     
-        // [ NOTA ] Pasa por aqui cuando se usa el boton
+      } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
+        //corine land cover
+        //
         if (elem.title.includes('LAEA')) {
-          debugger;
           firstLayer = BBoxes['dataset'];
         } else if (elem.title.includes('Guadeloupe')) {
-          debugger;
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
         } else if (elem.title.includes('French Guiana')) {
-          debugger;
           firstLayer = BBoxes[Object.keys(BBoxes)[1]];
         } else if (elem.title.includes('Martinique')) {
-          debugger;
           firstLayer = BBoxes[Object.keys(BBoxes)[2]];
         } else if (elem.title.includes('Mayotte')) {
-          debugger;
           firstLayer = BBoxes[Object.keys(BBoxes)[3]];
         } else if (elem.title.includes('Reunion')) {
-          debugger;
           firstLayer = BBoxes[Object.keys(BBoxes)[4]];
-        } else {   
-          debugger;                 
+        } else {
           // firstLayer = BBoxes[Object.keys(BBoxes)[Object.keys(BBoxes).length - 1]];
           firstLayer = BBoxes['dataset'];
         }
@@ -2339,7 +2333,7 @@ class MenuWidget extends React.Component {
         elem.id.includes('protected_areas')
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
-      } else {        
+      } else {
         // Takes the BBOX corresponding to the layer.
         firstLayer = BBoxes[elem.attributes.layerid.value];
         // firstLayer = BBoxes[Object.keys(BBoxes)[0]];
@@ -2352,15 +2346,14 @@ class MenuWidget extends React.Component {
         ymax: firstLayer.ymax,
         // spatialReference: 4326 // by default wkid 4326
       });
-      this.view.goTo(myExtent); // [ NOTA ] Este es el que actua en Corine
+      this.view.goTo(myExtent); //
     }
   }
   /**
    * Method to show Active Layers of the map
    * @param {*} elem From the click event
    */
-  addActiveLayer(elem, order, fromDownload, hideCalendar) {    
-    debugger;
+  addActiveLayer(elem, order, fromDownload, hideCalendar) {
     return (
       <div
         className="active-layer"
@@ -2624,8 +2617,7 @@ class MenuWidget extends React.Component {
           document.querySelector('#products_label').classList.add('locked');
           document.querySelector('#map_remove_layers').classList.add('locked');
           if (this.props.download)
-            document.querySelector('#download_label').classList.add('locked');     
-          debugger;
+            document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(
             elem,
             order,
@@ -2644,8 +2636,7 @@ class MenuWidget extends React.Component {
             document
               .querySelector('.active-layer[layer-id="' + layerId + '"]')
               .classList.add('locked');
-          }    
-          debugger;      
+          }
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
             order,
@@ -2664,8 +2655,7 @@ class MenuWidget extends React.Component {
           elem = document.getElementById(layerId);
         }
         if (elem.id === layerId) {
-          this.timeLayers[elem.id] = ['far', 'clock'];  
-          debugger;        
+          this.timeLayers[elem.id] = ['far', 'clock'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(
             elem,
             order,
@@ -2720,8 +2710,7 @@ class MenuWidget extends React.Component {
         } else {
           if (this.visibleLayers[layerId][1] === 'eye-slash') {
             this.layers[layerId].visible = true;
-            this.visibleLayers[layerId] = ['fas', 'eye'];     
-            debugger;       
+            this.visibleLayers[layerId] = ['fas', 'eye'];
             this.activeLayersJSON[layerId] = this.addActiveLayer(
               document.getElementById(layerId),
               order,
@@ -2962,13 +2951,13 @@ class MenuWidget extends React.Component {
     }
 
     this.saveVisibility();
-    debugger;
     this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
     this.layersReorder();
     this.saveLayerOrder();
     this.checkInfoWidget();
     this.setState({});
-    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) { // global dynamic land cover
+    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+      // global dynamic land cover
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
         this.map.findLayerById(elem.id).visible = false;
       } else {
@@ -3014,7 +3003,6 @@ class MenuWidget extends React.Component {
         if (this.activeLayersJSON[elem.id]) {
           let order = this.activeLayersJSON[elem.id].props['layer-order'];
           // add active layer to DOM
-          debugger;
           this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
           // reorder layers
           this.layersReorder();
@@ -3034,7 +3022,6 @@ class MenuWidget extends React.Component {
    */
   deleteCrossEvent(elem) {
     elem.checked = false;
-    debugger;
     this.toggleLayer(elem);
     delete this.activeLayersJSON[elem.id];
     // }
@@ -3158,7 +3145,6 @@ class MenuWidget extends React.Component {
             // click event fires toggleLayer()
             //node.dispatchEvent(event);
             node.checked = true;
-            debugger;
             this.toggleLayer(node);
           }
 

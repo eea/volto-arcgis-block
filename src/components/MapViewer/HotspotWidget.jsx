@@ -73,8 +73,7 @@ class HotspotWidget extends React.Component {
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
-        
-  
+
     let constraintExtent = new Extent({
       xmin: this.mapCfg.geometryZoomIn.xmin,
       ymin: this.mapCfg.geometryZoomIn.ymin,
@@ -85,8 +84,7 @@ class HotspotWidget extends React.Component {
       // xmax: 200,
       // ymax: 85,
       spatialReference: 4326,
-    });    
-    debugger;
+    });
     this.props.view.constraints.geometry = constraintExtent;
 
     const regionExtent = new Extent({
@@ -736,7 +734,7 @@ class HotspotWidget extends React.Component {
     this.layerModelInit();
     this.getBBoxData();
     // Listen for changes to sessionStorage
-    window.addEventListener('storage', this.handleStorageChange);    
+    window.addEventListener('storage', this.handleStorageChange);
   }
 
   componentWillUnmount() {
