@@ -54,6 +54,7 @@ class MapViewer extends React.Component {
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
+    this.urlCfg = props.cfg.Urls;
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -226,7 +227,9 @@ class MapViewer extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.location.search !== '') {
+      let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
       sessionStorage.clear();
+      sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
     }
 
     mapStatus = this.recoverState();
@@ -411,6 +414,7 @@ export const CheckLogin = ({ reference }) => {
           mapViewer={reference}
           download={reference.props.mapviewer_config.Download}
           updateArea={reference.updateArea}
+          urls={reference.urlCfg}
         />
       )}
     </>
