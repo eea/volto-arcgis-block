@@ -193,18 +193,18 @@ class MapViewer extends React.Component {
         this.setZoomState(newValue);
         if (mapStatus.zoom <= this.mapCfg.minZoom) {
           constraintExtent = new Extent({
-            xmin: -90,
-            ymin: -45,
-            xmax: 90,
-            ymax: 45,
+            xmin: this.mapCfg.geometry.xmin,
+            ymin: this.mapCfg.geometry.ymin,
+            xmax: this.mapCfg.geometry.xmax,
+            ymax: this.mapCfg.geometry.ymax,
             spatialReference: 4326,
           });
         } else {
           constraintExtent = new Extent({
-            xmin: -90,
-            ymin: -85,
-            xmax: 90,
-            ymax: 85,
+            xmin: this.mapCfg.geometryZoomIn.xmin,
+            ymin: this.mapCfg.geometryZoomIn.ymin,
+            xmax: this.mapCfg.geometryZoomIn.xmax,
+            ymax: this.mapCfg.geometryZoomIn.ymax,
             spatialReference: 4326,
           });
         }
@@ -341,6 +341,7 @@ class MapViewer extends React.Component {
           selectedLayers={this.layers}
           mapViewer={this}
           layers={sessionStorage}
+          mapCfg={this.mapCfg}
         />
       );
   }

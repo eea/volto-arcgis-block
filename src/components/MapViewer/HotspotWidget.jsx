@@ -41,6 +41,7 @@ class HotspotWidget extends React.Component {
     this.layerModelInit = this.layerModelInit.bind(this);
     this.getBBoxData = this.getBBoxData.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
+    this.mapCfg = this.props.mapCfg;
     //this.getLayerParameters();
     this.selectedArea = null;
   }
@@ -72,7 +73,22 @@ class HotspotWidget extends React.Component {
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
-    
+        
+  
+    let constraintExtent = new Extent({
+      xmin: this.mapCfg.geometryZoomIn.xmin,
+      ymin: this.mapCfg.geometryZoomIn.ymin,
+      xmax: this.mapCfg.geometryZoomIn.xmax,
+      ymax: this.mapCfg.geometryZoomIn.ymax,
+      // xmin: -200,
+      // ymin: -85,
+      // xmax: 200,
+      // ymax: 85,
+      spatialReference: 4326,
+    });    
+    debugger;
+    this.props.view.constraints.geometry = constraintExtent;
+
     const regionExtent = new Extent({
       xmin: Number(xmin_ymin[0]) * 0.99,
       ymin: Number(xmin_ymin[1]) * 0.99,
@@ -720,7 +736,7 @@ class HotspotWidget extends React.Component {
     this.layerModelInit();
     this.getBBoxData();
     // Listen for changes to sessionStorage
-    window.addEventListener('storage', this.handleStorageChange);
+    window.addEventListener('storage', this.handleStorageChange);    
   }
 
   componentWillUnmount() {
