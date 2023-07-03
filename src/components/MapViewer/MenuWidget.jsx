@@ -419,7 +419,7 @@ class MenuWidget extends React.Component {
     let toc_panel_scrolls =
       JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) || {};
     let scroll = toc_panel_scrolls[selected_tab.id];
-    if (scroll) {
+    if (scroll !== undefined) {
       scroll = parseInt(scroll);
       paneles.scrollTop = scroll;
     }
@@ -3135,7 +3135,6 @@ class MenuWidget extends React.Component {
    */
   toggleTab(e) {
     if (!e.currentTarget.classList.contains('tab-selected')) {
-      this.storePanelScroll();
       var tabsel = document.querySelector('.tab-selected');
       var tab = e.currentTarget;
       var panelsel = document.querySelector('.panel-selected');
@@ -3328,7 +3327,11 @@ class MenuWidget extends React.Component {
                 </span>
               )}
             </div>
-            <div className="panels" id="paneles">
+            <div
+              className="panels"
+              id="paneles"
+              onScroll={() => this.storePanelScroll()}
+            >
               <div
                 className={
                   !this.props.download ? 'panel panel-selected' : 'panel'
