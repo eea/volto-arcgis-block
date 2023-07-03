@@ -581,7 +581,6 @@ class MenuWidget extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
-    this.state.url = window.location.href;
     await this.getTMSLayersJSON();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
@@ -1608,6 +1607,16 @@ class MenuWidget extends React.Component {
       }
     }
     if (productContainerId === 'd764e020485a402598551fa461bf1db2') {
+      //      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+      //        let myExtent = new Extent({
+      //          xmin: -2037508.342789,
+      //          ymin: -2037508.342789,
+      //          xmax: 8037508.342789,
+      //          ymax: 8037508.342789,
+      //          spatialReference: 3857, // by default wkid 4326
+      //        });
+      //        this.view.goTo(myExtent);
+      //      }
       if (nextElemSibling) {
         siblingInput = nextElemSibling.querySelector('input');
       } else if (previousElemSibling) {
@@ -2262,12 +2271,7 @@ class MenuWidget extends React.Component {
       if (
         this.extentInitiated === false &&
         !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
-        !(
-          this.state.url === 'http://localhost:3000/en/map-viewer' ||
-          this.state.url ===
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-        )
+        this.location.search !== ''
       ) {
         firstLayer = BBoxes.dataset;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
