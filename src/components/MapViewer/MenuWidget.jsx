@@ -1607,6 +1607,16 @@ class MenuWidget extends React.Component {
       }
     }
     if (productContainerId === 'd764e020485a402598551fa461bf1db2') {
+      //      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+      //        let myExtent = new Extent({
+      //          xmin: -2037508.342789,
+      //          ymin: -2037508.342789,
+      //          xmax: 8037508.342789,
+      //          ymax: 8037508.342789,
+      //          spatialReference: 3857, // by default wkid 4326
+      //        });
+      //        this.view.goTo(myExtent);
+      //      }
       if (nextElemSibling) {
         siblingInput = nextElemSibling.querySelector('input');
       } else if (previousElemSibling) {
