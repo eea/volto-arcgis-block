@@ -72,6 +72,27 @@ class HotspotWidget extends React.Component {
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
+    
+    let zoom = this.view.zoom;
+    if (mapStatus.zoom <= this.mapCfg.minZoom) {
+      constraintExtent = new Extent({
+        xmin: -90,
+        ymin: -45,
+        xmax: 90,
+        ymax: 45,
+        spatialReference: 4326,
+      });
+    } else {
+      constraintExtent = new Extent({
+        xmin: -200,
+        ymin: -85,
+        xmax: 200,
+        ymax: 85,
+        spatialReference: 4326,
+      });
+    }
+    this.view.constraints.geometry = constraintExtent;
+
 
     const regionExtent = new Extent({
       xmin: Number(xmin_ymin[0]) * 0.99,
