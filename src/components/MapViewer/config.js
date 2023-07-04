@@ -12,6 +12,13 @@ const config = {
       xmax: 90,
       ymax: 45,
     },
+    geometryZoomIn: {
+      type: 'extent',
+      xmin: -200,
+      ymin: -85,
+      xmax: 200,
+      ymax: 85,
+    },
     activeLayers: [],
   },
   Components: [

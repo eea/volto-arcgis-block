@@ -581,7 +581,6 @@ class MenuWidget extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
-    this.state.url = window.location.href;
     await this.getTMSLayersJSON();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
@@ -1608,6 +1607,16 @@ class MenuWidget extends React.Component {
       }
     }
     if (productContainerId === 'd764e020485a402598551fa461bf1db2') {
+      //      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+      //        let myExtent = new Extent({
+      //          xmin: -2037508.342789,
+      //          ymin: -2037508.342789,
+      //          xmax: 8037508.342789,
+      //          ymax: 8037508.342789,
+      //          spatialReference: 3857, // by default wkid 4326
+      //        });
+      //        this.view.goTo(myExtent);
+      //      }
       if (nextElemSibling) {
         siblingInput = nextElemSibling.querySelector('input');
       } else if (previousElemSibling) {
@@ -1660,7 +1669,7 @@ class MenuWidget extends React.Component {
       if (this.props.download || this.location.search !== '') {
         if (
           this.extentInitiated === false &&
-          productContainerId !== 'd764e020485a402598551fa461bf1db2'
+          productContainerId !== 'd764e020485a402598551fa461bf1db2' //hotspot
         ) {
           this.extentInitiated = true;
           setTimeout(() => {
@@ -2073,6 +2082,8 @@ class MenuWidget extends React.Component {
     );
     let BBoxes = {};
     let layerGeoGraphic = {};
+    let xList = [];
+    let yList = [];
     for (let i in layersChildren) {
       if (
         layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
@@ -2101,25 +2112,48 @@ class MenuWidget extends React.Component {
           layerGeoGraphic.querySelector('northBoundLatitude').innerText,
         ),
       };
-    }
+      xList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
+      );
+      yList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
+      );
+      xList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
+      );
+      yList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
+      );
+    } // For loop
     // Add dataset bbox
-    layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
     BBoxes['dataset'] = {
-      xmin: Number(
-        layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-      ),
-      ymin: Number(
-        layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-      ),
-      xmax: Number(
-        layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-      ),
-      ymax: Number(
-        layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-      ),
+      xmin: Math.min.apply(Math, xList),
+      ymin: Math.min.apply(Math, yList),
+      xmax: Math.max.apply(Math, xList),
+      ymax: Math.max.apply(Math, yList),
     };
+    // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
+    // BBoxes['dataset'] = {
+    //   xmin: Number(
+    //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+    //   ),
+    //   ymin: Number(
+    //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+    //   ),
+    //   xmax: Number(
+    //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+    //   ),
+    //   ymax: Number(
+    //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+    //   ),
+    // };
     return BBoxes;
   } // function parseWMS
+
+  parseCapabilities(xml, tag) {
+    return xml.getElementsByTagName(tag);
+  }
+
   // Web Map Tiled Services WMTS
   parseBBOXWMTS(xml) {
     let BBoxes = {};
@@ -2134,6 +2168,9 @@ class MenuWidget extends React.Component {
     );
     let LowerCorner,
       UpperCorner = [];
+    let xList = [];
+    let yList = [];
+    let title = '';
     for (let i in layersChildren) {
       if (
         this.parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !==
@@ -2161,41 +2198,49 @@ class MenuWidget extends React.Component {
           'ows:UpperCorner',
         )[0].innerText.split(' ');
       }
-      BBoxes[
-        this.parseCapabilities(layersChildren[i], 'ows:Title')[0].innerText
-      ] = {
+      title = this.parseCapabilities(layersChildren[i], 'ows:Title')[0]
+        .innerText;
+      BBoxes[title] = {
         xmin: Number(LowerCorner[0]),
         ymin: Number(LowerCorner[1]),
         xmax: Number(UpperCorner[0]),
         ymax: Number(UpperCorner[1]),
       };
-    }
-    if (
-      typeof layerParent === 'object' &&
-      layerParent !== null &&
-      'getElementsByTagName' in layerParent
-    ) {
-      LowerCorner = this.parseCapabilities(
-        layerParent,
-        'ows:LowerCorner',
-      )[0]?.innerText.split(' ');
-      UpperCorner = this.parseCapabilities(
-        layerParent,
-        'ows:UpperCorner',
-      )[0].innerText.split(' ');
+      xList.push(BBoxes[title].xmin);
+      yList.push(BBoxes[title].ymin);
+      xList.push(BBoxes[title].xmax);
+      yList.push(BBoxes[title].ymax);
+    } // For loop
 
-      BBoxes['dataset'] = {
-        xmin: Number(LowerCorner[0]),
-        ymin: Number(LowerCorner[1]),
-        xmax: Number(UpperCorner[0]),
-        ymax: Number(UpperCorner[1]),
-      };
-    }
+    BBoxes['dataset'] = {
+      xmin: Math.min.apply(Math, xList),
+      ymin: Math.min.apply(Math, yList),
+      xmax: Math.max.apply(Math, xList),
+      ymax: Math.max.apply(Math, yList),
+    };
+
+    // if (
+    //   typeof layerParent === 'object' &&
+    //   layerParent !== null &&
+    //   'getElementsByTagName' in layerParent
+    // ) {
+    //   LowerCorner = this.parseCapabilities(
+    //     layerParent,
+    //     'ows:LowerCorner',
+    //   )[0]?.innerText.split(' ');
+    //   UpperCorner = this.parseCapabilities(
+    //     layerParent,
+    //     'ows:UpperCorner',
+    //   )[0].innerText.split(' ');
+
+    //   BBoxes['dataset'] = {
+    //     xmin: Number(LowerCorner[0]),
+    //     ymin: Number(LowerCorner[1]),
+    //     xmax: Number(UpperCorner[0]),
+    //     ymax: Number(UpperCorner[1]),
+    //   };
+    // }
     return BBoxes;
-  }
-
-  parseCapabilities(xml, tag) {
-    return xml.getElementsByTagName(tag);
   }
 
   getCapabilities = (url, serviceType) => {
@@ -2221,12 +2266,13 @@ class MenuWidget extends React.Component {
     let firstLayer;
 
     if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+      //global dynamic landCover
       this.findDatasetBoundingBox(elem);
 
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
-      this.productId.includes('fe8209dffe13454891cea05998c8e456') ||
-      this.productId.includes('8914fde2241a4035818af8f0264fd55e')
+      this.productId.includes('fe8209dffe13454891cea05998c8e456') || //Low Resolution Vegetation Parameters
+      this.productId.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
     ) {
       if (
         this.layers[elem.id].fullExtents &&
@@ -2241,12 +2287,10 @@ class MenuWidget extends React.Component {
           ymax: 20037508.342789,
           spatialReference: 3857, // by default wkid 4326
         });
-
         this.view.goTo(myExtent);
       }
     } else if (this.url.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
-
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
@@ -2262,16 +2306,16 @@ class MenuWidget extends React.Component {
       if (
         this.extentInitiated === false &&
         !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
-        !(
-          this.state.url === 'http://localhost:3000/en/map-viewer' ||
-          this.state.url ===
-            'https://clmsdemo.devel6cph.eea.europa.eu/en/map-viewer' ||
-          this.state.url === 'https://clms-prod.eea.europa.eu/en/map-viewer'
-        )
+        this.location.search !== ''
       ) {
+        // firstLayer = BBoxes['dataset'];
         firstLayer = BBoxes.dataset;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
-        if (elem.title.includes('Guadeloupe')) {
+        //corine land cover
+        //
+        if (elem.title.includes('LAEA')) {
+          firstLayer = BBoxes['dataset'];
+        } else if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
         } else if (elem.title.includes('French Guiana')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[1]];
@@ -2282,8 +2326,8 @@ class MenuWidget extends React.Component {
         } else if (elem.title.includes('Reunion')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[4]];
         } else {
-          firstLayer =
-            BBoxes[Object.keys(BBoxes)[Object.keys(BBoxes).length - 1]];
+          // firstLayer = BBoxes[Object.keys(BBoxes)[Object.keys(BBoxes).length - 1]];
+          firstLayer = BBoxes['dataset'];
         }
       } else if (
         elem.id.includes('all_present') ||
@@ -2293,7 +2337,9 @@ class MenuWidget extends React.Component {
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else {
-        firstLayer = BBoxes[Object.keys(BBoxes)[0]];
+        // Takes the BBOX corresponding to the layer.
+        firstLayer = BBoxes[elem.attributes.layerid.value];
+        // firstLayer = BBoxes[Object.keys(BBoxes)[0]];
       }
 
       let myExtent = new Extent({
@@ -2303,7 +2349,7 @@ class MenuWidget extends React.Component {
         ymax: firstLayer.ymax,
         // spatialReference: 4326 // by default wkid 4326
       });
-      this.view.goTo(myExtent);
+      this.view.goTo(myExtent); //
     }
   }
   /**
@@ -2914,6 +2960,7 @@ class MenuWidget extends React.Component {
     this.checkInfoWidget();
     this.setState({});
     if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+      // global dynamic land cover
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
         this.map.findLayerById(elem.id).visible = false;
       } else {
