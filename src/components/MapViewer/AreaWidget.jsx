@@ -296,7 +296,12 @@ class AreaWidget extends React.Component {
             if (graphic) {
               let geometry = graphic.geometry;
               if (geometry.type === 'polygon') {
-                let nuts = graphic.attributes.NUTS_ID;
+                let nuts;
+                if ('countries'.includes(graphic.layer.id)) {
+                  nuts = graphic.attributes.ISO_2DIGIT;
+                } else {
+                  nuts = graphic.attributes.NUTS_ID;
+                }
                 this.props.updateArea(nuts);
                 let symbol = new SimpleFillSymbol(
                   'solid',
