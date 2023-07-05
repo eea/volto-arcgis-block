@@ -1673,7 +1673,7 @@ class MenuWidget extends React.Component {
         ) {
           this.extentInitiated = true;
           setTimeout(() => {
-            // [ NOTA ] ¿Cuando se usa este fullExtent? Si se usa solo desde custom mapviewer se puede meter aqui la funcion para obtener todo el DATASET extent            
+            // [ NOTA ] ¿Cuando se usa este fullExtent? Si se usa solo desde custom mapviewer se puede meter aqui la funcion para obtener todo el DATASET extent
             this.FullExtentDataset(elem);
           }, 2000);
         }
@@ -1939,18 +1939,18 @@ class MenuWidget extends React.Component {
     let splitdefCheck = layerdef.split(',');
     let layerChecks = [];
     let selector = [];
-    if (value) {      
+    if (value) {
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
         layerChecks.push(selector);
       }
-    } else {      
+    } else {
       layerChecks = document.querySelectorAll(`[parentid=${id}]`);
     }
     layerChecks.forEach((element) => {
       if (element) {
-        element.checked = value;         
-        this.toggleLayer(element); 
+        element.checked = value;
+        this.toggleLayer(element);
       }
     });
   }
@@ -1979,7 +1979,7 @@ class MenuWidget extends React.Component {
 
     datasetChecks.forEach((element) => {
       if (element) {
-        element.checked = value;        
+        element.checked = value;
         this.toggleDataset(value, element.id, element);
       }
     });
@@ -2262,7 +2262,6 @@ class MenuWidget extends React.Component {
       .catch(() => {});
   };
 
-
   async FullExtentDataset(elem) {
     let BBoxes = {};
     this.findCheckedDataset(elem);
@@ -2272,7 +2271,7 @@ class MenuWidget extends React.Component {
     } else if (this.url.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
-    }    
+    }
     let myExtent = new Extent({
       xmin: BBoxes['dataset'].xmin,
       ymin: BBoxes['dataset'].ymin,
@@ -2282,7 +2281,6 @@ class MenuWidget extends React.Component {
     });
     this.view.goTo(myExtent); //
   }
-
 
   async fullExtent(elem) {
     this.findCheckedDataset(elem);
@@ -2301,7 +2299,7 @@ class MenuWidget extends React.Component {
       if (
         this.layers[elem.id].fullExtents &&
         this.layers[elem.id].fullExtents !== null
-      ) {        
+      ) {
         this.view.goTo(this.layers[elem.id].fullExtents[0]);
       } else {
         let myExtent = new Extent({
@@ -2330,13 +2328,12 @@ class MenuWidget extends React.Component {
         this.extentInitiated === false &&
         !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
         this.location.search !== ''
-      ) {        
+      ) {
         firstLayer = BBoxes.dataset;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
-                             
-        if (elem.title.includes('LAEA')) {          
+        if (elem.title.includes('LAEA')) {
           firstLayer = BBoxes['dataset'];
-        } else if (elem.title.includes('Guadeloupe')) {          
+        } else if (elem.title.includes('Guadeloupe')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
         } else if (elem.title.includes('French Guiana')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[1]];
@@ -2346,7 +2343,7 @@ class MenuWidget extends React.Component {
           firstLayer = BBoxes[Object.keys(BBoxes)[3]];
         } else if (elem.title.includes('Reunion')) {
           firstLayer = BBoxes[Object.keys(BBoxes)[4]];
-        } else {         
+        } else {
           firstLayer = BBoxes['dataset'];
         }
       } else if (
@@ -2358,7 +2355,7 @@ class MenuWidget extends React.Component {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else {
         // Takes the BBOX corresponding to the layer.
-        firstLayer = BBoxes[elem.attributes.layerid.value];        
+        firstLayer = BBoxes[elem.attributes.layerid.value];
       }
 
       let myExtent = new Extent({
