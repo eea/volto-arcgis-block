@@ -30,7 +30,7 @@ class HotspotWidget extends React.Component {
     this.esriLayer_pa = null;
     this.esriLayer_pa2 = null;
     this.subscribedLayers = sessionStorage;
-    this.checkedLayers = [];
+    this.checkedLayers = {};
     this.dataBBox = [];
     this.dataJSONNames = [];
     this.klcHighlightsArray = [];
@@ -41,8 +41,11 @@ class HotspotWidget extends React.Component {
     this.layerModelInit = this.layerModelInit.bind(this);
     this.getBBoxData = this.getBBoxData.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
+    this.mapCfg = this.props.mapCfg;
     //this.getLayerParameters();
     this.selectedArea = null;
+    this.lcYear = null;
+    this.lccYear = null;
   }
 
   loader() {
@@ -72,6 +75,15 @@ class HotspotWidget extends React.Component {
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
+
+    let constraintExtent = new Extent({
+      xmin: this.mapCfg.geometryZoomIn.xmin,
+      ymin: this.mapCfg.geometryZoomIn.ymin,
+      xmax: this.mapCfg.geometryZoomIn.xmax,
+      ymax: this.mapCfg.geometryZoomIn.ymax,      
+      spatialReference: 4326,
+    });
+    this.props.view.constraints.geometry = constraintExtent;
 
     const regionExtent = new Extent({
       xmin: Number(xmin_ymin[0]) * 0.99,
@@ -227,6 +239,9 @@ class HotspotWidget extends React.Component {
     }
     typeFilter.forEach((type) => {
       if (type === 'lcc') {
+        let selectLccBoxTime = document.getElementById('select-klc-lccTime')
+          .value;
+        this.lccYear = selectLccBoxTime;
         var selectBoxHighlightsLcc = document
           .getElementById('select-klc-lccTime')
           .value.match(/\d+/g)
@@ -267,6 +282,9 @@ class HotspotWidget extends React.Component {
             ? (typeLegend = 'all_present_lc_a_pol')
             : (typeLegend = 'all_present_lc_b_pol');
         });
+        let selectLcBoxTime = document.getElementById('select-klc-lcTime')
+          .value;
+        this.lcYear = selectLcBoxTime;
         var selectBoxHighlightsLc = document
           .getElementById('select-klc-lcTime')
           .value.match(/\d+/g)
@@ -458,7 +476,7 @@ class HotspotWidget extends React.Component {
           onClick={this.dropdownAnimation.bind(this)}
           onKeyDown={this.dropdownAnimation.bind(this)}
         >
-          <span>Present Land Cover</span>
+          <span>Reference Land Cover</span>
           <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
         </div>
         <div className="measurement-dropdown-container">
@@ -488,11 +506,20 @@ class HotspotWidget extends React.Component {
     var selectBoxLccTime;
     let modularKLCAreas = [];
     let dichotomousKLCAreas = [];
+    let checkedLayers =
+      JSON.parse(sessionStorage.getItem('checkedLayers')) || {};
 
-    this.selectedArea = selectedOption;
     selectBox = document.getElementById('select-klc-area');
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
+
+    if (selectedOption !== this.selectedArea) {
+      this.lcYear = null;
+      this.lccYear = null;
+    }
+
+    this.selectedArea = selectedOption;
+
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
 
@@ -552,7 +579,6 @@ class HotspotWidget extends React.Component {
             new Option(optionLcTime, optionLcTime, optionLcTime),
           );
         }
-        return;
       }
     }
     if (selectBox) {
@@ -565,35 +591,76 @@ class HotspotWidget extends React.Component {
           true,
         ),
       );
-
       selectBox.options[0].disabled = true;
     }
-    let checkedLayers =
-      JSON.parse(sessionStorage.getItem('checkedLayers')) || {};
-
-    for (let a = 0; a < checkedLayers.length; a++) {
-      if (
-        checkedLayers[a].includes('all_lcc_b_pol') ||
-        checkedLayers[a].includes('all_present_lc_b_pol')
-      ) {
-        for (let i = 0; i < modularKLCAreas.length; i++) {
-          let option = modularKLCAreas[i];
-          selectBox.options.add(new Option(option, option, option));
+    if (checkedLayers.length) {
+      for (let a = 0; a < checkedLayers.length; a++) {
+        if (
+          checkedLayers[a].includes('all_lcc_b_pol') ||
+          checkedLayers[a].includes('all_present_lc_b_pol')
+        ) {
+          for (let i = 0; i < modularKLCAreas.length; i++) {
+            let option = modularKLCAreas[i];
+            selectBox.options.add(new Option(option, option, option));
+          }
+          this.checkedLayers = checkedLayers;
+          for (let u = 0; u < selectBox.options.length; u++) {
+            if (selectBox.options[u].label.includes(this.selectedArea)) {
+              selectBox.value = this.selectedArea;
+              if (this.lcYear === null) selectBoxLcTime.value = 'default';
+              else if (this.lccYear === null)
+                selectBoxLccTime.value = 'default';
+              else {
+                selectBoxLcTime.value = this.lcYear;
+                selectBoxLccTime.value = this.lccYear;
+              }
+              break;
+            } else {
+              selectBox.value = 'default';
+              selectBoxLcTime.value = 'default';
+              selectBoxLccTime.value = 'default';
+            }
+          }
+          break;
+        } else if (
+          checkedLayers[a].includes('all_lcc_a_pol') ||
+          checkedLayers[a].includes('all_present_lc_a_pol')
+        ) {
+          for (let i = 0; i < dichotomousKLCAreas.length; i++) {
+            let option = dichotomousKLCAreas[i];
+            selectBox.options.add(new Option(option, option, option));
+          }
+          this.checkedLayers = checkedLayers;
+          for (let u = 0; u < selectBox.options.length; u++) {
+            if (selectBox.options[u].label.includes(this.selectedArea)) {
+              selectBox.value = this.selectedArea;
+              //selectBoxLcTime.value = this.lcYear;
+              //selectBoxLccTime.value = this.lccYear;
+              break;
+            } else {
+              selectBox.value = 'default';
+              //selectBoxLcTime.value = 'default';
+              //selectBoxLccTime.value = 'default';
+            }
+          }
+          break;
         }
-        this.checkedLayers = checkedLayers;
-        return;
-      } else if (
-        checkedLayers[a].includes('all_lcc_a_pol') ||
-        checkedLayers[a].includes('all_present_lc_a_pol')
-      ) {
-        for (let i = 0; i < dichotomousKLCAreas.length; i++) {
-          let option = dichotomousKLCAreas[i];
-          selectBox.options.add(new Option(option, option, option));
-        }
-        this.checkedLayers = checkedLayers;
-        return;
-      } else {
-        continue;
+      }
+    }
+    if (selectBox.value === 'default') {
+      if (selectBoxLcTime) {
+        this.removeOptions(selectBoxLcTime);
+        selectBoxLcTime.options.add(
+          new Option('Select a region first', 'default', true, true),
+        );
+        selectBoxLcTime.options[0].disabled = true;
+      }
+      if (selectBoxLccTime) {
+        this.removeOptions(selectBoxLccTime);
+        selectBoxLccTime.options.add(
+          new Option('Select a region first', 'default', true, true),
+        );
+        selectBoxLccTime.options[0].disabled = true;
       }
     }
   }
@@ -647,7 +714,7 @@ class HotspotWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="hotspot-container">
-          <div tooltip="Hotspot" direction="left" type="widget">
+          <div tooltip="Filter Hot Spots" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="hotspot_button"
@@ -660,7 +727,7 @@ class HotspotWidget extends React.Component {
           </div>
           <div className="right-panel">
             <div className="right-panel-header">
-              <span>Hot-spots outside Europe filtering options</span>
+              <span>Hot Spots outside Europe filtering options</span>
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
@@ -733,11 +800,5 @@ class HotspotWidget extends React.Component {
       JSON.parse(sessionStorage.getItem('checkedLayers')) || {};
     this.forceUpdate();
   };
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.checkedLayers !== this.checkedLayers) {
-      this.getKLCNames(this.dataJSONNames, this.selectedArea);
-    }
-  }
 }
 export default HotspotWidget;
