@@ -1673,7 +1673,6 @@ class MenuWidget extends React.Component {
         ) {
           this.extentInitiated = true;
           setTimeout(() => {
-            // [ NOTA ] ¿Cuando se usa este fullExtent? Si se usa solo desde custom mapviewer se puede meter aqui la funcion para obtener todo el DATASET extent
             this.FullExtentDataset(elem);
           }, 2000);
         }
