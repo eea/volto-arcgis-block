@@ -26,7 +26,7 @@ class BasemapWidget extends React.Component {
     this.menuClass =
       'esri-icon-basemap esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
-  }  
+  }
   loader() {
     return loadModules([
       'esri/widgets/BasemapGallery',

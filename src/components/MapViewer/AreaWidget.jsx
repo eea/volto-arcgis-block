@@ -8,8 +8,7 @@ var Graphic,
   GroupLayer,
   Color,
   SimpleLineSymbol,
-  SimpleFillSymbol,
-  SimpleRenderer;
+  SimpleFillSymbol;
 
 class AreaWidget extends React.Component {
   /**
@@ -44,7 +43,6 @@ class AreaWidget extends React.Component {
       'esri/Color',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
-      "esri/renderers/SimpleRenderer",      
     ]).then(
       ([
         _Graphic,
@@ -54,7 +52,6 @@ class AreaWidget extends React.Component {
         _Color,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
-        _SimpleRenderer,
       ]) => {
         [
           Graphic,
@@ -64,7 +61,6 @@ class AreaWidget extends React.Component {
           Color,
           SimpleLineSymbol,
           SimpleFillSymbol,
-          SimpleRenderer,
         ] = [
           _Graphic,
           _Extent,
@@ -73,7 +69,6 @@ class AreaWidget extends React.Component {
           _Color,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
-          _SimpleRenderer,
         ];
       },
     );
@@ -144,60 +139,83 @@ class AreaWidget extends React.Component {
 
   loadNutsService(id, levels) {
     this.clearWidget();
-        
 
     // This symbol and renderer if view is 3D
     let symbol = {
-      type: "simple-fill",  // autocasts as new SimpleFillSymbol()
-      color: [ 51,51, 204, 0.9 ],
-      style: "solid",
-      outline: {  // autocasts as new SimpleLineSymbol()
-        color: "white",
-        width: 1
-      }
-    };    
+      type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+      color: [51, 51, 204, 0.2],
+      style: 'solid',
+      outline: {
+        // autocasts as new SimpleLineSymbol()
+        color: 'grey',
+        width: 1,
+      },
+    };
     // Set a basic symbol on a layer to visualize all features the same way
     let renderer = {
-      type: "simple",  // autocasts as new SimpleRenderer()
-      symbol: symbol
+      type: 'simple', // autocasts as new SimpleRenderer()
+      symbol: symbol,
     };
-    
+
     levels.forEach((level) => {
       var layer = new FeatureLayer({
         id: id,
         //url: this.props.urls.nutsHandler,
+        // [ NOTA ] Llevar la URL a config
         url:
-          'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
+          'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/', // nuevo
+        // 'https://trial.discomap.eea.europa.eu/arcgis/services/CLMS/NUTS_2021/MapServer/', // antiguo
         layerId: level,
         outFields: ['*'],
         popupEnabled: false,
         //definitionExpression: 'LEVL_CODE=' + level,
       });
-
       if (this.props.view.type === '3d') {
-        window.alert('3d');
         layer.renderer = renderer;
       }
-      
+
+      // [ NOTA ] Añadir un refresh o algo que elimine todos los features antes de cargar los siguientes.
       this.nutsGroupLayer.add(layer);
 
       let index = this.getHighestIndex();
 
       this.props.map.reorder(this.nutsGroupLayer, index + 1);
-    });
+    }); // for
   }
 
   loadCountriesService(id) {
     this.clearWidget();
+
+    let symbol = {
+      type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+      color: [0, 163, 108, 0.3],
+      style: 'solid',
+      outline: {
+        // autocasts as new SimpleLineSymbol()
+        color: 'white',
+        width: 1,
+      },
+    };
+    // Set a basic symbol on a layer to visualize all features the same way
+    let renderer = {
+      type: 'simple', // autocasts as new SimpleRenderer()
+      symbol: symbol,
+    };
+
     var layer = new FeatureLayer({
       id: id,
       //url: this.props.urls.outsideEu,
+      // [ NOTA ] Llevar la URL a config
       url:
         'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
       layerId: 0,
       outFields: ['*'],
       popupEnabled: false,
     });
+
+    if (this.props.view.type === '3d') {
+      layer.renderer = renderer;
+    }
 
     this.nutsGroupLayer.add(layer);
 
@@ -336,24 +354,17 @@ class AreaWidget extends React.Component {
                   new Color([232, 104, 80, 0.25]),
                 );
                 let highlight = new Graphic(geometry, symbol);
-                if (this.props.view.type === '3d') {                                    
-                  window.alert('3d');
-                } else {                                    
-                  window.alert('2d');
-                }
-                debugger;
                 this.props.view.graphics.removeAll();
                 this.props.view.graphics.add(highlight);
                 this.setState({
                   showInfoPopup: true,
                   infoPopupType: 'download',
-                });                
+                });
                 if (this.props.download) {
                   document.querySelector(
                     '.drawRectanglePopup-block',
                   ).style.display = 'none';
                 }
-                debugger;
               }
             }
           }

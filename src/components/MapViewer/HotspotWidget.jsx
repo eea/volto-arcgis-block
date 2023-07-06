@@ -80,7 +80,7 @@ class HotspotWidget extends React.Component {
       xmin: this.mapCfg.geometryZoomIn.xmin,
       ymin: this.mapCfg.geometryZoomIn.ymin,
       xmax: this.mapCfg.geometryZoomIn.xmax,
-      ymax: this.mapCfg.geometryZoomIn.ymax,      
+      ymax: this.mapCfg.geometryZoomIn.ymax,
       spatialReference: 4326,
     });
     this.props.view.constraints.geometry = constraintExtent;

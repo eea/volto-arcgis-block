@@ -146,15 +146,15 @@ class MapViewer extends React.Component {
       // it as the active view
       this.mapView.viewpoint = activeViewpoint;
       this.mapView.container = this.mapdiv.current;
-      this.view = this.mapView;      
+      this.view = this.mapView;
       this.setViewState(this.view.type);
     } else {
       this.sceneView.viewpoint = activeViewpoint;
       this.sceneView.container = this.mapdiv.current;
-      this.view = this.sceneView;            
+      this.view = this.sceneView;
       this.setViewState(this.view.type);
-    }        
-    // this.view.ui._components.map(item => console.log(item));     
+    }
+    // this.view.ui._components.map(item => console.log(item));
   }
 
   async componentDidMount() {
@@ -175,7 +175,7 @@ class MapViewer extends React.Component {
       // referenceLayers: [
       //   new _WebTileLayer(...)
       // ],
-    });    
+    });
     this.map = new Map({
       // basemap: 'topo',
       basemap: this.positronCompositeBasemap,
@@ -192,15 +192,14 @@ class MapViewer extends React.Component {
     ) {
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
-      mapStatus.center = this.mapCfg.center;      
+      mapStatus.center = this.mapCfg.center;
       mapStatus.viewType = this.mapCfg.viewType;
       mapStatus.activeLayers = this.mapCfg.activeLayers;
       this.setCenterState(this.mapCfg.center);
       this.setZoomState(this.mapCfg.zoom);
       this.setViewState(this.mapCfg.viewType);
-      this.activeLayersHandler(this.mapCfg.activeLayers);      
+      this.activeLayersHandler(this.mapCfg.activeLayers);
     }
-  
 
     // 3D
     this.sceneView = new SceneView({
@@ -215,12 +214,11 @@ class MapViewer extends React.Component {
     if (mapStatus.viewType === '3d') {
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
-      this.setViewState(this.view.type);      
+      this.setViewState(this.view.type);
     }
- 
 
-     // 2D
-     this.mapView = new MapView({
+    // 2D
+    this.mapView = new MapView({
       container: null,
       map: this.map,
       center: mapStatus.center,
@@ -238,7 +236,7 @@ class MapViewer extends React.Component {
     if (mapStatus.viewType === '2d') {
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;
-      this.setViewState(this.view.type);      
+      this.setViewState(this.view.type);
     }
 
     this.zoom = new Zoom({
@@ -265,10 +263,9 @@ class MapViewer extends React.Component {
         //     this.switchView();
         //   }
         // }
-      });      
+      });
     });
 
-    
     this.mapView.when(() => {
       this.mapView.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);
@@ -304,8 +301,8 @@ class MapViewer extends React.Component {
           });
         }
         this.mapView.constraints.geometry = constraintExtent;
-      });      
-    });    
+      });
+    });
 
     ///// NOTA  con estas líneas he logrado que aparezcan los widgets en la vista 3D
     this.view.popup.autoOpenEnabled = false;
@@ -322,10 +319,6 @@ class MapViewer extends React.Component {
     this.sceneView.ui._removeComponents(['attribution']);
     this.mapView.ui._removeComponents(['attribution']);
   } // componentDidMount
-
-  componentDidUpdate () {
-    console.log('Se actualizo');
-  }
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.Download || (this.location && this.location.search !== '')) {
@@ -378,8 +371,8 @@ class MapViewer extends React.Component {
    * @returns jsx
    */
   renderBasemap() {
-    if (this.props.mapviewer_config.Download) return;    
-    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />         
+    if (this.props.mapviewer_config.Download) return;
+    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
   }
 
   renderLegend() {
@@ -439,7 +432,7 @@ class MapViewer extends React.Component {
       );
   }
 
-  renderMenu() {    
+  renderMenu() {
     if (this.view)
       return (
         <MenuWidget
@@ -470,36 +463,36 @@ class MapViewer extends React.Component {
   render() {
     // we use a reference (ref={this.mapdiv}) in order to reference a
     // DOM element to be mounted (but not yet mounted)
-    if ('loading' in this.props.mapviewer_config) {      
+    if ('loading' in this.props.mapviewer_config) {
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map"></div>
         </div>
       );
-    } else {   
-          //
-          // print soes not support scenView      
+    } else {
+      //
+      // print soes not support scenView
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
             {this.appLanguage()}
             {this.renderBasemap()}
-            
+
             {this.renderLegend()}
-            
+
             {this.renderMeasurement()}
-            
-            {this.renderPrint(this.mapView)} 
-            
+
+            {this.renderPrint(this.mapView)}
+
             {this.renderArea()}
-            {this.renderScale()}            
-            {this.renderPan()}            
+            {this.renderScale()}
+            {this.renderPan()}
             {this.renderInfo()}
             {this.renderHotspot()}
             {this.renderMenu()}
           </div>
         </div>
-      );    
+      );
     }
   }
 }

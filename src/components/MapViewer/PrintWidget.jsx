@@ -38,7 +38,7 @@ class PrintWidget extends React.Component {
    * and close actions of the component
    */
   openMenu() {
-    if (this.state.showMapMenu) {      
+    if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -54,16 +54,16 @@ class PrintWidget extends React.Component {
     } else {
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
-      'flex';
+        'flex';
       this.container.current
-      .querySelector('.esri-widget--button')
-      .classList.add('active-widget');
+        .querySelector('.esri-widget--button')
+        .classList.add('active-widget');
       document
-      .querySelector('.esri-ui-top-right.esri-ui-corner')
-      .classList.add('show-panel');
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });            
+      this.setState({ showMapMenu: true });
       this.props.mapViewer.switchView();
     }
   }
@@ -73,7 +73,7 @@ class PrintWidget extends React.Component {
   async componentDidMount() {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
-    // this.props.mapView.ui.add(this.container.current, 'top-right');    
+    // this.props.mapView.ui.add(this.container.current, 'top-right');
     this.print = new Print({
       view: this.props.mapViewer.mapView,
       container: this.container.current.querySelector('.print-panel'),

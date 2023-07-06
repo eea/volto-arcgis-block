@@ -20,7 +20,7 @@ const config = {
       ymax: 85,
     },
     activeLayers: [],
-    viewType: '2d',
+    viewType: '3d',
   },
   Components: [
     {
@@ -216,7 +216,8 @@ const config = {
   ],
   Urls: {
     nutsHandler:
-      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
+      // 'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
+      'https://trial.discomap.eea.europa.eu/arcgis/services/CLMS/NUTS_2021/MapServer/WMSServer',
     outsideEu:
       'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
   },
