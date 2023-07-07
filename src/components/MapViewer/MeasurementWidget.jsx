@@ -2,7 +2,10 @@ import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
-var Measurement;
+let Measurement;
+let AreaMeasurement3D;
+let DirectLineMeasurement3D;
+
 
 class MeasurementWidget extends React.Component {
   /**
@@ -21,9 +24,23 @@ class MeasurementWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/widgets/Measurement']).then(([_Measurement]) => {
-      Measurement = _Measurement;
-    });
+    return loadModules([
+      'esri/widgets/Measurement',
+      "esri/widgets/DirectLineMeasurement3D",
+      "esri/widgets/AreaMeasurement3D",
+    ]).then(([
+      _Measurement,
+      _DirectLineMeasurement3D,
+      _AreaMeasurement3D,
+    ]) => {[
+      Measurement,
+      DirectLineMeasurement3D,
+      AreaMeasurement3D,
+     ] = [
+      _Measurement,
+      _DirectLineMeasurement3D,
+      _AreaMeasurement3D,
+    ]});
   }
 
   /**
@@ -61,7 +78,7 @@ class MeasurementWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
-      this.areaMeasurement();
+      // this.areaMeasurement();
       document
         .querySelector('#measurement_area .ccl-expandable__button')
         .nextElementSibling.appendChild(
@@ -73,7 +90,7 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  toggleDropdownContent(e) {
+  toggleDropdownContent(e) {    
     if (e) {
       if (
         document.querySelector(
@@ -109,7 +126,7 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  areaMeasurementHandler(e) {
+  areaMeasurementHandler(e) {    
     e.currentTarget.nextElementSibling.appendChild(
       document.querySelector('.measurement-area'),
     );
@@ -121,19 +138,19 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  distanceMeasurementHandler(e) {
+  distanceMeasurementHandler(e) {    
     e.currentTarget.nextElementSibling.appendChild(
       document.querySelector('.measurement-area'),
     );
     this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
-    if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
+    if (e.currentTarget.getAttribute('aria-expanded') === 'true') {      
       this.distanceMeasurement();
     }
   }
 
-  coordsMeasurementHandler(e) {
+  coordsMeasurementHandler(e) {    
     this.toggleDropdownContent(e);
     this.clearMeasurements();
     //*** Add event to show mouse coordinates on click and move ***//
@@ -148,16 +165,20 @@ class MeasurementWidget extends React.Component {
       'block';
   }
 
-  areaMeasurement() {
-    this.measurement.activeTool = 'area';
+  areaMeasurement() {        
+    this.measurement.activeTool = 'area';    
   }
 
-  distanceMeasurement() {
-    this.measurement.activeTool = 'distance';
+  distanceMeasurement() {    
+    if (this.props.view.type === '2d') {
+      this.measurement.activeTool = 'distance';  // [[ NOTA ] aqui poner = distance2D
+    } else {
+      this.measurement.activeTool = 'direct-line';
+    }
   }
 
-  clearMeasurements() {
-    this.measurement.clear();
+  clearMeasurements() {        
+    this.measurement.clear();            
   }
 
   showCoordinates(pt) {
@@ -185,6 +206,24 @@ class MeasurementWidget extends React.Component {
       view: this.props.view,
       container: this.container.current.querySelector('.measurement-area'),
     });
+
+    // if (this.props.view.type === '2d') {
+    //   console.log('2D')
+    //   this.measurement = new Measurement({
+    //     view: this.props.view,
+    //     container: this.container.current.querySelector('.measurement-area'),
+    //   });
+    // } else if (this.props.view.type === '3d') {
+    //   console.log('3D')
+    //   this.DirectLineMeasurement3DTool = new DirectLineMeasurement3D({
+    //     view: this.props.view,
+    //     container: this.container.current.querySelector('.measurement-distance')
+    //   });
+    //   this.AreaMeasurement3DTool = new AreaMeasurement3D({
+    //     view: this.props.view,
+    //     container: this.container.current.querySelector('.measurement-area')
+    //   });     
+    // }    
   }
   /**
    * This method renders the component
@@ -235,7 +274,7 @@ class MeasurementWidget extends React.Component {
                     <div className="measurement-area"></div>
                   </div>
                 </div>
-                <div className="measurement-dropdown" id="measurement_distance">
+                <div className="measurement-dropdown" id="measurement_distance">                  
                   <div
                     className="ccl-expandable__button"
                     aria-expanded="false"
