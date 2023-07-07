@@ -100,23 +100,28 @@ class MeasurementWidget extends React.Component {
           '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
         ) !== e.currentTarget
       ) {
+        debugger;
         document
           .querySelector(
             '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
           )
           .setAttribute('aria-expanded', 'false');
       }
+      // poner el botón de new medida como pulsado para que se muestren los menús.      
+      debugger;
       var aria = e.currentTarget.getAttribute('aria-expanded');
       e.currentTarget.setAttribute(
         'aria-expanded',
         aria === 'true' ? 'false' : 'true',
       );
     } else {
+      debugger;
       if (
         document.querySelector(
           '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
         )
       ) {
+        debugger;
         document
           .querySelector(
             '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
@@ -130,7 +135,9 @@ class MeasurementWidget extends React.Component {
     e.currentTarget.nextElementSibling.appendChild(
       document.querySelector('.measurement-area'),
     );
-    this.toggleDropdownContent(e);
+    console.log(e);
+    debugger;
+    this.toggleDropdownContent(e);    
     this.clearMeasurements();
     this.clearCoordinates();
     if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
@@ -151,15 +158,29 @@ class MeasurementWidget extends React.Component {
   }
 
   coordsMeasurementHandler(e) {    
-    this.toggleDropdownContent(e);
+    // this.toggleDropdownContent(e);
     this.clearMeasurements();
     //*** Add event to show mouse coordinates on click and move ***//
-    var getCoordinates = this.props.view.on(
-      ['pointer-down', 'pointer-move'],
-      function (evt) {
-        this.showCoordinates(this.props.view.toMap({ x: evt.x, y: evt.y }));
-      }.bind(this),
-    );
+    debugger;
+    var getCoordinates;
+    if (this.props.view.type === '2d') {      
+      getCoordinates = this.props.view.on(
+        ['pointer-down', 'pointer-move'],
+        function (evt) {
+          this.showCoordinates(this.props.view.toMap({ x: evt.x, y: evt.y }));
+        }.bind(this),
+      );
+    } else {
+      debugger;
+      console.log('3D');
+      // getCoordinates = this.props.view.on(
+      //   ['pointer-move'],
+      //   function (evt) {
+      //     // this.showCoordinates(this.props.view.toMap({ x: evt.x, y: evt.y }));
+      //     console.log(evt);
+      //   }.bind(this),
+      // );
+    }
     this.setState({ ShowCoords: getCoordinates });
     this.container.current.querySelector('.measurement-coords').style.display =
       'block';
@@ -167,14 +188,19 @@ class MeasurementWidget extends React.Component {
 
   areaMeasurement() {        
     this.measurement.activeTool = 'area';    
+    this.measurement.startMeasurement();
+    // [probar en 2d]
+    debugger;
+    document.getElementsByClassName('esri-area-measurement-3d__clear-button').click();
   }
 
   distanceMeasurement() {    
     if (this.props.view.type === '2d') {
-      this.measurement.activeTool = 'distance';  // [[ NOTA ] aqui poner = distance2D
+      this.measurement.activeTool = 'distance';
     } else {
       this.measurement.activeTool = 'direct-line';
     }
+    this.measurement.startMeasurement();
   }
 
   clearMeasurements() {        
@@ -206,24 +232,6 @@ class MeasurementWidget extends React.Component {
       view: this.props.view,
       container: this.container.current.querySelector('.measurement-area'),
     });
-
-    // if (this.props.view.type === '2d') {
-    //   console.log('2D')
-    //   this.measurement = new Measurement({
-    //     view: this.props.view,
-    //     container: this.container.current.querySelector('.measurement-area'),
-    //   });
-    // } else if (this.props.view.type === '3d') {
-    //   console.log('3D')
-    //   this.DirectLineMeasurement3DTool = new DirectLineMeasurement3D({
-    //     view: this.props.view,
-    //     container: this.container.current.querySelector('.measurement-distance')
-    //   });
-    //   this.AreaMeasurement3DTool = new AreaMeasurement3D({
-    //     view: this.props.view,
-    //     container: this.container.current.querySelector('.measurement-area')
-    //   });     
-    // }    
   }
   /**
    * This method renders the component
