@@ -282,7 +282,11 @@ class MenuWidget extends React.Component {
           let items = [...innerDropdown];
           let snowAndIce = null;
           for (let item of items) {
-            if (item.innerText.includes('Snow and Ice')) {
+            let itemParentContainer = item.closest(
+              '.map-menu-product-dropdown',
+            );
+            let productId = itemParentContainer.getAttribute('productid');
+            if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
               snowAndIce = item;
               break;
             }
