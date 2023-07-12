@@ -2393,23 +2393,6 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
-          {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
-            <span
-              className="map-menu-icon active-layer-extent"
-              onClick={() => this.fullExtent(elem)}
-              onKeyDown={() => this.fullExtent(elem)}
-              tabIndex="0"
-              role="button"
-            >
-              <Popup
-                trigger={
-                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
-                }
-                content="Full extent"
-                {...popupSettings}
-              />
-            </span>
-          )}
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
@@ -2434,6 +2417,23 @@ class MenuWidget extends React.Component {
                     ? 'Show time slider'
                     : 'Hide time slider'
                 }
+                {...popupSettings}
+              />
+            </span>
+          )}
+          {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
+            <span
+              className="map-menu-icon active-layer-extent"
+              onClick={() => this.fullExtent(elem)}
+              onKeyDown={() => this.fullExtent(elem)}
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={
+                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
+                }
+                content="Full extent"
                 {...popupSettings}
               />
             </span>
