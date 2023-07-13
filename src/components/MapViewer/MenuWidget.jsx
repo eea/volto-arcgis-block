@@ -3555,5 +3555,4 @@ class MenuWidget extends React.Component {
     );
   }
 }
-
 export default MenuWidget;
