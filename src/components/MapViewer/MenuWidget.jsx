@@ -1757,25 +1757,24 @@ class MenuWidget extends React.Component {
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
   showZoomMessageOnDataset(dataset) {
+    let datasetContainer = dataset.closest('.map-menu-dataset-dropdown');
+    let datasetContainerId = datasetContainer.getAttribute('datasetid');
+
     if (this.props.download) return;
     let snowAndIceParameters;
     for (let i = 0; i < this.compCfg.length; i++) {
-      if (this.compCfg[i].ComponentTitle === 'Bio-geophysical Parameters') {
-        for (let j = 0; j < this.compCfg[i].Products.length; j++) {
-          if (
-            this.compCfg[i].Products[j].ProductId ===
-            '8474c3b080fa42cc837f1d2338fcf096'
-          ) {
-            snowAndIceParameters = this.compCfg[i].Products[j];
-            break;
-          }
+      for (let j = 0; j < this.compCfg[i].Products.length; j++) {
+        if (
+          this.compCfg[i].Products[j].ProductId ===
+          '8474c3b080fa42cc837f1d2338fcf096'
+        ) {
+          snowAndIceParameters = this.compCfg[i].Products[j];
+          break;
         }
-        break;
       }
     }
-
     snowAndIceParameters.Datasets.forEach((set) => {
-      if (set.DatasetTitle.includes(dataset.title)) {
+      if (set.DatasetId === datasetContainerId) {
         let node = document.getElementById(dataset.id).nextElementSibling
           .lastElementChild.lastChild.lastElementChild;
         if (dataset.checked) {
@@ -2033,10 +2032,14 @@ class MenuWidget extends React.Component {
   findCheckedDatasetNoServiceToVisualize(elem) {
     let parentId = elem.getAttribute('parentid');
     let selectedDataset = document.querySelector('[id="' + parentId + '"]');
+    let datasetContainer = selectedDataset.closest(
+      '.map-menu-dataset-dropdown',
+    );
+    let datasetContainerId = datasetContainer.getAttribute('datasetid');
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
-          if (dataset.DatasetTitle.includes(selectedDataset.title)) {
+          if (dataset.DatasetId === datasetContainerId) {
             return dataset.MarkAsDownloadableNoServiceToVisualize;
           }
         });
