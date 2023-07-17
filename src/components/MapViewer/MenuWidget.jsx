@@ -1006,7 +1006,6 @@ class MenuWidget extends React.Component {
     let style = this.props.download
       ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
       : {};
-
     if (dataset.HandlingLevel) {
       this.layerGroups[dataset.DatasetId] = [];
     }
@@ -1157,11 +1156,8 @@ class MenuWidget extends React.Component {
                     {description ? (
                       <Popup
                         trigger={
-                          (checkedLayers &&
-                            checkedLayers.includes(dataset.Layer.LayerId) &&
-                            dataset.ProductId ===
-                              '8474c3b080fa42cc837f1d2338fcf096') ||
-                          dataset.Product === 'Snow and Ice Parameters' ? (
+                          dataset.ProductId ===
+                          '8474c3b080fa42cc837f1d2338fcf096' ? (
                             <div class="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
                               <div class="zoom-in-message zoom-in-message-dataset">
@@ -1178,9 +1174,7 @@ class MenuWidget extends React.Component {
                         style={{ transform: 'translateX(-4rem)' }}
                       />
                     ) : dataset.ProductId ===
-                        '8474c3b080fa42cc837f1d2338fcf096' ||
-                      dataset.Product ===
-                        'High Resolution Snow and Ice Parameters' ? (
+                      '8474c3b080fa42cc837f1d2338fcf096' ? (
                       <div class="zoom-in-message-container">
                         <span>{dataset.DatasetTitle}</span>
                         <div class="zoom-in-message">
