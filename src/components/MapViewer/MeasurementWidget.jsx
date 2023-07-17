@@ -147,7 +147,10 @@ class MeasurementWidget extends React.Component {
         } else {
           if (coords !== null) {
             this.showCoordinates(coords);
-          } else {
+          } else if (
+            typeof this.setState['latlong'] !== 'undefined' ||
+            this.setState['latlong'] !== null
+          ) {
             this.setState({ latlong: null });
           }
         }
