@@ -3,9 +3,6 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 let Measurement;
-let AreaMeasurement3D;
-let DirectLineMeasurement3D;
-
 
 class MeasurementWidget extends React.Component {
   /**
@@ -24,23 +21,9 @@ class MeasurementWidget extends React.Component {
   }
 
   loader() {
-    return loadModules([
-      'esri/widgets/Measurement',
-      "esri/widgets/DirectLineMeasurement3D",
-      "esri/widgets/AreaMeasurement3D",
-    ]).then(([
-      _Measurement,
-      _DirectLineMeasurement3D,
-      _AreaMeasurement3D,
-    ]) => {[
-      Measurement,
-      DirectLineMeasurement3D,
-      AreaMeasurement3D,
-     ] = [
-      _Measurement,
-      _DirectLineMeasurement3D,
-      _AreaMeasurement3D,
-    ]});
+    return loadModules(['esri/widgets/Measurement']).then(([_Measurement]) => {
+      [Measurement] = [_Measurement];
+    });
   }
 
   /**
@@ -90,7 +73,7 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  toggleDropdownContent(e) {    
+  toggleDropdownContent(e) {
     if (e) {
       if (
         document.querySelector(
@@ -100,28 +83,24 @@ class MeasurementWidget extends React.Component {
           '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
         ) !== e.currentTarget
       ) {
-        debugger;
         document
           .querySelector(
             '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
           )
           .setAttribute('aria-expanded', 'false');
       }
-      // poner el botón de new medida como pulsado para que se muestren los menús.      
-      debugger;
+      // poner el botón de new medida como pulsado para que se muestren los menús.
       var aria = e.currentTarget.getAttribute('aria-expanded');
       e.currentTarget.setAttribute(
         'aria-expanded',
         aria === 'true' ? 'false' : 'true',
       );
     } else {
-      debugger;
       if (
         document.querySelector(
           '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
         )
       ) {
-        debugger;
         document
           .querySelector(
             '.measurement-dropdown .ccl-expandable__button[aria-expanded="true"]',
@@ -131,13 +110,11 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  areaMeasurementHandler(e) {    
+  areaMeasurementHandler(e) {
     e.currentTarget.nextElementSibling.appendChild(
       document.querySelector('.measurement-area'),
     );
-    console.log(e);
-    debugger;
-    this.toggleDropdownContent(e);    
+    this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
     if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
@@ -145,56 +122,50 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  distanceMeasurementHandler(e) {    
+  distanceMeasurementHandler(e) {
     e.currentTarget.nextElementSibling.appendChild(
       document.querySelector('.measurement-area'),
     );
     this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
-    if (e.currentTarget.getAttribute('aria-expanded') === 'true') {      
+    if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
       this.distanceMeasurement();
     }
   }
 
-  coordsMeasurementHandler(e) {    
-    // this.toggleDropdownContent(e);
+  coordsMeasurementHandler(e) {
+    this.toggleDropdownContent(e);
     this.clearMeasurements();
     //*** Add event to show mouse coordinates on click and move ***//
-    debugger;
-    var getCoordinates;
-    if (this.props.view.type === '2d') {      
-      getCoordinates = this.props.view.on(
-        ['pointer-down', 'pointer-move'],
-        function (evt) {
-          this.showCoordinates(this.props.view.toMap({ x: evt.x, y: evt.y }));
-        }.bind(this),
-      );
-    } else {
-      debugger;
-      console.log('3D');
-      // getCoordinates = this.props.view.on(
-      //   ['pointer-move'],
-      //   function (evt) {
-      //     // this.showCoordinates(this.props.view.toMap({ x: evt.x, y: evt.y }));
-      //     console.log(evt);
-      //   }.bind(this),
-      // );
-    }
+    var getCoordinates = this.props.view.on(
+      ['pointer-down', 'pointer-move'],
+      function (evt) {
+        let coords = this.props.view.toMap({ x: evt.x, y: evt.y });
+        if (this.props.view.type === '2d') {
+          this.showCoordinates(coords);
+        } else {
+          if (coords !== null) {
+            this.showCoordinates(coords);
+          } else {
+            this.setState({ latlong: null });
+          }
+        }
+      }.bind(this),
+    );
     this.setState({ ShowCoords: getCoordinates });
     this.container.current.querySelector('.measurement-coords').style.display =
       'block';
   }
 
-  areaMeasurement() {        
-    this.measurement.activeTool = 'area';    
+  areaMeasurement() {
+    this.measurement.activeTool = 'area';
     this.measurement.startMeasurement();
     // [probar en 2d]
-    debugger;
-    document.getElementsByClassName('esri-area-measurement-3d__clear-button').click();
+    // document.getElementsByClassName('esri-area-measurement-3d__clear-button').click();
   }
 
-  distanceMeasurement() {    
+  distanceMeasurement() {
     if (this.props.view.type === '2d') {
       this.measurement.activeTool = 'distance';
     } else {
@@ -203,8 +174,8 @@ class MeasurementWidget extends React.Component {
     this.measurement.startMeasurement();
   }
 
-  clearMeasurements() {        
-    this.measurement.clear();            
+  clearMeasurements() {
+    this.measurement.clear();
   }
 
   showCoordinates(pt) {
@@ -282,7 +253,7 @@ class MeasurementWidget extends React.Component {
                     <div className="measurement-area"></div>
                   </div>
                 </div>
-                <div className="measurement-dropdown" id="measurement_distance">                  
+                <div className="measurement-dropdown" id="measurement_distance">
                   <div
                     className="ccl-expandable__button"
                     aria-expanded="false"
