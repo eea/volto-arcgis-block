@@ -974,10 +974,11 @@ class MenuWidget extends React.Component {
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
-
+    let product = productCheck.closest('.map-menu-product-dropdown');
+    let productId = product.getAttribute('productid');
     productCheck.checked = trueCheck > 0;
-    let productCheckLabel = productCheck.labels[0].innerText;
-    if (productCheckLabel.includes('Snow and Ice Parameters')) {
+    // let productCheckLabel = productCheck.labels[0].innerText;
+    if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
       sessionStorage.setItem('snowAndIce', true);
     } else {
       sessionStorage.setItem('snowAndIce', false);
@@ -2990,6 +2991,21 @@ class MenuWidget extends React.Component {
         ) {
           this.map.findLayerById(elem.id).opacity = layerOpacities[elem.id];
         }
+      }
+    }
+  }
+
+  componentDidUpdate() {
+    if (sessionStorage.getItem('snowAndIce') === 'true') {
+      //grab all checkedLayers from sessionstorage store them in checkedLayeers
+      let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+      for (let i = 0; i < checkedLayers.length; i++) {
+        let layerCheck = document.getElementById(checkedLayers[i]);
+        let datasetParentContainer = layerCheck.closest('.ccl-fieldset');
+        let datasetInputParentContainer =
+          datasetParentContainer.firstElementChild;
+        let datasetCheck = datasetInputParentContainer.querySelector('input');
+        this.showZoomMessageOnDataset(datasetCheck);
       }
     }
   }
