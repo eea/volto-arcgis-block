@@ -2996,9 +2996,14 @@ class MenuWidget extends React.Component {
   }
 
   componentDidUpdate() {
+    if (this.props.download) return;
+
     if (sessionStorage.getItem('snowAndIce') === 'true') {
       //grab all checkedLayers from sessionstorage store them in checkedLayeers
       let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+
+      if (checkedLayers === null) return;
+
       for (let i = 0; i < checkedLayers.length; i++) {
         let layerCheck = document.getElementById(checkedLayers[i]);
         let datasetParentContainer = layerCheck.closest('.ccl-fieldset');
