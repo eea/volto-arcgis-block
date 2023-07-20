@@ -6,8 +6,6 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-import { Toast } from '@plone/volto/components';
-import { toast } from 'react-toastify';
 var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest, Extent;
 
 const popupSettings = {
@@ -57,7 +55,6 @@ export const AddCartItem = ({
     }
     let data = checkCartData(cartData, area, dataset);
     addCartItem(data).then(() => {
-      showMessageTimer('Added to cart', 'success', 'Success');
       if (dataset.IsTimeSeries) {
         let id = dataset.DatasetId;
         let datasetElem = document.querySelector('[datasetid="' + id + '"]');
@@ -84,18 +81,6 @@ export const AddCartItem = ({
     };
     let data = [datasetData];
     return data;
-  };
-
-  const showMessageTimer = (msg, type, title) => {
-    toast[type](<Toast autoClose={4000} title={title} content={msg} />, {
-      position: 'top-center',
-      autoClose: 4000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-      progress: undefined,
-    });
   };
 
   if (!dataset) {
