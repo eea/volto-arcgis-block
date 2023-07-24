@@ -343,6 +343,7 @@ class HotspotWidget extends React.Component {
     });
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
+    this.disableButton();
   }
 
   dropdownAnimation() {
@@ -626,13 +627,18 @@ class HotspotWidget extends React.Component {
           for (let u = 0; u < selectBox.options.length; u++) {
             if (selectBox.options[u].label.includes(this.selectedArea)) {
               selectBox.value = this.selectedArea;
-              //selectBoxLcTime.value = this.lcYear;
-              //selectBoxLccTime.value = this.lccYear;
+              if (this.lcYear === null) selectBoxLcTime.value = 'default';
+              else if (this.lccYear === null)
+                selectBoxLccTime.value = 'default';
+              else {
+                selectBoxLcTime.value = this.lcYear;
+                selectBoxLccTime.value = this.lccYear;
+              }
               break;
             } else {
               selectBox.value = 'default';
-              //selectBoxLcTime.value = 'default';
-              //selectBoxLccTime.value = 'default';
+              selectBoxLcTime.value = 'default';
+              selectBoxLccTime.value = 'default';
             }
           }
           break;
@@ -783,6 +789,7 @@ class HotspotWidget extends React.Component {
   componentDidUpdate(prevState) {
     if (prevState.activeLayers !== this.state.activeLayers) {
       this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      this.disableButton();
     }
   }
 
