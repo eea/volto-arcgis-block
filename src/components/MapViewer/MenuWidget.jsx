@@ -2812,10 +2812,10 @@ class MenuWidget extends React.Component {
     } else if (this.layers['pa_filter'] && layer.includes('protected_areas')) {
       this.layers['pa_filter'].opacity = value / 100;
       this.saveOpacity(this.layers['pa_filter'], value / 100);
+    } else {
+      this.layers[layer].opacity = value / 100;
+      this.saveOpacity(layer, value / 100);
     }
-    this.layers[layer].opacity = value / 100;
-    this.saveOpacity(layer, value / 100);
-
     if (
       this.map.findLayerById(layer) &&
       this.map.findLayerById(layer) !== null &&
