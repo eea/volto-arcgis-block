@@ -4,6 +4,7 @@ import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var Print;
 
+
 class PrintWidget extends React.Component {
   /**
    * Creator of the Measurement widget class
@@ -37,22 +38,26 @@ class PrintWidget extends React.Component {
    * button is clicked. It controls the open
    * and close actions of the component
    */
-  openMenu() {
-    if (this.state.showMapMenu) {
+  openMenu() {        
+    if (this.state.showMapMenu) {      
+      // CLOSE
+      if (this.props.view.type === "2d") {
+        this.props.mapViewer.switchView();
+      }      
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.right-panel').style.display =
-        'none';
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.remove('active-widget');
-      document
-        .querySelector('.esri-ui-top-right.esri-ui-corner')
-        .classList.remove('show-panel');
+      this.container.current.querySelector('.right-panel').style.display = 'none';
+      // this.container.current.querySelector('.esri-widget--button').classList.remove('active-widget');
+      // document.querySelector('.esri-ui-top-right.esri-ui-corner').classList.remove('show-panel');
+
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
-    } else {
-      this.props.mapViewer.setActiveWidget(this);
+    } else {      
+      // OPEN
+      if (this.props.view.type === "3d") {
+        this.props.mapViewer.switchView();
+      }            
+      this.props.mapViewer.setActiveWidget(this);      
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
       this.container.current
@@ -63,21 +68,21 @@ class PrintWidget extends React.Component {
         .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });
-      this.props.mapViewer.switchView();
-    }
+      this.setState({ showMapMenu: true });   
+    }  
   }
   /**
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
-    await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
-    // this.props.mapView.ui.add(this.container.current, 'top-right');
-    this.print = new Print({
-      view: this.props.mapViewer.mapView,
-      container: this.container.current.querySelector('.print-panel'),
-    });
+    this.props.view.ui.add(this.container.current, 'top-right');  
+    if (this.props.view.type === '2d') {
+      await this.loader();
+      this.print = new Print({
+        view: this.props.mapViewer.mapView,
+        container: this.container.current.querySelector('.print-panel'),
+      });
+    }    
   }
 
   componentDidUpdate() {
@@ -210,40 +215,78 @@ class PrintWidget extends React.Component {
     });
   }
 
+  changeView() {
+    this.props.mapViewer.switchView();    
+  }
   /**
    * This method renders the component
    * @returns jsx
    */
-  render() {
+  render() {  
     return (
       <>
         <div ref={this.container} className="print-container">
-          <div tooltip="Print" direction="left" type="widget">
-            <div
-              className={this.menuClass}
-              id="map_print_button"
-              aria-label="Print"
-              onClick={this.openMenu.bind(this)}
-              onKeyDown={this.openMenu.bind(this)}
-              tabIndex="0"
-              role="button"
-            ></div>
-          </div>
-          <div className="right-panel">
-            <div className="right-panel-header">
-              <span>Print</span>
-              <span
-                className="map-menu-icon esri-icon-close"
-                onClick={this.openMenu.bind(this)}
-                onKeyDown={this.openMenu.bind(this)}
-                tabIndex="0"
-                role="button"
-              ></span>
-            </div>
-            <div className="right-panel-content">
-              <div className="print-panel"></div>
-            </div>
-          </div>
+          {this.props.view.type === '2d' ? (
+            <>
+              <div tooltip="Print" direction="left" type="widget">
+                <div
+                  className={this.menuClass}
+                  id="map_print_button"
+                  aria-label="Print"
+                  onClick={this.openMenu.bind(this)}
+                  onKeyDown={this.openMenu.bind(this)}
+                  tabIndex="0"
+                  role="button"
+                ></div>
+              </div>
+              {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}                  
+              <div className="right-panel">
+                <div className="right-panel-header">
+                  <span>Print</span>                  
+                  <span
+                    className="map-menu-icon esri-icon-close"
+                    onClick={this.openMenu.bind(this)}
+                    onKeyDown={this.openMenu.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  ></span>
+                </div>
+                <div className="right-panel-content">
+                  <div className="print-panel"></div>
+                </div>
+              </div>
+            </>
+            ) : (
+              <>
+              <div tooltip="Print" direction="left">
+                <div
+                  className="esri-icon-printer esri-widget--button"
+                  id="map_print_button3d"
+                  aria-label="Print"
+                  onClick={this.changeView.bind(this)}
+                  onKeyDown={this.changeView.bind(this)}
+                  tabIndex="0"
+                  role="button"
+                ></div>
+              </div>
+              {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}                  
+              {/* <div className="right-panel">
+                <div className="right-panel-header">
+                  <span>Print</span>                  
+                  <span
+                    className="map-menu-icon esri-icon-close"
+                    onClick={this.openMenu.bind(this)}
+                    onKeyDown={this.openMenu.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  ></span>
+                </div>
+                <div className="right-panel-content">
+                  <div className="print-panel"></div>
+                </div>
+              </div> */}
+              </>
+            )}         
         </div>
       </>
     );

@@ -392,9 +392,9 @@ class MapViewer extends React.Component {
       return <MeasurementWidget view={this.view} mapViewer={this} />;
   }
 
-  renderPrint() {
+  renderPrint(view) {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
+    if (view) return <PrintWidget view={view} mapViewer={this} />;
   }
 
   renderArea() {
@@ -483,6 +483,7 @@ class MapViewer extends React.Component {
             {this.renderMeasurement()}
 
             {this.renderPrint(this.mapView)}
+            {this.renderPrint(this.sceneView)}
 
             {this.renderArea()}
             {this.renderScale()}
