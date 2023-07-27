@@ -214,7 +214,7 @@ class MapViewer extends React.Component {
     if (mapStatus.viewType === '3d') {
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
-      this.setViewState(this.view.type);
+      // this.setViewState(this.view.type);
     }
 
     // 2D
@@ -236,7 +236,7 @@ class MapViewer extends React.Component {
     if (mapStatus.viewType === '2d') {
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;
-      this.setViewState(this.view.type);
+      // this.setViewState(this.view.type);
     }
 
     this.zoom = new Zoom({

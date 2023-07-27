@@ -41,14 +41,14 @@ class PrintWidget extends React.Component {
   openMenu() {        
     if (this.state.showMapMenu) {      
       // CLOSE
-      if (this.props.view.type === "2d") {
-        this.props.mapViewer.switchView();
-      }      
+      this.container.current.querySelector('.esri-widget--button').classList.remove('active-widget');
+      document.querySelector('.esri-ui-top-right.esri-ui-corner').classList.remove('show-panel');
       this.props.mapViewer.setActiveWidget();
-      this.container.current.querySelector('.right-panel').style.display = 'none';
-      // this.container.current.querySelector('.esri-widget--button').classList.remove('active-widget');
-      // document.querySelector('.esri-ui-top-right.esri-ui-corner').classList.remove('show-panel');
-
+      this.container.current.querySelector('.right-panel').style.display = 'none';      
+      if (this.props.view.type === "2d" && this.props.mapViewer.mapCfg.viewType === '3d') {
+        // The app is configured in 3D and the current view is 2D
+        this.props.mapViewer.switchView();
+      }            
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
