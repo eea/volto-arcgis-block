@@ -599,21 +599,19 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+              selectBox.value = 'default';
+              continue;
+            } else {
               selectBox.value = this.selectedArea;
-              if (this.lcYear === null) selectBoxLcTime.value = 'default';
-              else if (this.lccYear === null)
-                selectBoxLccTime.value = 'default';
-              else {
+              if (this.lcYear !== null) {
                 selectBoxLcTime.value = this.lcYear;
+              }
+              if (this.lccYear !== null) {
                 selectBoxLccTime.value = this.lccYear;
               }
-              break;
-            } else {
-              selectBox.value = 'default';
-              selectBoxLcTime.value = 'default';
-              selectBoxLccTime.value = 'default';
             }
+            break;
           }
           break;
         } else if (
@@ -625,24 +623,23 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+              selectBox.value = 'default';
+              continue;
+            } else {
               selectBox.value = this.selectedArea;
-              if (this.lcYear === null) selectBoxLcTime.value = 'default';
-              else if (this.lccYear === null)
-                selectBoxLccTime.value = 'default';
-              else {
+              if (this.lcYear !== null) {
                 selectBoxLcTime.value = this.lcYear;
+              }
+              if (this.lccYear !== null) {
                 selectBoxLccTime.value = this.lccYear;
               }
-              break;
-            } else {
-              selectBox.value = 'default';
-              selectBoxLcTime.value = 'default';
-              selectBoxLccTime.value = 'default';
             }
+            break;
           }
           break;
         }
+        break;
       }
     }
     if (selectBox.value === 'default') {
