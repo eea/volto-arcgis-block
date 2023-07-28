@@ -147,12 +147,12 @@ class MapViewer extends React.Component {
       this.mapView.viewpoint = activeViewpoint;
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;
-      this.setViewState(this.view.type);
+      // this.setViewState(this.view.type);
     } else {
       this.sceneView.viewpoint = activeViewpoint;
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
-      this.setViewState(this.view.type);
+      // this.setViewState(this.view.type);
     }
     // this.view.ui._components.map(item => console.log(item));
   }
@@ -267,13 +267,13 @@ class MapViewer extends React.Component {
     });
 
     this.mapView.when(() => {
-      this.mapView.watch('center', (newValue, oldValue, property, object) => {
-        this.setCenterState(newValue);
-      });
+      // this.mapView.watch('center', (newValue, oldValue, property, object) => {
+      //   this.setCenterState(newValue);
+      // });
 
       let constraintExtent = null;
       this.mapView.watch('zoom', (newValue, oldValue, property, object) => {
-        this.setZoomState(newValue);
+        // this.setZoomState(newValue);
         // if (newValue < 4) {
         //   if (this.view.type === '2d') {
         //     this.switchView();
