@@ -223,6 +223,7 @@ class MapViewer extends React.Component {
       map: this.map,
       center: mapStatus.center,
       zoom: mapStatus.zoom,
+      popupEnabled: false,
       constraints: {
         minZoom: this.mapCfg.minZoom,
         maxZoom: this.mapCfg.maxZoom,
@@ -303,9 +304,15 @@ class MapViewer extends React.Component {
         this.mapView.constraints.geometry = constraintExtent;
       });
     });
+    
+    // this.view.popup.autoOpenEnabled = false;
 
-    ///// NOTA  con estas líneas he logrado que aparezcan los widgets en la vista 3D
-    this.view.popup.autoOpenEnabled = false;
+    this.mapView.popup.autoOpenEnabled = false;
+    
+    this.sceneView.popup.autoOpenEnabled = false;
+
+
+
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
     // this.props.mapviewer_config
