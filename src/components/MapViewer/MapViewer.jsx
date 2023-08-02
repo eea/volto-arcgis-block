@@ -215,6 +215,14 @@ class MapViewer extends React.Component {
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
       // this.setViewState(this.view.type);
+      
+      this.zoom = new Zoom({
+        view: this.sceneView,
+      });
+
+      this.sceneView.ui.add(this.zoom, {
+        position: 'top-right',
+      });
     }
 
     // 2D
@@ -238,15 +246,14 @@ class MapViewer extends React.Component {
       this.mapView.container = this.mapdiv.current;
       this.view = this.mapView;
       // this.setViewState(this.view.type);
+      this.zoom = new Zoom({
+        view: this.mapView,
+      });
+      this.mapView.ui.add(this.zoom, {
+        position: 'top-right',
+      });
     }
 
-    this.zoom = new Zoom({
-      view: this.view,
-    });
-
-    this.view.ui.add(this.zoom, {
-      position: 'top-right',
-    });
 
     this.sceneView.when(() => {
       this.sceneView.watch('center', (newValue, oldValue, property, object) => {

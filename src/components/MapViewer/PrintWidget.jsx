@@ -81,15 +81,18 @@ class PrintWidget extends React.Component {
       this.print = new Print({
         view: this.props.mapViewer.mapView,
         container: this.container.current.querySelector('.print-panel'),
-      });      
-      var popup = document.createElement('div');
-      popup.className = 'drawRectanglePopup-block';
-      popup.innerHTML =
+      });            
+      if (this.props.mapViewer.mapCfg.viewType === '3d') {
+        // This popup will be displayed only when the app is configured in 3D in config.js
+        var popup = document.createElement('div');
+        popup.className = 'drawRectanglePopup-block';
+        popup.innerHTML =
         '<div class="drawRectanglePopup-content">' +
         '<span class="drawRectanglePopup-icon"><span class="esri-icon-printer"></span></span>' +
         '<div class="drawRectanglePopup-text">This is a printing view. Zoom and pan to the area of interest.</div>' +
         '</div>';
-      this.props.mapViewer.mapView.ui.add(popup, 'top-right');
+        this.props.mapViewer.mapView.ui.add(popup, 'top-right');
+      }
     }    
   }
 
