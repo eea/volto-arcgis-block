@@ -288,7 +288,7 @@ class InfoWidget extends React.Component {
     }
 
     for (let feature in this.features) {
-      let topics = this.features[feature].attributes.Use_case_topics.split(',');
+      let topics = this.features[feature].attributes.Use_case_topics.split(';');
 
       for (let topic in topics) {
         processedData[topics[topic]].push(this.features[feature].attributes);
@@ -391,7 +391,7 @@ class InfoWidget extends React.Component {
     let topicProducts = [];
 
     for (let feature in features) {
-      let topics = features[feature].attributes.Use_case_topics.split(',');
+      let topics = features[feature].attributes.Use_case_topics.split(';');
 
       for (let topic in topics) {
         if (!topicProducts.includes(topics[topic])) {
