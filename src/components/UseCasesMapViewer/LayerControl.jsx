@@ -29,7 +29,12 @@ class LayerControl {
 
   getGeometry(country, layer) {
     layer.definitionExpression = `(`;
-    if (country === 'EU' || country === 'EU 27+UK' || country === 'EEA+38UK') {
+    if (
+      country === 'EU' ||
+      country === 'EU 27+UK' ||
+      country === 'EEA38' ||
+      country === 'EEA38+UK'
+    ) {
       let states = mapViewer.props.cfg.Codes[country];
       for (let i = 0; i < states.length; i++) {
         layer.definitionExpression += `CNTR_ID = '${states[i]}'`;
