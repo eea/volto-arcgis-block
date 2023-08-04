@@ -13,11 +13,11 @@ let Map,
   FeatureLayer,
   Extent,
   Basemap,
-  VectorTileLayer,
   layerControl,
   navigationControl,
   layerSpatial,
-  layerHighlight;
+  layerHighlight,
+  WebTileLayer;
 
 class UseCasesMapViewer extends React.Component {
   constructor(props) {
@@ -74,23 +74,16 @@ class UseCasesMapViewer extends React.Component {
       'esri/layers/FeatureLayer',
       'esri/geometry/Extent',
       'esri/Basemap',
-      'esri/layers/VectorTileLayer',
+      'esri/layers/WebTileLayer',
     ]).then(
-      ([
-        _Map,
-        _MapView,
-        _FeatureLayer,
-        _Extent,
-        _Basemap,
-        _VectorTileLayer,
-      ]) => {
-        [Map, MapView, FeatureLayer, Extent, Basemap, VectorTileLayer] = [
+      ([_Map, _MapView, _FeatureLayer, _Extent, _Basemap, _WebTileLayer]) => {
+        [Map, MapView, FeatureLayer, Extent, Basemap, WebTileLayer] = [
           _Map,
           _MapView,
           _FeatureLayer,
           _Extent,
           _Basemap,
-          _VectorTileLayer,
+          _WebTileLayer,
         ];
       },
     );
@@ -105,27 +98,29 @@ class UseCasesMapViewer extends React.Component {
     loadCss();
     await this.loader();
 
-    const gray_basemap = new VectorTileLayer({
-      portalItem: {
-        id: '291da5eab3a0412593b66d384379f89f',
-      },
-    });
-
-    let basemap = new Basemap({
-      baseLayers: [gray_basemap],
+    this.basemap = new Basemap({
+      title: 'Countries World',
+      thumbnailUrl:
+        'https://gisco-services.ec.europa.eu/maps/wmts/CountriesWorld/EPSG3857/0/0/0.png',
+      baseLayers: [
+        new WebTileLayer({
+          urlTemplate:
+            'https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png',
+        }),
+      ],
     });
 
     // this.mapdiv.current is the reference to the current DOM element of
     // this.mapdiv after it was mounted by the render() method
     this.map = new Map({
-      basemap: basemap,
+      basemap: this.basemap,
     });
 
     this.view = new MapView({
       container: this.mapdiv.current,
       map: this.map,
       center: this.mapCfg.center,
-      zoom: this.mapCfg.zoom,
+      zoom: 1,
       ui: {
         components: ['attribution'],
       },
