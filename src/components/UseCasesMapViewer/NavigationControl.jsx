@@ -21,7 +21,7 @@ class NavigationControl extends React.Component {
     this.layerControl.hideLayer(layerSpatial.id);
     this.layerControl.showLayer(layerRegion.id);
     this.view.center = this.center;
-    this.view.zoom = 0;
+    this.view.zoom = 1;
     layerSpatial.definitionExpression = null;
     mapViewer.setState(() => ({
       useCaseLevel: 1,
