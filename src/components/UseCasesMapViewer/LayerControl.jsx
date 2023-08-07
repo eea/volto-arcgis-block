@@ -129,6 +129,7 @@ class LayerControl {
     return Math.min(latZoom, lngZoom, this.zoomMax);
     //TODO calculate the corresponding level of zoom automatically
   }
+
   latRad(lat) {
     let sin = Math.sin((lat * Math.PI) / 180);
     let radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
