@@ -259,6 +259,7 @@ class AreaWidget extends React.Component {
       document.querySelector('.drawRectanglePopup-block').style.display =
         'block';
     }
+    this.props.view.ui._removeComponents(['attribution']);
   }
 
   /**
@@ -272,6 +273,7 @@ class AreaWidget extends React.Component {
     });
     this.props.map.add(this.nutsGroupLayer);
     this.props.view.on('click', (event) => {
+      this.props.view.ui.components = ['attribution'];
       if (
         (this.props.mapViewer.activeWidget === this || this.props.download) &&
         (this.props.mapViewer.activeWidget
