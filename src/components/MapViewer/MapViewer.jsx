@@ -18,6 +18,7 @@ import InfoWidget from './InfoWidget';
 import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
+import ResetViewWidget from './ResetViewWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
@@ -446,6 +447,10 @@ class MapViewer extends React.Component {
       );
   }
 
+  renderResetView() {
+    if (this.view) return <ResetViewWidget view={this.view} map={this.map} mapViewer={this} />;
+  }
+
   renderMenu() {
     if (this.view)
       return (
@@ -464,6 +469,7 @@ class MapViewer extends React.Component {
         />
       ); //call conf
   }
+  
 
   appLanguage() {
     return intl && <CheckLanguage />;
@@ -505,6 +511,7 @@ class MapViewer extends React.Component {
             {this.renderInfo()}
             {this.renderHotspot()}
             {this.renderMenu()}
+            {this.renderResetView()}
           </div>
         </div>
       );
