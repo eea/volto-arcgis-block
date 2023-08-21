@@ -44,6 +44,7 @@ class HotspotWidget extends React.Component {
     this.selectedArea = null;
     this.lcYear = null;
     this.lccYear = null;
+    this.urls = this.props.urls;
   }
 
   loader() {
@@ -59,7 +60,7 @@ class HotspotWidget extends React.Component {
   }
 
   getBBoxData = () => {
-    const url = 'https://land.copernicus.eu/global/hsm/php/klc_bbox.php';
+    const url = this.urls.klc_bbox;
     return esriRequest(url, {
       responseType: 'json',
     }).then((response) => {
@@ -98,15 +99,12 @@ class HotspotWidget extends React.Component {
   }
 
   addLegendNameToUrl(legend) {
-    const legendLinkUrl =
-      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=';
+    const legendLinkUrl = this.urls.legendLinkUrl;
     return legendLinkUrl + legend;
   }
 
   layerModelInit() {
-    const serviceUrl =
-      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms';
-
+    const serviceUrl = this.urls.serviceUrl;
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
       //featureInfoFormat: "application/json",
@@ -341,6 +339,7 @@ class HotspotWidget extends React.Component {
     });
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
+    this.disableButton();
   }
 
   dropdownAnimation() {
@@ -393,7 +392,7 @@ class HotspotWidget extends React.Component {
   }
 
   getLayerParameters() {
-    fetch('https://land.copernicus.eu/global/hsm/all_geo_klc_json')
+    fetch(this.urls.all_geo_klc)
       .then((data) => {
         if (data.status === 200) {
           return data.json();
@@ -596,21 +595,19 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+              selectBox.value = 'default';
+              continue;
+            } else {
               selectBox.value = this.selectedArea;
-              if (this.lcYear === null) selectBoxLcTime.value = 'default';
-              else if (this.lccYear === null)
-                selectBoxLccTime.value = 'default';
-              else {
+              if (this.lcYear !== null) {
                 selectBoxLcTime.value = this.lcYear;
+              }
+              if (this.lccYear !== null) {
                 selectBoxLccTime.value = this.lccYear;
               }
-              break;
-            } else {
-              selectBox.value = 'default';
-              selectBoxLcTime.value = 'default';
-              selectBoxLccTime.value = 'default';
             }
+            break;
           }
           break;
         } else if (
@@ -622,19 +619,23 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (selectBox.options[u].label.includes(this.selectedArea)) {
-              selectBox.value = this.selectedArea;
-              //selectBoxLcTime.value = this.lcYear;
-              //selectBoxLccTime.value = this.lccYear;
-              break;
-            } else {
+            if (!selectBox.options[u].label.includes(this.selectedArea)) {
               selectBox.value = 'default';
-              //selectBoxLcTime.value = 'default';
-              //selectBoxLccTime.value = 'default';
+              continue;
+            } else {
+              selectBox.value = this.selectedArea;
+              if (this.lcYear !== null) {
+                selectBoxLcTime.value = this.lcYear;
+              }
+              if (this.lccYear !== null) {
+                selectBoxLccTime.value = this.lccYear;
+              }
             }
+            break;
           }
           break;
         }
+        break;
       }
     }
     if (selectBox.value === 'default') {
@@ -781,6 +782,7 @@ class HotspotWidget extends React.Component {
   componentDidUpdate(prevState) {
     if (prevState.activeLayers !== this.state.activeLayers) {
       this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      this.disableButton();
     }
   }
 

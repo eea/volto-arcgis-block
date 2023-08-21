@@ -220,6 +220,21 @@ const config = {
       'https://trial.discomap.eea.europa.eu/arcgis/services/CLMS/NUTS_2021/MapServer/WMSServer',
     outsideEu:
       'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
+    all_present_lc_a_pol:
+      'https://clms-prod.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-reference-land-cover.png/@@images/image-800-8e5528b4247acef813af4b91d30a22d1.png',
+    all_present_lc_b_pol:
+      'https://clmsdemo.devel6cph.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-reference-land-cover.png/@@images/image-800-97f58b15239b2b3ea85d701e171eaf64.png',
+    all_lcc_a_pol:
+      'https://clms-prod.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/dichotomous-land-cover-change.png/@@images/image-800-e77885afc5da8e0535f648b563e60408.png',
+    all_lcc_b_pol:
+      'https://clms-prod.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/modular-land-cover-change.png/@@images/image-800-7e36e74d09ddd7e3f94fb502f0b5be8e.png',
+    cop_klc:
+      'https://clms-prod.eea.europa.eu/en/products/lclcc-hot-spots/static-legends/key-landscapes-for-conservation-borders.png/@@images/image-800-28ced0e8616b9a414ea5076399a5ba4e.png',
+    klc_bbox: 'https://land.copernicus.eu/global/hsm/php/klc_bbox.php',
+    legendLinkUrl:
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=',
+    serviceUrl: 'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms',
+    all_geo_klc: 'https://land.copernicus.eu/global/hsm/all_geo_klc_json',
   },
 };
 export default config;

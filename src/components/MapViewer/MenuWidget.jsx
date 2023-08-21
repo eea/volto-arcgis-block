@@ -6,8 +6,6 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-import { Toast } from '@plone/volto/components';
-import { toast } from 'react-toastify';
 var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest, Extent;
 
 const popupSettings = {
@@ -57,7 +55,6 @@ export const AddCartItem = ({
     }
     let data = checkCartData(cartData, area, dataset);
     addCartItem(data).then(() => {
-      showMessageTimer('Added to cart', 'success', 'Success');
       if (dataset.IsTimeSeries) {
         let id = dataset.DatasetId;
         let datasetElem = document.querySelector('[datasetid="' + id + '"]');
@@ -84,18 +81,6 @@ export const AddCartItem = ({
     };
     let data = [datasetData];
     return data;
-  };
-
-  const showMessageTimer = (msg, type, title) => {
-    toast[type](<Toast autoClose={4000} title={title} content={msg} />, {
-      position: 'top-center',
-      autoClose: 4000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-      progress: undefined,
-    });
   };
 
   if (!dataset) {
@@ -282,7 +267,11 @@ class MenuWidget extends React.Component {
           let items = [...innerDropdown];
           let snowAndIce = null;
           for (let item of items) {
-            if (item.innerText.includes('Snow and Ice')) {
+            let itemParentContainer = item.closest(
+              '.map-menu-product-dropdown',
+            );
+            let productId = itemParentContainer.getAttribute('productid');
+            if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
               snowAndIce = item;
               break;
             }
@@ -970,10 +959,11 @@ class MenuWidget extends React.Component {
     );
     let productCheck = document.querySelector('#' + productid);
     let trueCheck = datasetChecks.filter((elem) => elem.checked).length;
-
+    let product = productCheck.closest('.map-menu-product-dropdown');
+    let productId = product.getAttribute('productid');
     productCheck.checked = trueCheck > 0;
-    let productCheckLabel = productCheck.labels[0].innerText;
-    if (productCheckLabel.includes('Snow and Ice Parameters')) {
+    // let productCheckLabel = productCheck.labels[0].innerText;
+    if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
       sessionStorage.setItem('snowAndIce', true);
     } else {
       sessionStorage.setItem('snowAndIce', false);
@@ -1002,7 +992,6 @@ class MenuWidget extends React.Component {
     let style = this.props.download
       ? { paddingLeft: dataset.HandlingLevel ? '0' : '1rem' }
       : {};
-
     if (dataset.HandlingLevel) {
       this.layerGroups[dataset.DatasetId] = [];
     }
@@ -1153,11 +1142,8 @@ class MenuWidget extends React.Component {
                     {description ? (
                       <Popup
                         trigger={
-                          (checkedLayers &&
-                            checkedLayers.includes(dataset.Layer.LayerId) &&
-                            dataset.ProductId ===
-                              '8474c3b080fa42cc837f1d2338fcf096') ||
-                          dataset.Product === 'Snow and Ice Parameters' ? (
+                          dataset.ProductId ===
+                          '8474c3b080fa42cc837f1d2338fcf096' ? (
                             <div class="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
                               <div class="zoom-in-message zoom-in-message-dataset">
@@ -1174,9 +1160,7 @@ class MenuWidget extends React.Component {
                         style={{ transform: 'translateX(-4rem)' }}
                       />
                     ) : dataset.ProductId ===
-                        '8474c3b080fa42cc837f1d2338fcf096' ||
-                      dataset.Product ===
-                        'High Resolution Snow and Ice Parameters' ? (
+                      '8474c3b080fa42cc837f1d2338fcf096' ? (
                       <div class="zoom-in-message-container">
                         <span>{dataset.DatasetTitle}</span>
                         <div class="zoom-in-message">
@@ -1753,25 +1737,24 @@ class MenuWidget extends React.Component {
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
   showZoomMessageOnDataset(dataset) {
+    let datasetContainer = dataset.closest('.map-menu-dataset-dropdown');
+    let datasetContainerId = datasetContainer.getAttribute('datasetid');
+
     if (this.props.download) return;
     let snowAndIceParameters;
     for (let i = 0; i < this.compCfg.length; i++) {
-      if (this.compCfg[i].ComponentTitle === 'Bio-geophysical Parameters') {
-        for (let j = 0; j < this.compCfg[i].Products.length; j++) {
-          if (
-            this.compCfg[i].Products[j].ProductId ===
-            '8474c3b080fa42cc837f1d2338fcf096'
-          ) {
-            snowAndIceParameters = this.compCfg[i].Products[j];
-            break;
-          }
+      for (let j = 0; j < this.compCfg[i].Products.length; j++) {
+        if (
+          this.compCfg[i].Products[j].ProductId ===
+          '8474c3b080fa42cc837f1d2338fcf096'
+        ) {
+          snowAndIceParameters = this.compCfg[i].Products[j];
+          break;
         }
-        break;
       }
     }
-
     snowAndIceParameters.Datasets.forEach((set) => {
-      if (set.DatasetTitle.includes(dataset.title)) {
+      if (set.DatasetId === datasetContainerId) {
         let node = document.getElementById(dataset.id).nextElementSibling
           .lastElementChild.lastChild.lastElementChild;
         if (dataset.checked) {
@@ -2029,10 +2012,14 @@ class MenuWidget extends React.Component {
   findCheckedDatasetNoServiceToVisualize(elem) {
     let parentId = elem.getAttribute('parentid');
     let selectedDataset = document.querySelector('[id="' + parentId + '"]');
+    let datasetContainer = selectedDataset.closest(
+      '.map-menu-dataset-dropdown',
+    );
+    let datasetContainerId = datasetContainer.getAttribute('datasetid');
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
-          if (dataset.DatasetTitle.includes(selectedDataset.title)) {
+          if (dataset.DatasetId === datasetContainerId) {
             return dataset.MarkAsDownloadableNoServiceToVisualize;
           }
         });
@@ -2389,23 +2376,6 @@ class MenuWidget extends React.Component {
           {elem.title}
         </div>
         <div className="active-layer-options" key={'c_' + elem.id}>
-          {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
-            <span
-              className="map-menu-icon active-layer-extent"
-              onClick={() => this.fullExtent(elem)}
-              onKeyDown={() => this.fullExtent(elem)}
-              tabIndex="0"
-              role="button"
-            >
-              <Popup
-                trigger={
-                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
-                }
-                content="Full extent"
-                {...popupSettings}
-              />
-            </span>
-          )}
           {elem.parentElement.dataset.timeseries === 'true' && (
             <span
               className="map-menu-icon active-layer-time"
@@ -2430,6 +2400,23 @@ class MenuWidget extends React.Component {
                     ? 'Show time slider'
                     : 'Hide time slider'
                 }
+                {...popupSettings}
+              />
+            </span>
+          )}
+          {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
+            <span
+              className="map-menu-icon active-layer-extent"
+              onClick={() => this.fullExtent(elem)}
+              onKeyDown={() => this.fullExtent(elem)}
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={
+                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
+                }
+                content="Full extent"
                 {...popupSettings}
               />
             </span>
@@ -2825,10 +2812,9 @@ class MenuWidget extends React.Component {
     } else if (this.layers['pa_filter'] && layer.includes('protected_areas')) {
       this.layers['pa_filter'].opacity = value / 100;
       this.saveOpacity(this.layers['pa_filter'], value / 100);
-    } else {
-      this.layers[layer].opacity = value / 100;
-      this.saveOpacity(layer, value / 100);
     }
+    this.layers[layer].opacity = value / 100;
+    this.saveOpacity(layer, value / 100);
     if (
       this.map.findLayerById(layer) &&
       this.map.findLayerById(layer) !== null &&
@@ -2989,6 +2975,26 @@ class MenuWidget extends React.Component {
         ) {
           this.map.findLayerById(elem.id).opacity = layerOpacities[elem.id];
         }
+      }
+    }
+  }
+
+  componentDidUpdate() {
+    if (this.props.download) return;
+
+    if (sessionStorage.getItem('snowAndIce') === 'true') {
+      //grab all checkedLayers from sessionstorage store them in checkedLayeers
+      let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+
+      if (checkedLayers === null) return;
+
+      for (let i = 0; i < checkedLayers.length; i++) {
+        let layerCheck = document.getElementById(checkedLayers[i]);
+        let datasetParentContainer = layerCheck.closest('.ccl-fieldset');
+        let datasetInputParentContainer =
+          datasetParentContainer.firstElementChild;
+        let datasetCheck = datasetInputParentContainer.querySelector('input');
+        this.showZoomMessageOnDataset(datasetCheck);
       }
     }
   }
@@ -3551,5 +3557,4 @@ class MenuWidget extends React.Component {
     );
   }
 }
-
 export default MenuWidget;

@@ -397,6 +397,7 @@ class MapViewer extends React.Component {
           view={this.view}
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
+          urls={this.cfgUrls}
         />
       );
   }
@@ -443,6 +444,7 @@ class MapViewer extends React.Component {
           mapViewer={this}
           layers={sessionStorage}
           mapCfg={this.mapCfg}
+          urls={this.cfgUrls}
         />
       );
   }

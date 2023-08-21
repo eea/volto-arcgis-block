@@ -532,6 +532,10 @@
   background-color: #dadada40;
 }
 
+.land .map-menu-layer {
+  border-bottom: 1px solid rgba(160, 177, 40, 0.2) !important;
+}
+
 .map-menu-icons {
   display: inline-block;
   white-space: nowrap;
