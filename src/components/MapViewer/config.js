@@ -20,7 +20,7 @@ const config = {
       ymax: 85,
     },
     activeLayers: [],
-    viewType: '3d',
+    viewType: '2d',
   },
   Components: [
     {

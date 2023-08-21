@@ -64,27 +64,23 @@ class ResetViewWidget extends React.Component {
   }
 
   async resetView() {
-    console.log('resetView');
-    var myCamera = new Camera({
-      position: {
-        latitude: this.props.mapViewer.mapCfg.center[1],
-        longitude: this.props.mapViewer.mapCfg.center[0],
-        z: 250000000,
-      },
-      heading: 0,
-      tilt: 0
-    });
-
-    await this.props.mapViewer.view.goTo({target: myCamera});
-
-    // await this.props.mapViewer.view.goTo({
-    //   center: this.props.mapViewer.mapCfg.center,
-    //   zoom: this.props.mapViewer.mapCfg.zoom,
-    //   // heading: -180,
-    //   // tilt: -45
-    // });
-    // console.log(this.props.mapViewer.view.zoom);
-    // console.log(this.props.mapViewer.view.viewPoint.rotation);    
+    if (this.props.mapViewer.view.type === '3d') {      
+      var myCamera = new Camera({
+        position: {
+          latitude: this.props.mapViewer.mapCfg.center[1],
+          longitude: this.props.mapViewer.mapCfg.center[0],
+          z: 250000000,
+        },
+        heading: 0,
+        tilt: 0
+      });
+      await this.props.mapViewer.sceneView.goTo({target: myCamera});
+    } else {
+      await this.props.mapViewer.mapView.goTo({
+        target: this.props.mapViewer.mapCfg.center,
+        zoom: this.props.mapViewer.mapCfg.zoom
+      });
+    }
   }
 
   /**
@@ -95,9 +91,11 @@ class ResetViewWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="resetView-container">
+        {this.props.view.type === '3d' ? (
+          <>
           <div tooltip="Reset view" direction="left" type="widget">
             <div
-              id="resetView_buttom"
+              id="resetView_buttom-3d"
               className="esri-icon-globe esri-widget--button"
               role="button"
               tabIndex="0"
@@ -105,6 +103,21 @@ class ResetViewWidget extends React.Component {
               onKeyDown={this.resetView.bind(this)}
             ></div>
           </div>         
+        </>
+        ) : ( 
+        <>          
+          <div tooltip="Reset view" direction="left" type="widget">
+            <div
+              id="resetView_buttom-2d"
+              className="esri-icon-maps esri-widget--button"
+              role="button"
+              tabIndex="0"
+              onClick={this.resetView.bind(this)}
+              onKeyDown={this.resetView.bind(this)}
+            ></div>
+          </div>         
+        </>        
+        )}
         </div>
       </>
     );
