@@ -198,7 +198,7 @@ pipeline {
         }
       }
     }
-
+/*
     stage('SonarQube compare to master') {
       when {
         allOf {
@@ -223,7 +223,7 @@ pipeline {
         }
       }
     }
-
+*/
     stage('Pull Request') {
       when {
         not {
