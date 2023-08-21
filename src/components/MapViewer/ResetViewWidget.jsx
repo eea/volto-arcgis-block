@@ -1,6 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
-var Map, MapView, SceneView, Zoom, Extent;
+var Map, MapView, SceneView, Zoom, Extent, Camera;
 
 class ResetViewWidget extends React.Component {
   /**
@@ -26,20 +26,23 @@ class ResetViewWidget extends React.Component {
       'esri/views/SceneView',
       'esri/widgets/Zoom',     
       'esri/geometry/Extent',
+      'esri/Camera'
     ]).then(
       ([
         _Map,
         _MapView,
         _SceneView,
         _Zoom,        
-        _Extent
+        _Extent,
+        _Camera
       ]) => {
-        [Map, MapView, SceneView, Zoom, Extent] = [
+        [Map, MapView, SceneView, Zoom, Extent, Camera] = [
           _Map,
           _MapView,
           _SceneView,
           _Zoom,        
-          _Extent
+          _Extent,
+          _Camera
         ];
       },
     );
@@ -52,18 +55,36 @@ class ResetViewWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    await this.loader();
     this.props.view.ui.add({
       component: this.container.current,
       position: 'top-right',
       // index: 0,
     });
-  }  
+  }
 
   async resetView() {
-    await this.props.mapViewer.view.goTo({
-      center: this.props.mapViewer.mapCfg.center,
-      zoom: this.props.mapViewer.mapCfg.zoom
+    console.log('resetView');
+    var myCamera = new Camera({
+      position: {
+        latitude: this.props.mapViewer.mapCfg.center[1],
+        longitude: this.props.mapViewer.mapCfg.center[0],
+        z: 250000000,
+      },
+      heading: 0,
+      tilt: 0
     });
+
+    await this.props.mapViewer.view.goTo({target: myCamera});
+
+    // await this.props.mapViewer.view.goTo({
+    //   center: this.props.mapViewer.mapCfg.center,
+    //   zoom: this.props.mapViewer.mapCfg.zoom,
+    //   // heading: -180,
+    //   // tilt: -45
+    // });
+    // console.log(this.props.mapViewer.view.zoom);
+    // console.log(this.props.mapViewer.view.viewPoint.rotation);    
   }
 
   /**
@@ -74,10 +95,10 @@ class ResetViewWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="resetView-container">
-          <div>
+          <div tooltip="Reset view" direction="left" type="widget">
             <div
               id="resetView_buttom"
-              className="esri-icon-left-arrow-circled esri-widget--button"
+              className="esri-icon-globe esri-widget--button"
               role="button"
               tabIndex="0"
               onClick={this.resetView.bind(this)}
