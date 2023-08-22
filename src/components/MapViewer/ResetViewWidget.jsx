@@ -1,6 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
-var MapView, SceneView, Zoom, Extent, Camera;
+var Map, MapView, SceneView, Zoom, Extent, Camera;
 
 class ResetViewWidget extends React.Component {
   /**
