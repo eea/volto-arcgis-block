@@ -1242,10 +1242,7 @@ input[type='range']::-ms-track {
   content: '\e800';
 }
 
-
-
 /*Printing View Popup*/
-
 
 /*Draw rectangle popup*/
 
@@ -1259,7 +1256,7 @@ input[type='range']::-ms-track {
   background-color: white;
 }
 
-.drawRectanglePopup-content .drawRectanglePopup-icon{
+.drawRectanglePopup-content .drawRectanglePopup-icon {
   margin-top: 0.6rem;
   margin-right: 0.6rem;
   color: #a0b128;

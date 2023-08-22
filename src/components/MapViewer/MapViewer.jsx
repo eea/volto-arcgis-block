@@ -219,7 +219,7 @@ class MapViewer extends React.Component {
       this.sceneView.container = this.mapdiv.current;
       this.view = this.sceneView;
       // this.setViewState(this.view.type);
-      
+
       this.zoom = new Zoom({
         view: this.sceneView,
       });
@@ -257,7 +257,6 @@ class MapViewer extends React.Component {
         position: 'top-right',
       });
     }
-
 
     this.sceneView.when(() => {
       this.sceneView.watch('center', (newValue, oldValue, property, object) => {
@@ -315,14 +314,12 @@ class MapViewer extends React.Component {
         this.mapView.constraints.geometry = constraintExtent;
       });
     });
-    
+
     // this.view.popup.autoOpenEnabled = false;
 
     this.mapView.popup.autoOpenEnabled = false;
-    
+
     this.sceneView.popup.autoOpenEnabled = false;
-
-
 
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
@@ -453,7 +450,10 @@ class MapViewer extends React.Component {
   }
 
   renderResetView() {
-    if (this.view) return <ResetViewWidget view={this.view} map={this.map} mapViewer={this} />;
+    if (this.view)
+      return (
+        <ResetViewWidget view={this.view} map={this.map} mapViewer={this} />
+      );
   }
 
   renderMenu() {
@@ -519,7 +519,7 @@ class MapViewer extends React.Component {
             {this.renderInfo()}
             {this.renderHotspot()}
             {this.renderMenu()}
-            {this.renderBookmark()}
+            {/* {this.renderBookmark()} */}
             {this.renderResetView()}
           </div>
         </div>

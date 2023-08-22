@@ -4,7 +4,6 @@ import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var Print;
 
-
 class PrintWidget extends React.Component {
   /**
    * Creator of the Measurement widget class
@@ -38,30 +37,38 @@ class PrintWidget extends React.Component {
    * button is clicked. It controls the open
    * and close actions of the component
    */
-  openMenu(firstOpen) {        
-    if (this.state.showMapMenu) {      
+  openMenu() {
+    if (this.state.showMapMenu) {
       // CLOSE
-      this.container.current.querySelector('.esri-widget--button').classList.remove('active-widget');
-      document.querySelector('.esri-ui-top-right.esri-ui-corner').classList.remove('show-panel');
+      this.container.current
+        .querySelector('.esri-widget--button')
+        .classList.remove('active-widget');
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
       this.props.mapViewer.setActiveWidget();
-      
-      if (this.props.view.type === "2d" && this.props.mapViewer.mapCfg.viewType === '3d') {
+
+      if (
+        this.props.view.type === '2d' &&
+        this.props.mapViewer.mapCfg.viewType === '3d'
+      ) {
         // The app is configured in 3D and the current view is 2D
         this.props.mapViewer.switchView();
       }
       if (this.props.mapViewer.mapCfg.viewType === '2d') {
         // If the app is configured in 2D, the print panel will be closed. On the contrary it remains open in printing view.
-        this.container.current.querySelector('.right-panel').style.display = 'none';      
+        this.container.current.querySelector('.right-panel').style.display =
+          'none';
         // By invoking the setState, we notify the state we want to reach
         // and ensure that the component is rendered again
         this.setState({ showMapMenu: false });
       }
-    } else {      
+    } else {
       // OPEN
-      if (this.props.view.type === "3d") {
+      if (this.props.view.type === '3d') {
         this.props.mapViewer.switchView();
-      }            
-      this.props.mapViewer.setActiveWidget(this);      
+      }
+      this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
       this.container.current
@@ -72,35 +79,36 @@ class PrintWidget extends React.Component {
         .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.setState({ showMapMenu: true });   
-    }  
+      this.setState({ showMapMenu: true });
+    }
   }
   /**
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
-    this.props.view.ui.add(this.container.current, 'top-right');  
+    this.props.view.ui.add(this.container.current, 'top-right');
     if (this.props.view.type === '2d') {
       await this.loader();
       this.print = new Print({
         view: this.props.mapViewer.mapView,
         container: this.container.current.querySelector('.print-panel'),
-      });  
+      });
       if (this.props.mapViewer.mapCfg.viewType === '3d') {
         // When app is configured in 3D the print panel remains open in printing view.
-        this.container.current.querySelector('.right-panel').style.display ='flex'; 
-        this.setState({ showMapMenu: true });         
+        this.container.current.querySelector('.right-panel').style.display =
+          'flex';
+        this.setState({ showMapMenu: true });
         // This popup will be displayed only when the app is configured in 3D in config.js
         var popup = document.createElement('div');
         popup.className = 'drawRectanglePopup-block';
         popup.innerHTML =
-        '<div class="drawRectanglePopup-content">' +
-        '<span class="drawRectanglePopup-icon"><span class="esri-icon-printer"></span></span>' +
-        '<div class="drawRectanglePopup-text">This is a printing view. Zoom and pan to the area of interest.</div>' +
-        '</div>';
+          '<div class="drawRectanglePopup-content">' +
+          '<span class="drawRectanglePopup-icon"><span class="esri-icon-printer"></span></span>' +
+          '<div class="drawRectanglePopup-text">This is a printing view. Zoom and pan to the area of interest.</div>' +
+          '</div>';
         this.props.mapViewer.mapView.ui.add(popup, 'top-right');
       }
-    }    
+    }
   }
 
   componentDidUpdate() {
@@ -233,16 +241,21 @@ class PrintWidget extends React.Component {
     });
   }
 
-  changeView() {
+  async changeView() {
     this.props.mapViewer.switchView();
-    // this.openMenu(true);       
-    // this.setState({ showMapMenu: true });    
+    this.props.mapViewer.mapView.goTo({
+      target: this.props.mapViewer.mapCfg.center,
+      zoom: this.props.mapViewer.mapCfg.zoom,
+      rotation: 0,
+    });
+    // this.openMenu(true);
+    // this.setState({ showMapMenu: true });
   }
   /**
    * This method renders the component
    * @returns jsx
    */
-  render() {  
+  render() {
     return (
       <>
         <div ref={this.container} className="print-container">
@@ -259,10 +272,10 @@ class PrintWidget extends React.Component {
                   role="button"
                 ></div>
               </div>
-              {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}                  
+              {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}
               <div className="right-panel">
                 <div className="right-panel-header">
-                  <span>Print</span>                  
+                  <span>Print</span>
                   <span
                     className="map-menu-icon esri-icon-close"
                     onClick={this.openMenu.bind(this)}
@@ -276,8 +289,8 @@ class PrintWidget extends React.Component {
                 </div>
               </div>
             </>
-            ) : (
-              <>
+          ) : (
+            <>
               <div tooltip="Print" direction="left">
                 <div
                   className="esri-icon-printer esri-widget--button"
@@ -289,7 +302,7 @@ class PrintWidget extends React.Component {
                   role="button"
                 ></div>
               </div>
-              {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}                  
+              {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}
               {/* <div className="right-panel">
                 <div className="right-panel-header">
                   <span>Print</span>                  
@@ -305,8 +318,8 @@ class PrintWidget extends React.Component {
                   <div className="print-panel"></div>
                 </div>
               </div> */}
-              </>
-            )}         
+            </>
+          )}
         </div>
       </>
     );

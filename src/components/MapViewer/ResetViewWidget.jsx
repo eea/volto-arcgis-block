@@ -1,6 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
-var Map, MapView, SceneView, Zoom, Extent, Camera;
+var MapView, SceneView, Zoom, Extent, Camera;
 
 class ResetViewWidget extends React.Component {
   /**
@@ -18,38 +18,25 @@ class ResetViewWidget extends React.Component {
     this.props.mapViewer.resetView_enabled = true;
   }
 
-
   loader() {
     return loadModules([
       'esri/WebMap',
       'esri/views/MapView',
       'esri/views/SceneView',
-      'esri/widgets/Zoom',     
+      'esri/widgets/Zoom',
       'esri/geometry/Extent',
-      'esri/Camera'
-    ]).then(
-      ([
+      'esri/Camera',
+    ]).then(([_Map, _MapView, _SceneView, _Zoom, _Extent, _Camera]) => {
+      [Map, MapView, SceneView, Zoom, Extent, Camera] = [
         _Map,
         _MapView,
         _SceneView,
-        _Zoom,        
+        _Zoom,
         _Extent,
-        _Camera
-      ]) => {
-        [Map, MapView, SceneView, Zoom, Extent, Camera] = [
-          _Map,
-          _MapView,
-          _SceneView,
-          _Zoom,        
-          _Extent,
-          _Camera
-        ];
-      },
-    );
+        _Camera,
+      ];
+    });
   }
-
-
-
 
   /**
    * This method is executed after the rener method is executed
@@ -64,7 +51,7 @@ class ResetViewWidget extends React.Component {
   }
 
   async resetView() {
-    if (this.props.mapViewer.view.type === '3d') {      
+    if (this.props.mapViewer.view.type === '3d') {
       var myCamera = new Camera({
         position: {
           latitude: this.props.mapViewer.mapCfg.center[1],
@@ -72,13 +59,14 @@ class ResetViewWidget extends React.Component {
           z: 250000000,
         },
         heading: 0,
-        tilt: 0
+        tilt: 0,
       });
-      await this.props.mapViewer.sceneView.goTo({target: myCamera});
+      await this.props.mapViewer.sceneView.goTo({ target: myCamera });
     } else {
       await this.props.mapViewer.mapView.goTo({
         target: this.props.mapViewer.mapCfg.center,
-        zoom: this.props.mapViewer.mapCfg.zoom
+        zoom: this.props.mapViewer.mapCfg.zoom,
+        rotation: 0,
       });
     }
   }
@@ -91,33 +79,33 @@ class ResetViewWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="resetView-container">
-        {this.props.view.type === '3d' ? (
-          <>
-          <div tooltip="Reset view" direction="left" type="widget">
-            <div
-              id="resetView_buttom-3d"
-              className="esri-icon-globe esri-widget--button"
-              role="button"
-              tabIndex="0"
-              onClick={this.resetView.bind(this)}
-              onKeyDown={this.resetView.bind(this)}
-            ></div>
-          </div>         
-        </>
-        ) : ( 
-        <>          
-          <div tooltip="Reset view" direction="left" type="widget">
-            <div
-              id="resetView_buttom-2d"
-              className="esri-icon-maps esri-widget--button"
-              role="button"
-              tabIndex="0"
-              onClick={this.resetView.bind(this)}
-              onKeyDown={this.resetView.bind(this)}
-            ></div>
-          </div>         
-        </>        
-        )}
+          {this.props.view.type === '3d' ? (
+            <>
+              <div tooltip="Reset view" direction="left" type="widget">
+                <div
+                  id="resetView_buttom-3d"
+                  className="esri-icon-globe esri-widget--button"
+                  role="button"
+                  tabIndex="0"
+                  onClick={this.resetView.bind(this)}
+                  onKeyDown={this.resetView.bind(this)}
+                ></div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div tooltip="Reset view" direction="left" type="widget">
+                <div
+                  id="resetView_buttom-2d"
+                  className="esri-icon-maps esri-widget--button"
+                  role="button"
+                  tabIndex="0"
+                  onClick={this.resetView.bind(this)}
+                  onKeyDown={this.resetView.bind(this)}
+                ></div>
+              </div>
+            </>
+          )}
         </div>
       </>
     );
