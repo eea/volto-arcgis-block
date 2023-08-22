@@ -294,7 +294,7 @@ class MapViewer extends React.Component {
         //     this.switchView();
         //   }
         // }
-        if (mapStatus.zoom <= this.mapCfg.minZoom) {
+        if (mapStatus.zoom <= this.mapCfg.minZoom) {          
           constraintExtent = new Extent({
             xmin: this.mapCfg.geometry.xmin,
             ymin: this.mapCfg.geometry.ymin,
@@ -302,7 +302,7 @@ class MapViewer extends React.Component {
             ymax: this.mapCfg.geometry.ymax,
             spatialReference: 4326,
           });
-        } else {
+        } else {          
           constraintExtent = new Extent({
             xmin: this.mapCfg.geometryZoomIn.xmin,
             ymin: this.mapCfg.geometryZoomIn.ymin,
@@ -519,7 +519,7 @@ class MapViewer extends React.Component {
             {this.renderInfo()}
             {this.renderHotspot()}
             {this.renderMenu()}
-            {/* {this.renderBookmark()} */}
+            {this.renderBookmark()}
             {this.renderResetView()}
           </div>
         </div>
