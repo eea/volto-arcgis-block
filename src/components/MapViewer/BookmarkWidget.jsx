@@ -92,12 +92,16 @@ class BookmarkWidget extends React.Component {
 
     this.Bookmarks.when(() => {
       this.Bookmarks.bookmarks.on('change', () => {
-        if (this.userID != null) {
+        localStorage.setItem(
+          BOOKMARK_SESSION_KEY + '_' + this.userID,
+          JSON.stringify(this.Bookmarks.bookmarks.items),
+        );
+        /*if (this.userID != null) {
           localStorage.setItem(
             BOOKMARK_SESSION_KEY + '_' + this.userID,
             JSON.stringify(this.Bookmarks.bookmarks.items),
           );
-        }
+        }*/
       });
       this.Bookmarks.on('bookmark-edit', () => {
         if (this.userID != null) {
