@@ -253,6 +253,19 @@
   background: none;
   color: #212529;
 }
+/* Bookmark*/
+.esri-bookmarks .esri-button {
+  border-color: #a0b128;
+  background-color: white;
+  color: #a0b128;
+  transition: all 0.3s ease-out;
+}
+
+.esri-bookmarks .esri-button:hover {
+  border-color: #a0b128;
+  background-color: #a0b128;
+  color: white;
+}
 
 /* Area */
 .area-container {
