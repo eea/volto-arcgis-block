@@ -86,6 +86,10 @@
   order: 6;
 }
 
+.bookmark-container {
+  order: 7;
+}
+
 /* Basemap */
 .basemap-container {
   display: flex;
