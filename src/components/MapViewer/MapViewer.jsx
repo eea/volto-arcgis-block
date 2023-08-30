@@ -20,6 +20,7 @@ import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
 import ResetViewWidget from './ResetViewWidget';
+import SwipeWidget from './SwipeWidget';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
@@ -413,6 +414,11 @@ class MapViewer extends React.Component {
     if (view) return <PrintWidget view={view} mapViewer={this} />;
   }
 
+  renderSwipe(view) {
+    if (this.props.mapviewer_config.Download) return;
+    if (view) return <SwipeWidget view={view} mapViewer={this} />;
+  }
+
   renderArea() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view) {
@@ -510,6 +516,9 @@ class MapViewer extends React.Component {
 
             {this.renderMeasurement()}
 
+            {this.renderSwipe(this.mapView)}
+            {this.renderSwipe(this.sceneView)}
+            
             {this.renderPrint(this.mapView)}
             {this.renderPrint(this.sceneView)}
 
@@ -521,6 +530,7 @@ class MapViewer extends React.Component {
             {this.renderMenu()}
             {this.renderBookmark()}
             {this.renderResetView()}
+           
           </div>
         </div>
       );

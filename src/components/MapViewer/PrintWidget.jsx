@@ -95,9 +95,8 @@ class PrintWidget extends React.Component {
       });
       if (this.props.mapViewer.mapCfg.viewType === '3d') {
         // When app is configured in 3D the print panel remains open in printing view.
-        this.container.current.querySelector('.right-panel').style.display =
-          'flex';
-        this.setState({ showMapMenu: true });
+        // this.container.current.querySelector('.right-panel').style.display = 'flex';
+        // this.setState({ showMapMenu: true });
         // This popup will be displayed only when the app is configured in 3D in config.js
         var popup = document.createElement('div');
         popup.className = 'drawRectanglePopup-block';
