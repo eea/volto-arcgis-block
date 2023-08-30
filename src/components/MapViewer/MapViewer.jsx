@@ -556,34 +556,19 @@ export const CheckLogin = ({ reference }) => {
   );
 };
 export const CheckUserID = ({ reference }) => {
-  let { user_id, isLoggedIn } = useCartState();
-  if (isLoggedIn) {
-    return (
-      <>
-        {
-          <BookmarkWidget
-            view={reference.view}
-            map={reference.map}
-            mapViewer={reference}
-            userID={user_id}
-          />
-        }
-      </>
-    );
-  } else {
-    return (
-      <>
-        {
-          <BookmarkWidget
-            view={reference.view}
-            map={reference.map}
-            mapViewer={reference}
-            userID={null}
-          />
-        }
-      </>
-    );
-  }
+  let { user_id } = useCartState();
+  return (
+    <>
+      {
+        <BookmarkWidget
+          view={reference.view}
+          map={reference.map}
+          mapViewer={reference}
+          userID={user_id}
+        />
+      }
+    </>
+  );
 };
 
 export default compose(
