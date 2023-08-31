@@ -116,11 +116,11 @@ class BookmarkWidget extends React.Component {
   render() {
     return (
       <>
-        <div ref={this.container} className="legend-container">
+        <div ref={this.container} className="bookmark-container">
           <div tooltip="Bookmark" direction="left" type="widget">
             <div
               className={this.menuClass}
-              id="legend_button"
+              id="bookmark_button"
               aria-label="Bookmark"
               onClick={this.openMenu.bind(this)}
               onKeyDown={this.openMenu.bind(this)}
