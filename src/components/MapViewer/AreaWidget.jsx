@@ -139,7 +139,7 @@ class AreaWidget extends React.Component {
 
   loadNutsService(id, levels) {
     this.clearWidget();
-
+    this.props.view.ui.components = ['attribution'];
     levels.forEach((level) => {
       var layer = new FeatureLayer({
         id: id,
@@ -162,6 +162,7 @@ class AreaWidget extends React.Component {
 
   loadCountriesService(id) {
     this.clearWidget();
+    this.props.view.ui.components = ['attribution'];
     var layer = new FeatureLayer({
       id: id,
       //url: this.props.urls.outsideEu,
@@ -273,7 +274,6 @@ class AreaWidget extends React.Component {
     });
     this.props.map.add(this.nutsGroupLayer);
     this.props.view.on('click', (event) => {
-      this.props.view.ui.components = ['attribution'];
       if (
         (this.props.mapViewer.activeWidget === this || this.props.download) &&
         (this.props.mapViewer.activeWidget
