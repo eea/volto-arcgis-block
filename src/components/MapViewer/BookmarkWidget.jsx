@@ -113,7 +113,7 @@ class BookmarkWidget extends React.Component {
     let limitMaxLenth = function () {
       document.querySelector(
         '.esri-bookmarks__authoring-label .esri-input',
-      ).maxLength = 1;
+      ).maxLength = 150;
     };
     this.Bookmarks.container.addEventListener('keydown', limitMaxLenth);
     this.Bookmarks.container.addEventListener('paste', limitMaxLenth);
