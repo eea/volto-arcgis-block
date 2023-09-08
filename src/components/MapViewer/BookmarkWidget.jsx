@@ -109,6 +109,15 @@ class BookmarkWidget extends React.Component {
       });
     });
   }
+  componentDidUpdate() {
+    let limitMaxLenth = function () {
+      document.querySelector(
+        '.esri-bookmarks__authoring-label .esri-input',
+      ).maxLength = 1;
+    };
+    this.Bookmarks.container.addEventListener('keydown', limitMaxLenth);
+    this.Bookmarks.container.addEventListener('paste', limitMaxLenth);
+  }
   /**
    * This method renders the component
    * @returns jsx
