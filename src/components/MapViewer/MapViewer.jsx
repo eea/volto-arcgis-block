@@ -19,8 +19,10 @@ import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
+import LoadingSpinner from './LoadingSpinner';
+
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
+var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent, watchUtils;
 let mapStatus = {};
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -50,13 +52,20 @@ class MapViewer extends React.Component {
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
-    this.state = {};
+    this.state = {
+      loading: false,
+    };
     this.layers = {};
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
     this.cfgUrls = this.props.cfg.Urls;
     this.userID = null;
+    this.loadingHandler = this.loadingHandler.bind(this);
+  }
+
+  loadingHandler(bool) {
+    this.setState({ loading: bool });
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -93,9 +102,10 @@ class MapViewer extends React.Component {
       'esri/layers/WebTileLayer',
       'esri/geometry/Extent',
       'esri/widgets/Bookmarks',
+      'esri/core/watchUtils',
     ]).then(
-      ([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent]) => {
-        [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
+      ([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent, _watchUtils]) => {
+        [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent, watchUtils] = [
           _Map,
           _MapView,
           _Zoom,
@@ -103,6 +113,7 @@ class MapViewer extends React.Component {
           _Basemap,
           _WebTileLayer,
           _Extent,
+          _watchUtils,
         ];
       },
     );
@@ -186,8 +197,12 @@ class MapViewer extends React.Component {
     });
 
     this.view.when(() => {
-      this.view.watch('center', (newValue, oldValue, property, object) => {
+      this.view.watch('center', (newValue) => {
         this.setCenterState(newValue);
+      })
+      watchUtils.when(this.view, 'updating', () => {
+        console.log('is it updating: ', this.view.updating)
+        //this.loadingHandler(false);
       });
 
       let constraintExtent = null;
@@ -330,6 +345,7 @@ class MapViewer extends React.Component {
           layers={sessionStorage}
           mapCfg={this.mapCfg}
           urls={this.cfgUrls}
+          loadingHandler={this.loadingHandler}
         />
       );
   }
@@ -361,6 +377,10 @@ class MapViewer extends React.Component {
     return intl && <CheckLanguage />;
   }
 
+  renderLoadingSpinner() {
+    if (this.view) <LoadingSpinner view={this.view} isLoading={this.state.loading} />;
+  }
+
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -372,7 +392,8 @@ class MapViewer extends React.Component {
     if ('loading' in this.props.mapviewer_config) {
       return (
         <div className={this.mapClass}>
-          <div ref={this.mapdiv} className="map"></div>
+          <div ref={this.mapdiv} className="map">
+          </div>
         </div>
       );
     } else {
@@ -391,6 +412,7 @@ class MapViewer extends React.Component {
             {this.renderHotspot()}
             {this.renderMenu()}
             {this.renderBookmark()}
+            {this.renderLoadingSpinner()}
           </div>
         </div>
       );
