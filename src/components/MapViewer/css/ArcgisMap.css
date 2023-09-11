@@ -277,6 +277,12 @@ body.section-map-viewer
   h1 {
   width: auto !important;
 }
+
+.esri-button-menu__item-wrapper
+  li.esri-button-menu__item
+  [for*='-widget-1-menu-item-1'] {
+  display: none;
+}
 /* Area */
 .area-container {
   display: flex;
