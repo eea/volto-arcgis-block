@@ -1,6 +1,7 @@
 import React, { createRef } from 'react';
 import './css/ArcgisMap.css';
 import { loadModules } from 'esri-loader';
+var watchUtils;
 class LoadingSpinner extends React.Component {
   constructor(props) {
     super(props);
@@ -12,7 +13,9 @@ class LoadingSpinner extends React.Component {
   }
 
   loader() {
-    return loadModules().then(() => {});
+    return loadModules(['esri/core/watchUtils']).then(([_watchUtils]) => {
+      watchUtils = _watchUtils;
+    });
   }
 
   showLoading() {
@@ -28,8 +31,10 @@ class LoadingSpinner extends React.Component {
     await this.loader();
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'manual');
+      watchUtils.watch(this.props.view, 'updating', () => {
+        return;
+      });
     });
-    this.showLoading();
   }
 
   componentDidUpdate(prevProps) {
@@ -50,8 +55,8 @@ class LoadingSpinner extends React.Component {
       >
         <div>
           <svg
-            width="50"
-            height="50"
+            width="80"
+            height="80"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -59,7 +64,7 @@ class LoadingSpinner extends React.Component {
               {`.spinner_ajPY {
       transform-origin: center;
       animation: spinner_AtaB .75s infinite linear;
-      fill: #a0b128;
+      fill: #a0b128; stroke-width: 3px; filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
     }
     @keyframes spinner_AtaB {
       100% {

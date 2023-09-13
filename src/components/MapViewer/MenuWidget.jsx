@@ -1643,10 +1643,10 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
-    let modularLC;
+    /*let modularLC;
     if (elem.id.includes('all_present_lc_b_pol')) {
       modularLC = elem.id;
-    }
+    }*/
 
     let group = this.getGroup(elem);
     if (elem.checked) {
@@ -1672,13 +1672,13 @@ class MenuWidget extends React.Component {
         } else {
           this.map.add(this.layers[elem.id]);
         }
-      } else if (this.layers[modularLC]) {
+      } /*else if (this.layers[modularLC]) {
         let previousElem = document
           .getElementById(elem.id)
           .closest('.ccl-form-group')
           .previousElementSibling.querySelector('input');
         this.map.add(this.layers[previousElem.id]);
-      } else {
+      } */ else {
         this.map.add(this.layers[elem.id]);
       }
       this.layers[elem.id].visible = true; //layer id
