@@ -103,16 +103,7 @@ class MapViewer extends React.Component {
       'esri/geometry/Extent',
       'esri/widgets/Bookmarks',
     ]).then(
-      ([
-        _Map,
-        _MapView,
-        _Zoom,
-        _intl,
-        _Basemap,
-        _WebTileLayer,
-        _Extent,
-        _watchUtils,
-      ]) => {
+      ([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent]) => {
         [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
           _Map,
           _MapView,
@@ -204,7 +195,7 @@ class MapViewer extends React.Component {
     });
 
     this.view.when(() => {
-      this.view.watch('center', (newValue) => {
+      this.view.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);
       });
 
