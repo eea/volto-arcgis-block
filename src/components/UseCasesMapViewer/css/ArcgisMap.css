@@ -304,3 +304,7 @@
   color: #a0b128;
   font-size: 0.875rem;
 }
+
+.esri-view-surface--touch-none {
+  background-color: #97dbf2;
+}
