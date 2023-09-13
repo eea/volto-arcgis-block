@@ -305,6 +305,10 @@
   font-size: 0.875rem;
 }
 
-.esri-view-surface--touch-none {
+.use-cases-products-map
+  .map-container
+  .map
+  .esri-view-root
+  .esri-view-surface--touch-none {
   background-color: #97dbf2;
 }

@@ -285,9 +285,12 @@ body.section-map-viewer
   width: auto !important;
 }
 
-.esri-button-menu__item-wrapper
+div.esri-popover
+  div
+  div.esri-button-menu__content
+  ul.esri-button-menu__item-wrapper
   li.esri-button-menu__item
-  [for*='-widget-1-menu-item-1'] {
+  [for*='-menu-item-1'] {
   display: none;
 }
 /* Area */
