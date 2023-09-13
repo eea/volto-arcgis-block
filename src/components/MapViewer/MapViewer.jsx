@@ -19,6 +19,8 @@ import MenuWidget from './MenuWidget';
 import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
+import LoadingSpinner from './LoadingSpinner';
+
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
@@ -50,13 +52,20 @@ class MapViewer extends React.Component {
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
-    this.state = {};
+    this.state = {
+      layerLoading: false,
+    };
     this.layers = {};
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
     this.cfgUrls = this.props.cfg.Urls;
     this.userID = null;
+    this.loadingHandler = this.loadingHandler.bind(this);
+  }
+
+  loadingHandler(bool) {
+    this.setState({ layerLoading: bool });
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -330,6 +339,7 @@ class MapViewer extends React.Component {
           layers={sessionStorage}
           mapCfg={this.mapCfg}
           urls={this.cfgUrls}
+          loadingHandler={this.loadingHandler}
         />
       );
   }
@@ -349,6 +359,7 @@ class MapViewer extends React.Component {
           layers={this.layers}
           activeLayersHandler={this.activeLayersHandler}
           urls={this.cfgUrls}
+          loadingHandler={this.loadingHandler}
         />
       ); //call conf
   }
@@ -359,6 +370,12 @@ class MapViewer extends React.Component {
 
   appLanguage() {
     return intl && <CheckLanguage />;
+  }
+
+  renderLoadingSpinner() {
+    return (
+      <LoadingSpinner view={this.view} layerLoading={this.state.layerLoading} />
+    );
   }
 
   /**
@@ -391,6 +408,7 @@ class MapViewer extends React.Component {
             {this.renderHotspot()}
             {this.renderMenu()}
             {this.renderBookmark()}
+            {this.renderLoadingSpinner()}
           </div>
         </div>
       );

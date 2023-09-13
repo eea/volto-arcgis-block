@@ -183,6 +183,9 @@ class HotspotWidget extends React.Component {
 
   handleApplyFilter(typeFilter) {
     let typeLegend;
+    let filterId;
+
+    this.props.loadingHandler(true);
 
     if (this.props.selectedLayers) {
       //Clear previous selections when applying a new filter
@@ -236,6 +239,7 @@ class HotspotWidget extends React.Component {
       }
     }
     typeFilter.forEach((type) => {
+      filterId = type + '_filter';
       if (type === 'lcc') {
         let selectLccBoxTime = document.getElementById('select-klc-lccTime')
           .value;
@@ -271,7 +275,7 @@ class HotspotWidget extends React.Component {
           this.props.selectedLayers['lcc_filter'] = this.esriLayer_lcc;
           this.props.selectedLayers['lcc_filter'].visible = true;
           this.esriLayer_lcc2 = this.esriLayer_lcc;
-          this.layerModelInit();
+          //this.layerModelInit();
         }
       }
       if (type === 'lc') {
@@ -308,7 +312,7 @@ class HotspotWidget extends React.Component {
           this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
           this.props.selectedLayers['lc_filter'].visible = true;
           this.esriLayer_lc2 = this.esriLayer_lc;
-          this.layerModelInit();
+          //this.layerModelInit();
         }
       }
       this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
@@ -322,7 +326,7 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_klc);
           this.props.selectedLayers['klc_filter'].visible = true;
           this.esriLayer_klc2 = this.esriLayer_klc;
-          this.layerModelInit();
+          //this.layerModelInit();
         }
       }
       this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
@@ -336,14 +340,25 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_pa);
           this.props.selectedLayers['pa_filter'].visible = true;
           this.esriLayer_pa2 = this.esriLayer_pa;
-          this.layerModelInit();
         }
       }
+      this.layerModelInit();
       this.setBBoxCoordinates(this.dataBBox);
     });
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
+    this.props.view
+      .whenLayerView(this.props.selectedLayers[filterId])
+      .then((layerView) => {
+        layerView.watch('updating', (isUpdating) => {
+          if (!isUpdating) {
+            setTimeout(() => {
+              this.props.loadingHandler(false);
+            }, 500);
+          }
+        });
+      });
   }
 
   dropdownAnimation() {
