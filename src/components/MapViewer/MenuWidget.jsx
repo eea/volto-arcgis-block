@@ -902,10 +902,10 @@ class MenuWidget extends React.Component {
                           product.ProductId ===
                             '8474c3b080fa42cc837f1d2338fcf096' ||
                           product.ProductTitle === 'Snow and Ice Parameters' ? (
-                            <div class="zoom-in-message-container">
+                            <div className="zoom-in-message-container">
                               <span>{product.ProductTitle}</span>
                               <div
-                                class="zoom-in-message"
+                                className="zoom-in-message"
                                 id="snow-and-ice-zoom-message"
                               >
                                 Zoom in to view on map
@@ -924,9 +924,9 @@ class MenuWidget extends React.Component {
                         '8474c3b080fa42cc837f1d2338fcf096' ||
                       product.ProductTitle ===
                         'High Resolution Snow and Ice Parameters' ? (
-                      <div class="zoom-in-message-container">
+                      <div className="zoom-in-message-container">
                         <span>{product.ProductTitle}</span>
-                        <div class="zoom-in-message">
+                        <div className="zoom-in-message">
                           Zoom in to view on map
                         </div>
                       </div>
@@ -1144,9 +1144,9 @@ class MenuWidget extends React.Component {
                         trigger={
                           dataset.ProductId ===
                           '8474c3b080fa42cc837f1d2338fcf096' ? (
-                            <div class="zoom-in-message-container">
+                            <div className="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
-                              <div class="zoom-in-message zoom-in-message-dataset">
+                              <div className="zoom-in-message zoom-in-message-dataset">
                                 Zoom in to view on map
                               </div>
                             </div>
@@ -1161,9 +1161,9 @@ class MenuWidget extends React.Component {
                       />
                     ) : dataset.ProductId ===
                       '8474c3b080fa42cc837f1d2338fcf096' ? (
-                      <div class="zoom-in-message-container">
+                      <div className="zoom-in-message-container">
                         <span>{dataset.DatasetTitle}</span>
-                        <div class="zoom-in-message">
+                        <div className="zoom-in-message">
                           Zoom in to view on map
                         </div>
                       </div>
