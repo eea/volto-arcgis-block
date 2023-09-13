@@ -13,11 +13,12 @@
   pointer-events: auto;
 }
 
+/* Loading Spinner */
 .loading {
   position: absolute;
   top: 50%;
   left: 50%;
-  display: flex;
+  display: none;
   width: fit-content;
   flex-direction: column;
   align-items: center;
