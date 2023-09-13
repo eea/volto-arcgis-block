@@ -183,6 +183,9 @@ class HotspotWidget extends React.Component {
 
   handleApplyFilter(typeFilter) {
     let typeLegend;
+    let filterId;
+
+    this.props.loadingHandler(true);
 
     if (this.props.selectedLayers) {
       //Clear previous selections when applying a new filter
@@ -236,6 +239,7 @@ class HotspotWidget extends React.Component {
       }
     }
     typeFilter.forEach((type) => {
+      filterId = type + '_filter';
       if (type === 'lcc') {
         let selectLccBoxTime = document.getElementById('select-klc-lccTime')
           .value;
@@ -339,12 +343,22 @@ class HotspotWidget extends React.Component {
         }
       }
       this.layerModelInit();
-      this.props.loadingHandler(true);
       this.setBBoxCoordinates(this.dataBBox);
     });
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
+    this.props.view
+      .whenLayerView(this.props.selectedLayers[filterId])
+      .then((layerView) => {
+        layerView.watch('updating', (isUpdating) => {
+          if (!isUpdating) {
+            setTimeout(() => {
+              this.props.loadingHandler(false);
+            }, 500);
+          }
+        });
+      });
   }
 
   dropdownAnimation() {

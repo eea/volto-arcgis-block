@@ -1650,6 +1650,7 @@ class MenuWidget extends React.Component {
 
     let group = this.getGroup(elem);
     if (elem.checked) {
+      this.props.loadingHandler(true);
       if (this.props.download || this.location.search !== '') {
         if (
           this.extentInitiated === false &&
@@ -1705,6 +1706,13 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
+      this.props.view.whenLayerView(this.layers[elem.id]).then((layerView) => {
+        layerView.watch('updating', (isUpdating) => {
+          if (!isUpdating) {
+            this.props.loadingHandler(false);
+          }
+        });
+      });
       this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
