@@ -1648,14 +1648,22 @@ class MenuWidget extends React.Component {
       let layerTitle = activeLayer.props.children[0].props.children;
       if (layerTitle.includes('raster')) {
         if (zoom <= 11) {
-          if (this.visibleLayers[key][1] === 'eye')
+          if (
+            this.visibleLayers &&
+            this.visibleLayers[key] &&
+            this.visibleLayers[key][1] === 'eye'
+          )
             this.layers[key].visible = true;
         } else {
           this.layers[key].visible = false;
         }
       } else if (layerTitle.includes('vector')) {
         if (zoom >= 12) {
-          if (this.visibleLayers[key][1] === 'eye')
+          if (
+            this.visibleLayers &&
+            this.visibleLayers[key] &&
+            this.visibleLayers[key][1] === 'eye'
+          )
             this.layers[key].visible = true;
         } else {
           this.layers[key].visible = false;

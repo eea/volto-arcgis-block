@@ -219,15 +219,15 @@ const config = {
     outsideEu:
       'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
     all_present_lc_a_pol:
-    'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_present_lc_a_pol',
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_present_lc_a_pol',
     all_present_lc_b_pol:
-    'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_present_lc_b_pol',
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_present_lc_b_pol',
     all_lcc_a_pol:
-    'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_lcc_a_pol',
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_lcc_a_pol',
     all_lcc_b_pol:
-    'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_lcc_b_pol',
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=all_lcc_b_pol',
     cop_klc:
-    'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=cop_klc',
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=cop_klc',
     klc_bbox: 'https://land.copernicus.eu/global/hsm/php/klc_bbox.php',
     legendLinkUrl:
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=',

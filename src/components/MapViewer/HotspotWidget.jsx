@@ -181,9 +181,8 @@ class HotspotWidget extends React.Component {
     });
   }
 
-async handleApplyFilter(typeFilter) {
+  async handleApplyFilter(typeFilter) {
     let typeLegend;
-    let filterId;
 
     this.props.loadingHandler(true);
 
@@ -359,7 +358,9 @@ async handleApplyFilter(typeFilter) {
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
-    const layerView = await this.props.view.whenLayerView(this.props.selectedLayers[(typeFilter.length && typeFilter.length === 2) ? typeFilter[1] : typeFilter[0] + '_filter']);
+    const layerView = await this.props.view.whenLayerView(
+      this.props.selectedLayers[typeFilter[0] + '_filter'],
+    );
     layerView.watch('updating', (isUpdating) => {
       if (!isUpdating) {
         setTimeout(() => {
