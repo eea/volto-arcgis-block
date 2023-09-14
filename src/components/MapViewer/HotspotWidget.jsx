@@ -181,7 +181,7 @@ class HotspotWidget extends React.Component {
     });
   }
 
-  handleApplyFilter(typeFilter) {
+async handleApplyFilter(typeFilter) {
     let typeLegend;
     let filterId;
 
@@ -359,17 +359,14 @@ class HotspotWidget extends React.Component {
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
-    this.props.view
-      .whenLayerView(this.props.selectedLayers[filterId])
-      .then((layerView) => {
-        layerView.watch('updating', (isUpdating) => {
-          if (!isUpdating) {
-            setTimeout(() => {
-              this.props.loadingHandler(false);
-            }, 500);
-          }
-        });
-      });
+    const layerView = await this.props.view.whenLayerView(this.props.selectedLayers[(typeFilter.length && typeFilter.length === 2) ? typeFilter[1] : typeFilter[0] + '_filter']);
+    layerView.watch('updating', (isUpdating) => {
+      if (!isUpdating) {
+        setTimeout(() => {
+          this.props.loadingHandler(false);
+        }, 1000);
+      }
+    });
   }
 
   dropdownAnimation() {
