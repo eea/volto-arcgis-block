@@ -192,7 +192,8 @@ class TimesliderWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    let playRateValue = this.layer.ProductId == "8474c3b080fa42cc837f1d2338fcf096" ? 4000: 1000
+    let playRateValue =
+      this.layer.ProductId === '8474c3b080fa42cc837f1d2338fcf096' ? 4000 : 1000;
     this.TimesliderWidget = new TimeSlider({
       view: this.props.view,
       container: document.querySelector('.timeslider-panel'),
