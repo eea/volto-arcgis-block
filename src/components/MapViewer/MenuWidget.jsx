@@ -300,6 +300,8 @@ class MenuWidget extends React.Component {
             });
           }
         }
+        if (!this.visibleLayers) this.visibleLayers = {};
+        this.handleRasterVectorLegend();
       }
     });
 
@@ -1635,6 +1637,31 @@ class MenuWidget extends React.Component {
     this.setState({});
   }
 
+  /**
+   * Method to show/hide a legend if the layer is active or not in the view
+   */
+  handleRasterVectorLegend() {
+    let zoom = this.view.get('zoom');
+    Object.keys(this.activeLayersJSON).forEach((key) => {
+      let activeLayer = this.activeLayersJSON[key];
+      let layerTitle = activeLayer.props.children[0].props.children;
+      if (layerTitle.includes('raster')) {
+        if (zoom > 6) {
+          this.layers[key].visible = false;
+        } else {
+          this.layers[key].visible = true;
+        }
+      } else if (layerTitle.includes('vector')) {
+        if (zoom >= 12) {
+          this.layers[key].visible = true;
+        } else {
+          this.layers[key].visible = false;
+        }
+      }
+      this.setState({});
+    });
+  }
+
   async toggleLayer(elem) {
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
@@ -1694,6 +1721,7 @@ class MenuWidget extends React.Component {
           elem,
           Object.keys(this.activeLayersJSON).length,
         );
+        this.handleRasterVectorLegend();
       } else {
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
