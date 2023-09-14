@@ -247,8 +247,8 @@ class HotspotWidget extends React.Component {
           .getElementById('select-klc-lccTime')
           .value.match(/\d+/g)
           .map(Number)[0];
-      
-          for (let i = 0; i < this.state.activeLayers.length; i++) {
+
+        for (let i = 0; i < this.state.activeLayers.length; i++) {
           let layer = this.state.activeLayers[i];
           if (layer.includes('all_lcc_a_pol')) {
             typeLegend = 'all_lcc_a_pol';
@@ -257,7 +257,7 @@ class HotspotWidget extends React.Component {
             typeLegend = 'all_lcc_b_pol';
           }
         }
-      
+
         if (this.esriLayer_lcc !== null) {
           if (this.esriLayer_lcc2 !== null) {
             this.props.map.remove(this.esriLayer_lcc2);
@@ -301,7 +301,7 @@ class HotspotWidget extends React.Component {
           .getElementById('select-klc-lcTime')
           .value.match(/\d+/g)
           .map(Number)[0];
-        
+
         if (this.esriLayer_lc !== null) {
           if (this.esriLayer_lc2 !== null) {
             this.props.map.remove(this.esriLayer_lc2);
