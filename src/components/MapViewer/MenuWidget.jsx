@@ -1640,26 +1640,26 @@ class MenuWidget extends React.Component {
   /**
    * Method to show/hide a legend if the layer is active or not in the view
    */
-  handleRasterVectorLegend(){
+  handleRasterVectorLegend() {
     let zoom = this.view.get('zoom');
-        Object.keys(this.activeLayersJSON).forEach((key) => { 
-          let activeLayer = this.activeLayersJSON[key]
-          let layerTitle = activeLayer.props.children[0].props.children;
-          if (layerTitle.includes('raster')){
-            if (zoom > 6) {
-                this.layers[key].visible = false;
-              } else {
-                this.layers[key].visible = true;           
-              }
-          } else if (layerTitle.includes('vector')) {
-            if (zoom >= 12) {
-                this.layers[key].visible = true;
-              } else {
-                this.layers[key].visible = false;
-              }
-            }
-          this.setState({});
-        })
+    Object.keys(this.activeLayersJSON).forEach((key) => {
+      let activeLayer = this.activeLayersJSON[key];
+      let layerTitle = activeLayer.props.children[0].props.children;
+      if (layerTitle.includes('raster')) {
+        if (zoom > 6) {
+          this.layers[key].visible = false;
+        } else {
+          this.layers[key].visible = true;
+        }
+      } else if (layerTitle.includes('vector')) {
+        if (zoom >= 12) {
+          this.layers[key].visible = true;
+        } else {
+          this.layers[key].visible = false;
+        }
+      }
+      this.setState({});
+    });
   }
 
   async toggleLayer(elem) {
