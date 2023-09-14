@@ -239,7 +239,6 @@ class HotspotWidget extends React.Component {
       }
     }
     typeFilter.forEach((type) => {
-      filterId = type + '_filter';
       if (type === 'lcc') {
         let selectLccBoxTime = document.getElementById('select-klc-lccTime')
           .value;
@@ -248,11 +247,17 @@ class HotspotWidget extends React.Component {
           .getElementById('select-klc-lccTime')
           .value.match(/\d+/g)
           .map(Number)[0];
-        this.state.activeLayers.forEach((layer) => {
-          layer.includes('all_lcc_a_pol')
-            ? (typeLegend = 'all_lcc_a_pol')
-            : (typeLegend = 'all_lcc_b_pol');
-        });
+
+        for (let i = 0; i < this.state.activeLayers.length; i++) {
+          let layer = this.state.activeLayers[i];
+          if (layer.includes('all_lcc_a_pol')) {
+            typeLegend = 'all_lcc_a_pol';
+            break;
+          } else {
+            typeLegend = 'all_lcc_b_pol';
+          }
+        }
+
         if (this.esriLayer_lcc !== null) {
           if (this.esriLayer_lcc2 !== null) {
             this.props.map.remove(this.esriLayer_lcc2);
@@ -279,11 +284,16 @@ class HotspotWidget extends React.Component {
         }
       }
       if (type === 'lc') {
-        this.state.activeLayers.forEach((layer) => {
-          layer.includes('all_present_lc_a_pol')
-            ? (typeLegend = 'all_present_lc_a_pol')
-            : (typeLegend = 'all_present_lc_b_pol');
-        });
+        for (let i = 0; i < this.state.activeLayers.length; i++) {
+          let layer = this.state.activeLayers[i];
+          if (layer.includes('all_present_lc_a_pol')) {
+            typeLegend = 'all_present_lc_a_pol';
+            break;
+          } else {
+            typeLegend = 'all_present_lc_b_pol';
+          }
+        }
+
         let selectLcBoxTime = document.getElementById('select-klc-lcTime')
           .value;
         this.lcYear = selectLcBoxTime;
@@ -291,6 +301,7 @@ class HotspotWidget extends React.Component {
           .getElementById('select-klc-lcTime')
           .value.match(/\d+/g)
           .map(Number)[0];
+
         if (this.esriLayer_lc !== null) {
           if (this.esriLayer_lc2 !== null) {
             this.props.map.remove(this.esriLayer_lc2);
@@ -312,7 +323,6 @@ class HotspotWidget extends React.Component {
           this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
           this.props.selectedLayers['lc_filter'].visible = true;
           this.esriLayer_lc2 = this.esriLayer_lc;
-          //this.layerModelInit();
         }
       }
       this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
@@ -340,6 +350,7 @@ class HotspotWidget extends React.Component {
           this.props.map.add(this.esriLayer_pa);
           this.props.selectedLayers['pa_filter'].visible = true;
           this.esriLayer_pa2 = this.esriLayer_pa;
+          //this.layerModelInit();
         }
       }
       this.layerModelInit();

@@ -105,7 +105,7 @@ class PanWidget extends React.Component {
               <span
                 aria-hidden="true"
                 role="presentation"
-                class="esri-widget--button esri-icon esri-icon-pan"
+                className="esri-widget--button esri-icon esri-icon-pan"
               ></span>
             </div>
             <div
