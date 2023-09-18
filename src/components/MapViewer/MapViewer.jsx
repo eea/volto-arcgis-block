@@ -143,6 +143,8 @@ class MapViewer extends React.Component {
         new WebTileLayer({
           urlTemplate:
             'https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png',
+          copyright:
+            '&copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA',
         }),
       ],
       // referenceLayers: [
@@ -232,7 +234,6 @@ class MapViewer extends React.Component {
       //we invoke the setState method, that changes the state and forces a
       //react component to render itself again
       //this.setState({});
-      this.view.ui._removeComponents(['attribution']);
     });
   }
 
