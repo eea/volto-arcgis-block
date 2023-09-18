@@ -243,6 +243,8 @@ class BasemapWidget extends React.Component {
       });
     }
     this.props.view.ui.add(this.container.current, 'top-right');
+    document.querySelector('.esri-attribution__powered-by').style.display =
+      'none';
   }
   /**
    * This method renders the component
