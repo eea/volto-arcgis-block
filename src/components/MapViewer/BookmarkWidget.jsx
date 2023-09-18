@@ -69,11 +69,11 @@ class BookmarkWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
 
-  limitMaxLenth () {
+  limitMaxLenth() {
     document.querySelector(
       '.esri-bookmarks__authoring-label .esri-input',
     ).maxLength = 150;
-  };
+  }
 
   async componentDidMount() {
     await this.loader();
@@ -118,10 +118,13 @@ class BookmarkWidget extends React.Component {
   componentDidUpdate() {
     this.props.view.when(() => {
       this.Bookmarks.when(() => {
-        this.Bookmarks.container.addEventListener('keydown', this.limitMaxLenth);
+        this.Bookmarks.container.addEventListener(
+          'keydown',
+          this.limitMaxLenth,
+        );
         this.Bookmarks.container.addEventListener('paste', this.limitMaxLenth);
-      })
-    })
+      });
+    });
   }
   /**
    * This method renders the component
