@@ -212,7 +212,6 @@ export const TouchScreenPopup = () => {
     </>
   );
 };
-
 class MenuWidget extends React.Component {
   /**
    * Creator of the Basemap widget class
@@ -224,16 +223,17 @@ class MenuWidget extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = {
-      showMapMenu: false,
-      noServiceModal: true,
-      setNoServiceModal: true,
-    };
     // call the props of the layers list (mapviewer.jsx)
     this.location = this.props.location;
     this.compCfg = this.props.conf;
     this.map = this.props.map;
     this.view = this.props.view;
+    this.state = {
+      showMapMenu: false,
+      noServiceModal: true,
+      setNoServiceModal: true,
+      TMSLayerObj: null,
+    };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
@@ -971,6 +971,11 @@ class MenuWidget extends React.Component {
     } else {
       sessionStorage.setItem('snowAndIce', false);
     }
+    if (productId === '333e4100b79045daa0ff16466ac83b7f') {
+      sessionStorage.setItem('DynamicLandCover', true);
+    } else {
+      sessionStorage.setItem('DynamicLandCover', false);
+    }
   }
 
   /**
@@ -1015,6 +1020,19 @@ class MenuWidget extends React.Component {
         if (!layer_default.length) {
           layer_default.push(checkboxId);
         }
+        //CHECK SESSION STORAGE for TMSlAYEROBJ, if not there, create it with TMSLayerObj{ layer: layer, checboxId: checkboxId, dataset: dataset }, and if it is there, replace it with the new one
+        let TMSLayerObj = {
+          layer: layer,
+          checkboxId: checkboxId,
+          dataset: dataset,
+        };
+
+        if (sessionStorage.getItem('TMSLayerObj')) {
+          sessionStorage.setItem('TMSLayerObj', JSON.stringify(TMSLayerObj));
+        } else {
+          sessionStorage.setItem('TMSLayerObj', JSON.stringify(TMSLayerObj));
+        }
+
         // add each sublayer to this.layers
         this.processTMSLayer(layer, checkboxId, dataset);
 
@@ -1413,6 +1431,13 @@ class MenuWidget extends React.Component {
    * @param {*} checkboxId Is the layers checkbox ID
    */
   processTMSLayer(layer, checkboxId, dataset) {
+    let selectedUrl;
+    let zoom = this.view.get('zoom');
+    if (Array.isArray(layer.LayerUrl)) {
+      zoom < 10
+        ? (selectedUrl = layer.LayerUrl[0])
+        : (selectedUrl = layer.LayerUrl[1]);
+    } else selectedUrl = layer.LayerUrl;
     const CustomTileLayer = BaseTileLayer.createSubclass({
       properties: {
         urlTemplate: null,
@@ -1427,7 +1452,7 @@ class MenuWidget extends React.Component {
         // si es cero será el maximo. las filas serán el array invertido
         // tengo que extrarer de alguna manera la cantidad de filas y columnas que se muestran.
 
-        return this.urlTemplate
+        return /* this.urlTemplate */ selectedUrl
           .replace('{z}', level)
           .replace('{x}', col)
           .replace('{y}', row);
@@ -1442,11 +1467,10 @@ class MenuWidget extends React.Component {
         // Images pyramid formula
         if (this.tms) {
           var rowmax = 1 << level; // LEVEL 1 * (2 ** 1) = 1 * (2) = 2   ;   LEVEL 2 * (2 ** 2) = 1 * (4) = 4 ; LEVEL 3 * (2 ** 3) = 1 * (8) = 8 . . .
-          row = rowmax - row - 1; // Invert Y axis
+          row = zoom < 10 ? rowmax - row - 1 : row; // Invert Y axis
         }
 
         const url = this.getTileUrl(level, row, col);
-
         // request for tiles based on the generated url
         // the signal option ensures that obsolete requests are aborted
         return esriRequest(url, {
@@ -1477,26 +1501,23 @@ class MenuWidget extends React.Component {
     // *******************************************************
     // end of Custom tile layer class code
     // *******************************************************
-    this.layers[checkboxId] = new CustomTileLayer({
-      id: checkboxId,
-      tms: true, // True establishes Y axis from the south northwards. False establishes tile origin top left and Y from north southwards (Default False)
-      urlTemplate: layer.LayerUrl,
-      // TMS Service.
-      // 'https://s3-eu-west-1.amazonaws.com/vito-lcv/global/2019/cog-full_l0-colored-full/{z}/{x}/{y}.png',
-      // Google/ESRI/OSM tiling style services
-      // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      // "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-      // "https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg",
-      spatialReference: {
-        wkid: 3857,
-      },
-      title: layer.Title,
-      LayerTitle: layer.Title,
-      DatasetTitle: dataset.DatasetTitle,
-      ViewService: dataset.ViewService,
-      StaticImageLegend: layer.StaticImageLegend,
-      url: dataset.ViewService,
-    });
+    let customTileLayer = this.getGlobalDynamicLandCoverUrl(
+      CustomTileLayer,
+      checkboxId,
+      layer,
+      dataset,
+      selectedUrl,
+    );
+    if (customTileLayer === null || customTileLayer === undefined) return;
+    if (this.layers[checkboxId]) {
+      if (customTileLayer.urlTemplate !== this.layers[checkboxId].urlTemplate) {
+        this.map.remove(this.layers[checkboxId]);
+        this.layers[checkboxId] = customTileLayer;
+        this.map.add(this.layers[checkboxId]);
+      }
+    } else {
+      this.layers[checkboxId] = customTileLayer;
+    }
   }
 
   /**
@@ -1719,6 +1740,7 @@ class MenuWidget extends React.Component {
       } */ else {
         this.map.add(this.layers[elem.id]);
       }
+      if (this.layers[elem.id] === undefined) return;
       this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
@@ -1891,6 +1913,31 @@ class MenuWidget extends React.Component {
     if (noLegendMessage) {
       noLegendMessage.style.display = 'none';
     }
+  }
+
+  getGlobalDynamicLandCoverUrl(
+    CustomTileLayer,
+    checkboxId,
+    layer,
+    dataset,
+    url,
+  ) {
+    const customTileLayer = new CustomTileLayer({
+      id: checkboxId,
+      tms: true,
+      urlTemplate: url,
+      spatialReference: {
+        wkid: 3857,
+      },
+      title: layer.Title,
+      LayerTitle: layer.Title,
+      DatasetTitle: dataset.DatasetTitle,
+      ViewService: dataset.ViewService,
+      StaticImageLegend: layer.StaticImageLegend,
+      url: dataset.ViewService,
+    });
+
+    return customTileLayer;
   }
 
   createStaticLegendImageNode(id, title, imageURL) {
@@ -3026,7 +3073,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevState, prevProps) {
     if (this.props.download) return;
 
     if (sessionStorage.getItem('snowAndIce') === 'true') {
@@ -3043,6 +3090,16 @@ class MenuWidget extends React.Component {
         let datasetCheck = datasetInputParentContainer.querySelector('input');
         this.showZoomMessageOnDataset(datasetCheck);
       }
+    }
+    const latestLayer = JSON.parse(sessionStorage.getItem('TMSLayerObj'));
+
+    if (latestLayer) {
+      this.view.when(() => {
+        if (this.view.stationary) {
+          const { layer, checkboxId, dataset } = latestLayer;
+          this.processTMSLayer(checkboxId, layer, dataset);
+        }
+      });
     }
   }
 
