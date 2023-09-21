@@ -139,7 +139,8 @@ class AreaWidget extends React.Component {
 
   loadNutsService(id, levels) {
     this.clearWidget();
-    this.props.view.ui.components = ['attribution'];
+    document.querySelector('.esri-attribution__powered-by').style.display =
+      'flex';
     levels.forEach((level) => {
       var layer = new FeatureLayer({
         id: id,
@@ -162,7 +163,8 @@ class AreaWidget extends React.Component {
 
   loadCountriesService(id) {
     this.clearWidget();
-    this.props.view.ui.components = ['attribution'];
+    document.querySelector('.esri-attribution__powered-by').style.display =
+      'flex';
     var layer = new FeatureLayer({
       id: id,
       //url: this.props.urls.outsideEu,
@@ -260,7 +262,8 @@ class AreaWidget extends React.Component {
       document.querySelector('.drawRectanglePopup-block').style.display =
         'block';
     }
-    this.props.view.ui._removeComponents(['attribution']);
+    document.querySelector('.esri-attribution__powered-by').style.display =
+      'none';
   }
 
   /**

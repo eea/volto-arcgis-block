@@ -17,6 +17,7 @@ class LegendWidget extends React.Component {
     //not be showing the basemap panel
     this.state = {
       showMapMenu: false,
+      loading: false,
     };
     this.mapViewer = this.props.mapViewer;
     this.menuClass =
@@ -46,7 +47,6 @@ class LegendWidget extends React.Component {
 
   brokenLegendImagePatch() {
     const collection = document.getElementsByClassName('esri-legend__symbol');
-
     Array.prototype.forEach.call(collection, (element) => {
       let img = {};
 
@@ -58,29 +58,59 @@ class LegendWidget extends React.Component {
         if (img?.src?.includes('all_present_lc_a_pol')) {
           img.src = this.urls.all_present_lc_a_pol;
 
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
-            'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
+            'Dichotomous Present Land Cover in selected hot spots';
           return;
         } else if (img?.src?.includes('all_present_lc_b_pol')) {
-          img.src = this.urls.all_present_lc_b_pol;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
-            'none';
+          //img.src ='none';
+          const legends = document.getElementsByClassName(
+            'esri-legend__service',
+          );
+          for (let i = 0; i < legends.length; i++) {
+            const legend = legends[i];
+            //find the legend that contains a broken img
+            if (
+              legend.querySelector('img')?.src?.includes('all_present_lc_b_pol')
+            ) {
+              const img = legend.querySelector('img');
+              //set this legend to display none
+              if (!(img.complete && img.naturalHeight !== 0)) {
+                legend.style.display = 'none';
+              }
+              break; // break out of the loop after the first match
+            }
+          }
+          /*img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
+            'Modular Present Land Cover in selected hot spots';*/
         } else if (img?.src?.includes('all_lcc_a_pol')) {
           img.src = this.urls.all_lcc_a_pol;
 
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
-            'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
+            'Dichotomous Land Cover Change in selected hot spots';
         } else if (img?.src?.includes('all_lcc_b_pol')) {
-          img.src = this.urls.all_lcc_b_pol;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
-            'none';
+          //img.src ='none';
+          const legends = document.getElementsByClassName(
+            'esri-legend__service',
+          );
+          for (let i = 0; i < legends.length; i++) {
+            const legend = legends[i];
+            //find the legend that contains a broken img
+            if (legend.querySelector('img')?.src?.includes('all_lcc_b_pol')) {
+              const img = legend.querySelector('img');
+              //set this legend to display none
+              if (!(img.complete && img.naturalHeight !== 0)) {
+                legend.style.display = 'none';
+              }
+              break; // break out of the loop after the first match
+            }
+          }
+          /*img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
+            'Modular Present Land Cover in selected hot spots';*/
         } else if (img?.src?.includes('cop_klc')) {
           img.src = this.urls.cop_klc;
 
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
-            'none';
+          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
+            'Key Landscapes for Conservation borders in selected hotspots';
         } else if (img.style) {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
             'none';
@@ -141,6 +171,17 @@ class LegendWidget extends React.Component {
     }
   }
 
+  imageFixWithTimer() {
+    this.setState({ loading: true });
+    setTimeout(() => {
+      this.brokenLegendImagePatch();
+      if (this.props.download) {
+        this.hideNutsLegend();
+      }
+      this.setState({ loading: false });
+    }, 2000);
+  }
+
   /**
    * This method is executed after the rener method is executed
    */
@@ -155,12 +196,7 @@ class LegendWidget extends React.Component {
       container: document.querySelector('.legend-panel'),
     });
     this.props.view.allLayerViews.watch('length', () => {
-      setTimeout(() => {
-        this.brokenLegendImagePatch();
-        if (this.props.download) {
-          this.hideNutsLegend();
-        }
-      }, 1000);
+      this.imageFixWithTimer();
     });
   }
 
@@ -195,7 +231,16 @@ class LegendWidget extends React.Component {
               ></span>
             </div>
             <div className="right-panel-content">
-              <div className="legend-panel"></div>
+              <span
+                className="loading"
+                style={{ display: this.state.loading ? 'block' : 'none' }}
+              >
+                Loading...
+              </span>
+              <div
+                className="legend-panel"
+                style={{ display: this.state.loading ? 'none' : 'block' }}
+              ></div>
             </div>
           </div>
         </div>
