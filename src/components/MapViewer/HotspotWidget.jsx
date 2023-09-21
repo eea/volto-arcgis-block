@@ -32,6 +32,7 @@ class HotspotWidget extends React.Component {
     this.dataBBox = [];
     this.dataJSONNames = [];
     this.klcHighlightsArray = [];
+    this.hotspotDropdownFilters = this.hotspotDropdownFilters.bind(this);
     this.renderPresentLandCover = this.renderPresentLandCover.bind(this);
     this.renderLandCoverChange = this.renderLandCoverChange.bind(this);
     this.getLayerParameters = this.getLayerParameters.bind(this);
@@ -40,7 +41,7 @@ class HotspotWidget extends React.Component {
     this.getBBoxData = this.getBBoxData.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
     this.mapCfg = this.props.mapCfg;
-    //this.getLayerParameters();
+    this.getLayerParameters(); //UNAI: SEPARATE GETLAYERPARAMETERS FROM GET KLCNAMES FUNCTION, KEEP THEM PURE. STORE THE PAYLOAD IN THIS.LAYERPARAMETERS
     this.selectedArea = null;
     this.lcYear = null;
     this.lccYear = null;
@@ -484,6 +485,49 @@ class HotspotWidget extends React.Component {
     } else {
       document.querySelector('#applyFilterButton').disabled = false;
     }
+  }
+
+  titleTrimmer(layerId) {
+      while (layerId.length > 0 && !/[a-zA-Z]/.test(layerId.charAt(layerId.length - 1))) {
+        layerId = layerId.slice(0, -1);
+      }
+      return str;
+  };
+
+  hotspotDropdownFilters(layerId) {
+    //look for the layer name in the 
+    return (
+      <div className="measurement-dropdown" id=/*"PresentLandCoverDropdown"*/>
+        <div
+          className="ccl-expandable__button"
+          aria-expanded="true"
+          tabIndex="0"
+          role="button"
+          onClick={this.dropdownAnimation.bind(this)}
+          onKeyDown={this.dropdownAnimation.bind(this)}
+        >
+          <span>Reference Land Cover</span>
+          <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
+        </div>
+        <div className="measurement-dropdown-container">
+          <br></br>
+          <div className="esri-print__form-section-container">
+            <label>
+              Year
+              <select
+                id="select-klc-lcTime"
+                className="esri-select"
+                data-target-property="layout"
+                onBlur={() => {}}
+                onChange={(e) => {
+                  this.disableButton();
+                }}
+              ></select>
+            </label>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   renderPresentLandCover() {
