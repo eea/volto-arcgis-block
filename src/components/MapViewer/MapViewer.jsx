@@ -341,6 +341,7 @@ class MapViewer extends React.Component {
           mapCfg={this.mapCfg}
           urls={this.cfgUrls}
           loadingHandler={this.loadingHandler}
+          hotspotDatasets = {this.props.conf[1].Products[4].Datasets}
         />
       );
   }
