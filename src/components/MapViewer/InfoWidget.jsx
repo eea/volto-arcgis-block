@@ -1035,9 +1035,16 @@ class InfoWidget extends React.Component {
                         </span>
                       )
                     ) : (
-                      <span className="info-panel-empty">
-                        Click on the map to get pixel info
-                      </span>
+                      <>
+                        <span className="info-panel-empty">
+                          Click on the map to get pixel info.
+                        </span>
+                        <br />
+                        <span className="info-panel-empty">
+                          Some products may not have information available to be
+                          displayed.
+                        </span>
+                      </>
                     )}
                   </>
                 )}
