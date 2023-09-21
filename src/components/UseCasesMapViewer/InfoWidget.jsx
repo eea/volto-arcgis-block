@@ -28,10 +28,6 @@ class InfoWidget extends React.Component {
    * @returns lateralMenu DOM
    */
   showUseCase(UseCase) {
-    UseCase.Use_case_summary = UseCase.Use_case_summary.replace(
-      '.pdf"',
-      '.pdf/@@download/file"',
-    );
     let responsibleOrganizationOrPerson = UseCase.Responsible_organisation
       ? UseCase.Responsible_organisation
       : UseCase.Contact_person_name_
