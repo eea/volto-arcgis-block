@@ -235,7 +235,7 @@ class MenuWidget extends React.Component {
       TMSLayerObj: null,
     };
     this.menuClass =
-    'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
+      'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
     this.layers = this.props.layers;
     this.activeLayersJSON = {};
@@ -243,7 +243,7 @@ class MenuWidget extends React.Component {
     this.xml = null;
     this.dataBBox = null;
     this.extentInitiated = false;
-    
+
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
@@ -1032,7 +1032,7 @@ class MenuWidget extends React.Component {
         } else {
           sessionStorage.setItem('TMSLayerObj', JSON.stringify(TMSLayerObj));
         }
-        
+
         // add each sublayer to this.layers
         this.processTMSLayer(layer, checkboxId, dataset);
 
@@ -1432,10 +1432,12 @@ class MenuWidget extends React.Component {
    */
   processTMSLayer(layer, checkboxId, dataset) {
     let selectedUrl;
-        let zoom = this.view.get('zoom');
-        if (Array.isArray(layer.LayerUrl)) {
-          zoom < 10 ? (selectedUrl = layer.LayerUrl[0]) : (selectedUrl = layer.LayerUrl[1]);
-        } else selectedUrl = layer.LayerUrl;
+    let zoom = this.view.get('zoom');
+    if (Array.isArray(layer.LayerUrl)) {
+      zoom < 10
+        ? (selectedUrl = layer.LayerUrl[0])
+        : (selectedUrl = layer.LayerUrl[1]);
+    } else selectedUrl = layer.LayerUrl;
     const CustomTileLayer = BaseTileLayer.createSubclass({
       properties: {
         urlTemplate: null,
@@ -1450,7 +1452,7 @@ class MenuWidget extends React.Component {
         // si es cero será el maximo. las filas serán el array invertido
         // tengo que extrarer de alguna manera la cantidad de filas y columnas que se muestran.
 
-        return /* this.urlTemplate */selectedUrl
+        return /* this.urlTemplate */ selectedUrl
           .replace('{z}', level)
           .replace('{x}', col)
           .replace('{y}', row);
@@ -1507,13 +1509,13 @@ class MenuWidget extends React.Component {
       selectedUrl,
     );
     if (customTileLayer === null || customTileLayer === undefined) return;
-    if(this.layers[checkboxId]){
-      if(customTileLayer.urlTemplate !== this.layers[checkboxId].urlTemplate){
+    if (this.layers[checkboxId]) {
+      if (customTileLayer.urlTemplate !== this.layers[checkboxId].urlTemplate) {
         this.map.remove(this.layers[checkboxId]);
         this.layers[checkboxId] = customTileLayer;
         this.map.add(this.layers[checkboxId]);
       }
-    }else{
+    } else {
       this.layers[checkboxId] = customTileLayer;
     }
   }
@@ -1912,23 +1914,23 @@ class MenuWidget extends React.Component {
     dataset,
     url,
   ) {
-        const customTileLayer = new CustomTileLayer({
-          id: checkboxId,
-          tms: true,
-          urlTemplate: url,
-          spatialReference: {
-            wkid: 3857,
-          },
-          title: layer.Title,
-          LayerTitle: layer.Title,
-          DatasetTitle: dataset.DatasetTitle,
-          ViewService: dataset.ViewService,
-          StaticImageLegend: layer.StaticImageLegend,
-          url: dataset.ViewService,
-        });
+    const customTileLayer = new CustomTileLayer({
+      id: checkboxId,
+      tms: true,
+      urlTemplate: url,
+      spatialReference: {
+        wkid: 3857,
+      },
+      title: layer.Title,
+      LayerTitle: layer.Title,
+      DatasetTitle: dataset.DatasetTitle,
+      ViewService: dataset.ViewService,
+      StaticImageLegend: layer.StaticImageLegend,
+      url: dataset.ViewService,
+    });
 
-        return customTileLayer;
-      }
+    return customTileLayer;
+  }
 
   createStaticLegendImageNode(id, title, imageURL) {
     let node = document.createElement('div');
