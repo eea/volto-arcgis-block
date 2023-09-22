@@ -243,6 +243,7 @@ class MenuWidget extends React.Component {
     this.xml = null;
     this.dataBBox = null;
     this.extentInitiated = false;
+    this.hotspotLayerIds = this.props.hotspotLayerIds;
 
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -1688,7 +1689,7 @@ class MenuWidget extends React.Component {
 
     let group = this.getGroup(elem);
     if (elem.checked) {
-      this.props.loadingHandler(true);
+      this.props.loadingSpinnerHandler(true);
       if (this.props.download || this.location.search !== '') {
         if (
           this.extentInitiated === false &&
@@ -1710,13 +1711,7 @@ class MenuWidget extends React.Component {
         } else {
           this.map.add(this.layers[elem.id]);
         }
-      } /*else if (this.layers[modularLC]) {
-        let previousElem = document
-          .getElementById(elem.id)
-          .closest('.ccl-form-group')
-          .previousElementSibling.querySelector('input');
-        this.map.add(this.layers[previousElem.id]);
-      } */ else {
+      } else {
         this.map.add(this.layers[elem.id]);
       }
       this.layers[elem.id].visible = true; //layer id
@@ -1748,7 +1743,7 @@ class MenuWidget extends React.Component {
       this.props.view.whenLayerView(this.layers[elem.id]).then((layerView) => {
         layerView.watch('updating', (isUpdating) => {
           if (!isUpdating) {
-            this.props.loadingHandler(false);
+            this.props.loadingSpinnerHandler(false);
           }
         });
       });
@@ -1758,6 +1753,7 @@ class MenuWidget extends React.Component {
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
       this.deleteFilteredLayer(elem.id);
+      this.toggleHotspotFilter(elem.id);
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
       let mapLayer = this.map.findLayerById(elem.id);
@@ -1817,30 +1813,19 @@ class MenuWidget extends React.Component {
    * Hide or show the hotspot widget for a hotspot layer
    */
 
-  toggleHotspotWidget() {
-    let hotspotButton = document.querySelector('#hotspot_button');
+  toggleHotspotFilter(elemId) {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    let hotspotFilterApplied = sessionStorage.getItem('hotspotFilterApplied');
     if (this.props.download) {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
-    if (
-      checkedLayers.length === 0 &&
-      sessionStorage.getItem('hotspotFilterApplied')
-    ) {
-      sessionStorage.removeItem('hotspotFilterApplied');
-    }
-    if (checkedLayers) {
-      checkedLayers.forEach((key) => {
-        if (
-          key.includes('all_present_lc_a_pol') ||
-          key.includes('all_lcc_a_pol')
-        ) {
-          if (!this.props.mapViewer.activeWidget) {
-            hotspotButton.click();
-          }
+    this.hotspotLayerIds.find((layerId) => {
+      if (elemId.includes(layerId)) {
+        if (checkedLayers.find((layer) => layer.LayerId === elemId)) {
+          hotspotFilterApplied = true;
         }
-      });
-    }
+      }
+    })
   }
   /**
    * Hide or show a legend image in the legend widget for a WMTS or a TMS layer
@@ -2786,6 +2771,7 @@ class MenuWidget extends React.Component {
         layers.push(layer);
       }
     });
+
     if (!sessionStorage.getItem('hotspotFilterApplied')) {
       if (layers.length === 0 && document.querySelector('.info-container')) {
         this.props.mapViewer.closeActiveWidget();

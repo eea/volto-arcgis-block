@@ -54,24 +54,47 @@ class MapViewer extends React.Component {
     });
     this.state = {
       layerLoading: false,
+      activeHotSpotLayers: [],
     };
     this.layers = {};
-    this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
     this.cfgUrls = this.props.cfg.Urls;
     this.userID = null;
-    this.loadingHandler = this.loadingHandler.bind(this);
+    this.activeLayersHandler = this.activeLayersHandler.bind(this);
+    this.activeHotSpotLayersHandler = this.activeHotSpotLayersHandler.bind(this);
+    this.checkOrderOfHotspotLayers = this.checkOrderOfHotspotLayers.bind(this);
+    this.loadingSpinnerHandler = this.loadingSpinnerHandler.bind(this);
+    this.hotSpotDatasets = null;
+    this.hotspotLayerIds = [];
   }
 
-  loadingHandler(bool) {
-    this.setState({ layerLoading: bool });
+  checkOrderOfHotspotLayers(hotspotDatasets, activeLayers) {
+    const activeHotSpotLayers = [];
+    activeLayers.forEach((layer) => {
+      const trimmedLayer = this.trimLayerId(layer);
+      const layerMatch = this.findLayerMatch(hotspotDatasets, trimmedLayer);
+      if (layerMatch) {
+        this.hotspotLayerIds.push(layerMatch.LayerId);
+        activeHotSpotLayers.push(layerMatch);
+      }
+    });
+    this.activeHotSpotLayersHandler(activeHotSpotLayers);
+  }
+
+  activeHotSpotLayersHandler(activeHotSpotLayers) {
+  this.setState({ activeHotSpotLayers: activeHotSpotLayers });
   }
 
   activeLayersHandler(newActiveLayers) {
     this.activeLayers = newActiveLayers;
     mapStatus.activeLayers = newActiveLayers;
     sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+  }
+
+
+  loadingSpinnerHandler(bool) {
+    this.setState({ layerLoading: bool });
   }
 
   setCenterState(centerStatus) {
@@ -238,6 +261,15 @@ class MapViewer extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    if (prevProps.mapviewer_config.loading !== this.props.mapviewer_config.loading) {
+      this.hotSpotDatasets = this.props.mapviewer_config.Components[1].Products[4].Datasets;
+    }
+    if (prevState.activeLayers !== this.state.activeLayers) {
+      this.checkOrderOfHotspotLayers(
+        this.hotspotDatasets,
+        this.state.activeLayers,
+      );
+    }
     if (this.props.Download || (this.location && this.location.search !== '')) {
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
       sessionStorage.clear();
@@ -337,11 +369,15 @@ class MapViewer extends React.Component {
           map={this.map}
           selectedLayers={this.layers}
           mapViewer={this}
-          layers={sessionStorage}
           mapCfg={this.mapCfg}
           urls={this.cfgUrls}
-          loadingHandler={this.loadingHandler}
-          hotspotDatasets = {this.props.conf[1].Products[4].Datasets}
+          loadingSpinnerHandler={this.loadingSpinnerHandler}
+          hotSpotDatasets={
+            this.hotspotDatasets ? this.hotspotDatasets : null
+          }
+          activeHotSpotLayersHandler={this.activeHotSpotLayersHandler}
+          hotspotLayerIds={this.hotspotLayerIds}
+          activeHotSpotLayers={this.state.activeHotSpotLayers}
         />
       );
   }
@@ -361,7 +397,9 @@ class MapViewer extends React.Component {
           layers={this.layers}
           activeLayersHandler={this.activeLayersHandler}
           urls={this.cfgUrls}
-          loadingHandler={this.loadingHandler}
+          loadingSpinnerHandler={this.loadingSpinnerHandler}
+          activeHotSpotLayersHandler={this.activeHotSpotLayersHandler}
+          hotspotLayerIds={this.hotspotLayerIds}
         />
       ); //call conf
   }
