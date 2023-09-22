@@ -171,7 +171,7 @@ class BasemapWidget extends React.Component {
               baseLayers: [
                 new WebTileLayer({
                   urlTemplate: ${url}.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/${proj}/{z}/{x}/{y}'),
-                  copyright: '&copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA',
+                  copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
                 })
               ]
             });
@@ -196,8 +196,7 @@ class BasemapWidget extends React.Component {
           new WebTileLayer({
             urlTemplate:
               'https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png',
-            copyright:
-              '&copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA',
+            copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
           }),
         ],
         // referenceLayers: [
@@ -213,8 +212,7 @@ class BasemapWidget extends React.Component {
           new WebTileLayer({
             urlTemplate:
               'https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomComposite/EPSG3857/{z}/{x}/{y}.png',
-            copyright:
-              '&copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA',
+            copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
           }),
         ],
         // referenceLayers: [
@@ -230,8 +228,7 @@ class BasemapWidget extends React.Component {
           new WebTileLayer({
             urlTemplate:
               'https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png',
-            copyright:
-              '&copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA',
+            copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
           }),
         ],
         // referenceLayers: [
