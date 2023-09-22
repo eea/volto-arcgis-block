@@ -137,12 +137,10 @@ class MapViewer extends React.Component {
     await this.waitForDataFill(this.compCfg);
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
-      thumbnailUrl:
-        'https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png',
+      thumbnailUrl: this.cfgUrls.positronCompositeThumbnail,
       baseLayers: [
         new WebTileLayer({
-          urlTemplate:
-            'https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png',
+          urlTemplate: this.cfgUrls.positronCompositeTemplate,
           copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
         }),
       ],
@@ -281,7 +279,10 @@ class MapViewer extends React.Component {
    */
   renderBasemap() {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <BasemapWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <BasemapWidget view={this.view} mapViewer={this} urls={this.cfgUrls} />
+      );
   }
 
   renderLegend() {

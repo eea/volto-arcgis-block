@@ -233,6 +233,18 @@ const config = {
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=',
     serviceUrl: 'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms',
     all_geo_klc: 'https://land.copernicus.eu/global/hsm/all_geo_klc_json',
+    positronCompositeThumbnail:
+      'https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png',
+    positronCompositeTemplate:
+      'https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png',
+    blossomCompositeThumbnail:
+      'https://gisco-services.ec.europa.eu/maps/wmts/OSMBlossomComposite/EPSG3857/0/0/0.png',
+    blossomCompositeTemplate:
+      'https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomComposite/EPSG3857/{z}/{x}/{y}.png',
+    countriesWorldThumbnail:
+      'https://gisco-services.ec.europa.eu/maps/wmts/CountriesWorld/EPSG3857/0/0/0.png',
+    countriesWorldTemplate:
+      'https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png',
   },
 };
 export default config;
