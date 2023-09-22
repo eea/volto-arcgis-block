@@ -26,6 +26,7 @@ class BasemapWidget extends React.Component {
     this.menuClass =
       'esri-icon-basemap esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
+    this.urls = this.props.urls;
   }
 
   loader() {
@@ -190,12 +191,10 @@ class BasemapWidget extends React.Component {
       // Only 3 basemaps
       this.positronCompositeBasemap = new Basemap({
         title: 'Positron composite',
-        thumbnailUrl:
-          'https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png',
+        thumbnailUrl: this.urls.positronCompositeThumbnail,
         baseLayers: [
           new WebTileLayer({
-            urlTemplate:
-              'https://gisco-services.ec.europa.eu/maps/tiles/OSMPositronComposite/EPSG3857/{z}/{x}/{y}.png',
+            urlTemplate: this.urls.positronCompositeTemplate,
             copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
           }),
         ],
@@ -206,12 +205,10 @@ class BasemapWidget extends React.Component {
 
       this.blossomCompositeBasemap = new Basemap({
         title: 'Blossom composite',
-        thumbnailUrl:
-          'https://gisco-services.ec.europa.eu/maps/wmts/OSMBlossomComposite/EPSG3857/0/0/0.png',
+        thumbnailUrl: this.urls.blossomCompositeThumbnail,
         baseLayers: [
           new WebTileLayer({
-            urlTemplate:
-              'https://gisco-services.ec.europa.eu/maps/tiles/OSMBlossomComposite/EPSG3857/{z}/{x}/{y}.png',
+            urlTemplate: this.urls.blossomCompositeTemplate,
             copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
           }),
         ],
@@ -222,12 +219,10 @@ class BasemapWidget extends React.Component {
 
       this.worldBoundariesBasemap = new Basemap({
         title: 'World boundaries',
-        thumbnailUrl:
-          'https://gisco-services.ec.europa.eu/maps/wmts/CountriesWorld/EPSG3857/0/0/0.png',
+        thumbnailUrl: this.urls.countriesWorldThumbnail,
         baseLayers: [
           new WebTileLayer({
-            urlTemplate:
-              'https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png',
+            urlTemplate: this.urls.countriesWorldTemplate,
             copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
           }),
         ],
