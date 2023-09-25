@@ -1506,6 +1506,7 @@ class MenuWidget extends React.Component {
    */
 
   checkForHotspots(elem, productContainerId) {
+    if (!(elem.id.includes('all_present') || elem.id.includes('all_lcc'))) return;
     let elemContainer = document
       .getElementById(elem.id)
       .closest('.ccl-form-group');
