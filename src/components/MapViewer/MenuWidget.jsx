@@ -32,6 +32,7 @@ export const AddCartItem = ({
   const checkArea = (e) => {
     let check = document.querySelector('.area-panel input:checked').value;
     let area = {};
+    debugger
     if (check === 'area') {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
@@ -1433,10 +1434,10 @@ class MenuWidget extends React.Component {
   processTMSLayer(layer, checkboxId, dataset) {
     let selectedUrl;
     let zoom = this.view.get('zoom');
-    if (Array.isArray(layer.LayerUrl)) {
+    if (layer.LayerUrl && Object.keys(layer.LayerUrl).length > 0) { // replace testingUrl with layer.LayerUrl
       zoom < 10
-        ? (selectedUrl = layer.LayerUrl[0])
-        : (selectedUrl = layer.LayerUrl[1]);
+        ? (selectedUrl = layer.LayerUrl["longZoom"]) 
+        : (selectedUrl = layer.LayerUrl["shortZoom"]);
     } else selectedUrl = layer.LayerUrl;
     const CustomTileLayer = BaseTileLayer.createSubclass({
       properties: {
