@@ -1434,7 +1434,6 @@ class MenuWidget extends React.Component {
     let selectedUrl;
     let zoom = this.view.get('zoom');
     if (layer.LayerUrl && Object.keys(layer.LayerUrl).length > 0) {
-      // replace testingUrl with layer.LayerUrl
       zoom < 10
         ? (selectedUrl = layer.LayerUrl['longZoom'])
         : (selectedUrl = layer.LayerUrl['shortZoom']);
@@ -1510,7 +1509,7 @@ class MenuWidget extends React.Component {
       selectedUrl,
     );
     if (customTileLayer === null || customTileLayer === undefined) return;
-    if (this.layers[checkboxId]) {
+    if (this.layers[checkboxId] && this.activeLayersJSON[checkboxId]) {
       if (customTileLayer.urlTemplate !== this.layers[checkboxId].urlTemplate) {
         this.map.remove(this.layers[checkboxId]);
         this.layers[checkboxId] = customTileLayer;
@@ -3007,7 +3006,10 @@ class MenuWidget extends React.Component {
    */
   eyeLayer(elem) {
     this.findCheckedDataset(elem);
-    if (this.visibleLayers[elem.id][1] === 'eye') {
+    if (
+      this.visibleLayers[elem.id] &&
+      this.visibleLayers[elem.id][1] === 'eye'
+    ) {
       this.layers[elem.id].visible = false;
       this.visibleLayers[elem.id] = ['fas', 'eye-slash'];
       if (this.layers['lcc_filter'] && elem.id.includes('all_lcc')) {
