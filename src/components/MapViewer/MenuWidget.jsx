@@ -125,21 +125,27 @@ export const AddCartItem = ({
                 (isLoggedIn ? ' logged' : '')
               }
               onClick={(e) => {
-                if (!areaData) {
-                  if (
-                    !mapViewer.activeWidget ||
-                    !mapViewer.activeWidget.container.current.classList.contains(
-                      'area-container',
-                    )
-                  ) {
-                    document.querySelector('#map_area_button').click();
+                if (
+                  !document.getElementsByClassName(
+                    'drawRectanglePopupWarning-text',
+                  ).length > 0
+                ) {
+                  if (!areaData) {
+                    if (
+                      !mapViewer.activeWidget ||
+                      !mapViewer.activeWidget.container.current.classList.contains(
+                        'area-container',
+                      )
+                    ) {
+                      document.querySelector('#map_area_button').click();
+                    }
+                  } else {
+                    checkArea(e);
                   }
-                } else {
-                  checkArea(e);
                 }
               }}
               onKeyDown={(e) => {
-                if (!areaData) {
+                /* if (!areaData) {
                   if (
                     !mapViewer.activeWidget ||
                     !mapViewer.activeWidget.container.current.classList.contains(
@@ -150,16 +156,26 @@ export const AddCartItem = ({
                   }
                 } else {
                   checkArea(e);
-                }
+                } */
               }}
               tabIndex="0"
               role="button"
             >
               <FontAwesomeIcon
-                className={isLoggedIn ? '' : ' locked'}
+                className={
+                  isLoggedIn &&
+                  !document.getElementsByClassName(
+                    'drawRectanglePopupWarning-text',
+                  ).length > 0
+                    ? ''
+                    : ' locked'
+                }
                 icon={['fas', 'download']}
               />
-              {!isLoggedIn && <FontAwesomeIcon icon={['fas', 'lock']} />}
+              {!isLoggedIn ||
+                (document.getElementsByClassName(
+                  'drawRectanglePopupWarning-text',
+                ).length > 0 && <FontAwesomeIcon icon={['fas', 'lock']} />)}
             </span>
           }
           content="Download"

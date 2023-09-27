@@ -192,6 +192,17 @@ class AreaWidget extends React.Component {
     });
     return index;
   }
+
+  checkExtent(extent) {
+    if (
+      extent.xmin < -31.27 &&
+      extent.xmax > 44.82 &&
+      extent.ymin < 27.64 &&
+      extent.ymax > 80.83
+    )
+      return true;
+  }
+
   rectanglehandler() {
     this.clearWidget();
     window.document.querySelector('.pan-container').style.display = 'flex';
@@ -212,10 +223,17 @@ class AreaWidget extends React.Component {
       if (e.action === 'start') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         origin = this.props.view.toMap(e);
-        this.setState({
-          showInfoPopup: true,
-          infoPopupType: 'download',
-        });
+        if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'fullDataset',
+          });
+        } else {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'download',
+          });
+        }
         if (this.props.download) {
           document.querySelector('.drawRectanglePopup-block').style.display =
             'none';
@@ -233,6 +251,17 @@ class AreaWidget extends React.Component {
           }),
           symbol: fillSymbol,
         });
+        if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'fullDataset',
+          });
+        } else {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'download',
+          });
+        }
         this.props.updateArea({
           origin: { x: origin.longitude, y: origin.latitude },
           end: { x: p.longitude, y: p.latitude },
@@ -527,6 +556,17 @@ class AreaWidget extends React.Component {
                       <div className="drawRectanglePopup-text">
                         Click on the download icon on “Products and datasets” to
                         add to cart
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'fullDataset' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopupWarning-text">
+                        Full dataset's only downloadable through the M2M API,
+                        AOI isn't sent to cart
                       </div>
                     </>
                   )}
