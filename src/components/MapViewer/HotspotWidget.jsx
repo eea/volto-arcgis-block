@@ -817,6 +817,7 @@ class HotspotWidget extends React.Component {
   componentWillUnmount() {
     // Remove the event listener when the component is unmounted
     window.removeEventListener('storage', this.handleStorageChange);
+    //sessionStorage.removeItem("hotspotFilterApplied");
   }
 
   handleStorageChange = () => {

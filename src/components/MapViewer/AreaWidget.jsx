@@ -194,13 +194,21 @@ class AreaWidget extends React.Component {
   }
 
   checkExtent(extent) {
+    let extentToCHeck = new Extent({
+      xmin: -4957196.074387185,
+      xmax: 8896862.428240843,
+      ymin: 2252343.9407090154,
+      ymax: 12114555.078173038,
+      spatialReference: { wkid: 102100 },
+    });
     if (
-      extent.xmin < -31.27 &&
-      extent.xmax > 44.82 &&
-      extent.ymin < 27.64 &&
-      extent.ymax > 80.83
+      extent.xmin < extentToCHeck.xmin &&
+      extent.xmax > extentToCHeck.xmax &&
+      extent.ymin < extentToCHeck.ymin &&
+      extent.ymax > extentToCHeck.ymax
     )
       return true;
+    else return false;
   }
 
   rectanglehandler() {
@@ -565,8 +573,17 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopupWarning-text">
-                        Full dataset's only downloadable through the M2M API,
-                        AOI isn't sent to cart
+                        <a
+                          style={{ color: 'black', cursor: 'pointer' }}
+                          className="drawRectanglePopupWarning"
+                          id="drawRectanglePopupWarning"
+                          href="https://clmsdemo.devel6cph.eea.europa.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          To download the full dataset consult the "How to
+                          download M2M" How to guide.
+                        </a>
                       </div>
                     </>
                   )}

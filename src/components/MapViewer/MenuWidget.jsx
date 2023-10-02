@@ -2849,16 +2849,15 @@ class MenuWidget extends React.Component {
         layers.push(layer);
       }
     });
+    if (layers.length === 0 && document.querySelector('.info-container')) {
+      document.querySelector('.info-container').style.display = 'none';
+    } else if (layers.length > 0) {
+      document.querySelector('.info-container').style.display = 'flex';
+    }
     if (!sessionStorage.getItem('hotspotFilterApplied')) {
-      if (layers.length === 0 && document.querySelector('.info-container')) {
-        this.props.mapViewer.closeActiveWidget();
-        document.querySelector('.info-container').style.display = 'none';
-      } else if (layers.length > 0) {
-        document.querySelector('.info-container').style.display = 'flex';
-      }
+      this.props.mapViewer.closeActiveWidget();
     }
     this.renderHotspot();
-    /**/
   }
 
   getLayerTitle(layer) {

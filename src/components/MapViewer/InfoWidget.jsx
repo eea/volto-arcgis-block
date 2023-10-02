@@ -919,6 +919,7 @@ class InfoWidget extends React.Component {
   render() {
     let noData = true;
     if (this.state.pixelInfo) {
+      /* debugger */
       noData = this.infoData[this.state.layerIndex].data.data
         ? this.infoData[this.state.layerIndex].data.data.values.map((a) => {
             return a[
@@ -927,6 +928,7 @@ class InfoWidget extends React.Component {
           }).length === 0
         : true;
     } else if (this.state.popup) {
+      /* debugger */
       noData = this.infoData[this.state.layerIndex].data.length === 0 && true;
     }
     return (
