@@ -1371,3 +1371,16 @@ div.map-container.popup-block {
   align-items:center;
 }
 */
+
+/*Swipe*/
+
+.swipe-container .esri-button {
+  border: none;
+  background-color: #a0b128;
+}
+
+.swipe-container .esri-button:hover {
+  border-color: #a0b128;
+  background-color: white;
+  color: #a0b128;
+}

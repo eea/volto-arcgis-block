@@ -11,6 +11,7 @@ import { useIntl } from 'react-intl';
 import BasemapWidget from './BasemapWidget';
 import MeasurementWidget from './MeasurementWidget';
 import PrintWidget from './PrintWidget';
+import SwipeWidget from './SwipeWidget';
 import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
@@ -308,6 +309,12 @@ class MapViewer extends React.Component {
     if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
   }
 
+  renderSwipe() {
+    if (this.props.mapviewer_config.Download) return;
+    if (this.view)
+      return <SwipeWidget view={this.view} mapViewer={this} map={this.map} />;
+  }
+
   renderArea() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view) {
@@ -402,6 +409,7 @@ class MapViewer extends React.Component {
             {this.renderLegend()}
             {this.renderMeasurement()}
             {this.renderPrint()}
+            {this.renderSwipe()}
             {this.renderArea()}
             {this.renderPan()}
             {this.renderScale()}
