@@ -16,6 +16,7 @@ class HotspotWidget extends React.Component {
     //not be showing the basemap panel
     this.state = {
       showMapMenu: false,
+      activeLayers: {},
     };
     this.menuClass =
       'esri-icon-filter esri-widget--button esri-widget esri-interactive';
@@ -183,7 +184,7 @@ class HotspotWidget extends React.Component {
 
   async handleApplyFilter(typeFilter) {
     let typeLegend;
-
+    const activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
     this.props.loadingHandler(true);
 
     if (this.props.selectedLayers) {
@@ -247,8 +248,8 @@ class HotspotWidget extends React.Component {
           .value.match(/\d+/g)
           .map(Number)[0];
 
-        for (let i = 0; i < this.state.activeLayers.length; i++) {
-          let layer = this.state.activeLayers[i];
+        for (let i = 0; activeLayers[i]; i++) {
+          let layer = activeLayers[i];
           if (layer.includes('all_lcc_a_pol')) {
             typeLegend = 'all_lcc_a_pol';
             break;
@@ -283,8 +284,8 @@ class HotspotWidget extends React.Component {
         }
       }
       if (type === 'lc') {
-        for (let i = 0; i < this.state.activeLayers.length; i++) {
-          let layer = this.state.activeLayers[i];
+        for (let i = 0; i < activeLayers.length; i++) {
+          let layer = activeLayers[i];
           if (layer.includes('all_present_lc_a_pol')) {
             typeLegend = 'all_present_lc_a_pol';
             break;
@@ -354,6 +355,7 @@ class HotspotWidget extends React.Component {
       }
       this.layerModelInit();
       this.setBBoxCoordinates(this.dataBBox);
+      //this.setState({ activeLayers: {[type+'_filter']: this.props.selectedLayers[type+'_filter']}})
     });
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
@@ -387,7 +389,7 @@ class HotspotWidget extends React.Component {
 
   openMenu() {
     if (this.state.showMapMenu) {
-      this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      //this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -401,9 +403,9 @@ class HotspotWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
-      this.getLayerParameters();
-      if (this.getLayerParameters.length !== 0)
-        this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      //this.getLayerParameters();
+      //if (this.getLayerParameters.length !== 0)
+      //this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
@@ -433,7 +435,6 @@ class HotspotWidget extends React.Component {
         //if (this.selectedArea == null) {
         //  this.selectedArea = data.nodes[0].node.klc_name;
         //}
-        this.getKLCNames(data.nodes, this.selectedArea);
       })
       .catch(function (error) {
         /* console.log('error while getting data'); */
@@ -442,6 +443,7 @@ class HotspotWidget extends React.Component {
 
   renderApplyFilterButton() {
     let typeFilter = [];
+    const activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
 
     if (
       this.container.current.querySelector('.presentLandCoverContainer').style
@@ -456,7 +458,7 @@ class HotspotWidget extends React.Component {
     ) {
       typeFilter.push('lcc');
     }
-    this.state.activeLayers.forEach((layer) => {
+    activeLayers.forEach((layer) => {
       if (layer.match('cop_klc')) {
         typeFilter.push('klc');
       }
@@ -527,6 +529,13 @@ class HotspotWidget extends React.Component {
     var selectBoxLccTime;
     let modularKLCAreas = [];
     let dichotomousKLCAreas = [];
+    let activeLayers = [];
+
+    if (this.props.hotspotData['activeLayers'] === undefined) return;
+
+    activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
+
+    if (selectedOption === undefined) return;
 
     selectBox = document.getElementById('select-klc-area');
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
@@ -612,11 +621,11 @@ class HotspotWidget extends React.Component {
       );
       selectBox.options[0].disabled = true;
     }
-    if (this.state.activeLayers.length) {
-      for (let a = 0; a < this.state.activeLayers.length; a++) {
+    if (activeLayers.length) {
+      for (let a = 0; a < activeLayers.length; a++) {
         if (
-          this.state.activeLayers[a].includes('all_lcc_b_pol') ||
-          this.state.activeLayers[a].includes('all_present_lc_b_pol')
+          activeLayers[a].includes('all_lcc_b_pol') ||
+          activeLayers[a].includes('all_present_lc_b_pol')
         ) {
           for (let i = 0; i < modularKLCAreas.length; i++) {
             let option = modularKLCAreas[i];
@@ -634,13 +643,13 @@ class HotspotWidget extends React.Component {
               if (this.lccYear !== null) {
                 selectBoxLccTime.value = this.lccYear;
               }
+              break; // move break statement inside the if block
             }
-            break;
           }
           break;
         } else if (
-          this.state.activeLayers[a].includes('all_lcc_a_pol') ||
-          this.state.activeLayers[a].includes('all_present_lc_a_pol')
+          activeLayers[a].includes('all_lcc_a_pol') ||
+          activeLayers[a].includes('all_present_lc_a_pol')
         ) {
           for (let i = 0; i < dichotomousKLCAreas.length; i++) {
             let option = dichotomousKLCAreas[i];
@@ -658,12 +667,11 @@ class HotspotWidget extends React.Component {
               if (this.lccYear !== null) {
                 selectBoxLccTime.value = this.lccYear;
               }
+              break; // move break statement inside the if block
             }
-            break;
           }
           break;
         }
-        break;
       }
     }
     if (selectBox.value === 'default') {
@@ -803,26 +811,13 @@ class HotspotWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
     this.getBBoxData();
-    // Listen for changes to sessionStorage
-    window.addEventListener('storage', this.handleStorageChange);
   }
 
-  componentDidUpdate(prevState) {
-    if (prevState.activeLayers !== this.state.activeLayers) {
+  componentDidUpdate(prevState, prevProps) {
+    if (prevProps.hotspotData !== this.props.hotspotData) {
       this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.disableButton();
     }
   }
-
-  componentWillUnmount() {
-    // Remove the event listener when the component is unmounted
-    window.removeEventListener('storage', this.handleStorageChange);
-    //sessionStorage.removeItem("hotspotFilterApplied");
-  }
-
-  handleStorageChange = () => {
-    this.setState({ activeLayers: JSON.parse(sessionStorage.checkedLayers) });
-    this.forceUpdate();
-  };
 }
 export default HotspotWidget;
