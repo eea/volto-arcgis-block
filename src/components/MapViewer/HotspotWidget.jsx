@@ -16,6 +16,7 @@ class HotspotWidget extends React.Component {
     //not be showing the basemap panel
     this.state = {
       showMapMenu: false,
+      activeLayers: {},
     };
     this.menuClass =
       'esri-icon-filter esri-widget--button esri-widget esri-interactive';
@@ -183,7 +184,7 @@ class HotspotWidget extends React.Component {
 
   async handleApplyFilter(typeFilter) {
     let typeLegend;
-
+    const activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
     this.props.loadingHandler(true);
 
     if (this.props.selectedLayers) {
@@ -247,8 +248,8 @@ class HotspotWidget extends React.Component {
           .value.match(/\d+/g)
           .map(Number)[0];
 
-        for (let i = 0; i < this.activeLayers.length; i++) {
-          let layer = this.activeLayers[i];
+        for (let i = 0; activeLayers[i]; i++) {
+          let layer = activeLayers[i];
           if (layer.includes('all_lcc_a_pol')) {
             typeLegend = 'all_lcc_a_pol';
             break;
@@ -283,8 +284,8 @@ class HotspotWidget extends React.Component {
         }
       }
       if (type === 'lc') {
-        for (let i = 0; i < this.activeLayers.length; i++) {
-          let layer = this.activeLayers[i];
+        for (let i = 0; i < activeLayers.length; i++) {
+          let layer = activeLayers[i];
           if (layer.includes('all_present_lc_a_pol')) {
             typeLegend = 'all_present_lc_a_pol';
             break;
@@ -404,7 +405,7 @@ class HotspotWidget extends React.Component {
     } else {
       //this.getLayerParameters();
       //if (this.getLayerParameters.length !== 0)
-      this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      //this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
@@ -442,6 +443,7 @@ class HotspotWidget extends React.Component {
 
   renderApplyFilterButton() {
     let typeFilter = [];
+    const activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
 
     if (
       this.container.current.querySelector('.presentLandCoverContainer').style
@@ -456,7 +458,7 @@ class HotspotWidget extends React.Component {
     ) {
       typeFilter.push('lcc');
     }
-    this.activeLayers.forEach((layer) => {
+    activeLayers.forEach((layer) => {
       if (layer.match('cop_klc')) {
         typeFilter.push('klc');
       }
@@ -527,6 +529,11 @@ class HotspotWidget extends React.Component {
     var selectBoxLccTime;
     let modularKLCAreas = [];
     let dichotomousKLCAreas = [];
+    let activeLayers = [];
+
+    if (this.props.hotspotData['activeLayers'] === undefined) return;
+
+    activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
 
     if (selectedOption === undefined) return;
 
@@ -614,11 +621,11 @@ class HotspotWidget extends React.Component {
       );
       selectBox.options[0].disabled = true;
     }
-    if (this.activeLayers && this.activeLayers.length) {
-      for (let a = 0; a < this.activeLayers.length; a++) {
+    if (activeLayers.length) {
+      for (let a = 0; a < activeLayers.length; a++) {
         if (
-          this.activeLayers[a].includes('all_lcc_b_pol') ||
-          this.activeLayers[a].includes('all_present_lc_b_pol')
+          activeLayers[a].includes('all_lcc_b_pol') ||
+          activeLayers[a].includes('all_present_lc_b_pol')
         ) {
           for (let i = 0; i < modularKLCAreas.length; i++) {
             let option = modularKLCAreas[i];
@@ -641,8 +648,8 @@ class HotspotWidget extends React.Component {
           }
           break;
         } else if (
-          this.activeLayers[a].includes('all_lcc_a_pol') ||
-          this.activeLayers[a].includes('all_present_lc_a_pol')
+          activeLayers[a].includes('all_lcc_a_pol') ||
+          activeLayers[a].includes('all_present_lc_a_pol')
         ) {
           for (let i = 0; i < dichotomousKLCAreas.length; i++) {
             let option = dichotomousKLCAreas[i];
@@ -804,49 +811,13 @@ class HotspotWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
     this.getBBoxData();
-    // Listen for changes to sessionStorage
-    // window.addEventListener('storage', this.handleStorageChange);
   }
 
   componentDidUpdate(prevState, prevProps) {
-    if (this.props.hotspotData !== prevProps.hotspotData) {
+    if (prevProps.hotspotData !== this.props.hotspotData) {
       this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.disableButton();
     }
   }
-
-  componentWillUnmount() {
-    // Remove the event listener when the component is unmounted
-    //  window.removeEventListener('storage', this.handleStorageChange);
-  }
-
-  handleStorageChange = () => {
-    let updatedActiveLayers = [];
-    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (checkedLayers !== null) {
-      for (let i = 0; i < checkedLayers.length; i++) {
-        let hotSpotLayersIds = [];
-        Object.keys(this.props.hotspotData).forEach((key) => {
-          let dataset = this.props.hotspotData[key];
-          Object.keys(dataset).forEach((layerKey) => {
-            hotSpotLayersIds.push(layerKey);
-          });
-        });
-        checkedLayers.forEach((layer) => {
-          hotSpotLayersIds.forEach((id) => {
-            if (layer.includes(id)) {
-              updatedActiveLayers[layer] = this.props.selectedLayers[layer];
-            }
-          });
-        });
-      }
-    }
-    let newHotspotData = {
-      ...this.props.hotspotData,
-      activeLayers: updatedActiveLayers,
-    };
-    this.props.hotspotDataHandler(newHotspotData);
-    //this.forceUpdate();
-  };
 }
 export default HotspotWidget;

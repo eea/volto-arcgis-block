@@ -74,7 +74,6 @@ class MapViewer extends React.Component {
       this.setState({ hotspotData: {} });
     }
     this.setState({ hotspotData: newHotspotData });
-    console.log(newHotspotData);
   }
 
   activeLayersHandler(newActiveLayers) {
