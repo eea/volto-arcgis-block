@@ -56,7 +56,9 @@ class LegendWidget extends React.Component {
       if (!(img.complete && img.naturalHeight !== 0)) {
         // If img src returns a broken link
         if (img?.src?.includes('all_present_lc_a_pol')) {
-          img.src = this.urls.all_present_lc_a_pol;
+          img.src = this.props.hotspotData.all_present_lc[
+            'all_present_lc_a_pol'
+          ].FilterStaticImageLegend;
 
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Dichotomous Present Land Cover in selected hot spots';
@@ -83,7 +85,9 @@ class LegendWidget extends React.Component {
           /*img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Modular Present Land Cover in selected hot spots';*/
         } else if (img?.src?.includes('all_lcc_a_pol')) {
-          img.src = this.urls.all_lcc_a_pol;
+          img.src = this.props.hotspotData.all_lcc[
+            'all_lcc_a_pol'
+          ].FilterStaticImageLegend;
 
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Dichotomous Land Cover Change in selected hot spots';
@@ -172,6 +176,11 @@ class LegendWidget extends React.Component {
   }
 
   imageFixWithTimer() {
+    let newHotspotData = this.props.hotspotData;
+    if (this.props.hotspotData?.layerViewError !== undefined) {
+      delete newHotspotData['layerViewError'];
+    }
+    this.props.hotspotDataHandler(newHotspotData);
     this.setState({ loading: true });
     setTimeout(() => {
       this.brokenLegendImagePatch();
@@ -200,6 +209,11 @@ class LegendWidget extends React.Component {
     });
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.hotspotData?.layerViewError !== undefined) {
+      this.imageFixWithTimer();
+    }
+  }
   /**
    * This method renders the component
    * @returns jsx

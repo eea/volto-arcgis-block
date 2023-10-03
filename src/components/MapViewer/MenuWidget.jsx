@@ -1831,13 +1831,25 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      this.props.view.whenLayerView(this.layers[elem.id]).then((layerView) => {
-        layerView.watch('updating', (isUpdating) => {
-          if (!isUpdating) {
-            this.props.loadingHandler(false);
-          }
+      this.props.view
+        .whenLayerView(this.layers[elem.id])
+        .then((layerView) => {
+          layerView.watch('updating', (isUpdating) => {
+            if (!isUpdating) {
+              this.props.loadingHandler(false);
+            } else {
+            }
+          });
+        })
+        .catch((error) => {
+          let newHotspotData = this.props.hotspotData;
+          let LayerId = elem.id.replace(/\d+\D*/g, '').slice(0, -1);
+          let errObj = {};
+          errObj[LayerId] = error;
+          newHotspotData['layerViewError'] = errObj;
+          this.props.hotspotDataHandler(newHotspotData);
+          this.props.loadingHandler(false);
         });
-      });
       this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');

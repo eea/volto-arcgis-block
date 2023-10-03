@@ -306,6 +306,8 @@ class MapViewer extends React.Component {
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
           urls={this.cfgUrls}
+          hotspotData={this.state.hotspotData}
+          hotspotDataHandler={this.hotspotDataHandler}
         />
       );
   }
