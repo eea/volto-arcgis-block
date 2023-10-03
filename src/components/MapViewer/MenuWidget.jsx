@@ -259,7 +259,8 @@ class MenuWidget extends React.Component {
     this.xml = null;
     this.dataBBox = null;
     this.extentInitiated = false;
-
+    this.prepareHotspotLayers = this.prepareHotspotLayers.bind(this);
+    this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
@@ -349,6 +350,56 @@ class MenuWidget extends React.Component {
         Extent = _Extent;
       },
     );
+  }
+
+  stringMatch(str1, str2) {
+    let matchingPart = '';
+    for (let i = 0; i < str1.length; i++) {
+      if (str1[i] === str2[i]) {
+        matchingPart += str1[i];
+      } else {
+        break;
+      }
+    }
+    return matchingPart;
+  }
+
+  prepareHotspotLayers() {
+    this.compCfg.forEach((component) => {
+      const hotspotProduct = component.Products.find(
+        (product) => product.ProductId === 'd764e020485a402598551fa461bf1db2',
+      );
+
+      if (hotspotProduct !== undefined) {
+        const datasetObj = {};
+        hotspotProduct.Datasets.forEach((dataset) => {
+          const layerObj = {};
+          dataset.Layer.forEach((layer) => {
+            layerObj[layer.LayerId] = layer;
+          });
+          let key;
+          if (dataset.Layer.length === 1) {
+            key = dataset.Layer[0].LayerId;
+          } else if (dataset.Layer.length === 2) {
+            key = this.stringMatch(
+              dataset.Layer[0].LayerId,
+              dataset.Layer[1].LayerId,
+            );
+            if (key.endsWith('_')) {
+              key = key.slice(0, -1);
+            }
+          } else if (dataset.Layer.length > 2) {
+            key = dataset.DatasetTitle.toLowerCase()
+              .split(' ')
+              .join('_')
+              .split('_(')[0]
+              .split('_for')[0];
+          }
+          datasetObj[key] = layerObj;
+        });
+        return this.props.hotspotDataHandler(datasetObj);
+      }
+    });
   }
 
   // get custom TMS layer JSON
@@ -589,6 +640,7 @@ class MenuWidget extends React.Component {
     loadCss();
     await this.loader();
     await this.getTMSLayersJSON();
+    this.prepareHotspotLayers();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
       setTimeout(() => {
@@ -1542,6 +1594,8 @@ class MenuWidget extends React.Component {
    */
 
   checkForHotspots(elem, productContainerId) {
+    if (!(elem.id.includes('all_present') || elem.id.includes('all_lcc')))
+      return;
     let elemContainer = document
       .getElementById(elem.id)
       .closest('.ccl-form-group');
@@ -1718,15 +1772,15 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
-    /*let modularLC;
-    if (elem.id.includes('all_present_lc_b_pol')) {
-      modularLC = elem.id;
-    }*/
 
     let group = this.getGroup(elem);
     if (elem.checked) {
       this.props.loadingHandler(true);
-      if (this.props.download || this.location.search !== '') {
+      if (
+        this.props.download ||
+        this.location.search.includes('product=') ||
+        this.location.search.includes('dataset=')
+      ) {
         if (
           this.extentInitiated === false &&
           productContainerId !== 'd764e020485a402598551fa461bf1db2' // hotspot
@@ -1747,13 +1801,7 @@ class MenuWidget extends React.Component {
         } else {
           this.map.add(this.layers[elem.id]);
         }
-      } /*else if (this.layers[modularLC]) {
-        let previousElem = document
-          .getElementById(elem.id)
-          .closest('.ccl-form-group')
-          .previousElementSibling.querySelector('input');
-        this.map.add(this.layers[previousElem.id]);
-      } */ else {
+      } else {
         this.map.add(this.layers[elem.id]);
       }
       if (this.layers[elem.id] === undefined) return;
@@ -1815,10 +1863,44 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
+    this.activeLayersToHotspotData(elem.id);
     // update DOM
-    this.setState({});
+    //this.setState({});
   }
 
+  activeLayersToHotspotData(layerId) {
+    let layer = Object.entries(this.layers).find(
+      ([key, value]) => key === layerId,
+    )?.[1];
+    let hotspotLayersIds = [];
+    let updatedActiveLayers = this.props.hotspotData['activeLayers'] || {};
+    let newHotspotData = this.props.hotspotData;
+
+    Object.keys(this.props.hotspotData).forEach((key) => {
+      let dataset = this.props.hotspotData[key];
+      Object.keys(dataset).forEach((layerKey) => {
+        hotspotLayersIds.push(layerKey);
+      });
+    });
+
+    for (let i = 0; i < hotspotLayersIds.length; i++) {
+      const id = hotspotLayersIds[i];
+      if (!layerId.includes(id)) continue;
+      else if (layerId.includes(id)) {
+        if (layer.visible === true) {
+          updatedActiveLayers[id] = layer;
+        } else if (layer.visible === false) {
+          if (updatedActiveLayers[id]) {
+            delete updatedActiveLayers[id];
+          }
+        }
+        break;
+      }
+    }
+
+    newHotspotData['activeLayers'] = updatedActiveLayers;
+    return this.props.hotspotDataHandler(newHotspotData);
+  }
   //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
 
   showZoomMessageOnDataset(dataset) {
@@ -3245,10 +3327,8 @@ class MenuWidget extends React.Component {
   deleteFilteredLayer(layer) {
     let layers = this.layers;
     if (layers['lcc_filter'] && layer.includes('all_lcc')) {
-      layers['lcc_filter'].visible = false;
       delete layers['lcc_filter'];
     } else if (layers['lc_filter'] && layer.includes('all_present_lc')) {
-      layers['lc_filter'].visible = false;
       delete layers['lc_filter'];
     } else if (layers['klc_filter'] && layer.includes('cop_klc')) {
       layers['klc_filter'].visible = false;

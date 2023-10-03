@@ -62,10 +62,19 @@ class MapViewer extends React.Component {
     this.cfgUrls = this.props.cfg.Urls;
     this.userID = null;
     this.loadingHandler = this.loadingHandler.bind(this);
+    this.hotspotDataHandler = this.hotspotDataHandler.bind(this);
   }
 
   loadingHandler(bool) {
     this.setState({ layerLoading: bool });
+  }
+
+  hotspotDataHandler(newHotspotData) {
+    if (!this.state.hotspotData) {
+      this.setState({ hotspotData: {} });
+    }
+    this.setState({ hotspotData: newHotspotData });
+    console.log(newHotspotData);
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -235,7 +244,12 @@ class MapViewer extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.Download || (this.location && this.location.search !== '')) {
+    if (
+      this.props.Download ||
+      (this.location &&
+        (this.location.search.includes('product=') ||
+          this.location.search.includes('dataset=')))
+    ) {
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
       sessionStorage.clear();
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
@@ -341,6 +355,8 @@ class MapViewer extends React.Component {
           mapCfg={this.mapCfg}
           urls={this.cfgUrls}
           loadingHandler={this.loadingHandler}
+          hotspotData={this.state.hotspotData}
+          hotspotDataHandler={this.hotspotDataHandler}
         />
       );
   }
@@ -361,6 +377,8 @@ class MapViewer extends React.Component {
           activeLayersHandler={this.activeLayersHandler}
           urls={this.cfgUrls}
           loadingHandler={this.loadingHandler}
+          hotspotDataHandler={this.hotspotDataHandler}
+          hotspotData={this.state.hotspotData}
         />
       ); //call conf
   }
