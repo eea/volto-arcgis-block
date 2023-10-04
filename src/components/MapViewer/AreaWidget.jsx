@@ -194,10 +194,7 @@ class AreaWidget extends React.Component {
   }
 
   checkExtent(extent) {
-    if (
-      extent.width > 1707297.4637772422 &&
-      extent.height > 1169180.7846497446
-    ) {
+    if (extent.width * extent.height > 1996137506460) {
       return true;
     } else {
       return false;
