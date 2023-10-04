@@ -92,7 +92,6 @@ class SwipeWidget extends React.Component {
       position: 50,
     });
   }
-
   getLayerTitle(layer) {
     let title;
     if (layer.url && layer.url.toLowerCase().includes('wmts')) {
