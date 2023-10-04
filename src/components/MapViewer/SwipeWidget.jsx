@@ -88,13 +88,13 @@ class SwipeWidget extends React.Component {
     await this.loader();
     this.swipe = new Swipe({
       view: this.props.view,
+      direction: 'horizontal',
       position: 50,
     });
   }
-
   getLayerTitle(layer) {
     let title;
-    if (layer.url.toLowerCase().includes('wmts')) {
+    if (layer.url && layer.url.toLowerCase().includes('wmts')) {
       title = layer._wmtsTitle;
     } else {
       if (layer.sublayers) {
@@ -148,8 +148,12 @@ class SwipeWidget extends React.Component {
       .value;
     let selectedTrailingLayer = document.getElementById('select-trailing-layer')
       .value;
+    let selectedSwipeDirection = document.getElementById(
+      'select-swipe-direction',
+    ).value;
     this.swipe.leadingLayers.removeAll();
     this.swipe.trailingLayers.removeAll();
+    this.swipe.direction = selectedSwipeDirection;
     this.map.layers.forEach((layer) => {
       layer.visible = false;
       if (layer.id === selectedLeadingLayer) {
@@ -218,6 +222,12 @@ class SwipeWidget extends React.Component {
                 <br></br>
                 <span>Trailing Layer</span>
                 <select id="select-trailing-layer" class="esri-select"></select>
+                <br></br>
+                <span>Swipe Direction</span>
+                <select id="select-swipe-direction" class="esri-select">
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
                 <br></br>
                 <button
                   id="applySwipeButton"
