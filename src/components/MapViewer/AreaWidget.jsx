@@ -194,21 +194,14 @@ class AreaWidget extends React.Component {
   }
 
   checkExtent(extent) {
-    let extentToCHeck = new Extent({
-      xmin: -4957196.074387185,
-      xmax: 8896862.428240843,
-      ymin: 2252343.9407090154,
-      ymax: 12114555.078173038,
-      spatialReference: { wkid: 102100 },
-    });
     if (
-      extent.xmin < extentToCHeck.xmin &&
-      extent.xmax > extentToCHeck.xmax &&
-      extent.ymin < extentToCHeck.ymin &&
-      extent.ymax > extentToCHeck.ymax
-    )
+      extent.width > 1707297.4637772422 &&
+      extent.height > 1169180.7846497446
+    ) {
       return true;
-    else return false;
+    } else {
+      return false;
+    }
   }
 
   rectanglehandler() {
