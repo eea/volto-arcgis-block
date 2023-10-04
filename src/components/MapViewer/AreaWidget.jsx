@@ -567,7 +567,7 @@ class AreaWidget extends React.Component {
                           style={{ color: 'black', cursor: 'pointer' }}
                           className="drawRectanglePopupWarning"
                           id="drawRectanglePopupWarning"
-                          href="https://clmsdemo.devel6cph.eea.europa.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
+                          href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
                           target="_blank"
                           rel="noreferrer"
                         >
