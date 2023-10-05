@@ -327,7 +327,14 @@ class MapViewer extends React.Component {
   renderSwipe() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view)
-      return <SwipeWidget view={this.view} mapViewer={this} map={this.map} />;
+      return (
+        <SwipeWidget
+          view={this.view}
+          mapViewer={this}
+          map={this.map}
+          layers={this.layers}
+        />
+      );
   }
 
   renderArea() {

@@ -25,7 +25,7 @@ class SwipeWidget extends React.Component {
     this.dpiMax = 1200;
     this.scaleMax = 600000000;
     this.map = this.props.map;
-    this.visibleSavedLayers = [];
+    this.layers = this.props.layers;
   }
 
   loader() {
@@ -139,9 +139,6 @@ class SwipeWidget extends React.Component {
     }
   }
   renderApplySwipeButton() {
-    if (this.visibleSavedLayers.length === 0) {
-      this.saveVisibleLayers();
-    }
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);
     let selectedLeadingLayer = document.getElementById('select-leading-layer')
@@ -166,23 +163,21 @@ class SwipeWidget extends React.Component {
       }
     });
   }
-  saveVisibleLayers() {
-    this.visibleSavedLayers.push('default');
-    this.map.layers.forEach((layer) => {
-      if (layer.visible) {
-        this.visibleSavedLayers.push(layer.id);
-      }
-    });
-  }
   loadVisibleLayers() {
-    this.map.layers.forEach((layer) => {
-      this.visibleSavedLayers.forEach((visibleLayerId) => {
-        if (layer.id === visibleLayerId) {
-          layer.visible = true;
+    let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
+    if (vl) {
+      for (const key in vl) {
+        if (vl[key][1] === 'eye') {
+          this.layers[key].visible = true;
+        } else {
+          this.layers[key].visible = false;
         }
+      }
+    } else {
+      this.map.layers.forEach((layer) => {
+        layer.visible = true;
       });
-    });
-    this.visibleSavedLayers = [];
+    }
   }
   /**
    * This method renders the component
