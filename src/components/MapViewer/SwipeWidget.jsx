@@ -151,33 +151,51 @@ class SwipeWidget extends React.Component {
     this.swipe.leadingLayers.removeAll();
     this.swipe.trailingLayers.removeAll();
     this.swipe.direction = selectedSwipeDirection;
+    let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
     this.map.layers.forEach((layer) => {
       layer.visible = false;
       if (layer.id === selectedLeadingLayer) {
         layer.visible = true;
+        if (vl) {
+          for (const key in vl) {
+            if (this.layers[key].id === layer.id) {
+              if (vl[key][1] === 'eye-slash') {
+                layer.visible = false;
+              }
+            }
+          }
+        }
         this.swipe.leadingLayers.add(layer);
       }
       if (layer.id === selectedTrailingLayer) {
         layer.visible = true;
+        if (vl) {
+          for (const key in vl) {
+            if (this.layers[key].id === layer.id) {
+              if (vl[key][1] === 'eye-slash') {
+                layer.visible = false;
+              }
+            }
+          }
+        }
         this.swipe.trailingLayers.add(layer);
       }
     });
   }
   loadVisibleLayers() {
     let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
-    if (vl) {
-      for (const key in vl) {
-        if (vl[key][1] === 'eye') {
-          this.layers[key].visible = true;
-        } else {
-          this.layers[key].visible = false;
+    this.map.layers.forEach((layer) => {
+      layer.visible = true;
+      if (vl) {
+        for (const key in vl) {
+          if (this.layers[key].id === layer.id) {
+            if (vl[key][1] === 'eye-slash') {
+              layer.visible = false;
+            }
+          }
         }
       }
-    } else {
-      this.map.layers.forEach((layer) => {
-        layer.visible = true;
-      });
-    }
+    });
   }
   /**
    * This method renders the component
