@@ -24,10 +24,6 @@
 
 1.  Happy hacking!
 
-    ```Bash
-    cd src/addons/volto-arcgis-block/
-    ```
-
 ### Or add @eeacms/volto-arcgis-block to your Volto project
 
 Before starting make sure your development environment is properly set. See [Volto Developer Documentation](https://docs.voltocms.com/getting-started/install/)
