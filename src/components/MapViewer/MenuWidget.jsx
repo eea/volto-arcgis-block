@@ -1553,7 +1553,7 @@ class MenuWidget extends React.Component {
             const height = this.tileInfo.size[0];
             // create a canvas with 2D rendering context
             const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+            const context = canvas.getContext('2d'); //try modifying this value for 3d test UNAI
             //canvas
             canvas.width = width;
             canvas.height = height;
@@ -1792,10 +1792,23 @@ class MenuWidget extends React.Component {
         }
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+        let filteredHotspotLayers = this.props.hotspotData['filteredLayers'];
         if (elem.id.includes('cop_klc')) {
+          if (
+            this.layers['klc_filter'] === undefined &&
+            filteredHotspotLayers['klc_filter']
+          ) {
+            this.layers['klc_filter'] = filteredHotspotLayers['klc_filter'];
+          }
           this.layers['klc_filter'].visible = true;
           this.map.add(this.layers['klc_filter']);
         } else if (elem.id.includes('protected_areas')) {
+          if (
+            this.layers['pa_filter'] === undefined &&
+            filteredHotspotLayers['pa_filter']
+          ) {
+            this.layers['pa_filter'] = filteredHotspotLayers['pa_filter'];
+          }
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
         } else {
@@ -1855,12 +1868,15 @@ class MenuWidget extends React.Component {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
-      this.deleteFilteredLayer(elem.id);
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
+      this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
-      if (mapLayer) mapLayer.destroy();
-      this.map.remove(this.layers[elem.id]);
+      if (mapLayer) {
+        mapLayer.clear();
+        mapLayer.destroy();
+        this.map.remove(this.layers[elem.id]);
+      }
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
@@ -2100,16 +2116,25 @@ class MenuWidget extends React.Component {
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
-    let activeLayers = Array.from(
-      document.querySelectorAll('.active-layer'),
-    ).map((elem) => {
-      return elem.getAttribute('layer-id');
+    /*let activeLayers = Array.from(document.querySelectorAll('ctive-layer')).map(
+      (elem) => {
+        return elem.getAttribute('layer-id');
+      },
+    );*/
+    let data = activeLayersArray.sort((a, b) => {
+      //let aIndex = activeLayers.indexOf(a.props['layer-id']);
+      //let bIndex = activeLayers.indexOf(b.props['layer-id']);
+      let product =
+        Number(a.props['layer-id'].split('_').join('')) -
+        Number(b.props['layer-id'].split('_').join(''));
+      if (product < 0) {
+        return -1;
+      } else if (product > 0) {
+        return 1;
+      } else if (product === 0) {
+        return 0;
+      }
     });
-    let data = activeLayersArray.sort(
-      (a, b) =>
-        activeLayers.indexOf(a.props['layer-id']) -
-        activeLayers.indexOf(b.props['layer-id']),
-    );
     this.activeLayersHandler(activeLayersArray);
     return data;
   }
@@ -3337,16 +3362,53 @@ class MenuWidget extends React.Component {
   }
 
   deleteFilteredLayer(layer) {
-    let layers = this.layers;
-    if (layers['lcc_filter'] && layer.includes('all_lcc')) {
-      delete layers['lcc_filter'];
-    } else if (layers['lc_filter'] && layer.includes('all_present_lc')) {
-      delete layers['lc_filter'];
-    } else if (layers['klc_filter'] && layer.includes('cop_klc')) {
-      layers['klc_filter'].visible = false;
-    } else if (layers['pa_filter'] && layer.includes('protected_areas')) {
-      layers['pa_filter'].visible = false;
+    let filterLayer;
+    let updatedHotspotData = this.props.hotspotData;
+    let updatedFilteredLayers = this.props.hotspotData['filteredLayers'];
+    if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
+      this.layers['lcc_filter'].visible = false;
+      filterLayer = this.props.map.findLayerById('lcc_filter');
+      if (filterLayer !== undefined) {
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      delete updatedFilteredLayers['lcc_filter'];
+      delete this.layers['lcc_filter'];
+    } else if (this.layers['lc_filter'] && layer.includes('all_present_lc')) {
+      this.layers['lc_filter'].visible = false;
+      filterLayer = this.props.map.findLayerById('lc_filter');
+      if (filterLayer !== undefined) {
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      delete updatedFilteredLayers['lc_filter'];
+      delete this.layers['lc_filter'];
+    } else if (this.layers['klc_filter'] && layer.includes('cop_klc')) {
+      this.layers['klc_filter'].visible = false;
+      filterLayer = this.props.map.findLayerById('klc_filter');
+      if (filterLayer !== undefined) {
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      //delete updatedFilteredLayers['klc_filter'];
+      delete this.layers['klc_filter'];
+    } else if (this.layers['pa_filter'] && layer.includes('protected_areas')) {
+      this.layers['pa_filter'].visible = false;
+      filterLayer = this.props.map.findLayerById('pa_filter');
+      if (filterLayer !== undefined) {
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      //delete updatedFilteredLayers['pa_filter'];
+      delete this.layers['pa_filter'];
     }
+    this.props.mapLayersHandler(this.layers);
+    updatedHotspotData['filteredLayers'] = updatedFilteredLayers;
+    this.props.hotspotDataHandler(updatedHotspotData);
   }
 
   /**
