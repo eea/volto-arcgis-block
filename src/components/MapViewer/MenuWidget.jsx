@@ -1807,6 +1807,7 @@ class MenuWidget extends React.Component {
   }
 
   async toggleLayer(elem) {
+    if (this.layers[elem.id] === undefined) return;
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
@@ -1814,6 +1815,7 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
+      
     let group = this.getGroup(elem);
     if (elem.checked) {
       this.props.loadingHandler(true);
@@ -1833,23 +1835,25 @@ class MenuWidget extends React.Component {
         }
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
-        let filteredHotspotLayers = this.props.hotspotData['filteredLayers'];
+//        let filteredHotspotLayers = this.props.hotspotData['filteredLayers'];
         if (elem.id.includes('cop_klc')) {
-          if (
-            this.layers['klc_filter'] === undefined &&
-            filteredHotspotLayers['klc_filter']
-          ) {
-            this.layers['klc_filter'] = filteredHotspotLayers['klc_filter'];
-          }
+//          if (
+//            this.layers['klc_filter'] === undefined &&
+//            filteredHotspotLayers['klc_filter']
+//          ) {
+//            this.layers['klc_filter'] = filteredHotspotLayers['klc_filter'];
+//          }
+//          this.layers[elem.id].visible = false;
           this.layers['klc_filter'].visible = true;
           this.map.add(this.layers['klc_filter']);
         } else if (elem.id.includes('protected_areas')) {
-          if (
-            this.layers['pa_filter'] === undefined &&
-            filteredHotspotLayers['pa_filter']
-          ) {
-            this.layers['pa_filter'] = filteredHotspotLayers['pa_filter'];
-          }
+//          if (
+//            this.layers['pa_filter'] === undefined &&
+//            filteredHotspotLayers['pa_filter']
+//          ) {
+//            this.layers['pa_filter'] = filteredHotspotLayers['pa_filter'];
+//          }
+//          this.layers[elem.id].visible = false;
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
         } else {
@@ -1857,9 +1861,8 @@ class MenuWidget extends React.Component {
         }
       } else {
         this.map.add(this.layers[elem.id]);
+        this.layers[elem.id].visible = true; //layer id
       }
-      if (this.layers[elem.id] === undefined) return;
-      this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
@@ -3404,6 +3407,7 @@ class MenuWidget extends React.Component {
 
   deleteFilteredLayer(layer) {
     let filterLayer;
+    //let temp;
     let updatedHotspotData = this.props.hotspotData;
     let updatedFilteredLayers = this.props.hotspotData['filteredLayers'];
     if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
@@ -3428,24 +3432,30 @@ class MenuWidget extends React.Component {
       delete this.layers['lc_filter'];
     } else if (this.layers['klc_filter'] && layer.includes('cop_klc')) {
       this.layers['klc_filter'].visible = false;
+      this.layers[layer].visible = false;
       filterLayer = this.props.map.findLayerById('klc_filter');
       if (filterLayer !== undefined) {
+      //  temp = filterLayer;
         filterLayer.clear();
         filterLayer.destroy();
         this.props.map.remove(filterLayer);
       }
       //delete updatedFilteredLayers['klc_filter'];
-      delete this.layers['klc_filter'];
+      //updatedFilteredLayers['klc_filter'] = temp;
+      //delete this.layers['klc_filter'];
     } else if (this.layers['pa_filter'] && layer.includes('protected_areas')) {
       this.layers['pa_filter'].visible = false;
+      this.layers[layer].visible = false;
       filterLayer = this.props.map.findLayerById('pa_filter');
       if (filterLayer !== undefined) {
+      //  temp = filterLayer;
         filterLayer.clear();
         filterLayer.destroy();
         this.props.map.remove(filterLayer);
       }
       //delete updatedFilteredLayers['pa_filter'];
-      delete this.layers['pa_filter'];
+      //updatedFilteredLayers['pa_filter'] = temp;
+      //delete this.layers['pa_filter'];
     }
     this.props.mapLayersHandler(this.layers);
     updatedHotspotData['filteredLayers'] = updatedFilteredLayers;
