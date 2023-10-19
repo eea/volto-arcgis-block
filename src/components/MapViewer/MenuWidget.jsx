@@ -1912,7 +1912,7 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    //this.activeLayersToHotspotData(elem.id);
+    this.activeLayersToHotspotData(elem.id);
     // update DOM
     //this.setState({});
   }
