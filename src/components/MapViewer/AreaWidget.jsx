@@ -233,8 +233,24 @@ class AreaWidget extends React.Component {
           });
         }
         if (this.props.download) {
-          document.querySelector('.drawRectanglePopup-block').style.display =
-            'none';
+          if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
+            let popupToUpdate = document.querySelector(
+              '.drawRectanglePopup-block',
+            );
+            popupToUpdate.style.display = 'block';
+            popupToUpdate.innerHTML =
+              '<div class="drawRectanglePopup-content">' +
+              '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
+              '<div class="drawRectanglePopup-text">' +
+              '<a style="color: black; cursor: pointer" href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m" target="_blank" rel="noreferrer">To download the full dataset consult the "How to download M2M" How to guide.</a>' +
+              '</div>' +
+              '</div>';
+          } else {
+            let popupToUpdate = document.querySelector(
+              '.drawRectanglePopup-block',
+            );
+            popupToUpdate.style.display = 'none';
+          }
         }
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
@@ -259,6 +275,26 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'download',
           });
+        }
+        if (this.props.download) {
+          if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
+            let popupToUpdate = document.querySelector(
+              '.drawRectanglePopup-block',
+            );
+            popupToUpdate.style.display = 'block';
+            popupToUpdate.innerHTML =
+              '<div class="drawRectanglePopup-content">' +
+              '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
+              '<div class="drawRectanglePopup-text">' +
+              '<a style="color: black; cursor: pointer" href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m" target="_blank" rel="noreferrer">To download the full dataset consult the "How to download M2M" How to guide.</a>' +
+              '</div>' +
+              '</div>';
+          } else {
+            let popupToUpdate = document.querySelector(
+              '.drawRectanglePopup-block',
+            );
+            popupToUpdate.style.display = 'none';
+          }
         }
         this.props.updateArea({
           origin: { x: origin.longitude, y: origin.latitude },
@@ -286,8 +322,13 @@ class AreaWidget extends React.Component {
       infoPopupType: 'area',
     });
     if (this.props.download) {
-      document.querySelector('.drawRectanglePopup-block').style.display =
-        'block';
+      let popup = document.querySelector('.drawRectanglePopup-block');
+      popup.innerHTML =
+        '<div class="drawRectanglePopup-content">' +
+        '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
+        '<div class="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
+        '</div>';
+      popup.style.display = 'block';
     }
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';

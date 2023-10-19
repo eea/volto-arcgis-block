@@ -261,6 +261,7 @@ class MenuWidget extends React.Component {
     this.extentInitiated = false;
     this.prepareHotspotLayers = this.prepareHotspotLayers.bind(this);
     this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
+    this.getLimitScale = this.getLimitScale.bind(this);
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
@@ -318,7 +319,8 @@ class MenuWidget extends React.Component {
           }
         }
         if (!this.visibleLayers) this.visibleLayers = {};
-        this.handleRasterVectorLegend();
+        this.view.watch('scale', (newValue) => {});
+        //this.handleRasterVectorLegend();
       }
     });
 
@@ -1730,38 +1732,74 @@ class MenuWidget extends React.Component {
   }
 
   /**
+   * Method to check resourceInfo object from layers and check max or min scale
+   */
+  getLimitScale(key, layerTitle) {
+    //CLMS-2684
+    const layerTitleToCompare = layerTitle.includes(' -')
+      ? layerTitle.replace(' -', '').trim()
+      : layerTitle.includes('raster')
+      ? layerTitle
+      : layerTitle;
+    let scale;
+    //let layerTitleToCompare = layerTitle;
+    if (this.layers[key].resourceInfo) {
+      this.layers[key].resourceInfo.layers.forEach((sublayer) => {
+        if (
+          sublayer.title.includes(layerTitleToCompare) &&
+          layerTitle.includes('raster')
+        ) {
+          scale = sublayer.maxScale;
+        } else if (
+          sublayer.title.includes(layerTitleToCompare) &&
+          layerTitle.includes('vector')
+        ) {
+          scale = sublayer.minScale;
+        }
+      });
+    }
+    return scale;
+  }
+
+  /**
    * Method to show/hide a legend if the layer is active or not in the view
    */
   handleRasterVectorLegend() {
-    let zoom = this.view.get('zoom');
-    Object.keys(this.activeLayersJSON).forEach((key) => {
+    //CLMS-2684
+    //let zoom = this.view.get('zoom');
+    /* let scale = this.view.scale;
+    Object.keys(this.activeLayersJSON).forEach((key) => { 
       let activeLayer = this.activeLayersJSON[key];
       let layerTitle = activeLayer.props.children[0].props.children;
       if (layerTitle.includes('raster')) {
-        if (zoom <= 11) {
+        if (scale > this.getLimitScale(key, layerTitle)) {
           if (
             this.visibleLayers &&
             this.visibleLayers[key] &&
             this.visibleLayers[key][1] === 'eye'
-          )
+          ){
             this.layers[key].visible = true;
+          }
         } else {
+          //debugger
           this.layers[key].visible = false;
         }
       } else if (layerTitle.includes('vector')) {
-        if (zoom >= 12) {
+        if (scale < this.getLimitScale(key, layerTitle)) {
           if (
             this.visibleLayers &&
             this.visibleLayers[key] &&
             this.visibleLayers[key][1] === 'eye'
-          )
+          ){
             this.layers[key].visible = true;
+          }
         } else {
+          //debugger
           this.layers[key].visible = false;
         }
       }
       this.setState({});
-    });
+    }); */
   }
 
   async toggleLayer(elem) {
@@ -1772,7 +1810,6 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
-
     let group = this.getGroup(elem);
     if (elem.checked) {
       this.props.loadingHandler(true);
@@ -1875,7 +1912,7 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    this.activeLayersToHotspotData(elem.id);
+    //this.activeLayersToHotspotData(elem.id);
     // update DOM
     //this.setState({});
   }
