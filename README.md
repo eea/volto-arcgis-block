@@ -82,7 +82,7 @@ const customBlocks = (config) => ({
     "@eeacms/volto-clms-theme"
   ],
 ````
-![Style example volto-arcgis-block](docs/styles_example.gif)
+![Style example volto-arcgis-block](https://raw.githubusercontent.com/eea/volto-arcgis-block/master/docs/styles_example.gif)
 
 ## Release
 
