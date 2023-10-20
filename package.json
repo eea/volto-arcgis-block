@@ -1,6 +1,6 @@
 {
   "name": "@eeacms/volto-arcgis-block",
-  "version": "0.1.215",
+  "version": "0.1.216",
   "description": "volto-arcgis-block: Volto add-on",
   "main": "src/index.js",
   "author": "European Environment Agency: CodeSyntax",
@@ -71,7 +71,7 @@
     "@cypress/code-coverage": "^3.9.5",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "md5": "^2.3.0",
-    "husky": "*",
+    "husky": "^8.0.3",
     "lint-staged": "13.1.4"
   }
 }
