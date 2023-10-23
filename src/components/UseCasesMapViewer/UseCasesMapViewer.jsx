@@ -32,25 +32,26 @@ class UseCasesMapViewer extends React.Component {
     this.id = props.id;
     this.popupOnce = false;
     this.popupRegion = '';
+    this.initFMI = this.initFMI.bind(this);
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
     this.spatialConfig = {
       id: 'spatialLayer',
-      url: props.cfg.Services.SpatialCoverageLayer,
+      url: '',
       render: props.cfg.SpatialRenderer,
       showLegend: true,
     };
     this.regionConfig = {
       id: 'regionLayer',
-      url: props.cfg.Services.RegionLayer,
+      url: '',
       render: props.cfg.RegionMarkerRenderer,
       label: props.cfg.RegionLabel,
       showLegend: false,
     };
     this.HighlightConfig = {
       id: 'HightlightLayer',
-      url: props.cfg.Services.Highlight_service,
+      url: '',
       render: props.cfg.HightlightRenderer,
       showLegend: false,
     };
@@ -97,7 +98,7 @@ class UseCasesMapViewer extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
-
+    await this.initFMI();
     this.basemap = new Basemap({
       title: 'Countries World',
       thumbnailUrl:
@@ -196,7 +197,84 @@ class UseCasesMapViewer extends React.Component {
     //react component to render itself again
     this.setState(() => ({ useCaseLevel: 1 }));
   }
-
+  async initFMI() {
+    let currentUrl = window.location.href.split('.eu');
+    let fetchUrl = '';
+    if (currentUrl[0] === 'https://land.copernicus') {
+      fetchUrl = 'https://land.copernicus.eu';
+      if (this.getAuthToken()) {
+        fetchUrl = fetchUrl + '/++api++/@registry';
+      } else {
+        fetchUrl = fetchUrl + '/++api++/@anon-registry';
+      }
+    } else if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea.europa') {
+      fetchUrl = 'https://clmsdemo.devel6cph.eea.europa.eu';
+      if (this.getAuthToken()) {
+        fetchUrl = fetchUrl + '/++api++/@registry';
+      } else {
+        fetchUrl = fetchUrl + '/++api++/@anon-registry';
+      }
+    } else {
+      fetchUrl = 'https://land.copernicus.eu/++api++/@anon-registry';
+    }
+    try {
+      let highlightResponse = await fetch(
+        fetchUrl + this.serviceCfg.Highlight_service,
+      );
+      if (highlightResponse.status === 200) {
+        this.HighlightConfig.url = await highlightResponse.json();
+      } else {
+        throw new Error(highlightResponse.status);
+      }
+      let regionResponse = await fetch(fetchUrl + this.serviceCfg.RegionLayer);
+      if (regionResponse.status === 200) {
+        this.regionConfig.url = await regionResponse.json();
+      } else {
+        throw new Error(regionResponse.status);
+      }
+      let spatialResponse = await fetch(
+        fetchUrl + this.serviceCfg.SpatialCoverageLayer,
+      );
+      if (spatialResponse.status === 200) {
+        this.spatialConfig.url = await spatialResponse.json();
+      } else {
+        throw new Error(spatialResponse.status);
+      }
+      let thumbnailResponse = await fetch(fetchUrl + this.thumbnail);
+      if (thumbnailResponse.status === 200) {
+        this.thumbnail = await thumbnailResponse.json();
+      } else {
+        throw new Error(thumbnailResponse.status);
+      }
+    } catch (error) {
+      //console.error('There was a problem with the fetch operation:', error);
+    }
+  }
+  getAuthToken() {
+    let tokenResult = null;
+    if (this.getCookie('auth_token')) {
+      tokenResult = true;
+    } else {
+      tokenResult = false;
+    }
+    return tokenResult;
+  }
+  getCookie(name) {
+    var dc = document.cookie;
+    var prefix = name + '=';
+    var begin = dc.indexOf('; ' + prefix);
+    if (begin === -1) {
+      begin = dc.indexOf(prefix);
+      if (begin !== 0) return null;
+    } else {
+      begin += 2;
+      var end = document.cookie.indexOf(';', begin);
+      if (end === -1) {
+        end = dc.length;
+      }
+    }
+    return decodeURI(dc.substring(begin + prefix.length, end));
+  }
   /**
    * This method will disable all the functionalities on the map
    * @param {MapView} view

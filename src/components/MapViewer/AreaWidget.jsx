@@ -32,6 +32,8 @@ class AreaWidget extends React.Component {
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
     // Enable defaultPopup option to charge popup and highlifght feature
     this.props.mapViewer.view.popup.defaultPopupTemplateEnabled = true;
+    this.nutsUrl = '';
+    this.initFMI = this.initFMI.bind(this);
   }
 
   loader() {
@@ -145,8 +147,7 @@ class AreaWidget extends React.Component {
       var layer = new FeatureLayer({
         id: id,
         //url: this.props.urls.nutsHandler,
-        url:
-          'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
+        url: this.nutsUrl,
         layerId: level,
         outFields: ['*'],
         popupEnabled: false,
@@ -339,6 +340,7 @@ class AreaWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
+    await this.initFMI();
     this.nutsGroupLayer = new GroupLayer({
       title: 'nuts',
       //opacity: 0.5,
@@ -414,6 +416,50 @@ class AreaWidget extends React.Component {
     this.props.download && this.props.view.ui.add(popup, 'top-right');
   }
 
+  async initFMI() {
+    let currentUrl = window.location.href.split('/');
+    let fetchUrl = currentUrl[0] + '//' + currentUrl[2];
+    if (this.getAuthToken()) {
+      fetchUrl = fetchUrl + '/++api++/@registry';
+    } else {
+      fetchUrl = fetchUrl + '/++api++/@anon-registry';
+    }
+    try {
+      let nutsResponse = await fetch(fetchUrl + this.props.urls.nutsHandler);
+      if (nutsResponse.status === 200) {
+        this.nutsUrl = await nutsResponse.json();
+      } else {
+        throw new Error(nutsResponse.status);
+      }
+    } catch (error) {
+      //console.error('There was a problem with the fetch operation:', error);
+    }
+  }
+  getAuthToken() {
+    let tokenResult = null;
+    if (this.getCookie('auth_token')) {
+      tokenResult = true;
+    } else {
+      tokenResult = false;
+    }
+    return tokenResult;
+  }
+  getCookie(name) {
+    var dc = document.cookie;
+    var prefix = name + '=';
+    var begin = dc.indexOf('; ' + prefix);
+    if (begin === -1) {
+      begin = dc.indexOf(prefix);
+      if (begin !== 0) return null;
+    } else {
+      begin += 2;
+      var end = document.cookie.indexOf(';', begin);
+      if (end === -1) {
+        end = dc.length;
+      }
+    }
+    return decodeURI(dc.substring(begin + prefix.length, end));
+  }
   /**
    * This method renders the component
    * @returns jsx
