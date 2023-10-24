@@ -107,7 +107,11 @@ export const AddCartItem = ({
               ) {
                 document.getElementById('products_label').click();
               } else {
-                if (areaData) {
+                if (
+                  areaData &&
+                  document.querySelector('.drawRectanglePopup-block').style
+                    .display === 'none'
+                ) {
                   checkArea(e);
                 }
               }
