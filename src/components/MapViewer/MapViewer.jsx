@@ -260,40 +260,6 @@ class MapViewer extends React.Component {
       sessionStorage.clear();
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
     }
-    //    if (prevState !== this.state) {
-    //      let newHotspotData = this.state.hotspotData;
-    //      let newFilteredLayers = this.state.hotspotData && this.state.hotspotData['filteredLayers'] ? this.state.hotspotData['filteredLayers'] : {};
-    //      let filteredLayerKeys = this.state.hotspotData && this.state.hotspotData['filteredLayers'] ? Object.keys(this.state.hotspotData['filteredLayers']) : [];
-    //      let activeLayerKeys = this.state.hotspotData && this.state.hotspotData['activeLayers'] ? Object.keys(this.state.hotspotData['activeLayers']) : [];
-    //      let deleteFilteredLayers = [];
-    //
-    //      if (filteredLayerKeys.length === 0)  return;
-    //
-    //      if (activeLayerKeys.length === 0) {
-    //        newHotspotData['filteredLayers'] = {};
-    //        return this.hotspotDataHandler(newHotspotData);
-    //      }
-    //
-    //      filteredLayerKeys.forEach(layerKey => {
-    //        let moddedKey = layerKey + '_';
-    //        for (let i = 0; i < activeLayerKeys.length; i++) {
-    //          if (activeLayerKeys[i].includes(moddedKey)) {
-    //            continue;
-    //          } else {
-    //            deleteFilteredLayers.push(layerKey);
-    //          }
-    //        }
-    //      });
-    //
-    //      if (deleteFilteredLayers.length === 0) return;
-    //
-    //      deleteFilteredLayers.forEach(layerKey => {
-    //        delete newFilteredLayers[layerKey];
-    //      });
-    //
-    //      newHotspotData['filteredLayers'] = newFilteredLayers;
-    //      this.hotspotDataHandler(newHotspotData);
-    //    }
   }
 
   componentWillUnmount() {
@@ -347,6 +313,7 @@ class MapViewer extends React.Component {
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
           urls={this.cfgUrls}
+          layerLoading={this.state.layerLoading}
           hotspotData={this.state.hotspotData}
           hotspotDataHandler={this.hotspotDataHandler}
         />
