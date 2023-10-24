@@ -107,7 +107,11 @@ export const AddCartItem = ({
               ) {
                 document.getElementById('products_label').click();
               } else {
-                if (areaData) {
+                if (
+                  areaData &&
+                  document.querySelector('.drawRectanglePopup-block').style
+                    .display === 'none'
+                ) {
                   checkArea(e);
                 }
               }
@@ -1912,7 +1916,7 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    this.activeLayersToHotspotData(elem.id);
+    //this.activeLayersToHotspotData(elem.id);
     // update DOM
     //this.setState({});
   }
