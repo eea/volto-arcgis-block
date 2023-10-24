@@ -416,6 +416,7 @@ class InfoWidget extends React.Component {
           } else if (format.includes('json')) {
             data = JSON.parse(response.data);
           }
+          console.log(data);
           return data;
         })
         .then((data) => {

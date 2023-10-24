@@ -45,14 +45,22 @@ class LegendWidget extends React.Component {
     });
   }
 
-  brokenLegendImagePatch() {
+  scanImages() {
+    let img = {};
     const collection = document.getElementsByClassName('esri-legend__symbol');
     Array.prototype.forEach.call(collection, (element) => {
-      let img = {};
-
       if (element.hasChildNodes()) img = element.childNodes[0];
       else img = element;
+      img.onerror = () => this.setState({ loading: true });
+    });
+  }
 
+  brokenLegendImagePatch() {
+    let img = {};
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+    Array.prototype.forEach.call(collection, (element) => {
+      if (element.hasChildNodes()) img = element.childNodes[0];
+      else img = element;
       if (!(img.complete && img.naturalHeight !== 0)) {
         // If img src returns a broken link
         if (img?.src?.includes('all_present_lc_a_pol')) {
@@ -62,35 +70,13 @@ class LegendWidget extends React.Component {
 
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Dichotomous Present Land Cover in selected hot spots';
-          //return;
         } else if (img?.src?.includes('all_present_lc_b_pol')) {
-          //  img.src ='none';
           img.src = this.props.hotspotData.all_present_lc[
             'all_present_lc_b_pol'
           ].FilterStaticImageLegend;
 
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Modular Present Land Cover in selected hot spots';
-          //return;
-          //  const legends = document.getElementsByClassName(
-          //    'esri-legend__service',
-          //  );
-          //  for (let i = 0; i < legends.length; i++) {
-          //    const legend = legends[i];
-          //    //find the legend that contains a broken img
-          //    if (
-          //      legend.querySelector('img')?.src?.includes('all_present_lc_b_pol')
-          //    ) {
-          //      const img = legend.querySelector('img');
-          //      //set this legend to display none
-          //      if (!(img.complete && img.naturalHeight !== 0)) {
-          //        legend.style.display = 'none';
-          //      }
-          //      break; // break out of the loop after the first match
-          //    }
-          //  }
-          /*img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Modular Present Land Cover in selected hot spots';*/
         } else if (img?.src?.includes('all_lcc_a_pol')) {
           img.src = this.props.hotspotData.all_lcc[
             'all_lcc_a_pol'
@@ -99,30 +85,12 @@ class LegendWidget extends React.Component {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Dichotomous Land Cover Change in selected hot spots';
         } else if (img?.src?.includes('all_lcc_b_pol')) {
-          //  img.src ='none';
           img.src = this.props.hotspotData.all_lcc[
             'all_lcc_b_pol'
           ].FilterStaticImageLegend;
 
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Modular Land Cover Change in selected hot spots';
-          //  const legends = document.getElementsByClassName(
-          //    'esri-legend__service',
-          //  );
-          //  for (let i = 0; i < legends.length; i++) {
-          //    const legend = legends[i];
-          //    //find the legend that contains a broken img
-          //    if (legend.querySelector('img')?.src?.includes('all_lcc_b_pol')) {
-          //      const img = legend.querySelector('img');
-          //      //set this legend to display none
-          //      if (!(img.complete && img.naturalHeight !== 0)) {
-          //        legend.style.display = 'none';
-          //      }
-          //      break; // break out of the loop after the first match
-          //    }
-          //  }
-          /*img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Modular Present Land Cover in selected hot spots';*/
         } else if (img?.src?.includes('cop_klc')) {
           img.src = this.props.hotspotData.cop_klc[
             'cop_klc'
@@ -131,9 +99,6 @@ class LegendWidget extends React.Component {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Key Landscapes for Conservation borders in selected hotspots';
         } else if (img?.src?.includes('protected_areas')) {
-          /*img.src = this.props.hotspotData.cop_klc[
-            'protected_areas'
-          ].FilterStaticImageLegend;*/
           img.src =
             'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=protected_areas';
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
@@ -201,11 +166,6 @@ class LegendWidget extends React.Component {
   }
 
   imageFixWithTimer() {
-    let newHotspotData = this.props.hotspotData;
-    if (this.props.hotspotData?.layerViewError !== undefined) {
-      delete newHotspotData['layerViewError'];
-    }
-    this.props.hotspotDataHandler(newHotspotData);
     this.setState({ loading: true });
     setTimeout(() => {
       this.brokenLegendImagePatch();
@@ -229,16 +189,28 @@ class LegendWidget extends React.Component {
       }),
       container: document.querySelector('.legend-panel'),
     });
-    this.props.view.allLayerViews.watch('length', () => {
-      this.imageFixWithTimer();
+    this.LegendWidget.when(() => {
+      this.LegendWidget.activeLayerInfos.on('after-changes', (event) => {
+        this.setState({ loading: true });
+        this.scanImages();
+      });
     });
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.hotspotData?.layerViewError !== undefined) {
-      this.imageFixWithTimer();
+  componentDidUpdate(prevState, prevProps) {
+    if (prevState.loading !== this.state.loading) {
+      if (this.state.loading === true) {
+        setTimeout(() => {
+          this.brokenLegendImagePatch();
+          if (this.props.download) {
+            this.hideNutsLegend();
+          }
+          this.setState({ loading: false });
+        }, 2000);
+      }
     }
   }
+
   /**
    * This method renders the component
    * @returns jsx
