@@ -207,7 +207,7 @@ class UseCasesMapViewer extends React.Component {
       } else {
         fetchUrl = fetchUrl + '/++api++/@anon-registry';
       }
-    } else if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea.europa') {
+    } else if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea') {
       fetchUrl = 'https://clmsdemo.devel6cph.eea.europa.eu';
       if (this.getAuthToken()) {
         fetchUrl = fetchUrl + '/++api++/@registry';

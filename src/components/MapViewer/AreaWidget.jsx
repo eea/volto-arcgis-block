@@ -417,12 +417,24 @@ class AreaWidget extends React.Component {
   }
 
   async initFMI() {
-    let currentUrl = window.location.href.split('/');
-    let fetchUrl = currentUrl[0] + '//' + currentUrl[2];
-    if (this.getAuthToken()) {
-      fetchUrl = fetchUrl + '/++api++/@registry';
+    let currentUrl = window.location.href.split('.eu');
+    let fetchUrl = '';
+    if (currentUrl[0] === 'https://land.copernicus') {
+      fetchUrl = 'https://land.copernicus.eu';
+      if (this.getAuthToken()) {
+        fetchUrl = fetchUrl + '/++api++/@registry';
+      } else {
+        fetchUrl = fetchUrl + '/++api++/@anon-registry';
+      }
+    } else if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea') {
+      fetchUrl = 'https://clmsdemo.devel6cph.eea.europa.eu';
+      if (this.getAuthToken()) {
+        fetchUrl = fetchUrl + '/++api++/@registry';
+      } else {
+        fetchUrl = fetchUrl + '/++api++/@anon-registry';
+      }
     } else {
-      fetchUrl = fetchUrl + '/++api++/@anon-registry';
+      fetchUrl = 'https://land.copernicus.eu/++api++/@anon-registry';
     }
     try {
       let nutsResponse = await fetch(fetchUrl + this.props.urls.nutsHandler);
