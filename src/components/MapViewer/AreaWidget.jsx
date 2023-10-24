@@ -419,20 +419,9 @@ class AreaWidget extends React.Component {
   async initFMI() {
     let currentUrl = window.location.href.split('.eu');
     let fetchUrl = '';
-    if (currentUrl[0] === 'https://land.copernicus') {
-      fetchUrl = 'https://land.copernicus.eu';
-      if (this.getAuthToken()) {
-        fetchUrl = fetchUrl + '/++api++/@registry';
-      } else {
-        fetchUrl = fetchUrl + '/++api++/@anon-registry';
-      }
-    } else if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea') {
-      fetchUrl = 'https://clmsdemo.devel6cph.eea.europa.eu';
-      if (this.getAuthToken()) {
-        fetchUrl = fetchUrl + '/++api++/@registry';
-      } else {
-        fetchUrl = fetchUrl + '/++api++/@anon-registry';
-      }
+    if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea') {
+      fetchUrl =
+        'https://clmsdemo.devel6cph.eea.europa.eu/++api++/@anon-registry';
     } else {
       fetchUrl = 'https://land.copernicus.eu/++api++/@anon-registry';
     }
@@ -446,31 +435,6 @@ class AreaWidget extends React.Component {
     } catch (error) {
       //console.error('There was a problem with the fetch operation:', error);
     }
-  }
-  getAuthToken() {
-    let tokenResult = null;
-    if (this.getCookie('auth_token')) {
-      tokenResult = true;
-    } else {
-      tokenResult = false;
-    }
-    return tokenResult;
-  }
-  getCookie(name) {
-    var dc = document.cookie;
-    var prefix = name + '=';
-    var begin = dc.indexOf('; ' + prefix);
-    if (begin === -1) {
-      begin = dc.indexOf(prefix);
-      if (begin !== 0) return null;
-    } else {
-      begin += 2;
-      var end = document.cookie.indexOf(';', begin);
-      if (end === -1) {
-        end = dc.length;
-      }
-    }
-    return decodeURI(dc.substring(begin + prefix.length, end));
   }
   /**
    * This method renders the component
