@@ -322,6 +322,7 @@ class MenuWidget extends React.Component {
         }
         if (!this.visibleLayers) this.visibleLayers = {};
         this.handleRasterVectorLegend();
+        this.setState({});
       }
     });
 
