@@ -9,7 +9,11 @@ class LoadingSpinner extends React.Component {
     this.container = createRef();
     //Initially, we set the state of the component to
     //not be showing the basemap panel
-    this.state = {};
+    this.state = {
+      loading: false,
+    };
+    this.showLoading = this.showLoading.bind(this);
+    this.listenForLayerChanges = this.listenForLayerChanges.bind(this);
   }
 
   loader() {
@@ -18,8 +22,38 @@ class LoadingSpinner extends React.Component {
     });
   }
 
+  listenForLayerChanges() {
+    this.props.view.map.layers.on('change', (event) => {
+      if (event.added.length > 0)
+        if (this.state.loading === false) {
+          this.setState({ loading: true });
+          this.showLoading();
+        }
+    });
+    this.props.view.on('layerview-create', (event) => {
+      if (event.layer.loadStatus === 'loaded') {
+        this.props.view.watch('updating', (isUpdating) => {
+          if (!isUpdating) {
+            if (this.state.loading === true) {
+              this.setState({ loading: false });
+              this.showLoading();
+            }
+          }
+        });
+      }
+    });
+    this.props.view.on('layerview-create-error', (event) => {
+      if (event.layer.loadError !== null) {
+        if (this.state.loading === true) {
+          this.setState({ loading: false });
+          this.showLoading();
+        }
+      }
+    });
+  }
+
   showLoading() {
-    if (this.props.layerLoading === false) {
+    if (this.state.loading === false) {
       this.container.current.style.display = 'none';
     } else {
       this.container.current.style.display = 'block';
@@ -29,18 +63,22 @@ class LoadingSpinner extends React.Component {
 
   async componentDidMount() {
     await this.loader();
-    this.props.view.when(() => {
-      this.props.view.ui.add(this.container.current, 'manual');
-      watchUtils.watch(this.props.view, 'updating', () => {
-        return;
-      });
+    //this.props.view.when(() => {
+    //  this.props.view.ui.add(this.container.current, 'manual');
+    //  this.listenForLayerChanges();
+    //});
+    watchUtils.when(this.props.view, 'ready', (isReady) => {
+      if (isReady) {
+        this.props.view.ui.add(this.container.current, 'manual');
+        this.listenForLayerChanges();
+      }
     });
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.layerLoading !== prevProps.layerLoading) {
-      this.showLoading();
-    }
+  componentDidUpdate(prevState) {
+    //    if (this.state.loading !== prevState.loading) {
+    //      this.showLoading();
+    //    }
   }
 
   render() {

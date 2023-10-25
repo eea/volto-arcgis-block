@@ -45,6 +45,25 @@ class LegendWidget extends React.Component {
     });
   }
 
+  scanImages() {
+    let img = {};
+    const collection = document.getElementsByClassName('esri-legend__symbol');
+    Array.prototype.forEach.call(collection, (element) => {
+      if (element.hasChildNodes()) {
+        for (let i = 0; i < element.childNodes.length; i++) {
+          let child = element.childNodes[i];
+          if (child.nodename === 'IMG') {
+            img = child;
+            break;
+          }
+        }
+      } else img = element;
+      if (!(img instanceof HTMLImageElement)) return;
+
+      img.onerror = () => this.setState({ loading: true });
+    });
+  }
+
   brokenLegendImagePatch() {
     const collection = document.getElementsByClassName('esri-legend__symbol');
     Array.prototype.forEach.call(collection, (element) => {
@@ -176,11 +195,6 @@ class LegendWidget extends React.Component {
   }
 
   imageFixWithTimer() {
-    let newHotspotData = this.props.hotspotData;
-    if (this.props.hotspotData?.layerViewError !== undefined) {
-      delete newHotspotData['layerViewError'];
-    }
-    this.props.hotspotDataHandler(newHotspotData);
     this.setState({ loading: true });
     setTimeout(() => {
       this.brokenLegendImagePatch();
@@ -204,16 +218,28 @@ class LegendWidget extends React.Component {
       }),
       container: document.querySelector('.legend-panel'),
     });
-    this.props.view.allLayerViews.watch('length', () => {
-      this.imageFixWithTimer();
+    this.LegendWidget.when(() => {
+      this.LegendWidget.activeLayerInfos.on('after-changes', (event) => {
+        this.setState({ loading: true });
+        this.scanImages();
+      });
     });
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.hotspotData?.layerViewError !== undefined) {
-      this.imageFixWithTimer();
+  componentDidUpdate(prevState, prevProps) {
+    if (prevState.loading !== this.state.loading) {
+      if (this.state.loading === true) {
+        setTimeout(() => {
+          this.brokenLegendImagePatch();
+          if (this.props.download) {
+            this.hideNutsLegend();
+          }
+          this.setState({ loading: false });
+        }, 2000);
+      }
     }
   }
+
   /**
    * This method renders the component
    * @returns jsx
