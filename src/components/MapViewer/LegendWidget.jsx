@@ -133,7 +133,7 @@ class LegendWidget extends React.Component {
         }
         if (
           img.closest('.esri-legend__service').firstElementChild.nodeName ===
-            '#text' &&
+            'H3' &&
           img.closest('.esri-legend__service').firstElementChild.textContent ===
             'WMS'
         ) {

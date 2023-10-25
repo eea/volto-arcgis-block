@@ -1887,27 +1887,6 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      //this.props.view //mueve esto
-      //  .whenLayerView(this.layers[elem.id])
-      //  .then((layerView) => {
-      //    layerView.watch('updating', (isUpdating) => {
-      //      if (!isUpdating) {
-      //        setTimeout(() => {
-      //        this.props.loadingHandler(false);
-      //        }, 2000);
-      //      } else {
-      //      }
-      //    });
-      //  })
-      //  .catch((error) => {
-      //    let newHotspotData = this.props.hotspotData;
-      //    let LayerId = elem.id.replace(/\d+\D*/g, '').slice(0, -1);
-      //    let errObj = {};
-      //    errObj[LayerId] = error;
-      //    newHotspotData['layerViewError'] = errObj;
-      //    this.props.hotspotDataHandler(newHotspotData);
-      //    this.props.loadingHandler(false);
-      //  });
       this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
@@ -1937,12 +1916,6 @@ class MenuWidget extends React.Component {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
     this.activeLayersToHotspotData(elem.id);
-    // update DOM
-    //this.setState({});
-    let checkedLayers = sessionStorage.getItem('checkedLayers');
-    if (checkedLayers && checkedLayers.length === 0) {
-      this.props.loadingHandler(false);
-    }
   }
 
   getHotspotLayerIds() {
