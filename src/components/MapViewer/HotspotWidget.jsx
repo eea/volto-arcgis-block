@@ -20,6 +20,7 @@ class HotspotWidget extends React.Component {
       selectedArea: null,
       lcYear: null,
       lccYear: null,
+      activeLayersArray: [],
     };
     this.menuClass =
       'esri-icon-filter esri-widget--button esri-widget esri-interactive';
@@ -436,6 +437,7 @@ class HotspotWidget extends React.Component {
     let lccContainer = document.querySelector('.landCoverChangeContainer');
     let lccTimeSelect = document.querySelector('#select-klc-lccTime');
     let lcTimeSelect = document.querySelector('#select-klc-lcTime');
+    if (lcContainer === null || lccContainer === null) return;
     if (
       (lcContainer.style.display === 'block' &&
         lcTimeSelect.value === 'default') ||
@@ -701,6 +703,29 @@ class HotspotWidget extends React.Component {
   }
 
   render() {
+    let divs = [
+      {
+        id: 'all_present_lc',
+        func: this.renderPresentLandCover,
+        className: 'presentLandCoverContainer',
+      },
+      {
+        id: 'all_lcc',
+        func: this.renderLandCoverChange,
+        className: 'landCoverChangeContainer',
+      },
+    ];
+
+    divs.sort((a, b) => {
+      let indexA = this.state.activeLayersArray.findIndex((layer) =>
+        layer.getAttribute('layer-id').includes(a.id),
+      );
+      let indexB = this.state.activeLayersArray.findIndex((layer) =>
+        layer.getAttribute('layer-id').includes(b.id),
+      );
+      if (indexA === -1 || indexB === -1) return 0;
+      return indexA - indexB;
+    });
     return (
       <>
         <div ref={this.container} className="hotspot-container">
@@ -736,8 +761,6 @@ class HotspotWidget extends React.Component {
                         onBlur={() => {}}
                         onChange={(e) => {
                           this.setState({ selectedArea: e.target.value });
-                          //this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
-                          //this.disableButton();
                         }}
                         id="select-klc-area"
                         className="esri-select"
@@ -745,11 +768,10 @@ class HotspotWidget extends React.Component {
                     </label>
                   </div>
                 </div>
-                <div className="presentLandCoverContainer">
-                  {this.renderPresentLandCover()}
-                </div>
-                <div className="landCoverChangeContainer">
-                  {this.renderLandCoverChange()}
+                <div>
+                  {divs.map((div) => (
+                    <div className={div.className}>{div.func()}</div>
+                  ))}
                 </div>
                 <button
                   id="applyFilterButton"
@@ -766,6 +788,31 @@ class HotspotWidget extends React.Component {
     );
   }
 
+  //sortHotspotTabs = () => {
+  //  let activeLayersArray = Array.from(document.querySelectorAll('.active-layer'));
+  //  let divs = [
+  //    { id: 'all_present_lc', func: this.renderPresentLandCover, className: 'presentLandCoverContainer' },
+  //    { id: 'all_lcc', func: this.renderLandCoverChange, className: 'landCoverChangeContainer' }
+  //  ];
+  //
+  //  divs.sort((a, b) => {
+  //    let indexA = activeLayersArray.findIndex(layer => layer.getAttribute('layer-id').includes(a.id));
+  //    let indexB = activeLayersArray.findIndex(layer => layer.getAttribute('layer-id').includes(b.id));
+  //    if (indexA === -1 || indexB === -1) return 0;
+  //    return indexA - indexB;
+  //  });
+  //
+  //  return (
+  //    <div>
+  //      {divs.map(div => (
+  //        <div className={div.className}>
+  //          {div.func()}
+  //        </div>
+  //      ))}
+  //    </div>
+  //  );
+  //}
+
   /**
    * This method is executed after the rener method is executed
    */
@@ -776,6 +823,11 @@ class HotspotWidget extends React.Component {
     this.layerModelInit();
     this.getBBoxData();
     this.props.view.map.layers.on('change', () => {
+      this.setState({
+        activeLayersArray: Array.from(
+          document.querySelectorAll('.active-layer'),
+        ),
+      });
       const newHotspotData = this.props.hotspotData;
       this.props.hotspotDataHandler(newHotspotData);
     });
