@@ -196,7 +196,6 @@ class HotspotWidget extends React.Component {
         ? Object.keys(this.props.hotspotData['filteredLayers'])
         : [];
     let layersToAdd = {};
-    //this.props.loadingHandler(true);
 
     typeFilter.forEach((type) => {
       let filterLayer;
@@ -312,16 +311,6 @@ class HotspotWidget extends React.Component {
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
-    //const layerView = await this.props.view.whenLayerView(
-    //  this.layers[typeFilter[0] + '_filter'],
-    //);
-    //layerView.watch('updating', (isUpdating) => {
-    //  if (!isUpdating) {
-    //    setTimeout(() => {
-    //      this.props.loadingHandler(false);
-    //    }, 2000);
-    //  }
-    //});
     this.props.mapLayersHandler(this.layers);
     this.filteredLayersToHotspotData(Object.keys(layersToAdd));
   }

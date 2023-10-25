@@ -49,8 +49,18 @@ class LegendWidget extends React.Component {
     let img = {};
     const collection = document.getElementsByClassName('esri-legend__symbol');
     Array.prototype.forEach.call(collection, (element) => {
-      if (element.hasChildNodes()) img = element.childNodes[0];
-      else img = element;
+      if (element.hasChildNodes()) {
+        for (let i = 0; i < element.childNodes.length; i++) {
+          let child = element.childNodes[i];
+          if (child.nodename === 'IMG') {
+            img = child;
+            break;
+          }
+        }
+      }
+        else img = element;
+      if (!(img instanceof HTMLImageElement)) return;
+      
       img.onerror = () => this.setState({ loading: true });
     });
   }
@@ -59,7 +69,15 @@ class LegendWidget extends React.Component {
     let img = {};
     const collection = document.getElementsByClassName('esri-legend__symbol');
     Array.prototype.forEach.call(collection, (element) => {
-      if (element.hasChildNodes()) img = element.childNodes[0];
+      if (element.hasChildNodes()) {
+       for (let i = 0; i < element.childNodes.length; i++) {
+        let child = element.childNodes[i];
+        if (child.nodeName === 'IMG') {
+          img = child;
+          break;
+        }
+      }
+      }
       else img = element;
       if (!(img.complete && img.naturalHeight !== 0)) {
         // If img src returns a broken link
@@ -114,8 +132,10 @@ class LegendWidget extends React.Component {
           span.innerHTML = 'No legend available';
           element.parentNode.appendChild(span);
         }
-        img.closest('.esri-legend__service').firstElementChild.style.display =
-          'none';
+        //debugger;
+        if (img.closest('.esri-legend__service').firstElementChild.nodeName === '#text' && img.closest('.esri-legend__service').firstElementChild.textContent === 'WMS') {
+          img.closest('.esri-legend__service').firstElementChild.style.display = 'none';
+        }
       }
     });
   }
