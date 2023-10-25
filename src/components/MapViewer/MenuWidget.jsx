@@ -326,8 +326,8 @@ class MenuWidget extends React.Component {
           }
         }
         if (!this.visibleLayers) this.visibleLayers = {};
-        this.view.watch('scale', (newValue) => {});
-        //this.handleRasterVectorLegend();
+        this.handleRasterVectorLegend();
+        this.setState({});
       }
     });
 
@@ -980,8 +980,8 @@ class MenuWidget extends React.Component {
                       <Popup
                         trigger={
                           product.ProductId ===
-                            '8474c3b080fa42cc837f1d2338fcf096' ||
-                          product.ProductTitle === 'Snow and Ice Parameters' ? (
+                          '8474c3b080fa42cc837f1d2338fcf096' /*||
+                          product.ProductTitle === 'Snow and Ice Parameters' */ ? (
                             <div className="zoom-in-message-container">
                               <span>{product.ProductTitle}</span>
                               <div
@@ -1001,9 +1001,9 @@ class MenuWidget extends React.Component {
                         style={{ transform: 'translateX(-4rem)' }}
                       />
                     ) : product.ProductId ===
-                        '8474c3b080fa42cc837f1d2338fcf096' ||
+                      '8474c3b080fa42cc837f1d2338fcf096' /*||
                       product.ProductTitle ===
-                        'High Resolution Snow and Ice Parameters' ? (
+                        'High Resolution Snow and Ice Parameters' */ ? (
                       <div className="zoom-in-message-container">
                         <span>{product.ProductTitle}</span>
                         <div className="zoom-in-message">
@@ -1248,6 +1248,14 @@ class MenuWidget extends React.Component {
                                 Zoom in to view on map
                               </div>
                             </div>
+                          ) : dataset.productId ===
+                            'd764e020485a402598551fa461bf1db2' ? (
+                            <div className="hotspot-filter-message-container">
+                              <span>{dataset.DatasetTitle}</span>
+                              <div className="hotspot-filter-message hotspot-filter-message-dataset">
+                                Use the filter to visualize a KLC area
+                              </div>
+                            </div>
                           ) : (
                             <span>{dataset.DatasetTitle}</span>
                           )
@@ -1263,6 +1271,14 @@ class MenuWidget extends React.Component {
                         <span>{dataset.DatasetTitle}</span>
                         <div className="zoom-in-message">
                           Zoom in to view on map
+                        </div>
+                      </div>
+                    ) : dataset.productId ===
+                      'd764e020485a402598551fa461bf1db2' ? (
+                      <div className="hotspot-filter-message-container">
+                        <span>{dataset.DatasetTitle}</span>
+                        <div className="hotspot-filter-message hotspot-filter-message-dataset">
+                          Use the filter to visualize a KLC area
                         </div>
                       </div>
                     ) : (
@@ -1561,7 +1577,7 @@ class MenuWidget extends React.Component {
             const height = this.tileInfo.size[0];
             // create a canvas with 2D rendering context
             const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d'); //try modifying this value for 3d test UNAI
+            const context = canvas.getContext('2d');
             //canvas
             canvas.width = width;
             canvas.height = height;
@@ -1871,27 +1887,6 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      //this.props.view //mueve esto
-      //  .whenLayerView(this.layers[elem.id])
-      //  .then((layerView) => {
-      //    layerView.watch('updating', (isUpdating) => {
-      //      if (!isUpdating) {
-      //        setTimeout(() => {
-      //        this.props.loadingHandler(false);
-      //        }, 2000);
-      //      } else {
-      //      }
-      //    });
-      //  })
-      //  .catch((error) => {
-      //    let newHotspotData = this.props.hotspotData;
-      //    let LayerId = elem.id.replace(/\d+\D*/g, '').slice(0, -1);
-      //    let errObj = {};
-      //    errObj[LayerId] = error;
-      //    newHotspotData['layerViewError'] = errObj;
-      //    this.props.hotspotDataHandler(newHotspotData);
-      //    this.props.loadingHandler(false);
-      //  });
       this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
@@ -1921,12 +1916,6 @@ class MenuWidget extends React.Component {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
     this.activeLayersToHotspotData(elem.id);
-    // update DOM
-    //this.setState({});
-    let checkedLayers = sessionStorage.getItem('checkedLayers');
-    if (checkedLayers && checkedLayers.length === 0) {
-      this.props.loadingHandler(false);
-    }
   }
 
   getHotspotLayerIds() {
