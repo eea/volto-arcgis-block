@@ -76,7 +76,6 @@ class MapViewer extends React.Component {
   }
 
   hotspotDataHandler(newHotspotData) {
-    console.log(newHotspotData);
     if (!this.state.hotspotData) {
       this.setState({ hotspotData: {} });
     }

@@ -57,10 +57,9 @@ class LegendWidget extends React.Component {
             break;
           }
         }
-      }
-        else img = element;
+      } else img = element;
       if (!(img instanceof HTMLImageElement)) return;
-      
+
       img.onerror = () => this.setState({ loading: true });
     });
   }
@@ -70,15 +69,14 @@ class LegendWidget extends React.Component {
     const collection = document.getElementsByClassName('esri-legend__symbol');
     Array.prototype.forEach.call(collection, (element) => {
       if (element.hasChildNodes()) {
-       for (let i = 0; i < element.childNodes.length; i++) {
-        let child = element.childNodes[i];
-        if (child.nodeName === 'IMG') {
-          img = child;
-          break;
+        for (let i = 0; i < element.childNodes.length; i++) {
+          let child = element.childNodes[i];
+          if (child.nodeName === 'IMG') {
+            img = child;
+            break;
+          }
         }
-      }
-      }
-      else img = element;
+      } else img = element;
       if (!(img.complete && img.naturalHeight !== 0)) {
         // If img src returns a broken link
         if (img?.src?.includes('all_present_lc_a_pol')) {
@@ -133,8 +131,14 @@ class LegendWidget extends React.Component {
           element.parentNode.appendChild(span);
         }
         //debugger;
-        if (img.closest('.esri-legend__service').firstElementChild.nodeName === '#text' && img.closest('.esri-legend__service').firstElementChild.textContent === 'WMS') {
-          img.closest('.esri-legend__service').firstElementChild.style.display = 'none';
+        if (
+          img.closest('.esri-legend__service').firstElementChild.nodeName ===
+            '#text' &&
+          img.closest('.esri-legend__service').firstElementChild.textContent ===
+            'WMS'
+        ) {
+          img.closest('.esri-legend__service').firstElementChild.style.display =
+            'none';
         }
       }
     });

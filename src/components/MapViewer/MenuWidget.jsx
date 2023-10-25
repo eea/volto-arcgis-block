@@ -249,6 +249,7 @@ class MenuWidget extends React.Component {
       noServiceModal: true,
       setNoServiceModal: true,
       TMSLayerObj: null,
+      draggedElements: [],
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -1764,7 +1765,7 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
-      
+
     let group = this.getGroup(elem);
     if (elem.checked) {
       //this.props.loadingHandler(true);
@@ -1784,10 +1785,16 @@ class MenuWidget extends React.Component {
         }
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
-        if (elem.id.includes('cop_klc') && this.layers['klc_filter'] !== undefined) {
+        if (
+          elem.id.includes('cop_klc') &&
+          this.layers['klc_filter'] !== undefined
+        ) {
           this.layers['klc_filter'].visible = true;
           this.map.add(this.layers['klc_filter']);
-        } else if (elem.id.includes('protected_areas') && this.layers['pa_filter'] !== undefined) {
+        } else if (
+          elem.id.includes('protected_areas') &&
+          this.layers['pa_filter'] !== undefined
+        ) {
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
         } else {
@@ -1876,8 +1883,8 @@ class MenuWidget extends React.Component {
     //this.setState({});
     let checkedLayers = sessionStorage.getItem('checkedLayers');
     if (checkedLayers && checkedLayers.length === 0) {
-    this.props.loadingHandler(false);
-}
+      this.props.loadingHandler(false);
+    }
   }
 
   getHotspotLayerIds() {
@@ -2105,16 +2112,22 @@ class MenuWidget extends React.Component {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
     let data = activeLayersArray.sort((a, b) => {
-      let product =
-        Number(a.props['layer-id'].split('_').join('')) -
-        Number(b.props['layer-id'].split('_').join(''));
-      if (product < 0) {
-        return -1;
-      } else if (product > 0) {
-        return 1;
-      } else if (product === 0) {
+      let layerIdA = a.props['layer-id'];
+      let layerIdB = b.props['layer-id'];
+      layerIdA = layerIdA.split('_').slice(-4).join('_');
+      layerIdB = layerIdB.split('_').slice(-4).join('_');
+
+      if (
+        this.state.draggedElements !== undefined &&
+        (this.state.draggedElements.includes(layerIdA) ||
+          this.state.draggedElements.includes(layerIdB))
+      ) {
         return 0;
       }
+
+      if (layerIdA < layerIdB) return -1;
+      if (layerIdA > layerIdB) return 1;
+      return 0;
     });
     this.activeLayersHandler(activeLayersArray);
     return data;
@@ -2696,7 +2709,7 @@ class MenuWidget extends React.Component {
   onDrop(e) {
     let dst = e.target.closest('div.active-layer');
     if (dst === this.draggingElement) return;
-
+    let id = dst.id.split('_').slice(-4).join('_');
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
@@ -2707,6 +2720,9 @@ class MenuWidget extends React.Component {
       dst.parentElement.insertBefore(this.draggingElement, dst);
     }
 
+    if (!this.state.draggedElements.includes(id)) {
+      this.setState({ draggedElements: [...this.state.draggedElements, id] });
+    }
     this.layersReorder();
     this.saveLayerOrder();
   }
@@ -3343,7 +3359,15 @@ class MenuWidget extends React.Component {
   }
 
   deleteFilteredLayer(layer) {
-    if (!(layer.includes('all_lcc') || layer.includes('all_present') || layer.includes('cop_klc') || layer.includes('protected_areas'))) return;
+    if (
+      !(
+        layer.includes('all_lcc') ||
+        layer.includes('all_present') ||
+        layer.includes('cop_klc') ||
+        layer.includes('protected_areas')
+      )
+    )
+      return;
     let filterLayer;
     //let temp;
     let updatedHotspotData = this.props.hotspotData;
@@ -3368,19 +3392,25 @@ class MenuWidget extends React.Component {
       }
       delete updatedFilteredLayers['lc_filter'];
       delete this.layers['lc_filter'];
-    } else if (this.layers['klc_filter'] !== undefined && layer.includes('cop_klc')) {
+    } else if (
+      this.layers['klc_filter'] !== undefined &&
+      layer.includes('cop_klc')
+    ) {
       this.layers['klc_filter'].visible = false;
       this.layers[layer].visible = false;
       filterLayer = this.props.map.findLayerById('klc_filter');
       if (filterLayer !== undefined) {
-      //  temp = filterLayer;
+        //  temp = filterLayer;
         filterLayer.clear();
         filterLayer.destroy();
         this.props.map.remove(filterLayer);
       }
       delete updatedFilteredLayers['klc_filter'];
       //delete this.layers['klc_filter'];
-    } else if (this.layers['pa_filter'] !== undefined && layer.includes('protected_areas')) {
+    } else if (
+      this.layers['pa_filter'] !== undefined &&
+      layer.includes('protected_areas')
+    ) {
       this.layers['pa_filter'].visible = false;
       this.layers[layer].visible = false;
       filterLayer = this.props.map.findLayerById('pa_filter');
