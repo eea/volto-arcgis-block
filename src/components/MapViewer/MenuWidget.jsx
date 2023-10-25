@@ -253,6 +253,7 @@ class MenuWidget extends React.Component {
       noServiceModal: true,
       setNoServiceModal: true,
       TMSLayerObj: null,
+      draggedElements: [],
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -263,6 +264,8 @@ class MenuWidget extends React.Component {
     this.xml = null;
     this.dataBBox = null;
     this.extentInitiated = false;
+    this.hotspotLayerIds = [];
+    this.getHotspotLayerIds = this.getHotspotLayerIds.bind(this);
     this.prepareHotspotLayers = this.prepareHotspotLayers.bind(this);
     this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
     this.getLimitScale = this.getLimitScale.bind(this);
@@ -631,7 +634,6 @@ class MenuWidget extends React.Component {
               bubbles: true,
               cancelable: false,
             });
-            // let el = document.getElementById('active_label');
             let el = document.getElementById('download_label');
             el.dispatchEvent(event);
           }
@@ -647,6 +649,7 @@ class MenuWidget extends React.Component {
     await this.loader();
     await this.getTMSLayersJSON();
     this.prepareHotspotLayers();
+    this.getHotspotLayerIds();
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
       setTimeout(() => {
@@ -1401,7 +1404,6 @@ class MenuWidget extends React.Component {
           url: viewService,
           featureInfoFormat: 'text/html',
           featureInfoUrl: viewService,
-          //id: layer.LayerId,
           title: '',
           legendEnabled: true,
           sublayers: [
@@ -1559,7 +1561,7 @@ class MenuWidget extends React.Component {
             const height = this.tileInfo.size[0];
             // create a canvas with 2D rendering context
             const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+            const context = canvas.getContext('2d'); //try modifying this value for 3d test UNAI
             //canvas
             canvas.width = width;
             canvas.height = height;
@@ -1691,16 +1693,6 @@ class MenuWidget extends React.Component {
       }
     }
     if (productContainerId === 'd764e020485a402598551fa461bf1db2') {
-      //      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
-      //        let myExtent = new Extent({
-      //          xmin: -2037508.342789,
-      //          ymin: -2037508.342789,
-      //          xmax: 8037508.342789,
-      //          ymax: 8037508.342789,
-      //          spatialReference: 3857, // by default wkid 4326
-      //        });
-      //        this.view.goTo(myExtent);
-      //      }
       if (nextElemSibling) {
         siblingInput = nextElemSibling.querySelector('input');
       } else if (previousElemSibling) {
@@ -1807,6 +1799,7 @@ class MenuWidget extends React.Component {
   }
 
   async toggleLayer(elem) {
+    if (this.layers[elem.id] === undefined) return;
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = elem.getAttribute('parentid');
@@ -1814,9 +1807,10 @@ class MenuWidget extends React.Component {
       .getElementById(parentId)
       .closest('.map-menu-product-dropdown')
       .getAttribute('productid');
+
     let group = this.getGroup(elem);
     if (elem.checked) {
-      this.props.loadingHandler(true);
+      //this.props.loadingHandler(true);
       if (
         this.props.download ||
         this.location.search.includes('product=') ||
@@ -1833,20 +1827,25 @@ class MenuWidget extends React.Component {
         }
       }
       if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
-        if (elem.id.includes('cop_klc')) {
+        if (
+          elem.id.includes('cop_klc') &&
+          this.layers['klc_filter'] !== undefined
+        ) {
           this.layers['klc_filter'].visible = true;
           this.map.add(this.layers['klc_filter']);
-        } else if (elem.id.includes('protected_areas')) {
+        } else if (
+          elem.id.includes('protected_areas') &&
+          this.layers['pa_filter'] !== undefined
+        ) {
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
         } else {
           this.map.add(this.layers[elem.id]);
         }
       } else {
+        this.layers[elem.id].visible = true; //layer id
         this.map.add(this.layers[elem.id]);
       }
-      if (this.layers[elem.id] === undefined) return;
-      this.layers[elem.id].visible = true; //layer id
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       if (group) {
@@ -1872,36 +1871,41 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      this.props.view
-        .whenLayerView(this.layers[elem.id])
-        .then((layerView) => {
-          layerView.watch('updating', (isUpdating) => {
-            if (!isUpdating) {
-              this.props.loadingHandler(false);
-            } else {
-            }
-          });
-        })
-        .catch((error) => {
-          let newHotspotData = this.props.hotspotData;
-          let LayerId = elem.id.replace(/\d+\D*/g, '').slice(0, -1);
-          let errObj = {};
-          errObj[LayerId] = error;
-          newHotspotData['layerViewError'] = errObj;
-          this.props.hotspotDataHandler(newHotspotData);
-          this.props.loadingHandler(false);
-        });
+      //this.props.view //mueve esto
+      //  .whenLayerView(this.layers[elem.id])
+      //  .then((layerView) => {
+      //    layerView.watch('updating', (isUpdating) => {
+      //      if (!isUpdating) {
+      //        setTimeout(() => {
+      //        this.props.loadingHandler(false);
+      //        }, 2000);
+      //      } else {
+      //      }
+      //    });
+      //  })
+      //  .catch((error) => {
+      //    let newHotspotData = this.props.hotspotData;
+      //    let LayerId = elem.id.replace(/\d+\D*/g, '').slice(0, -1);
+      //    let errObj = {};
+      //    errObj[LayerId] = error;
+      //    newHotspotData['layerViewError'] = errObj;
+      //    this.props.hotspotDataHandler(newHotspotData);
+      //    this.props.loadingHandler(false);
+      //  });
       this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
-      this.deleteFilteredLayer(elem.id);
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
+      this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
-      if (mapLayer) mapLayer.destroy();
-      this.map.remove(this.layers[elem.id]);
+      if (mapLayer) {
+        mapLayer.clear();
+        mapLayer.destroy();
+        this.map.remove(this.layers[elem.id]);
+      }
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
@@ -1919,22 +1923,30 @@ class MenuWidget extends React.Component {
     this.activeLayersToHotspotData(elem.id);
     // update DOM
     //this.setState({});
+    let checkedLayers = sessionStorage.getItem('checkedLayers');
+    if (checkedLayers && checkedLayers.length === 0) {
+      this.props.loadingHandler(false);
+    }
   }
 
-  activeLayersToHotspotData(layerId) {
-    let layer = Object.entries(this.layers).find(
-      ([key, value]) => key === layerId,
-    )?.[1];
+  getHotspotLayerIds() {
     let hotspotLayersIds = [];
-    let updatedActiveLayers = this.props.hotspotData['activeLayers'] || {};
-    let newHotspotData = this.props.hotspotData;
-
     Object.keys(this.props.hotspotData).forEach((key) => {
       let dataset = this.props.hotspotData[key];
       Object.keys(dataset).forEach((layerKey) => {
         hotspotLayersIds.push(layerKey);
       });
     });
+    this.hotspotLayersIds = hotspotLayersIds;
+  }
+
+  activeLayersToHotspotData(layerId) {
+    let layer = Object.entries(this.layers).find(
+      ([key, value]) => key === layerId,
+    )?.[1];
+    let hotspotLayersIds = this.hotspotLayersIds;
+    let updatedActiveLayers = this.props.hotspotData['activeLayers'] || {};
+    let newHotspotData = this.props.hotspotData;
 
     for (let i = 0; i < hotspotLayersIds.length; i++) {
       const id = hotspotLayersIds[i];
@@ -2141,16 +2153,24 @@ class MenuWidget extends React.Component {
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
-    let activeLayers = Array.from(
-      document.querySelectorAll('.active-layer'),
-    ).map((elem) => {
-      return elem.getAttribute('layer-id');
+    let data = activeLayersArray.sort((a, b) => {
+      let layerIdA = a.props['layer-id'];
+      let layerIdB = b.props['layer-id'];
+      layerIdA = layerIdA.split('_').slice(-4).join('_');
+      layerIdB = layerIdB.split('_').slice(-4).join('_');
+
+      if (
+        this.state.draggedElements !== undefined &&
+        (this.state.draggedElements.includes(layerIdA) ||
+          this.state.draggedElements.includes(layerIdB))
+      ) {
+        return 0;
+      }
+
+      if (layerIdA < layerIdB) return -1;
+      if (layerIdA > layerIdB) return 1;
+      return 0;
     });
-    let data = activeLayersArray.sort(
-      (a, b) =>
-        activeLayers.indexOf(a.props['layer-id']) -
-        activeLayers.indexOf(b.props['layer-id']),
-    );
     this.activeLayersHandler(activeLayersArray);
     return data;
   }
@@ -2731,7 +2751,7 @@ class MenuWidget extends React.Component {
   onDrop(e) {
     let dst = e.target.closest('div.active-layer');
     if (dst === this.draggingElement) return;
-
+    let id = dst.id.split('_').slice(-4).join('_');
     //First, we decide how to insert the element in the DOM
     let init_ord = this.draggingElement.getAttribute('layer-order');
     let dst_ord = dst.getAttribute('layer-order');
@@ -2742,6 +2762,9 @@ class MenuWidget extends React.Component {
       dst.parentElement.insertBefore(this.draggingElement, dst);
     }
 
+    if (!this.state.draggedElements.includes(id)) {
+      this.setState({ draggedElements: [...this.state.draggedElements, id] });
+    }
     this.layersReorder();
     this.saveLayerOrder();
   }
@@ -3378,16 +3401,72 @@ class MenuWidget extends React.Component {
   }
 
   deleteFilteredLayer(layer) {
-    let layers = this.layers;
-    if (layers['lcc_filter'] && layer.includes('all_lcc')) {
-      delete layers['lcc_filter'];
-    } else if (layers['lc_filter'] && layer.includes('all_present_lc')) {
-      delete layers['lc_filter'];
-    } else if (layers['klc_filter'] && layer.includes('cop_klc')) {
-      layers['klc_filter'].visible = false;
-    } else if (layers['pa_filter'] && layer.includes('protected_areas')) {
-      layers['pa_filter'].visible = false;
+    if (
+      !(
+        layer.includes('all_lcc') ||
+        layer.includes('all_present') ||
+        layer.includes('cop_klc') ||
+        layer.includes('protected_areas')
+      )
+    )
+      return;
+    let filterLayer;
+    //let temp;
+    let updatedHotspotData = this.props.hotspotData;
+    let updatedFilteredLayers = this.props.hotspotData['filteredLayers'];
+    if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
+      this.layers['lcc_filter'].visible = false;
+      filterLayer = this.props.map.findLayerById('lcc_filter');
+      if (filterLayer !== undefined) {
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      delete updatedFilteredLayers['lcc_filter'];
+      delete this.layers['lcc_filter'];
+    } else if (this.layers['lc_filter'] && layer.includes('all_present_lc')) {
+      this.layers['lc_filter'].visible = false;
+      filterLayer = this.props.map.findLayerById('lc_filter');
+      if (filterLayer !== undefined) {
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      delete updatedFilteredLayers['lc_filter'];
+      delete this.layers['lc_filter'];
+    } else if (
+      this.layers['klc_filter'] !== undefined &&
+      layer.includes('cop_klc')
+    ) {
+      this.layers['klc_filter'].visible = false;
+      this.layers[layer].visible = false;
+      filterLayer = this.props.map.findLayerById('klc_filter');
+      if (filterLayer !== undefined) {
+        //  temp = filterLayer;
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      delete updatedFilteredLayers['klc_filter'];
+      //delete this.layers['klc_filter'];
+    } else if (
+      this.layers['pa_filter'] !== undefined &&
+      layer.includes('protected_areas')
+    ) {
+      this.layers['pa_filter'].visible = false;
+      this.layers[layer].visible = false;
+      filterLayer = this.props.map.findLayerById('pa_filter');
+      if (filterLayer !== undefined) {
+        //  temp = filterLayer;
+        filterLayer.clear();
+        filterLayer.destroy();
+        this.props.map.remove(filterLayer);
+      }
+      delete updatedFilteredLayers['pa_filter'];
     }
+    this.props.mapLayersHandler(this.layers);
+    updatedHotspotData['filteredLayers'] = updatedFilteredLayers;
+    this.props.hotspotDataHandler(updatedHotspotData);
   }
 
   /**

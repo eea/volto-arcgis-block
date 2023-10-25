@@ -17,6 +17,10 @@ class HotspotWidget extends React.Component {
     this.state = {
       showMapMenu: false,
       activeLayers: {},
+      selectedArea: null,
+      lcYear: null,
+      lccYear: null,
+      activeLayersArray: [],
     };
     this.menuClass =
       'esri-icon-filter esri-widget--button esri-widget esri-interactive';
@@ -40,12 +44,15 @@ class HotspotWidget extends React.Component {
     this.layerModelInit = this.layerModelInit.bind(this);
     this.getBBoxData = this.getBBoxData.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
+    this.filteredLayersToHotspotData = this.filteredLayersToHotspotData.bind(
+      this,
+    );
     this.mapCfg = this.props.mapCfg;
-    //this.getLayerParameters();
     this.selectedArea = null;
     this.lcYear = null;
     this.lccYear = null;
     this.urls = this.props.urls;
+    this.layers = this.props.selectedLayers;
   }
 
   loader() {
@@ -184,65 +191,24 @@ class HotspotWidget extends React.Component {
 
   async handleApplyFilter(typeFilter) {
     let typeLegend;
-    const activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
-    this.props.loadingHandler(true);
+    let activeLayers =
+      this.props.hotspotData && this.props.hotspotData['activeLayers']
+        ? Object.keys(this.props.hotspotData['activeLayers'])
+        : [];
+    let filteredLayers =
+      this.props.hotspotData && this.props.hotspotData['filteredLayers']
+        ? Object.keys(this.props.hotspotData['filteredLayers'])
+        : [];
+    let layersToAdd = {};
 
-    if (this.props.selectedLayers) {
-      //Clear previous selections when applying a new filter
-      var currentLccLayer = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('lcc_filter'),
-      );
-      if (currentLccLayer) delete this.props.selectedLayers[currentLccLayer];
-
-      var currentLcLayer = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('lc_filter'),
-      );
-      if (currentLcLayer) delete this.props.selectedLayers[currentLcLayer];
-
-      var currentKlcLayer = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('klc_filter'),
-      );
-      if (currentKlcLayer) delete this.props.selectedLayers[currentKlcLayer];
-
-      var currentPaLayer = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('pa_filter'),
-      );
-      if (currentPaLayer) delete this.props.selectedLayers[currentPaLayer];
-
-      var currentLcckey = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('all_lcc'),
-      );
-      var currentLckey = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('all_present_lc'),
-      );
-      var currentKlckey = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('cop_klc'),
-      );
-      var currentPakey = Object.keys(this.props.selectedLayers).find((e) =>
-        e.includes('protected_areas'),
-      );
-      if (currentLcckey) {
-        //this.props.map.remove(this.props.selectedLayers[currentLcckey]);
-        this.props.selectedLayers[currentLcckey].visible = false;
-      }
-      if (currentLckey) {
-        //this.props.map.remove(this.props.selectedLayers[currentLckey]);
-        this.props.selectedLayers[currentLckey].visible = false;
-      }
-      if (currentKlckey) {
-        //this.props.map.remove(this.props.selectedLayers[currentKlckey]);
-        this.props.selectedLayers[currentKlckey].visible = false;
-      }
-      if (currentPakey) {
-        //this.props.map.remove(this.props.selectedLayers[currentPakey]);
-        this.props.selectedLayers[currentPakey].visible = false;
-      }
-    }
     typeFilter.forEach((type) => {
+      let filterLayer;
+
       if (type === 'lcc') {
         let selectLccBoxTime = document.getElementById('select-klc-lccTime')
           .value;
-        this.lccYear = selectLccBoxTime;
+        //this.lccYear = selectLccBoxTime;
+        this.setState({ lccYear: selectLccBoxTime });
         var selectBoxHighlightsLcc = document
           .getElementById('select-klc-lccTime')
           .value.match(/\d+/g)
@@ -258,30 +224,19 @@ class HotspotWidget extends React.Component {
           }
         }
 
-        if (this.esriLayer_lcc !== null) {
-          if (this.esriLayer_lcc2 !== null) {
-            this.props.map.remove(this.esriLayer_lcc2);
-          }
+        filterLayer = this.esriLayer_lcc;
 
-          this.esriLayer_lcc.sublayers.items[0].name = this.addLegendName(
-            typeLegend,
-          );
-          this.esriLayer_lcc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
-            typeLegend,
-          );
-          this.esriLayer_lcc.customLayerParameters['CQL_FILTER'] =
-            'klc_code LIKE ' +
-            "'" +
-            this.dataKlc_code +
-            "'" +
-            " AND in_pa = 'not_defined' AND date = " +
-            selectBoxHighlightsLcc;
-          this.props.map.add(this.esriLayer_lcc);
-          this.props.selectedLayers['lcc_filter'] = this.esriLayer_lcc;
-          this.props.selectedLayers['lcc_filter'].visible = true;
-          this.esriLayer_lcc2 = this.esriLayer_lcc;
-          //this.layerModelInit();
-        }
+        filterLayer.sublayers.items[0].name = this.addLegendName(typeLegend);
+        filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
+          typeLegend,
+        );
+        filterLayer.customLayerParameters['CQL_FILTER'] =
+          'klc_code LIKE ' +
+          "'" +
+          this.dataKlc_code +
+          "'" +
+          " AND in_pa = 'not_defined' AND date = " +
+          selectBoxHighlightsLcc;
       }
       if (type === 'lc') {
         for (let i = 0; i < activeLayers.length; i++) {
@@ -296,80 +251,94 @@ class HotspotWidget extends React.Component {
 
         let selectLcBoxTime = document.getElementById('select-klc-lcTime')
           .value;
-        this.lcYear = selectLcBoxTime;
+        //this.lcYear = selectLcBoxTime;
+        this.setState({ lcYear: selectLcBoxTime });
         var selectBoxHighlightsLc = document
           .getElementById('select-klc-lcTime')
           .value.match(/\d+/g)
           .map(Number)[0];
 
-        if (this.esriLayer_lc !== null) {
-          if (this.esriLayer_lc2 !== null) {
-            this.props.map.remove(this.esriLayer_lc2);
-          }
-          this.esriLayer_lc.sublayers.items[0].name = this.addLegendName(
-            typeLegend,
-          );
-          this.esriLayer_lc.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
-            typeLegend,
-          );
-          this.esriLayer_lc.customLayerParameters['CQL_FILTER'] =
-            'klc_code LIKE ' +
-            "'" +
-            this.dataKlc_code +
-            "'" +
-            " AND in_pa = 'not_defined' AND date = " +
-            selectBoxHighlightsLc;
-          this.props.map.add(this.esriLayer_lc);
-          this.props.selectedLayers['lc_filter'] = this.esriLayer_lc;
-          this.props.selectedLayers['lc_filter'].visible = true;
-          this.esriLayer_lc2 = this.esriLayer_lc;
-        }
+        filterLayer = this.esriLayer_lc;
+
+        filterLayer.sublayers.items[0].name = this.addLegendName(typeLegend);
+        filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
+          typeLegend,
+        );
+        filterLayer.customLayerParameters['CQL_FILTER'] =
+          'klc_code LIKE ' +
+          "'" +
+          this.dataKlc_code +
+          "'" +
+          " AND in_pa = 'not_defined' AND date = " +
+          selectBoxHighlightsLc;
       }
-      this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
-        "klc_code LIKE '" + this.dataKlc_code + "'";
-      this.props.selectedLayers['klc_filter'] = this.esriLayer_klc;
       if (type === 'klc') {
-        if (this.esriLayer_klc !== null) {
-          if (this.esriLayer_klc2 !== null) {
-            this.props.map.remove(this.esriLayer_klc2);
-          }
-          this.props.map.add(this.esriLayer_klc);
-          this.props.selectedLayers['klc_filter'].visible = true;
-          this.esriLayer_klc2 = this.esriLayer_klc;
-          //this.layerModelInit();
-        }
+        this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
+          "klc_code LIKE '" + this.dataKlc_code + "'";
+        filterLayer = this.esriLayer_klc;
       }
-      this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
-        "klc_code LIKE '" + this.dataKlc_code + "'";
-      this.props.selectedLayers['pa_filter'] = this.esriLayer_pa;
       if (type === 'pa') {
-        if (this.esriLayer_pa !== null) {
-          if (this.esriLayer_pa2 !== null) {
-            this.props.map.remove(this.esriLayer_pa2);
-          }
-          this.props.map.add(this.esriLayer_pa);
-          this.props.selectedLayers['pa_filter'].visible = true;
-          this.esriLayer_pa2 = this.esriLayer_pa;
-          //this.layerModelInit();
-        }
+        this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
+          "klc_code LIKE '" + this.dataKlc_code + "'";
+        filterLayer = this.esriLayer_pa;
       }
-      this.layerModelInit();
-      this.setBBoxCoordinates(this.dataBBox);
-      //this.setState({ activeLayers: {[type+'_filter']: this.props.selectedLayers[type+'_filter']}})
+      layersToAdd[type + '_filter'] = filterLayer;
     });
+    activeLayers.forEach((activeLayer) => {
+      let layerId = Object.keys(this.layers).find((key) =>
+        key.includes(activeLayer),
+      );
+      if (layerId !== undefined) this.layers[layerId].visible = false;
+      let layer = this.props.map.findLayerById(layerId);
+      if (layer !== undefined) {
+        layer.clear();
+        layer.destroy();
+        this.props.map.remove(layer);
+      }
+    });
+    filteredLayers.forEach((filteredLayer) => {
+      let layerId = Object.keys(this.layers).find((key) =>
+        key.includes(filteredLayer),
+      );
+      if (layerId !== undefined) this.layers[layerId].visible = false;
+      let layer = this.props.map.findLayerById(layerId);
+      if (layer !== undefined) {
+        layer.clear();
+        layer.destroy();
+        this.props.map.remove(layer);
+      }
+    });
+    this.props.map.addMany(Object.values(layersToAdd));
+    Object.keys(layersToAdd).forEach((key) => {
+      this.layers[key] = layersToAdd[key];
+      this.layers[key].visible = true;
+    });
+    this.setBBoxCoordinates(this.dataBBox);
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
-    const layerView = await this.props.view.whenLayerView(
-      this.props.selectedLayers[typeFilter[0] + '_filter'],
-    );
-    layerView.watch('updating', (isUpdating) => {
-      if (!isUpdating) {
-        setTimeout(() => {
-          this.props.loadingHandler(false);
-        }, 1000);
-      }
+    this.props.mapLayersHandler(this.layers);
+    this.filteredLayersToHotspotData(Object.keys(layersToAdd));
+  }
+
+  filteredLayersToHotspotData(layerIds) {
+    let updatedFilteredLayers = this.props.hotspotData['filteredLayers'] || {};
+    let newHotspotData = this.props.hotspotData;
+    layerIds.forEach((layerId) => {
+      let layer = Object.entries(this.layers).find(
+        ([key, value]) => key === layerId,
+      )?.[1];
+
+      Object.keys(updatedFilteredLayers).forEach((key) => {
+        if (key === layerId) {
+          delete updatedFilteredLayers[key];
+        }
+      });
+
+      updatedFilteredLayers[layerId] = layer;
     });
+    newHotspotData['filteredLayers'] = updatedFilteredLayers;
+    return this.props.hotspotDataHandler(newHotspotData);
   }
 
   dropdownAnimation() {
@@ -389,7 +358,6 @@ class HotspotWidget extends React.Component {
 
   openMenu() {
     if (this.state.showMapMenu) {
-      //this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -403,9 +371,6 @@ class HotspotWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
     } else {
-      //this.getLayerParameters();
-      //if (this.getLayerParameters.length !== 0)
-      //this.getKLCNames(this.dataJSONNames, this.selectedArea);
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
@@ -432,9 +397,6 @@ class HotspotWidget extends React.Component {
       })
       .then((data) => {
         this.dataJSONNames = data.nodes;
-        //if (this.selectedArea == null) {
-        //  this.selectedArea = data.nodes[0].node.klc_name;
-        //}
       })
       .catch(function (error) {
         /* console.log('error while getting data'); */
@@ -475,6 +437,7 @@ class HotspotWidget extends React.Component {
     let lccContainer = document.querySelector('.landCoverChangeContainer');
     let lccTimeSelect = document.querySelector('#select-klc-lccTime');
     let lcTimeSelect = document.querySelector('#select-klc-lcTime');
+    if (lcContainer === null || lccContainer === null) return;
     if (
       (lcContainer.style.display === 'block' &&
         lcTimeSelect.value === 'default') ||
@@ -541,12 +504,14 @@ class HotspotWidget extends React.Component {
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
 
-    if (selectedOption !== this.selectedArea) {
-      this.lcYear = null;
-      this.lccYear = null;
+    if (selectedOption !== this.state.selectedArea) {
+      this.setState({
+        lcYear: null,
+        lccYear: null,
+      });
     }
 
-    this.selectedArea = selectedOption;
+    //this.selectedArea = selectedOption;
 
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
@@ -632,16 +597,16 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.state.selectedArea)) {
               selectBox.value = 'default';
               continue;
             } else {
-              selectBox.value = this.selectedArea;
-              if (this.lcYear !== null) {
-                selectBoxLcTime.value = this.lcYear;
+              selectBox.value = this.state.selectedArea;
+              if (this.state.lcYear !== null) {
+                selectBoxLcTime.value = this.state.lcYear;
               }
-              if (this.lccYear !== null) {
-                selectBoxLccTime.value = this.lccYear;
+              if (this.state.lccYear !== null) {
+                selectBoxLccTime.value = this.state.lccYear;
               }
               break; // move break statement inside the if block
             }
@@ -656,18 +621,18 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.state.selectedArea)) {
               selectBox.value = 'default';
               continue;
             } else {
-              selectBox.value = this.selectedArea;
-              if (this.lcYear !== null) {
-                selectBoxLcTime.value = this.lcYear;
+              selectBox.value = this.state.selectedArea;
+              if (this.state.lcYear !== null) {
+                selectBoxLcTime.value = this.state.lcYear;
               }
-              if (this.lccYear !== null) {
-                selectBoxLccTime.value = this.lccYear;
+              if (this.state.lccYear !== null) {
+                selectBoxLccTime.value = this.state.lccYear;
               }
-              break; // move break statement inside the if block
+              break;
             }
           }
           break;
@@ -738,6 +703,29 @@ class HotspotWidget extends React.Component {
   }
 
   render() {
+    let divs = [
+      {
+        id: 'all_present_lc',
+        func: this.renderPresentLandCover,
+        className: 'presentLandCoverContainer',
+      },
+      {
+        id: 'all_lcc',
+        func: this.renderLandCoverChange,
+        className: 'landCoverChangeContainer',
+      },
+    ];
+
+    divs.sort((a, b) => {
+      let indexA = this.state.activeLayersArray.findIndex((layer) =>
+        layer.getAttribute('layer-id').includes(a.id),
+      );
+      let indexB = this.state.activeLayersArray.findIndex((layer) =>
+        layer.getAttribute('layer-id').includes(b.id),
+      );
+      if (indexA === -1 || indexB === -1) return 0;
+      return indexA - indexB;
+    });
     return (
       <>
         <div ref={this.container} className="hotspot-container">
@@ -772,8 +760,7 @@ class HotspotWidget extends React.Component {
                       <select
                         onBlur={() => {}}
                         onChange={(e) => {
-                          this.getKLCNames(this.dataJSONNames, e.target.value);
-                          this.disableButton();
+                          this.setState({ selectedArea: e.target.value });
                         }}
                         id="select-klc-area"
                         className="esri-select"
@@ -781,11 +768,10 @@ class HotspotWidget extends React.Component {
                     </label>
                   </div>
                 </div>
-                <div className="presentLandCoverContainer">
-                  {this.renderPresentLandCover()}
-                </div>
-                <div className="landCoverChangeContainer">
-                  {this.renderLandCoverChange()}
+                <div>
+                  {divs.map((div) => (
+                    <div className={div.className}>{div.func()}</div>
+                  ))}
                 </div>
                 <button
                   id="applyFilterButton"
@@ -802,6 +788,31 @@ class HotspotWidget extends React.Component {
     );
   }
 
+  //sortHotspotTabs = () => {
+  //  let activeLayersArray = Array.from(document.querySelectorAll('.active-layer'));
+  //  let divs = [
+  //    { id: 'all_present_lc', func: this.renderPresentLandCover, className: 'presentLandCoverContainer' },
+  //    { id: 'all_lcc', func: this.renderLandCoverChange, className: 'landCoverChangeContainer' }
+  //  ];
+  //
+  //  divs.sort((a, b) => {
+  //    let indexA = activeLayersArray.findIndex(layer => layer.getAttribute('layer-id').includes(a.id));
+  //    let indexB = activeLayersArray.findIndex(layer => layer.getAttribute('layer-id').includes(b.id));
+  //    if (indexA === -1 || indexB === -1) return 0;
+  //    return indexA - indexB;
+  //  });
+  //
+  //  return (
+  //    <div>
+  //      {divs.map(div => (
+  //        <div className={div.className}>
+  //          {div.func()}
+  //        </div>
+  //      ))}
+  //    </div>
+  //  );
+  //}
+
   /**
    * This method is executed after the rener method is executed
    */
@@ -811,12 +822,22 @@ class HotspotWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
     this.getBBoxData();
+    this.props.view.map.layers.on('change', () => {
+      this.setState({
+        activeLayersArray: Array.from(
+          document.querySelectorAll('.active-layer'),
+        ),
+      });
+      const newHotspotData = this.props.hotspotData;
+      this.props.hotspotDataHandler(newHotspotData);
+    });
   }
 
   componentDidUpdate(prevState, prevProps) {
     if (prevProps.hotspotData !== this.props.hotspotData) {
-      this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
       this.disableButton();
+      //this.layerModelInit();
     }
   }
 }

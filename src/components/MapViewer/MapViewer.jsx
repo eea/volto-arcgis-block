@@ -55,8 +55,8 @@ class MapViewer extends React.Component {
     });
     this.state = {
       layerLoading: false,
+      layers: {},
     };
-    this.layers = {};
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
     this.props.mapviewer_config.loading = true;
@@ -64,6 +64,11 @@ class MapViewer extends React.Component {
     this.userID = null;
     this.loadingHandler = this.loadingHandler.bind(this);
     this.hotspotDataHandler = this.hotspotDataHandler.bind(this);
+    this.mapLayersHandler = this.mapLayersHandler.bind(this);
+  }
+
+  mapLayersHandler(newLayers) {
+    this.setState({ layers: newLayers });
   }
 
   loadingHandler(bool) {
@@ -307,6 +312,7 @@ class MapViewer extends React.Component {
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
           urls={this.cfgUrls}
+          layerLoading={this.state.layerLoading}
           hotspotData={this.state.hotspotData}
           hotspotDataHandler={this.hotspotDataHandler}
         />
@@ -364,7 +370,7 @@ class MapViewer extends React.Component {
         <HotspotWidget
           view={this.view}
           map={this.map}
-          selectedLayers={this.layers}
+          selectedLayers={this.state.layers}
           mapViewer={this}
           layers={sessionStorage}
           mapCfg={this.mapCfg}
@@ -372,6 +378,7 @@ class MapViewer extends React.Component {
           loadingHandler={this.loadingHandler}
           hotspotData={this.state.hotspotData}
           hotspotDataHandler={this.hotspotDataHandler}
+          mapLayersHandler={this.mapLayersHandler}
         />
       );
   }
@@ -388,12 +395,13 @@ class MapViewer extends React.Component {
           mapViewer={this}
           updateArea={this.updateArea}
           area={this.state.area}
-          layers={this.layers}
+          layers={this.state.layers}
           activeLayersHandler={this.activeLayersHandler}
           urls={this.cfgUrls}
           loadingHandler={this.loadingHandler}
           hotspotDataHandler={this.hotspotDataHandler}
           hotspotData={this.state.hotspotData}
+          mapLayersHandler={this.mapLayersHandler}
         />
       ); //call conf
   }
