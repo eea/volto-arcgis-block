@@ -1244,7 +1244,14 @@ input[type='range']::-ms-track {
   box-shadow: none;
 }
 
-.zoom-in-message {
+.hotspot-filter-message-container,
+.hotspot-filter-message,
+.hotspot-filter-message-dataset {
+  display: block;
+}
+
+.zoom-in-message,
+.hotspot-filter-message {
   padding: 0.1rem 0.6rem 0.1rem 0.6rem;
   margin-top: 0.2rem;
   background: #a0b128;
