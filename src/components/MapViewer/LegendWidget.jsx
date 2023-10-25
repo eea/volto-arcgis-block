@@ -67,6 +67,7 @@ class LegendWidget extends React.Component {
   brokenLegendImagePatch() {
     let img = {};
     const collection = document.getElementsByClassName('esri-legend__symbol');
+    if (collection.length === 0) return;
     Array.prototype.forEach.call(collection, (element) => {
       if (element.hasChildNodes()) {
         for (let i = 0; i < element.childNodes.length; i++) {
