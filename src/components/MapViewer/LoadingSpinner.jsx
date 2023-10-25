@@ -23,40 +23,35 @@ class LoadingSpinner extends React.Component {
   }
 
   listenForLayerChanges() {
-    this.props.view.map.layers.on("change", (event) => {
+    this.props.view.map.layers.on('change', (event) => {
       if (event.added.length > 0)
         if (this.state.loading === false) {
           this.setState({ loading: true });
           this.showLoading();
         }
     });
-    this.props.view.on("layerview-create", (event) => {
+    this.props.view.on('layerview-create', (event) => {
       if (event.layer.loadStatus === 'loaded') {
         this.props.view.watch('updating', (isUpdating) => {
           if (!isUpdating) {
             if (this.state.loading === true) {
-              setTimeout(() => {
-                this.setState({ loading: false });
-                this.showLoading();
-              });
+              this.setState({ loading: false });
+              this.showLoading();
             }
           }
-        })        
+        });
       }
     });
-    this.props.view.on("layerview-create-error", (event) => {
+    this.props.view.on('layerview-create-error', (event) => {
       if (event.layer.loadError !== null) {
-        console.log(event.layer.loadError);
         if (this.state.loading === true) {
-          setTimeout(() => {
-            this.setState({ loading: false });
-            this.showLoading();
-          })
+          this.setState({ loading: false });
+          this.showLoading();
         }
       }
     });
   }
-  
+
   showLoading() {
     if (this.state.loading === false) {
       this.container.current.style.display = 'none';
@@ -68,16 +63,22 @@ class LoadingSpinner extends React.Component {
 
   async componentDidMount() {
     await this.loader();
-    this.props.view.when(() => {
-      this.props.view.ui.add(this.container.current, 'manual');
-      this.listenForLayerChanges();
+    //this.props.view.when(() => {
+    //  this.props.view.ui.add(this.container.current, 'manual');
+    //  this.listenForLayerChanges();
+    //});
+    watchUtils.when(this.props.view, 'ready', (isReady) => {
+      if (isReady) {
+        this.props.view.ui.add(this.container.current, 'manual');
+        this.listenForLayerChanges();
+      }
     });
   }
 
   componentDidUpdate(prevState) {
-//    if (this.state.loading !== prevState.loading) {
-//      this.showLoading();
-//    }
+    //    if (this.state.loading !== prevState.loading) {
+    //      this.showLoading();
+    //    }
   }
 
   render() {

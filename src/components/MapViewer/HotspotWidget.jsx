@@ -17,6 +17,9 @@ class HotspotWidget extends React.Component {
     this.state = {
       showMapMenu: false,
       activeLayers: {},
+      selectedArea: null,
+      lcYear: null,
+      lccYear: null,
     };
     this.menuClass =
       'esri-icon-filter esri-widget--button esri-widget esri-interactive';
@@ -203,7 +206,8 @@ class HotspotWidget extends React.Component {
       if (type === 'lcc') {
         let selectLccBoxTime = document.getElementById('select-klc-lccTime')
           .value;
-        this.lccYear = selectLccBoxTime;
+        //this.lccYear = selectLccBoxTime;
+        this.setState({ lccYear: selectLccBoxTime });
         var selectBoxHighlightsLcc = document
           .getElementById('select-klc-lccTime')
           .value.match(/\d+/g)
@@ -246,7 +250,8 @@ class HotspotWidget extends React.Component {
 
         let selectLcBoxTime = document.getElementById('select-klc-lcTime')
           .value;
-        this.lcYear = selectLcBoxTime;
+        //this.lcYear = selectLcBoxTime;
+        this.setState({ lcYear: selectLcBoxTime });
         var selectBoxHighlightsLc = document
           .getElementById('select-klc-lcTime')
           .value.match(/\d+/g)
@@ -497,12 +502,14 @@ class HotspotWidget extends React.Component {
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
 
-    if (selectedOption !== this.selectedArea) {
-      this.lcYear = null;
-      this.lccYear = null;
+    if (selectedOption !== this.state.selectedArea) {
+      this.setState({
+        lcYear: null,
+        lccYear: null,
+      });
     }
 
-    this.selectedArea = selectedOption;
+    //this.selectedArea = selectedOption;
 
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
@@ -588,16 +595,16 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.state.selectedArea)) {
               selectBox.value = 'default';
               continue;
             } else {
-              selectBox.value = this.selectedArea;
-              if (this.lcYear !== null) {
-                selectBoxLcTime.value = this.lcYear;
+              selectBox.value = this.state.selectedArea;
+              if (this.state.lcYear !== null) {
+                selectBoxLcTime.value = this.state.lcYear;
               }
-              if (this.lccYear !== null) {
-                selectBoxLccTime.value = this.lccYear;
+              if (this.state.lccYear !== null) {
+                selectBoxLccTime.value = this.state.lccYear;
               }
               break; // move break statement inside the if block
             }
@@ -612,16 +619,16 @@ class HotspotWidget extends React.Component {
             selectBox.options.add(new Option(option, option, option));
           }
           for (let u = 0; u < selectBox.options.length; u++) {
-            if (!selectBox.options[u].label.includes(this.selectedArea)) {
+            if (!selectBox.options[u].label.includes(this.state.selectedArea)) {
               selectBox.value = 'default';
               continue;
             } else {
-              selectBox.value = this.selectedArea;
-              if (this.lcYear !== null) {
-                selectBoxLcTime.value = this.lcYear;
+              selectBox.value = this.state.selectedArea;
+              if (this.state.lcYear !== null) {
+                selectBoxLcTime.value = this.state.lcYear;
               }
-              if (this.lccYear !== null) {
-                selectBoxLccTime.value = this.lccYear;
+              if (this.state.lccYear !== null) {
+                selectBoxLccTime.value = this.state.lccYear;
               }
               break;
             }
@@ -728,8 +735,9 @@ class HotspotWidget extends React.Component {
                       <select
                         onBlur={() => {}}
                         onChange={(e) => {
-                          this.getKLCNames(this.dataJSONNames, e.target.value);
-                          this.disableButton();
+                          this.setState({ selectedArea: e.target.value });
+                          //this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
+                          //this.disableButton();
                         }}
                         id="select-klc-area"
                         className="esri-select"
@@ -767,11 +775,15 @@ class HotspotWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
     this.getBBoxData();
+    this.props.view.map.layers.on('change', () => {
+      const newHotspotData = this.props.hotspotData;
+      this.props.hotspotDataHandler(newHotspotData);
+    });
   }
 
   componentDidUpdate(prevState, prevProps) {
     if (prevProps.hotspotData !== this.props.hotspotData) {
-      this.getKLCNames(this.dataJSONNames, this.selectedArea);
+      this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
       this.disableButton();
       //this.layerModelInit();
     }
