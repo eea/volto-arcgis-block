@@ -45,6 +45,7 @@ class LegendWidget extends React.Component {
     });
   }
 
+  //set event listener to all images in legend
   scanImages() {
     let img = {};
     const collection = document.getElementsByClassName('esri-legend__symbol');
