@@ -326,8 +326,7 @@ class MenuWidget extends React.Component {
           }
         }
         if (!this.visibleLayers) this.visibleLayers = {};
-        this.view.watch('scale', (newValue) => {});
-        //this.handleRasterVectorLegend();
+        this.handleRasterVectorLegend();
         this.setState({});
       }
     });
@@ -1578,7 +1577,7 @@ class MenuWidget extends React.Component {
             const height = this.tileInfo.size[0];
             // create a canvas with 2D rendering context
             const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d'); //try modifying this value for 3d test UNAI
+            const context = canvas.getContext('2d');
             //canvas
             canvas.width = width;
             canvas.height = height;
