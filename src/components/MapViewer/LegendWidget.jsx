@@ -115,8 +115,9 @@ class LegendWidget extends React.Component {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Key Landscapes for Conservation borders in selected hotspots';
         } else if (img?.src?.includes('protected_areas')) {
-          img.src =
-            'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=protected_areas';
+          img.src = this.props.hotspotData.protected_areas[
+            'protected_areas'
+          ].FilterStaticImageLegend;
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Protected Areas in Key Landscapes for Conservation borders in selected hot-spots';
         } else if (img.style) {
@@ -130,7 +131,6 @@ class LegendWidget extends React.Component {
           span.innerHTML = 'No legend available';
           element.parentNode.appendChild(span);
         }
-        //debugger;
         if (
           img.closest('.esri-legend__service').firstElementChild.nodeName ===
             '#text' &&
