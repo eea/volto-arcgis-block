@@ -769,8 +769,10 @@ class HotspotWidget extends React.Component {
                   </div>
                 </div>
                 <div>
-                  {divs.map((div) => (
-                    <div className={div.className}>{div.func()}</div>
+                  {divs.map((div, i) => (
+                    <div key={i} className={div.className}>
+                      {div.func()}
+                    </div>
                   ))}
                 </div>
                 <button
