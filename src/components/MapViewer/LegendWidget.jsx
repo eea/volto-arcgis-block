@@ -227,9 +227,10 @@ class LegendWidget extends React.Component {
     if (prevState.loading !== this.state.loading) {
       if (this.state.loading === true) {
         setTimeout(() => {
-          this.brokenLegendImagePatch();
           if (this.props.download) {
             this.hideNutsLegend();
+          } else {
+            this.brokenLegendImagePatch();
           }
           this.setState({ loading: false });
         }, 2000);

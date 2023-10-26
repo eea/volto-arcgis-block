@@ -648,8 +648,10 @@ class MenuWidget extends React.Component {
     loadCss();
     await this.loader();
     await this.getTMSLayersJSON();
-    this.prepareHotspotLayers();
-    this.getHotspotLayerIds();
+    if (!this.props.download) {
+      this.prepareHotspotLayers();
+      this.getHotspotLayerIds();
+    }
     this.props.view.ui.add(this.container.current, 'top-left');
     if (this.props.download) {
       setTimeout(() => {
@@ -1915,7 +1917,9 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    this.activeLayersToHotspotData(elem.id);
+    if (!this.props.download) {
+      this.activeLayersToHotspotData(elem.id);
+    }
   }
 
   getHotspotLayerIds() {
