@@ -824,14 +824,16 @@ class HotspotWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.layerModelInit();
     this.getBBoxData();
-    this.props.view.map.layers.on('change', () => {
-      this.setState({
-        activeLayersArray: Array.from(
-          document.querySelectorAll('.active-layer'),
-        ),
+    this.props.view.when(() => {
+      this.props.view.map.layers.on('change', () => {
+        this.setState({
+          activeLayersArray: Array.from(
+            document.querySelectorAll('.active-layer'),
+          ),
+        });
+        const newHotspotData = this.props.hotspotData;
+        this.props.hotspotDataHandler(newHotspotData);
       });
-      const newHotspotData = this.props.hotspotData;
-      this.props.hotspotDataHandler(newHotspotData);
     });
   }
 
