@@ -32,7 +32,8 @@ class AreaWidget extends React.Component {
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
     // Enable defaultPopup option to charge popup and highlifght feature
     this.props.mapViewer.view.popup.defaultPopupTemplateEnabled = true;
-    this.nutsUrl = '';
+    this.nutsUrl =
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/0/query?f=json&text=&objectIds=&time=&timeRelation=esriTimeRelationOverlaps&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=*&returnGeometry=false&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&sqlFormat=none&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&';
     this.initFMI = this.initFMI.bind(this);
   }
 
