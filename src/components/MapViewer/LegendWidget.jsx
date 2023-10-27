@@ -122,7 +122,7 @@ class LegendWidget extends React.Component {
           ].FilterStaticImageLegend;
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
             'Protected Areas in Key Landscapes for Conservation borders in selected hot-spots';
-        } else if (img.style) {
+        } /*  else if (img.style) {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
             'none';
           img.style.display = 'none';
@@ -132,12 +132,12 @@ class LegendWidget extends React.Component {
           let span = document.createElement('span');
           span.innerHTML = 'No legend available';
           element.parentNode.appendChild(span);
-        }
+        } */
         if (
-          img.closest('.esri-legend__service').firstElementChild.nodeName ===
+          img?.closest('.esri-legend__service')?.firstElementChild?.nodeName ===
             'H3' &&
-          img.closest('.esri-legend__service').firstElementChild.textContent ===
-            'WMS'
+          img?.closest('.esri-legend__service')?.firstElementChild
+            ?.textContent === 'WMS'
         ) {
           img.closest('.esri-legend__service').firstElementChild.style.display =
             'none';
@@ -229,9 +229,8 @@ class LegendWidget extends React.Component {
         setTimeout(() => {
           if (this.props.download) {
             this.hideNutsLegend();
-          } else {
-            this.brokenLegendImagePatch();
           }
+          this.brokenLegendImagePatch();
           this.setState({ loading: false });
         }, 2000);
       }

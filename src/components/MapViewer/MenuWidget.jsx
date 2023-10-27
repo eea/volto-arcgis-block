@@ -1899,7 +1899,7 @@ class MenuWidget extends React.Component {
       this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
-        mapLayer.clear();
+        if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
         mapLayer.destroy();
         this.map.remove(this.layers[elem.id]);
       }
@@ -2599,7 +2599,9 @@ class MenuWidget extends React.Component {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else {
         // Takes the BBOX corresponding to the layer.
-        firstLayer = BBoxes[elem.attributes.layerid.value];
+        if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+          firstLayer = BBoxes[0];
+        } else firstLayer = BBoxes[elem.attributes.layerid.value];
       }
 
       let myExtent = new Extent({
