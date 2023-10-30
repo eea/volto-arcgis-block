@@ -121,12 +121,69 @@ class SwipeWidget extends React.Component {
     );
     selectTrailingLayer.options[0].disabled = true;
     this.map.layers.forEach((layer) => {
-      selectLeadingLayer.options.add(
-        new Option(this.getLayerTitle(layer), layer.id, layer.id),
-      );
-      selectTrailingLayer.options.add(
-        new Option(this.getLayerTitle(layer), layer.id, layer.id),
-      );
+      let layerId = layer.id;
+      if (this.layers['lcc_filter']) {
+        if (
+          layer.id === this.layers['all_lcc_a_pol_1_4_1_0'].id ||
+          layer.id === this.layers['all_lcc_b_pol_1_4_1_1'].id
+        ) {
+          layerId = this.layers['lcc_filter'].id;
+        }
+        if (layer.id !== this.layers['lcc_filter'].id) {
+          selectLeadingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+          selectTrailingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+        }
+      } else if (this.layers['lc_filter']) {
+        if (
+          layer.id === this.layers['all_present_lc_a_pol_1_4_0_0'].id ||
+          layer.id === this.layers['all_present_lc_b_pol_1_4_0_1'].id
+        ) {
+          layerId = this.layers['lc_filter'].id;
+        }
+        if (layer.id !== this.layers['lc_filter'].id) {
+          selectLeadingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+          selectTrailingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+        }
+      } else if (this.layers['klc_filter']) {
+        if (layer.id === this.layers['cop_klc_1_4_2_0'].id) {
+          layerId = this.layers['klc_filter'].id;
+        }
+        if (layer.id !== this.layers['klc_filter'].id) {
+          selectLeadingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+          selectTrailingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+        }
+      } else if (this.layers['pa_filter']) {
+        if (layer.id === this.layers['protected_areas_1_4_3_0'].id) {
+          layerId = this.layers['pa_filter'].id;
+        }
+        if (layer.id !== this.layers['pa_filter'].id) {
+          selectLeadingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+          selectTrailingLayer.options.add(
+            new Option(this.getLayerTitle(layer), layerId, layerId),
+          );
+        }
+      } else {
+        selectLeadingLayer.options.add(
+          new Option(this.getLayerTitle(layer), layerId, layerId),
+        );
+        selectTrailingLayer.options.add(
+          new Option(this.getLayerTitle(layer), layerId, layerId),
+        );
+      }
     });
   }
   removeOptions(selectElement) {
@@ -185,7 +242,39 @@ class SwipeWidget extends React.Component {
   loadVisibleLayers() {
     let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
     this.map.layers.forEach((layer) => {
-      layer.visible = true;
+      if (this.layers['lcc_filter']) {
+        if (
+          layer.id === this.layers['all_lcc_a_pol_1_4_1_0'].id ||
+          layer.id === this.layers['all_lcc_b_pol_1_4_1_1'].id
+        ) {
+          layer.visible = false;
+        } else {
+          layer.visible = true;
+        }
+      } else if (this.layers['lc_filter']) {
+        if (
+          layer.id === this.layers['all_present_lc_a_pol_1_4_0_0'].id ||
+          layer.id === this.layers['all_present_lc_b_pol_1_4_0_1'].id
+        ) {
+          layer.visible = false;
+        } else {
+          layer.visible = true;
+        }
+      } else if (this.layers['klc_filter']) {
+        if (layer.id === this.layers['cop_klc_1_4_2_0'].id) {
+          layer.visible = false;
+        } else {
+          layer.visible = true;
+        }
+      } else if (this.layers['pa_filter']) {
+        if (layer.id === this.layers['protected_areas_1_4_3_0'].id) {
+          layer.visible = false;
+        } else {
+          layer.visible = true;
+        }
+      } else {
+        layer.visible = true;
+      }
       if (vl) {
         for (const key in vl) {
           if (this.layers[key].id === layer.id) {

@@ -338,7 +338,7 @@ class MapViewer extends React.Component {
           view={this.view}
           mapViewer={this}
           map={this.map}
-          layers={this.layers}
+          layers={this.state.layers}
         />
       );
   }
