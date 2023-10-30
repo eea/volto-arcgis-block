@@ -134,6 +134,7 @@ class LegendWidget extends React.Component {
           element.parentNode.appendChild(span);
         } */
         if (
+          img.hasOwnProperty('closest') &&
           img?.closest('.esri-legend__service')?.firstElementChild?.nodeName ===
             'H3' &&
           img?.closest('.esri-legend__service')?.firstElementChild
