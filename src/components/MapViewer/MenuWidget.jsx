@@ -2037,13 +2037,21 @@ class MenuWidget extends React.Component {
         this.addCustomItemToLegend(layer);
       } else {
         // show existing one
-        existingItem.style.display = 'block';
+        if (!existingItem.innerText.includes('undefined'))
+          existingItem.style.display = 'block';
       }
     } else {
       // hide legend item
       if (existingItem) {
         existingItem.style.display = 'none';
       }
+    }
+    // hide no legend message
+    const noLegendMessage = document.querySelectorAll(
+      '.esri-legend__message',
+    )[0];
+    if (noLegendMessage) {
+      noLegendMessage.style.display = 'none';
     }
   }
 
@@ -2053,14 +2061,15 @@ class MenuWidget extends React.Component {
     let childDiv = legendDiv.firstChild;
 
     // create legend element
-    let legendItem = this.createStaticLegendImageNode(
-      layer.id,
-      layer.LayerTitle,
-      layer.StaticImageLegend,
-    );
-
-    // append to Legend widet
-    childDiv.appendChild(legendItem);
+    if (layer.LayerTitle !== undefined) {
+      let legendItem = this.createStaticLegendImageNode(
+        layer.id,
+        layer.LayerTitle,
+        layer.StaticImageLegend,
+      );
+      // append to Legend widet
+      childDiv.appendChild(legendItem);
+    }
 
     // hide no legend message
     const noLegendMessage = document.querySelectorAll(
@@ -3007,10 +3016,6 @@ class MenuWidget extends React.Component {
     } else if (layers.length > 0) {
       document.querySelector('.info-container').style.display = 'flex';
     }
-    if (!sessionStorage.getItem('hotspotFilterApplied')) {
-      this.props.mapViewer.closeActiveWidget();
-    }
-    this.renderHotspot();
   }
 
   getLayerTitle(layer) {
@@ -3219,12 +3224,6 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
 
-    this.saveVisibility();
-    this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
-    this.layersReorder();
-    this.saveLayerOrder();
-    this.checkInfoWidget();
-    this.setState({});
     if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
       // global dynamic land cover
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
@@ -3242,6 +3241,13 @@ class MenuWidget extends React.Component {
         }
       }
     }
+    this.saveVisibility();
+    this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, 0);
+    this.layersReorder();
+    this.saveLayerOrder();
+    this.checkInfoWidget();
+    this.toggleCustomLegendItem(this.layers[elem.id]);
+    this.setState({});
   }
 
   componentDidUpdate(prevState, prevProps) {
