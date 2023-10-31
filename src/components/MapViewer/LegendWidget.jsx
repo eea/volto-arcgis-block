@@ -223,6 +223,55 @@ class LegendWidget extends React.Component {
     });
   }
 
+  /**
+   * Method that returns true or false if session storage has any visible active layer
+   */
+  enabledVisilelayers() {
+    let enabledVisilelayers = false;
+    let visiblelayersFromStorage = JSON.parse(sessionStorage.visibleLayers);
+    let visibleLayerKeys = Object.keys(visiblelayersFromStorage);
+    for (let i = 0; i < visibleLayerKeys.length; i++) {
+      let currentLayer = visibleLayerKeys[i];
+      if (visiblelayersFromStorage[currentLayer][1] === 'eye')
+        enabledVisilelayers = true;
+    }
+    return enabledVisilelayers;
+  }
+
+  /**
+   * Method to handle "No legend" message visibility
+   */
+  handleNoLegendMessage() {
+    const noLegendMessage = document.querySelectorAll(
+      '.esri-legend__message',
+    )[0];
+    if (sessionStorage.checkedLayers && sessionStorage.checkedLayers === '[]') {
+      // show no legend message
+      if (noLegendMessage) {
+        noLegendMessage.style.display = 'block';
+      }
+    } else if (
+      sessionStorage.visibleLayers &&
+      (this.enabledVisilelayers() || sessionStorage.visibleLayers === '{}')
+    ) {
+      // hide no legend message
+      if (noLegendMessage) {
+        noLegendMessage.style.display = 'none';
+      }
+    } else if (noLegendMessage) {
+      if (
+        sessionStorage.checkedLayers &&
+        sessionStorage.checkedLayers === '[]'
+      ) {
+        noLegendMessage.style.display = 'block';
+      } else if (sessionStorage.visibleLayers && !this.enabledVisilelayers()) {
+        noLegendMessage.style.display = 'block';
+      } else {
+        noLegendMessage.style.display = 'none';
+      }
+    }
+  }
+
   componentDidUpdate(prevState, prevProps) {
     if (prevState.loading !== this.state.loading) {
       if (this.state.loading === true) {
@@ -234,6 +283,7 @@ class LegendWidget extends React.Component {
           this.setState({ loading: false });
         }, 2000);
       }
+      this.handleNoLegendMessage();
     }
   }
 
