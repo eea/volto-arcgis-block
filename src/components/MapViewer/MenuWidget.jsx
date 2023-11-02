@@ -1920,6 +1920,7 @@ class MenuWidget extends React.Component {
     if (!this.props.download) {
       this.activeLayersToHotspotData(elem.id);
     }
+    this.renderHotspot();
   }
 
   getHotspotLayerIds() {
