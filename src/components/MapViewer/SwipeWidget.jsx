@@ -70,11 +70,22 @@ class SwipeWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.loadOptions();
-      this.map.layers.on('change', () => {
-        this.loadVisibleLayers();
-        this.swipe.leadingLayers.removeAll();
-        this.swipe.trailingLayers.removeAll();
-        this.props.view.ui.remove(this.swipe);
+      this.map.layers.on('change', (change) => {
+        if (change.added[0]) {
+          if (change.added[0].DatasetId) {
+            this.loadVisibleLayers();
+            this.swipe.leadingLayers.removeAll();
+            this.swipe.trailingLayers.removeAll();
+            this.props.view.ui.remove(this.swipe);
+          }
+        } else if (change.removed[0]) {
+          if (change.removed[0].DatasetId) {
+            this.loadVisibleLayers();
+            this.swipe.leadingLayers.removeAll();
+            this.swipe.trailingLayers.removeAll();
+            this.props.view.ui.remove(this.swipe);
+          }
+        }
         this.loadOptions();
       });
       this.setState({ showMapMenu: true });
@@ -120,6 +131,7 @@ class SwipeWidget extends React.Component {
       new Option('Select a trailing layer', 'default', true, true),
     );
     selectTrailingLayer.options[0].disabled = true;
+    let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     this.map.layers.forEach((layer) => {
       let layerId = layer.id;
       if (this.layers['lcc_filter']) {
@@ -129,46 +141,27 @@ class SwipeWidget extends React.Component {
         ) {
           layerId = this.layers['lcc_filter'].id;
         }
-        if (layer.id !== this.layers['lcc_filter'].id) {
-          selectLeadingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-          selectTrailingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-        }
-      } else if (this.layers['lc_filter']) {
+      }
+      if (this.layers['lc_filter']) {
         if (
           layer.id === this.layers['all_present_lc_a_pol_1_4_0_0'].id ||
           layer.id === this.layers['all_present_lc_b_pol_1_4_0_1'].id
         ) {
           layerId = this.layers['lc_filter'].id;
         }
-        if (layer.id !== this.layers['lc_filter'].id) {
-          selectLeadingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-          selectTrailingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-        }
-      } else if (this.layers['klc_filter']) {
+      }
+      if (this.layers['klc_filter']) {
         if (layer.id === this.layers['cop_klc_1_4_2_0'].id) {
           layerId = this.layers['klc_filter'].id;
         }
-        if (layer.id !== this.layers['klc_filter'].id) {
-          selectLeadingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-          selectTrailingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-        }
-      } else if (this.layers['pa_filter']) {
+      }
+      if (this.layers['pa_filter']) {
         if (layer.id === this.layers['protected_areas_1_4_3_0'].id) {
           layerId = this.layers['pa_filter'].id;
         }
-        if (layer.id !== this.layers['pa_filter'].id) {
+      }
+      cl.forEach((checkedLayer) => {
+        if (this.layers[checkedLayer].id === layer.id) {
           selectLeadingLayer.options.add(
             new Option(this.getLayerTitle(layer), layerId, layerId),
           );
@@ -176,14 +169,7 @@ class SwipeWidget extends React.Component {
             new Option(this.getLayerTitle(layer), layerId, layerId),
           );
         }
-      } else {
-        selectLeadingLayer.options.add(
-          new Option(this.getLayerTitle(layer), layerId, layerId),
-        );
-        selectTrailingLayer.options.add(
-          new Option(this.getLayerTitle(layer), layerId, layerId),
-        );
-      }
+      });
     });
   }
   removeOptions(selectElement) {
@@ -248,32 +234,33 @@ class SwipeWidget extends React.Component {
           layer.id === this.layers['all_lcc_b_pol_1_4_1_1'].id
         ) {
           layer.visible = false;
-        } else {
+        } else if (layer.id === this.layers['lcc_filter'].id) {
           layer.visible = true;
         }
-      } else if (this.layers['lc_filter']) {
+      }
+      if (this.layers['lc_filter']) {
         if (
           layer.id === this.layers['all_present_lc_a_pol_1_4_0_0'].id ||
           layer.id === this.layers['all_present_lc_b_pol_1_4_0_1'].id
         ) {
           layer.visible = false;
-        } else {
+        } else if (layer.id === this.layers['lc_filter'].id) {
           layer.visible = true;
         }
-      } else if (this.layers['klc_filter']) {
+      }
+      if (this.layers['klc_filter']) {
         if (layer.id === this.layers['cop_klc_1_4_2_0'].id) {
           layer.visible = false;
-        } else {
+        } else if (layer.id === this.layers['klc_filter'].id) {
           layer.visible = true;
         }
-      } else if (this.layers['pa_filter']) {
+      }
+      if (this.layers['pa_filter']) {
         if (layer.id === this.layers['protected_areas_1_4_3_0'].id) {
           layer.visible = false;
-        } else {
+        } else if (layer.id === this.layers['pa_filter'].id) {
           layer.visible = true;
         }
-      } else {
-        layer.visible = true;
       }
       if (vl) {
         for (const key in vl) {
