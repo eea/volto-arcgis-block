@@ -81,9 +81,15 @@ class SwipeWidget extends React.Component {
         } else if (change.removed[0]) {
           if (change.removed[0].DatasetId) {
             this.loadVisibleLayers();
-            this.swipe.leadingLayers.removeAll();
-            this.swipe.trailingLayers.removeAll();
-            this.props.view.ui.remove(this.swipe);
+            if (this.swipe.leadingLayers) {
+              this.swipe.leadingLayers.removeAll();
+            }
+            if (this.swipe.trailingLayers) {
+              this.swipe.trailingLayers.removeAll();
+            }
+            if (this.props.view.ui) {
+              this.props.view.ui.remove(this.swipe);
+            }
           }
         }
         this.loadOptions();
@@ -120,17 +126,21 @@ class SwipeWidget extends React.Component {
   }
   loadOptions() {
     var selectLeadingLayer = document.getElementById('select-leading-layer');
+    if (selectLeadingLayer) {
+      this.removeOptions(selectLeadingLayer);
+      selectLeadingLayer.options.add(
+        new Option('Select a leading layer', 'default', true, true),
+      );
+      selectLeadingLayer.options[0].disabled = true;
+    }
     var selectTrailingLayer = document.getElementById('select-trailing-layer');
-    this.removeOptions(selectLeadingLayer);
-    this.removeOptions(selectTrailingLayer);
-    selectLeadingLayer.options.add(
-      new Option('Select a leading layer', 'default', true, true),
-    );
-    selectLeadingLayer.options[0].disabled = true;
-    selectTrailingLayer.options.add(
-      new Option('Select a trailing layer', 'default', true, true),
-    );
-    selectTrailingLayer.options[0].disabled = true;
+    if (selectTrailingLayer) {
+      this.removeOptions(selectTrailingLayer);
+      selectTrailingLayer.options.add(
+        new Option('Select a leading layer', 'default', true, true),
+      );
+      selectTrailingLayer.options[0].disabled = true;
+    }
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     this.map.layers.forEach((layer) => {
       let layerId = layer.id;
