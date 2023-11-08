@@ -2146,6 +2146,7 @@ class MenuWidget extends React.Component {
    * Returns the DOM elements for active layers
    * just in the order they were added to map
    */
+
   activeLayersAsArray() {
     var messageLayers = document.querySelector('#nolayers_message');
     let activeLayersArray = [];
@@ -2156,26 +2157,9 @@ class MenuWidget extends React.Component {
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
-    let data = activeLayersArray.sort((a, b) => {
-      let layerIdA = a.props['layer-id'];
-      let layerIdB = b.props['layer-id'];
-      layerIdA = layerIdA.split('_').slice(-4).join('_');
-      layerIdB = layerIdB.split('_').slice(-4).join('_');
 
-      if (
-        this.state.draggedElements !== undefined &&
-        (this.state.draggedElements.includes(layerIdA) ||
-          this.state.draggedElements.includes(layerIdB))
-      ) {
-        return 0;
-      }
-
-      if (layerIdA < layerIdB) return -1;
-      if (layerIdA > layerIdB) return 1;
-      return 0;
-    });
     this.activeLayersHandler(activeLayersArray);
-    return data;
+    return activeLayersArray;
   }
 
   /**
