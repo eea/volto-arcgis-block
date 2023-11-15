@@ -26,6 +26,7 @@ class SwipeWidget extends React.Component {
     this.scaleMax = 600000000;
     this.map = this.props.map;
     this.layers = this.props.layers;
+    this.hasSwipe = false;
   }
 
   loader() {
@@ -53,6 +54,7 @@ class SwipeWidget extends React.Component {
       this.swipe.leadingLayers.removeAll();
       this.swipe.trailingLayers.removeAll();
       this.props.view.ui.remove(this.swipe);
+      this.hasSwipe = false;
       this.container.current.querySelector('.right-panel').style.display =
         'none';
       this.setState({ showMapMenu: false });
@@ -70,26 +72,14 @@ class SwipeWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.loadOptions();
-      this.map.layers.on('change', (change) => {
-        if (change.added[0]) {
-          if (change.added[0].DatasetId) {
-            this.loadVisibleLayers();
-            this.swipe.leadingLayers.removeAll();
-            this.swipe.trailingLayers.removeAll();
-            this.props.view.ui.remove(this.swipe);
+      this.map.layers.on('change', () => {
+        if (this.hasSwipe) {
+          this.map.layers.removeAll();
+          if (this.swipe.leadingLayers.items[0]) {
+            this.map.layers.add(this.swipe.leadingLayers.items[0]);
           }
-        } else if (change.removed[0]) {
-          if (change.removed[0].DatasetId) {
-            this.loadVisibleLayers();
-            if (this.swipe.leadingLayers) {
-              this.swipe.leadingLayers.removeAll();
-            }
-            if (this.swipe.trailingLayers) {
-              this.swipe.trailingLayers.removeAll();
-            }
-            if (this.props.view.ui) {
-              this.props.view.ui.remove(this.swipe);
-            }
+          if (this.swipe.trailingLayers.items[0]) {
+            this.map.layers.add(this.swipe.trailingLayers.items[0]);
           }
         }
         this.loadOptions();
@@ -129,7 +119,7 @@ class SwipeWidget extends React.Component {
     if (selectLeadingLayer) {
       this.removeOptions(selectLeadingLayer);
       selectLeadingLayer.options.add(
-        new Option('Select a leading layer', 'default', true, true),
+        new Option('Select a leading layer', 'default', false, false),
       );
       selectLeadingLayer.options[0].disabled = true;
     }
@@ -137,50 +127,88 @@ class SwipeWidget extends React.Component {
     if (selectTrailingLayer) {
       this.removeOptions(selectTrailingLayer);
       selectTrailingLayer.options.add(
-        new Option('Select a leading layer', 'default', true, true),
+        new Option('Select a trailing layer', 'default', false, false),
       );
       selectTrailingLayer.options[0].disabled = true;
     }
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    this.map.layers.forEach((layer) => {
-      let layerId = layer.id;
-      if (this.layers['lcc_filter']) {
-        if (
-          layer.id === this.layers['all_lcc_a_pol_1_4_1_0'].id ||
-          layer.id === this.layers['all_lcc_b_pol_1_4_1_1'].id
-        ) {
-          layerId = this.layers['lcc_filter'].id;
-        }
-      }
-      if (this.layers['lc_filter']) {
-        if (
-          layer.id === this.layers['all_present_lc_a_pol_1_4_0_0'].id ||
-          layer.id === this.layers['all_present_lc_b_pol_1_4_0_1'].id
-        ) {
-          layerId = this.layers['lc_filter'].id;
-        }
-      }
-      if (this.layers['klc_filter']) {
-        if (layer.id === this.layers['cop_klc_1_4_2_0'].id) {
-          layerId = this.layers['klc_filter'].id;
-        }
-      }
-      if (this.layers['pa_filter']) {
-        if (layer.id === this.layers['protected_areas_1_4_3_0'].id) {
-          layerId = this.layers['pa_filter'].id;
-        }
-      }
-      cl.forEach((checkedLayer) => {
-        if (this.layers[checkedLayer].id === layer.id) {
-          selectLeadingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
-          selectTrailingLayer.options.add(
-            new Option(this.getLayerTitle(layer), layerId, layerId),
-          );
+    if (cl) {
+      cl.forEach((layer) => {
+        if (this.layers[layer]) {
+          let layerId = this.layers[layer].id;
+          if (this.layers['lcc_filter']) {
+            if (
+              layer === 'all_lcc_a_pol_1_4_1_0' ||
+              layer === 'all_lcc_b_pol_1_4_1_1'
+            ) {
+              layerId = this.layers['lcc_filter'].id;
+            }
+          }
+          if (this.layers['lc_filter']) {
+            if (
+              layer === 'all_present_lc_a_pol_1_4_0_0' ||
+              layer === 'all_present_lc_b_pol_1_4_0_1'
+            ) {
+              layerId = this.layers['lc_filter'].id;
+            }
+          }
+          if (this.layers['klc_filter']) {
+            if (layer === 'cop_klc_1_4_2_0') {
+              layerId = this.layers['klc_filter'].id;
+            }
+          }
+          if (this.layers['pa_filter']) {
+            if (layer === 'protected_areas_1_4_3_0') {
+              layerId = this.layers['pa_filter'].id;
+            }
+          }
+          if (
+            this.swipe.leadingLayers &&
+            this.swipe.leadingLayers.items[0] &&
+            this.swipe.leadingLayers.items[0].id === layerId
+          ) {
+            selectLeadingLayer.options.add(
+              new Option(
+                this.getLayerTitle(this.layers[layer]),
+                layerId,
+                true,
+                true,
+              ),
+            );
+          } else {
+            selectLeadingLayer.options.add(
+              new Option(
+                this.getLayerTitle(this.layers[layer]),
+                layerId,
+                false,
+              ),
+            );
+          }
+          if (
+            this.swipe.selectTrailingLayer &&
+            this.swipe.selectTrailingLayer.items[0] &&
+            this.swipe.selectTrailingLayer.items[0].id === layerId
+          ) {
+            selectTrailingLayer.options.add(
+              new Option(
+                this.getLayerTitle(this.layers[layer]),
+                layerId,
+                true,
+                true,
+              ),
+            );
+          } else {
+            selectTrailingLayer.options.add(
+              new Option(
+                this.getLayerTitle(this.layers[layer]),
+                layerId,
+                false,
+              ),
+            );
+          }
         }
       });
-    });
+    }
   }
   removeOptions(selectElement) {
     if (selectElement.options.length > 0) {
@@ -194,6 +222,7 @@ class SwipeWidget extends React.Component {
   renderApplySwipeButton() {
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);
+    this.hasSwipe = true;
     let selectedLeadingLayer = document.getElementById('select-leading-layer')
       .value;
     let selectedTrailingLayer = document.getElementById('select-trailing-layer')
@@ -204,84 +233,76 @@ class SwipeWidget extends React.Component {
     this.swipe.leadingLayers.removeAll();
     this.swipe.trailingLayers.removeAll();
     this.swipe.direction = selectedSwipeDirection;
-    let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
-    this.map.layers.forEach((layer) => {
-      layer.visible = false;
-      if (layer.id === selectedLeadingLayer) {
-        layer.visible = true;
-        if (vl) {
-          for (const key in vl) {
-            if (this.layers[key].id === layer.id) {
-              if (vl[key][1] === 'eye-slash') {
-                layer.visible = false;
-              }
-            }
-          }
+    let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    if (cl) {
+      cl.forEach((layer) => {
+        if (this.layers[layer].id === selectedLeadingLayer) {
+          this.swipe.leadingLayers.add(this.layers[layer]);
         }
-        this.swipe.leadingLayers.add(layer);
-      }
-      if (layer.id === selectedTrailingLayer) {
-        layer.visible = true;
-        if (vl) {
-          for (const key in vl) {
-            if (this.layers[key].id === layer.id) {
-              if (vl[key][1] === 'eye-slash') {
-                layer.visible = false;
-              }
-            }
-          }
+        if (this.layers[layer].id === selectedTrailingLayer) {
+          this.swipe.trailingLayers.add(this.layers[layer]);
         }
-        this.swipe.trailingLayers.add(layer);
+      });
+    }
+    if (this.layers['lcc_filter']) {
+      if (this.layers['lcc_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(this.layers['lcc_filter']);
       }
-    });
+      if (this.layers['lcc_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(this.layers['lcc_filter']);
+      }
+    }
+    if (this.layers['lc_filter']) {
+      if (this.layers['lc_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(this.layers['lc_filter']);
+      }
+      if (this.layers['lc_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(this.layers['lc_filter']);
+      }
+    }
+    if (this.layers['klc_filter']) {
+      if (this.layers['klc_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(this.layers['klc_filter']);
+      }
+      if (this.layers['klc_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(this.layers['klc_filter']);
+      }
+    }
+    if (this.layers['pa_filter']) {
+      if (this.layers['pa_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(this.layers['pa_filter']);
+      }
+      if (this.layers['pa_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(this.layers['pa_filter']);
+      }
+    }
+    this.map.layers.removeAll();
+    if (this.swipe.leadingLayers.items[0]) {
+      this.map.layers.add(this.swipe.leadingLayers.items[0]);
+    }
+    if (this.swipe.trailingLayers.items[0]) {
+      this.map.layers.add(this.swipe.trailingLayers.items[0]);
+    }
   }
   loadVisibleLayers() {
-    let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
-    this.map.layers.forEach((layer) => {
-      if (this.layers['lcc_filter']) {
-        if (
-          layer.id === this.layers['all_lcc_a_pol_1_4_1_0'].id ||
-          layer.id === this.layers['all_lcc_b_pol_1_4_1_1'].id
-        ) {
-          layer.visible = false;
-        } else if (layer.id === this.layers['lcc_filter'].id) {
-          layer.visible = true;
-        }
-      }
-      if (this.layers['lc_filter']) {
-        if (
-          layer.id === this.layers['all_present_lc_a_pol_1_4_0_0'].id ||
-          layer.id === this.layers['all_present_lc_b_pol_1_4_0_1'].id
-        ) {
-          layer.visible = false;
-        } else if (layer.id === this.layers['lc_filter'].id) {
-          layer.visible = true;
-        }
-      }
-      if (this.layers['klc_filter']) {
-        if (layer.id === this.layers['cop_klc_1_4_2_0'].id) {
-          layer.visible = false;
-        } else if (layer.id === this.layers['klc_filter'].id) {
-          layer.visible = true;
-        }
-      }
-      if (this.layers['pa_filter']) {
-        if (layer.id === this.layers['protected_areas_1_4_3_0'].id) {
-          layer.visible = false;
-        } else if (layer.id === this.layers['pa_filter'].id) {
-          layer.visible = true;
-        }
-      }
-      if (vl) {
-        for (const key in vl) {
-          if (this.layers[key].id === layer.id) {
-            if (vl[key][1] === 'eye-slash') {
-              layer.visible = false;
-            }
-          }
-        }
-      }
-    });
+    let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
+    if (cl) {
+      cl.forEach((layer) => {
+        this.map.layers.add(this.layers[layer]);
+      });
+    }
+    if (this.layers['lcc_filter']) {
+      this.map.layers.add(this.layers['lcc_filter']);
+    }
+    if (this.layers['lc_filter']) {
+      this.map.layers.add(this.layers['lc_filter']);
+    }
+    if (this.layers['klc_filter']) {
+      this.map.layers.add(this.layers['klc_filter']);
+    }
+    if (this.layers['pa_filter']) {
+      this.map.layers.add(this.layers['pa_filter']);
+    }
   }
   /**
    * This method renders the component
