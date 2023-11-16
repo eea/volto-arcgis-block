@@ -284,6 +284,7 @@ class SwipeWidget extends React.Component {
       this.map.layers.add(this.swipe.trailingLayers.items[0]);
     }
   }
+
   loadVisibleLayers() {
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (cl) {
