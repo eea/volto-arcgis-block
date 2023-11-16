@@ -185,9 +185,9 @@ class SwipeWidget extends React.Component {
             );
           }
           if (
-            this.swipe.selectTrailingLayer &&
-            this.swipe.selectTrailingLayer.items[0] &&
-            this.swipe.selectTrailingLayer.items[0].id === layerId
+            this.swipe.trailingLayers &&
+            this.swipe.trailingLayers.items[0] &&
+            this.swipe.trailingLayers.items[0].id === layerId
           ) {
             selectTrailingLayer.options.add(
               new Option(
@@ -284,6 +284,7 @@ class SwipeWidget extends React.Component {
       this.map.layers.add(this.swipe.trailingLayers.items[0]);
     }
   }
+
   loadVisibleLayers() {
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (cl) {
