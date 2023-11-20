@@ -75,10 +75,10 @@ class SwipeWidget extends React.Component {
       this.map.layers.on('change', () => {
         if (this.hasSwipe) {
           this.map.layers.removeAll();
-          if (this.swipe.leadingLayers.items[0]) {
+          if (this.swipe.leadingLayers && this.swipe.leadingLayers.items[0]) {
             this.map.layers.add(this.swipe.leadingLayers.items[0]);
           }
-          if (this.swipe.trailingLayers.items[0]) {
+          if (this.swipe.trailingLayers && this.swipe.trailingLayers.items[0]) {
             this.map.layers.add(this.swipe.trailingLayers.items[0]);
           }
         }
@@ -162,49 +162,53 @@ class SwipeWidget extends React.Component {
               layerId = this.layers['pa_filter'].id;
             }
           }
-          if (
-            this.swipe.leadingLayers &&
-            this.swipe.leadingLayers.items[0] &&
-            this.swipe.leadingLayers.items[0].id === layerId
-          ) {
-            selectLeadingLayer.options.add(
-              new Option(
-                this.getLayerTitle(this.layers[layer]),
-                layerId,
-                true,
-                true,
-              ),
-            );
-          } else {
-            selectLeadingLayer.options.add(
-              new Option(
-                this.getLayerTitle(this.layers[layer]),
-                layerId,
-                false,
-              ),
-            );
+          if (selectLeadingLayer) {
+            if (
+              this.swipe.leadingLayers &&
+              this.swipe.leadingLayers.items[0] &&
+              this.swipe.leadingLayers.items[0].id === layerId
+            ) {
+              selectLeadingLayer.options.add(
+                new Option(
+                  this.getLayerTitle(this.layers[layer]),
+                  layerId,
+                  true,
+                  true,
+                ),
+              );
+            } else {
+              selectLeadingLayer.options.add(
+                new Option(
+                  this.getLayerTitle(this.layers[layer]),
+                  layerId,
+                  false,
+                ),
+              );
+            }
           }
-          if (
-            this.swipe.trailingLayers &&
-            this.swipe.trailingLayers.items[0] &&
-            this.swipe.trailingLayers.items[0].id === layerId
-          ) {
-            selectTrailingLayer.options.add(
-              new Option(
-                this.getLayerTitle(this.layers[layer]),
-                layerId,
-                true,
-                true,
-              ),
-            );
-          } else {
-            selectTrailingLayer.options.add(
-              new Option(
-                this.getLayerTitle(this.layers[layer]),
-                layerId,
-                false,
-              ),
-            );
+          if (selectTrailingLayer) {
+            if (
+              this.swipe.trailingLayers &&
+              this.swipe.trailingLayers.items[0] &&
+              this.swipe.trailingLayers.items[0].id === layerId
+            ) {
+              selectTrailingLayer.options.add(
+                new Option(
+                  this.getLayerTitle(this.layers[layer]),
+                  layerId,
+                  true,
+                  true,
+                ),
+              );
+            } else {
+              selectTrailingLayer.options.add(
+                new Option(
+                  this.getLayerTitle(this.layers[layer]),
+                  layerId,
+                  false,
+                ),
+              );
+            }
           }
         }
       });
