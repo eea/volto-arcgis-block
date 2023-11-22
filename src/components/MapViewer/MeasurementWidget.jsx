@@ -200,7 +200,11 @@ class MeasurementWidget extends React.Component {
               id="map_measurement_button"
               aria-label="Measurement"
               onClick={this.openMenu.bind(this)}
-              onKeyDown={this.openMenu.bind(this)}
+              onKeyDown={(e) => {
+                if (!e.altKey && e.code !== 'Tab') {
+                  this.openMenu(this);
+                }
+              }}
               tabIndex="0"
               role="button"
             ></div>
@@ -211,7 +215,11 @@ class MeasurementWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
-                onKeyDown={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (!e.altKey && e.code !== 'Tab') {
+                    this.openMenu(this);
+                  }
+                }}
                 tabIndex="0"
                 role="button"
               ></span>
