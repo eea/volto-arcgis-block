@@ -1250,11 +1250,13 @@ class MenuWidget extends React.Component {
                                 Zoom in to view on map
                               </div>
                             </div>
-                          ) : dataset.productId ===
-                            'd764e020485a402598551fa461bf1db2' ? (
-                            <div className="hotspot-filter-message-container">
+                          ) : dataset.DatasetId ===
+                              '9827d711d3e148aabccc76dd501a4b86' ||
+                            dataset.DatasetId ===
+                              'e27dbc8330084b58bb5e282231fca74d' ? (
+                            <div className="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
-                              <div className="hotspot-filter-message hotspot-filter-message-dataset">
+                              <div className="zoom-in-message">
                                 Use the filter to visualize a KLC area
                               </div>
                             </div>
