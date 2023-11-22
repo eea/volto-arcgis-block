@@ -453,7 +453,11 @@ class AreaWidget extends React.Component {
                 id="map_area_button"
                 aria-label="Area selection"
                 onClick={this.openMenu.bind(this)}
-                onKeyDown={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (!e.altKey && e.code !== 'Tab') {
+                    this.openMenu(this);
+                  }
+                }}
                 tabIndex="0"
                 role="button"
               ></div>
@@ -466,7 +470,11 @@ class AreaWidget extends React.Component {
                 <span
                   className="map-menu-icon esri-icon-close"
                   onClick={this.openMenu.bind(this)}
-                  onKeyDown={this.openMenu.bind(this)}
+                  onKeyDown={(e) => {
+                    if (!e.altKey && e.code !== 'Tab') {
+                      this.openMenu(this);
+                    }
+                  }}
                   tabIndex="0"
                   role="button"
                 ></span>
