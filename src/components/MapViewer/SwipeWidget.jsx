@@ -323,7 +323,11 @@ class SwipeWidget extends React.Component {
               id="map_swipe_button"
               aria-label="Swipe"
               onClick={this.openMenu.bind(this)} //aqui deberían ir ocultar panel y mas abajo cerrar (pasar a 3d)
-              onKeyDown={this.openMenu.bind(this)}
+              onKeyDown={(e) => {
+                if (!e.altKey && e.code !== 'Tab') {
+                  this.openMenu(this);
+                }
+              }}
               tabIndex="0"
               role="button"
             ></div>
@@ -335,7 +339,11 @@ class SwipeWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
-                onKeyDown={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (!e.altKey && e.code !== 'Tab') {
+                    this.openMenu(this);
+                  }
+                }}
                 tabIndex="0"
                 role="button"
               ></span>

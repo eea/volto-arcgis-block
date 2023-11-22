@@ -140,7 +140,11 @@ class BookmarkWidget extends React.Component {
               id="bookmark_button"
               aria-label="Bookmark"
               onClick={this.openMenu.bind(this)}
-              onKeyDown={this.openMenu.bind(this)}
+              onKeyDown={(e) => {
+                if (!e.altKey && e.code !== 'Tab') {
+                  this.openMenu(this);
+                }
+              }}
               tabIndex="0"
               role="button"
             ></div>
@@ -151,7 +155,11 @@ class BookmarkWidget extends React.Component {
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
-                onKeyDown={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (!e.altKey && e.code !== 'Tab') {
+                    this.openMenu(this);
+                  }
+                }}
                 tabIndex="0"
                 role="button"
               ></span>
