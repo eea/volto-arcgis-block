@@ -228,12 +228,12 @@ const config = {
     cop_klc:
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms?request=GetLegendGraphic&version=1.0.0&format=image/png&layer=cop_klc',
     klc_bbox:
-      'https://land.copernicus.eu/en/products/lclcc-hot-spots/json-files/klc_bbox.php/@@download/file',
+      '/products/lclcc-hot-spots/json-files/klc_bbox.php/@@download/file',
+    all_geo_klc:
+      '/products/lclcc-hot-spots/json-files/all_geo_klc.json/@@download/file',
     legendLinkUrl:
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=',
     serviceUrl: 'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms',
-    all_geo_klc:
-      'https://land.copernicus.eu/en/products/lclcc-hot-spots/json-files/all_geo_klc.json/@@download/file',
     positronCompositeThumbnail:
       'https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png',
     positronCompositeTemplate:
