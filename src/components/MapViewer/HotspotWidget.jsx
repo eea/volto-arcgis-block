@@ -68,7 +68,9 @@ class HotspotWidget extends React.Component {
   }
 
   getBBoxData = () => {
-    const url = this.urls.klc_bbox;
+    const url =
+      window.location.href.replace(window.location.pathname.substring(3), '') +
+      this.props.urls.klc_bbox;
     return esriRequest(url, {
       responseType: 'json',
     }).then((response) => {
@@ -387,7 +389,10 @@ class HotspotWidget extends React.Component {
   }
 
   getLayerParameters() {
-    fetch(this.urls.all_geo_klc)
+    const url =
+      window.location.href.replace(window.location.pathname.substring(3), '') +
+      this.props.urls.klc_names;
+    fetch(url)
       .then((data) => {
         if (data.status === 200) {
           return data.json();
@@ -798,34 +803,10 @@ class HotspotWidget extends React.Component {
     );
   }
 
-  //sortHotspotTabs = () => {
-  //  let activeLayersArray = Array.from(document.querySelectorAll('.active-layer'));
-  //  let divs = [
-  //    { id: 'all_present_lc', func: this.renderPresentLandCover, className: 'presentLandCoverContainer' },
-  //    { id: 'all_lcc', func: this.renderLandCoverChange, className: 'landCoverChangeContainer' }
-  //  ];
-  //
-  //  divs.sort((a, b) => {
-  //    let indexA = activeLayersArray.findIndex(layer => layer.getAttribute('layer-id').includes(a.id));
-  //    let indexB = activeLayersArray.findIndex(layer => layer.getAttribute('layer-id').includes(b.id));
-  //    if (indexA === -1 || indexB === -1) return 0;
-  //    return indexA - indexB;
-  //  });
-  //
-  //  return (
-  //    <div>
-  //      {divs.map(div => (
-  //        <div className={div.className}>
-  //          {div.func()}
-  //        </div>
-  //      ))}
-  //    </div>
-  //  );
-  //}
-
   /**
-   * This method is executed after the rener method is executed
+   * This method is executed after the render method is executed
    */
+
   async componentDidMount() {
     await this.getLayerParameters();
     await this.loader();
@@ -849,7 +830,6 @@ class HotspotWidget extends React.Component {
     if (prevProps.hotspotData !== this.props.hotspotData) {
       this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
       this.disableButton();
-      //this.layerModelInit();
     }
   }
 }
