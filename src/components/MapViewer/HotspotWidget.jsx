@@ -391,7 +391,7 @@ class HotspotWidget extends React.Component {
   getLayerParameters() {
     const url =
       window.location.href.replace(window.location.pathname.substring(3), '') +
-      this.props.urls.klc_names;
+      this.props.urls.all_geo_klc;
     fetch(url)
       .then((data) => {
         if (data.status === 200) {
