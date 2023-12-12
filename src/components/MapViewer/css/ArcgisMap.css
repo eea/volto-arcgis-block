@@ -1026,17 +1026,19 @@ div.esri-popover
 .react-datepicker__day-name {
   color: white !important;
 }
-.datetime-picker{
+
+.datetime-picker {
   background-color: white;
 }
-.calendar-button{
+
+.calendar-button {
   color: #a0b128;
 }
-.datepicker{
-  display:none;
+
+.datepicker {
+  display: none;
   margin-left: 2.5em;
 }
-
 
 /* Scale */
 .esri-scale-bar {

@@ -564,14 +564,16 @@ class TimesliderWidget extends React.Component {
       date = this.TimesliderWidget.fullTimeExtent.start;
     }
     while (this.TimesliderWidget.timeExtent.end > date) {
-      this.TimesliderWidget.previous()
+      this.TimesliderWidget.previous();
     }
     while (this.TimesliderWidget.timeExtent.end < date) {
-      this.TimesliderWidget.next()
+      this.TimesliderWidget.next();
     }
   }
-  openCalendar(){
-    if (document.querySelector('.datepicker').style.display === 'inline-block') {
+  openCalendar() {
+    if (
+      document.querySelector('.datepicker').style.display === 'inline-block'
+    ) {
       document.querySelector('.datepicker').style.display = 'none';
     } else {
       document.querySelector('.datepicker').style.display = 'inline-block';
@@ -619,12 +621,13 @@ class TimesliderWidget extends React.Component {
         >
           <div className="datetime-picker">
             <button
-              className='calendar-button'
+              className="calendar-button"
               onClick={() => this.openCalendar()}
               onKeyDown={() => this.openCalendar()}
-              ><Icon name={calendarSVG} size={25} />
+            >
+              <Icon name={calendarSVG} size={25} />
             </button>
-            <div className='datepicker'>
+            <div className="datepicker">
               <DatePicker
                 id="start_date"
                 showIcon
