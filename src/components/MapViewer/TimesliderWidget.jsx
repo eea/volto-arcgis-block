@@ -54,7 +54,6 @@ class TimesliderWidget extends React.Component {
       document.querySelector('.drawRectanglePopup-block').style.display =
         'none';
     }
-    this.calendarOpened = false;
   }
 
   loader() {
