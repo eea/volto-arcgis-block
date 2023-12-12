@@ -302,7 +302,7 @@ class LegendWidget extends React.Component {
               aria-label="Legend"
               onClick={this.openMenu.bind(this)}
               onKeyDown={(e) => {
-                if (!e.altKey && e.code !== 'Tab') {
+                if (!e.altKey && e.code !== 'Tab' && !e.code.startsWith('F')) {
                   this.openMenu(this);
                 }
               }}
@@ -317,7 +317,11 @@ class LegendWidget extends React.Component {
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
                 onKeyDown={(e) => {
-                  if (!e.altKey && e.code !== 'Tab') {
+                  if (
+                    !e.altKey &&
+                    e.code !== 'Tab' &&
+                    !e.code.startsWith('F')
+                  ) {
                     this.openMenu(this);
                   }
                 }}

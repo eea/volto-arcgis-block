@@ -3838,7 +3838,7 @@ class MenuWidget extends React.Component {
               aria-label="Menu of products"
               onClick={this.openMenu.bind(this)}
               onKeyDown={(e) => {
-                if (!e.altKey && e.code !== 'Tab') {
+                if (!e.altKey && e.code !== 'Tab' && !e.code.startsWith('F')) {
                   this.openMenu(this);
                 }
               }}
