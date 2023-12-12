@@ -1027,6 +1027,19 @@ div.esri-popover
   color: white !important;
 }
 
+.datetime-picker {
+  background-color: white;
+}
+
+.calendar-button {
+  color: #a0b128;
+}
+
+.datepicker {
+  display: none;
+  margin-left: 2.5em;
+}
+
 /* Scale */
 .esri-scale-bar {
   z-index: 0;

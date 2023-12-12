@@ -1,5 +1,8 @@
 import React, { createRef } from 'react';
+import DatePicker from 'react-datepicker';
 import { loadModules } from 'esri-loader';
+import calendarSVG from '@plone/volto/icons/calendar.svg';
+import { Icon } from '@plone/volto/components';
 import 'react-datepicker/dist/react-datepicker.css';
 var TimeSlider;
 var TimeExtent;
@@ -552,6 +555,30 @@ class TimesliderWidget extends React.Component {
     return new Date(date).toISOString().split('T')[0].toString();
   }
 
+  setDatepick(date) {
+    if (this.TimesliderWidget.fullTimeExtent.end < date) {
+      date = this.TimesliderWidget.fullTimeExtent.end;
+    }
+    if (this.TimesliderWidget.fullTimeExtent.start > date) {
+      date = this.TimesliderWidget.fullTimeExtent.start;
+    }
+    while (this.TimesliderWidget.timeExtent.end > date) {
+      this.TimesliderWidget.previous();
+    }
+    while (this.TimesliderWidget.timeExtent.end < date) {
+      this.TimesliderWidget.next();
+    }
+  }
+  openCalendar() {
+    if (
+      document.querySelector('.datepicker').style.display === 'inline-block'
+    ) {
+      document.querySelector('.datepicker').style.display = 'none';
+    } else {
+      document.querySelector('.datepicker').style.display = 'inline-block';
+    }
+  }
+
   /**
    * This method renders the component
    * @returns jsx
@@ -591,6 +618,27 @@ class TimesliderWidget extends React.Component {
           onDragStart={(e) => this.onDragStart(e)}
           style={this.state.styles}
         >
+          <div className="datetime-picker">
+            <button
+              className="calendar-button"
+              onClick={() => this.openCalendar()}
+              onKeyDown={() => this.openCalendar()}
+            >
+              <Icon name={calendarSVG} size={25} />
+            </button>
+            <div className="datepicker">
+              <DatePicker
+                id="start_date"
+                showIcon
+                inline
+                onChange={(date) => this.setDatepick(date)}
+                dateFormat="dd.MM.yyyy"
+                dropdownMode="select"
+                showMonthDropdown
+                showYearDropdown
+              ></DatePicker>
+            </div>
+          </div>
           <div className="timeslider-panel"></div>
         </div>
       </>
