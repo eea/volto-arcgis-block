@@ -261,7 +261,13 @@ class BasemapWidget extends React.Component {
               aria-label="Basemap gallery"
               onClick={this.openMenu.bind(this)}
               onKeyDown={(e) => {
-                if (!e.altKey && e.code !== 'Tab' && !e.code.startsWith('F')) {
+                if (
+                  !e.altKey &&
+                  e.code !== 'Tab' &&
+                  !e.ctrlKey &&
+                  e.code !== 'Delete' &&
+                  !e.code.startsWith('F')
+                ) {
                   this.openMenu(this);
                 }
               }}
@@ -279,6 +285,8 @@ class BasemapWidget extends React.Component {
                   if (
                     !e.altKey &&
                     e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
                     !e.code.startsWith('F')
                   ) {
                     this.openMenu(this);

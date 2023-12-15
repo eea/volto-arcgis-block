@@ -1032,12 +1032,26 @@ div.esri-popover
 }
 
 .calendar-button {
+  border: #a0b128;
+  margin-top: 0.5rem;
+  margin-left: 11rem;
+  background-color: white;
   color: #a0b128;
+}
+
+.calendar-button:hover {
+  background-color: #a0b128;
+  color: white;
 }
 
 .datepicker {
   display: none;
-  margin-left: 2.5em;
+  margin-top: 0.5rem;
+  margin-left: 4.5em;
+}
+
+.timeslider-container {
+  background-color: white;
 }
 
 /* Scale */

@@ -70,8 +70,8 @@
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.5",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "md5": "^2.3.0",
     "husky": "^8.0.3",
-    "lint-staged": "13.1.4"
+    "lint-staged": "13.1.4",
+    "md5": "^2.3.0"
   }
 }
