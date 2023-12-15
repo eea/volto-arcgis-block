@@ -618,6 +618,18 @@ class TimesliderWidget extends React.Component {
           onDragStart={(e) => this.onDragStart(e)}
           style={this.state.styles}
         >
+          <div className="datepicker">
+            <DatePicker
+              id="start_date"
+              showIcon
+              inline
+              onChange={(date) => this.setDatepick(date)}
+              dateFormat="dd.MM.yyyy"
+              dropdownMode="select"
+              showMonthDropdown
+              showYearDropdown
+            ></DatePicker>
+          </div>
           <div className="datetime-picker">
             <button
               className="calendar-button"
@@ -626,18 +638,6 @@ class TimesliderWidget extends React.Component {
             >
               <Icon name={calendarSVG} size={25} />
             </button>
-            <div className="datepicker">
-              <DatePicker
-                id="start_date"
-                showIcon
-                inline
-                onChange={(date) => this.setDatepick(date)}
-                dateFormat="dd.MM.yyyy"
-                dropdownMode="select"
-                showMonthDropdown
-                showYearDropdown
-              ></DatePicker>
-            </div>
           </div>
           <div className="timeslider-panel"></div>
         </div>
