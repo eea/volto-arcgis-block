@@ -6,7 +6,7 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest, Extent;
+var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest, Extent, MapImageLayer;
 
 const popupSettings = {
   basic: true,
@@ -339,6 +339,7 @@ class MenuWidget extends React.Component {
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
       'esri/layers/FeatureLayer',
+      "esri/layers/MapImageLayer",
       'esri/layers/BaseTileLayer',
       'esri/request',
       'esri/geometry/Extent',
@@ -347,6 +348,7 @@ class MenuWidget extends React.Component {
         _WMSLayer,
         _WMTSLayer,
         _FeatureLayer,
+        _MapImageLayer,
         _BaseTileLayer,
         _esriRequest,
         _Extent,
@@ -354,6 +356,7 @@ class MenuWidget extends React.Component {
         WMSLayer = _WMSLayer;
         WMTSLayer = _WMTSLayer;
         FeatureLayer = _FeatureLayer;
+        MapImageLayer = _MapImageLayer;
         BaseTileLayer = _BaseTileLayer;
         esriRequest = _esriRequest;
         Extent = _Extent;
@@ -1416,7 +1419,48 @@ class MenuWidget extends React.Component {
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      if (viewService.toLowerCase().includes('wms')) {
+      // TO DO. Cambiar esta opcion a mas generica. Si contiene /arcgis/services/', '/arcgis/rest/services/
+      if (viewService.toLowerCase().includes('discomap.eea.europa.eu/arcgis')) {
+        console.log('discomap EEA')
+        viewService = viewService.replace('/arcgis/services/', '/arcgis/rest/services/');
+        if (viewService.toLowerCase().includes('/wmsserver')){
+          viewService = viewService.split('/WMSServer')[0]
+          viewService = viewService.split('/WmsServer')[0]
+          viewService = viewService.split('/wmsserver')[0]
+        }
+        console.log(viewService);
+        // TO DO quita este IF y mete las imagery como MAPIMAGELAYER. Tan pronto testee que todo funciona con las mapImageLayer procedo a usar las 
+        if (viewService.includes('/MapServer')){          
+          this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new MapImageLayer ({
+            url: viewService,
+            // featureInfoFormat: 'text/html',
+            // featureInfoUrl: viewService,
+            title: '',
+            legendEnabled: true,
+            sublayers: [
+              {
+                name: layer.LayerId,
+                title: layer.Title,
+                popupEnabled: true,
+                queryable: true,
+                visible: true,
+                legendEnabled: true,
+                // legendUrl: layer.StaticImageLegend
+                //   ? layer.StaticImageLegend
+                //   : viewService + legendRequest + layer.LayerId,
+                // featureInfoUrl: featureInfoUrl,
+              },
+            ],
+            isTimeSeries: isTimeSeries,
+            fields: layer.Fields,
+            DatasetId: DatasetId,
+            DatasetTitle: DatasetTitle,
+            ProductId: ProductId,
+            ViewService: viewService,
+          })
+        }        
+      }
+      else if (viewService.toLowerCase().includes('wms')) {
         viewService = viewService.endsWith('?')
           ? viewService
           : viewService + '?';
