@@ -457,6 +457,8 @@ class AreaWidget extends React.Component {
                   if (
                     !e.altKey &&
                     e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
                     !e.code.startsWith('F')
                   ) {
                     this.openMenu(this);
@@ -478,6 +480,8 @@ class AreaWidget extends React.Component {
                     if (
                       !e.altKey &&
                       e.code !== 'Tab' &&
+                      !e.ctrlKey &&
+                      e.code !== 'Delete' &&
                       !e.code.startsWith('F')
                     ) {
                       this.openMenu(this);
