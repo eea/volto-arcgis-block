@@ -1418,28 +1418,30 @@ class MenuWidget extends React.Component {
     //Add sublayers and popup enabled for layers
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
-    ) {
-      // TO DO. Cambiar esta opcion a mas generica. Si contiene /arcgis/services/', '/arcgis/rest/services/
-      if (viewService.toLowerCase().includes('discomap.eea.europa.eu/arcgis')) {
-        console.log('discomap EEA')
+    ) {      
+      if (viewService.toLowerCase().includes('/arcgis/services/') || viewService.toLowerCase().includes('/arcgis/rest/services/')) {
         viewService = viewService.replace('/arcgis/services/', '/arcgis/rest/services/');
         if (viewService.toLowerCase().includes('/wmsserver')){
+          // Note, the url is case sensitive
           viewService = viewService.split('/WMSServer')[0]
           viewService = viewService.split('/WmsServer')[0]
           viewService = viewService.split('/wmsserver')[0]
-        }
-        console.log(viewService);
-        // TO DO quita este IF y mete las imagery como MAPIMAGELAYER. Tan pronto testee que todo funciona con las mapImageLayer procedo a usar las 
-        if (viewService.includes('/MapServer')){          
+        }        
+        // console.log('discomap EEA')
+        // console.log(viewService);
+        // TO DO quita este IF y mete las imagery como MAPIMAGELAYER. Tan pronto testee que todo funciona con las mapImageLayer procedo a usar las MAPIMAGELAYERS
+        if (viewService.includes('/MapServer')){   
+          console.log(layer.LayerId + ' ' + layer.Title);    
           this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new MapImageLayer ({
             url: viewService,
-            // featureInfoFormat: 'text/html',
-            // featureInfoUrl: viewService,
+            featureInfoFormat: 'text/html',
+            featureInfoUrl: viewService,
             title: '',
             legendEnabled: true,
             sublayers: [
               {
-                name: layer.LayerId,
+                id: layer.LayerId,
+                // name: layer.LayerId,
                 title: layer.Title,
                 popupEnabled: true,
                 queryable: true,
@@ -1448,7 +1450,7 @@ class MenuWidget extends React.Component {
                 // legendUrl: layer.StaticImageLegend
                 //   ? layer.StaticImageLegend
                 //   : viewService + legendRequest + layer.LayerId,
-                // featureInfoUrl: featureInfoUrl,
+                featureInfoUrl: featureInfoUrl,
               },
             ],
             isTimeSeries: isTimeSeries,

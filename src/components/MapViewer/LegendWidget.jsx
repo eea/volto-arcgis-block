@@ -210,6 +210,7 @@ class LegendWidget extends React.Component {
     this.props.view.ui.add(this.container.current, 'top-right');
     this.LegendWidget = new Legend({
       view: this.props.view,
+      respectLayerVisibility: true,
       viewModel: new LegendViewModel({
         view: this.props.view,
       }),
