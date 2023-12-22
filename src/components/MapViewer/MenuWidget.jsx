@@ -1431,26 +1431,24 @@ class MenuWidget extends React.Component {
         // console.log(viewService);
         // TO DO quita este IF y mete las imagery como MAPIMAGELAYER. Tan pronto testee que todo funciona con las mapImageLayer procedo a usar las MAPIMAGELAYERS
         if (viewService.includes('/MapServer')){   
-          console.log(layer.LayerId + ' ' + layer.Title);    
+          // MapImageLayer in our code is able to manage the layers automatically, but not sublayers (like colonies). In the case of colonies is necessary to set the scale manually         
           this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new MapImageLayer ({
             url: viewService,
             featureInfoFormat: 'text/html',
             featureInfoUrl: viewService,
-            title: '',
-            legendEnabled: true,
+            title: '',            
             sublayers: [
               {
                 id: layer.LayerId,
-                // name: layer.LayerId,
+                name: layer.LayerId,
                 title: layer.Title,
                 popupEnabled: true,
                 queryable: true,
-                visible: true,
-                legendEnabled: true,
+                visible: true,                
                 // legendUrl: layer.StaticImageLegend
                 //   ? layer.StaticImageLegend
                 //   : viewService + legendRequest + layer.LayerId,
-                featureInfoUrl: featureInfoUrl,
+                featureInfoUrl: featureInfoUrl,             
               },
             ],
             isTimeSeries: isTimeSeries,
@@ -1460,8 +1458,21 @@ class MenuWidget extends React.Component {
             ProductId: ProductId,
             ViewService: viewService,
           })
-        }        
-      }
+          if (layer.LayerId.includes('_R_WM')){ // añadir esto como ternario en las propiedades
+            console.log('Corine Colonies raster')
+            console.log(layer.LayerId + ' ' + layer.Title);               
+            this.layers[layer.LayerId + '_' + inheritedIndexLayer].allSublayers.items[0].maxScale = 250000
+            this.layers[layer.LayerId + '_' + inheritedIndexLayer].allSublayers.items[0].minScale = 0         
+          } 
+          else if (!layer.LayerId.includes('_R_WM') && layer.LayerId.includes('_WM')){
+            console.log('Corine Colonies vector')            
+            console.log(layer.LayerId + ' ' + layer.Title);            
+            this.layers[layer.LayerId + '_' + inheritedIndexLayer].allSublayers.items[0].maxScale = 0
+            this.layers[layer.LayerId + '_' + inheritedIndexLayer].allSublayers.items[0].minScale = 249999                  
+          };
+          // añadir un layer reload IDEA                    
+        }       
+      } // End of MapImageLayer management
       else if (viewService.toLowerCase().includes('wms')) {
         viewService = viewService.endsWith('?')
           ? viewService

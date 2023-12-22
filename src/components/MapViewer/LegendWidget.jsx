@@ -139,6 +139,7 @@ class LegendWidget extends React.Component {
           img?.closest('.esri-legend__service')?.firstElementChild
             ?.textContent === 'WMS'
         ) {
+          console.log('LEYENDA BROKEN');
           img.closest('.esri-legend__service').firstElementChild.style.display =
             'none';
         }
@@ -270,7 +271,7 @@ class LegendWidget extends React.Component {
       } else {
         noLegendMessage.style.display = 'none';
       }
-    }
+    }   
   }
 
   componentDidUpdate(prevState, prevProps) {
