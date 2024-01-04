@@ -2571,17 +2571,21 @@ class MenuWidget extends React.Component {
       ) {
         firstLayer = BBoxes.dataset;
       } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
-        if (elem.title.includes('LAEA')) {
+        let str = elem.parentNode.outerHTML;
+        let match = str.match(/layerid="(\d+)"/);
+        let layerid = match ? match[1] : null;
+        if (layerid === null || layerid === undefined) return;
+        if (layerid === '12' || layerid === '13') {
           firstLayer = BBoxes['dataset'];
-        } else if (elem.title.includes('Guadeloupe')) {
+        } else if (layerid === '1' || layerid === '7') {
           firstLayer = BBoxes[Object.keys(BBoxes)[0]];
-        } else if (elem.title.includes('French Guiana')) {
+        } else if (layerid === '2' || layerid === '8') {
           firstLayer = BBoxes[Object.keys(BBoxes)[1]];
-        } else if (elem.title.includes('Martinique')) {
+        } else if (layerid === '3' || layerid === '9') {
           firstLayer = BBoxes[Object.keys(BBoxes)[2]];
-        } else if (elem.title.includes('Mayotte')) {
+        } else if (layerid === '4' || layerid === '10') {
           firstLayer = BBoxes[Object.keys(BBoxes)[3]];
-        } else if (elem.title.includes('Reunion')) {
+        } else if (layerid === '5' || layerid === '11') {
           firstLayer = BBoxes[Object.keys(BBoxes)[4]];
         } else {
           firstLayer = BBoxes['dataset'];
