@@ -202,7 +202,9 @@ class HotspotWidget extends React.Component {
         ? Object.keys(this.props.hotspotData['filteredLayers'])
         : [];
     let layersToAdd = {};
-
+    let bookmarkHotspotFilter = JSON.parse(
+      localStorage.getItem('bookmarkHotspotFilter'),
+    );
     typeFilter.forEach((type) => {
       let filterLayer;
 
@@ -211,11 +213,12 @@ class HotspotWidget extends React.Component {
           .value;
         //this.lccYear = selectLccBoxTime;
         this.setState({ lccYear: selectLccBoxTime });
-        var selectBoxHighlightsLcc = document
-          .getElementById('select-klc-lccTime')
-          .value.match(/\d+/g)
-          .map(Number)[0];
-
+        if (document.getElementById('select-klc-lccTime').value.match(/\d+/g)) {
+          var selectBoxHighlightsLcc = document
+            .getElementById('select-klc-lccTime')
+            .value.match(/\d+/g)
+            .map(Number)[0];
+        }
         for (let i = 0; activeLayers[i]; i++) {
           let layer = activeLayers[i];
           if (layer.includes('all_lcc_a_pol')) {
@@ -232,13 +235,18 @@ class HotspotWidget extends React.Component {
         filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
           typeLegend,
         );
-        filterLayer.customLayerParameters['CQL_FILTER'] =
-          'klc_code LIKE ' +
-          "'" +
-          this.dataKlc_code +
-          "'" +
-          " AND in_pa = 'not_defined' AND date = " +
-          selectBoxHighlightsLcc;
+        if (bookmarkHotspotFilter !== null) {
+          filterLayer.customLayerParameters['CQL_FILTER'] =
+            bookmarkHotspotFilter.filteredLayers['lcc_filter'];
+        } else {
+          filterLayer.customLayerParameters['CQL_FILTER'] =
+            'klc_code LIKE ' +
+            "'" +
+            this.dataKlc_code +
+            "'" +
+            " AND in_pa = 'not_defined' AND date = " +
+            selectBoxHighlightsLcc;
+        }
       }
       if (type === 'lc') {
         for (let i = 0; i < activeLayers.length; i++) {
@@ -255,10 +263,12 @@ class HotspotWidget extends React.Component {
           .value;
         //this.lcYear = selectLcBoxTime;
         this.setState({ lcYear: selectLcBoxTime });
-        var selectBoxHighlightsLc = document
-          .getElementById('select-klc-lcTime')
-          .value.match(/\d+/g)
-          .map(Number)[0];
+        if (document.getElementById('select-klc-lcTime').value.match(/\d+/g)) {
+          var selectBoxHighlightsLc = document
+            .getElementById('select-klc-lcTime')
+            .value.match(/\d+/g)
+            .map(Number)[0];
+        }
 
         filterLayer = this.esriLayer_lc;
 
@@ -266,22 +276,37 @@ class HotspotWidget extends React.Component {
         filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
           typeLegend,
         );
-        filterLayer.customLayerParameters['CQL_FILTER'] =
-          'klc_code LIKE ' +
-          "'" +
-          this.dataKlc_code +
-          "'" +
-          " AND in_pa = 'not_defined' AND date = " +
-          selectBoxHighlightsLc;
+        if (bookmarkHotspotFilter !== null) {
+          filterLayer.customLayerParameters['CQL_FILTER'] =
+            bookmarkHotspotFilter.filteredLayers['lc_filter'];
+        } else {
+          filterLayer.customLayerParameters['CQL_FILTER'] =
+            'klc_code LIKE ' +
+            "'" +
+            this.dataKlc_code +
+            "'" +
+            " AND in_pa = 'not_defined' AND date = " +
+            selectBoxHighlightsLc;
+        }
       }
       if (type === 'klc') {
-        this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
-          "klc_code LIKE '" + this.dataKlc_code + "'";
+        if (bookmarkHotspotFilter !== null) {
+          this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
+            bookmarkHotspotFilter.filteredLayers['klc_filter'];
+        } else {
+          this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
+            "klc_code LIKE '" + this.dataKlc_code + "'";
+        }
         filterLayer = this.esriLayer_klc;
       }
       if (type === 'pa') {
-        this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
-          "klc_code LIKE '" + this.dataKlc_code + "'";
+        if (bookmarkHotspotFilter !== null) {
+          this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
+            bookmarkHotspotFilter.filteredLayers['pa_filter'];
+        } else {
+          this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
+            "klc_code LIKE '" + this.dataKlc_code + "'";
+        }
         filterLayer = this.esriLayer_pa;
       }
       layersToAdd[type + '_filter'] = filterLayer;
@@ -315,7 +340,9 @@ class HotspotWidget extends React.Component {
       this.layers[key] = layersToAdd[key];
       this.layers[key].visible = true;
     });
-    this.setBBoxCoordinates(this.dataBBox);
+    if (bookmarkHotspotFilter === null) {
+      this.setBBoxCoordinates(this.dataBBox);
+    }
     //set sessionStorage value to keep the widget open
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
@@ -829,6 +856,26 @@ class HotspotWidget extends React.Component {
     this.getBBoxData();
     this.props.view.when(() => {
       this.props.view.map.layers.on('change', () => {
+        let bookmarkHotspotFilter = JSON.parse(
+          localStorage.getItem('bookmarkHotspotFilter'),
+        );
+        if (
+          bookmarkHotspotFilter !== null &&
+          this.props.view.map.layers.items[0] !== 'bookmark'
+        ) {
+          let activeLayers = [];
+          let filteredLayers = [];
+          Object.keys(bookmarkHotspotFilter.activeLayers).forEach((key) => {
+            activeLayers[key] = this.layers[key];
+          });
+          Object.keys(bookmarkHotspotFilter.filteredLayers).forEach((key) => {
+            filteredLayers[key] = null;
+          });
+          this.props.hotspotData['activeLayers'] = activeLayers;
+          this.props.hotspotData['filteredLayers'] = filteredLayers;
+          this.renderApplyFilterButton();
+          localStorage.setItem('bookmarkHotspotFilter', null);
+        }
         this.setState({
           activeLayersArray: Array.from(
             document.querySelectorAll('.active-layer'),
