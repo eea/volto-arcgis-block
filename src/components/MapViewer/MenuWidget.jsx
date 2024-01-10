@@ -1184,6 +1184,15 @@ class MenuWidget extends React.Component {
       );
     }
 
+    if (dataset.DatasetURL) {
+      const originUrl = window.location.origin;
+      let datasetUrl = new URL(dataset.DatasetURL);
+      let datasetUrlPathname = datasetUrl.pathname;
+      let newUrl = new URL(datasetUrlPathname, originUrl);
+
+      dataset.DatasetURL = newUrl.toString();
+    }
+
     return (
       <div
         className="map-menu-dataset-dropdown"
