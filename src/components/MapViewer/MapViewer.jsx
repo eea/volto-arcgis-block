@@ -484,8 +484,10 @@ export const CheckUserID = ({ reference }) => {
         <BookmarkWidget
           view={reference.view}
           map={reference.map}
+          layers={reference.state.layers}
           mapViewer={reference}
           userID={user_id}
+          hotspotData={reference.state.hotspotData}
         />
       }
     </>
