@@ -680,6 +680,30 @@ class MenuWidget extends React.Component {
     this.loadOpacity();
     this.loadVisibility();
     this.handleRasterVectorLegend();
+    this.map.when(() => {
+      this.map.layers.on('change', (e) => {
+        if (this.map.layers.items[0] === 'bookmark') {
+          this.map.layers.remove('bookmark');
+          let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
+          for (const layer in this.layers) {
+            let node = document.getElementById(layer);
+            if (node) {
+              if (layers.includes(layer)) {
+                let visible = this.layers[node.id].visible;
+                node.checked = true;
+                this.toggleLayer(node);
+                if (!visible) {
+                  this.eyeLayer(node);
+                }
+              } else if (node.checked) {
+                node.checked = false;
+                this.toggleLayer(node);
+              }
+            }
+          }
+        }
+      });
+    });
   }
 
   setSliderTag(val) {

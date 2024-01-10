@@ -21,9 +21,16 @@ class BookmarkWidget extends React.Component {
       showMapMenu: false,
     };
     this.mapViewer = this.props.mapViewer;
+    this.map = this.props.map;
+    this.layers = this.props.layers;
     this.userID = this.props.userID;
     this.menuClass =
       'esri-icon-bookmark esri-widget--button esri-widget esri-interactive';
+    this.sessionBookmarks = [];
+    this.sessionBookmarkLayers = [];
+    this.sessionBookmarkOpacity = [];
+    this.sessionBookmarkVisible = [];
+    this.sessionBookmarkHotspot = [];
   }
 
   loader() {
@@ -70,20 +77,65 @@ class BookmarkWidget extends React.Component {
    */
 
   limitMaxLenth() {
-    document.querySelector(
-      '.esri-bookmarks__authoring-label .esri-input',
-    ).maxLength = 150;
+    if (
+      document.querySelector('.esri-bookmarks__authoring-label .esri-input')
+    ) {
+      document.querySelector(
+        '.esri-bookmarks__authoring-label .esri-input',
+      ).maxLength = 150;
+    }
   }
 
   async componentDidMount() {
     await this.loader();
     this.props.view.ui.add(this.container.current, 'top-right');
-    let sessionBookmarks = {};
     if (this.userID != null) {
-      sessionBookmarks =
+      this.sessionBookmarks =
         JSON.parse(
           localStorage.getItem(BOOKMARK_SESSION_KEY + '_' + this.userID),
-        ) || {};
+        ) || [];
+      this.sessionBookmarkLayers =
+        JSON.parse(
+          localStorage.getItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_layers',
+          ),
+        ) || [];
+      while (this.sessionBookmarkLayers.length < this.sessionBookmarks.length) {
+        this.sessionBookmarkLayers.push([]);
+      }
+      this.sessionBookmarkOpacity =
+        JSON.parse(
+          localStorage.getItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_opacity',
+          ),
+        ) || [];
+      while (
+        this.sessionBookmarkOpacity.length < this.sessionBookmarks.length
+      ) {
+        this.sessionBookmarkOpacity.push([]);
+      }
+      this.sessionBookmarkVisible =
+        JSON.parse(
+          localStorage.getItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_visible',
+          ),
+        ) || [];
+      while (
+        this.sessionBookmarkVisible.length < this.sessionBookmarks.length
+      ) {
+        this.sessionBookmarkVisible.push([]);
+      }
+      this.sessionBookmarkHotspot =
+        JSON.parse(
+          localStorage.getItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_hotspot',
+          ),
+        ) || [];
+      while (
+        this.sessionBookmarkHotspot.length < this.sessionBookmarks.length
+      ) {
+        this.sessionBookmarkHotspot.push([]);
+      }
     }
     this.Bookmarks = new Bookmarks({
       view: this.props.view,
@@ -93,25 +145,194 @@ class BookmarkWidget extends React.Component {
         time: false, // don't show the time (h:m:s) next to the date
       },
       container: document.querySelector('.bookmark-panel'),
-      bookmarks: sessionBookmarks,
+      bookmarks: this.sessionBookmarks,
     });
-
+    this.sessionBookmarks = [];
+    this.Bookmarks.bookmarks.items.forEach((bookmark) => {
+      this.sessionBookmarks.push(bookmark);
+    });
     this.Bookmarks.when(() => {
-      this.Bookmarks.bookmarks.on('change', () => {
+      this.Bookmarks.bookmarks.on('change', (e) => {
+        if (e.added[0]) {
+          let check = JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+          let visibleLayers =
+            JSON.parse(sessionStorage.getItem('visibleLayers')) || [];
+          let opacity = [];
+          let visible = [];
+          check.forEach((layer) => {
+            opacity.push(this.layers[layer].opacity);
+            if (
+              visibleLayers[check] &&
+              visibleLayers[check][1] === 'eye-slash'
+            ) {
+              visible.push(false);
+            } else {
+              visible.push(true);
+            }
+          });
+          this.sessionBookmarks.push(e.added[0]);
+          this.sessionBookmarkLayers.push(check);
+          this.sessionBookmarkOpacity.push(opacity);
+          this.sessionBookmarkVisible.push(visible);
+          let hotspotFilters = {
+            activeLayers: {},
+            filteredLayers: {},
+          };
+          Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+            hotspotFilters.activeLayers[key] = null;
+          });
+          Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
+            hotspotFilters.filteredLayers[
+              key
+            ] = this.props.hotspotData.filteredLayers[
+              key
+            ].customLayerParameters['CQL_FILTER'];
+          });
+          this.sessionBookmarkHotspot.push(hotspotFilters);
+        } else if (e.removed[0]) {
+          for (let index = 0; index < this.sessionBookmarks.length; index++) {
+            if (e.removed[0] === this.sessionBookmarks[index]) {
+              this.sessionBookmarks.splice(index, 1);
+              this.sessionBookmarkLayers.splice(index, 1);
+              this.sessionBookmarkOpacity.splice(index, 1);
+              this.sessionBookmarkVisible.splice(index, 1);
+              this.sessionBookmarkHotspot.splice(index, 1);
+            }
+          }
+        } else {
+          let newSessionBookmark = [];
+          let newSessionBookmarkLayers = [];
+          let newSessionBookmarkOpacity = [];
+          let newSessionBookmarkVisible = [];
+          let newSessionBookmarkHotspot = [];
+          for (let i = 0; i < this.Bookmarks.bookmarks.items.length; i++) {
+            for (let j = 0; j < this.sessionBookmarks.length; j++) {
+              if (
+                this.Bookmarks.bookmarks.items[i] === this.sessionBookmarks[j]
+              ) {
+                newSessionBookmark.push(this.sessionBookmarks[j]);
+                newSessionBookmarkLayers.push(this.sessionBookmarkLayers[j]);
+                newSessionBookmarkOpacity.push(this.sessionBookmarkOpacity[j]);
+                newSessionBookmarkVisible.push(this.sessionBookmarkVisible[j]);
+                newSessionBookmarkHotspot.push(this.sessionBookmarkHotspot[j]);
+              }
+            }
+          }
+          this.sessionBookmarks = newSessionBookmark;
+          this.sessionBookmarkLayers = newSessionBookmarkLayers;
+          this.sessionBookmarkOpacity = newSessionBookmarkOpacity;
+          this.sessionBookmarkVisible = newSessionBookmarkVisible;
+          this.sessionBookmarkHotspot = newSessionBookmarkHotspot;
+        }
         if (this.userID != null) {
           localStorage.setItem(
             BOOKMARK_SESSION_KEY + '_' + this.userID,
             JSON.stringify(this.Bookmarks.bookmarks.items),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_layers',
+            JSON.stringify(this.sessionBookmarkLayers),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_opacity',
+            JSON.stringify(this.sessionBookmarkOpacity),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_visible',
+            JSON.stringify(this.sessionBookmarkVisible),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_hotspot',
+            JSON.stringify(this.sessionBookmarkHotspot),
           );
         }
       });
-      this.Bookmarks.on('bookmark-edit', () => {
+      this.Bookmarks.on('bookmark-edit', (e) => {
+        let check = JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+        let visibleLayers =
+          JSON.parse(sessionStorage.getItem('visibleLayers')) || [];
+        let opacity = [];
+        let visible = [];
+        check.forEach((layer) => {
+          opacity.push(this.layers[layer].opacity);
+          if (visibleLayers[check] && visibleLayers[check][1] === 'eye-slash') {
+            visible.push(false);
+          } else {
+            visible.push(true);
+          }
+        });
+        let hotspotFilters = {
+          activeLayers: {},
+          filteredLayers: {},
+        };
+        Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+          hotspotFilters.activeLayers[key] = null;
+        });
+        Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
+          hotspotFilters.filteredLayers[
+            key
+          ] = this.props.hotspotData.filteredLayers[key].customLayerParameters[
+            'CQL_FILTER'
+          ];
+        });
+        for (let index = 0; index < this.sessionBookmarks.length; index++) {
+          if (e.bookmark === this.sessionBookmarks[index]) {
+            this.sessionBookmarks[index] = e.bookmark;
+            this.sessionBookmarkLayers[index] = check;
+            this.sessionBookmarkOpacity[index] = opacity;
+            this.sessionBookmarkVisible[index] = visible;
+            this.sessionBookmarkHotspot[index] = hotspotFilters;
+          }
+        }
         if (this.userID != null) {
           localStorage.setItem(
             BOOKMARK_SESSION_KEY + '_' + this.userID,
             JSON.stringify(this.Bookmarks.bookmarks.items),
           );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_layers',
+            JSON.stringify(this.sessionBookmarkLayers),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_opacity',
+            JSON.stringify(this.sessionBookmarkOpacity),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_visible',
+            JSON.stringify(this.sessionBookmarkVisible),
+          );
+          localStorage.setItem(
+            BOOKMARK_SESSION_KEY + '_' + this.userID + '_hotspot',
+            JSON.stringify(this.sessionBookmarkHotspot),
+          );
         }
+      });
+      this.Bookmarks.on('bookmark-select', (e) => {
+        let selectLayers = [];
+        let selectOpacity = [];
+        let selectVisible = [];
+        for (let index = 0; index < this.Bookmarks.bookmarks.length; index++) {
+          if (e.bookmark === this.Bookmarks.bookmarks.items[index]) {
+            selectLayers = this.sessionBookmarkLayers[index];
+            selectOpacity = this.sessionBookmarkOpacity[index];
+            selectVisible = this.sessionBookmarkVisible[index];
+            localStorage.setItem(
+              'bookmarkHotspotFilter',
+              JSON.stringify(this.sessionBookmarkHotspot[index]),
+            );
+          }
+        }
+        this.map.layers.removeAll();
+        this.map.layers.add('bookmark');
+        for (let index = 0; index < selectLayers.length; index++) {
+          if (selectOpacity[index]) {
+            this.layers[selectLayers[index]].opacity = selectOpacity[index];
+          }
+          if (selectVisible[index] !== null) {
+            this.layers[selectLayers[index]].visible = selectVisible[index];
+          }
+        }
+        sessionStorage.setItem('checkedLayers', JSON.stringify(selectLayers));
       });
     });
   }
