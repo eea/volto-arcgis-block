@@ -465,8 +465,8 @@ class TimesliderWidget extends React.Component {
     document.querySelector(
       '.esri-ui-bottom-right.esri-ui-corner',
     ).style.pointerEvents = 'auto';
-    this.drag.x = e.screenX - e.currentTarget.getBoundingClientRect().left;
-    this.drag.y = e.screenY - e.currentTarget.getBoundingClientRect().top;
+    this.drag.x = e.screenX - e.currentTarget.getBoundingClientRect().right;
+    this.drag.y = e.screenY - e.currentTarget.getBoundingClientRect().bottom;
   }
 
   onDragOver(e) {
@@ -474,17 +474,17 @@ class TimesliderWidget extends React.Component {
   }
 
   onDrop(e) {
-    let left =
-      e.screenX -
+    let right =
       this.drag.x -
-      e.currentTarget.getBoundingClientRect().left +
+      e.screenX +
+      e.currentTarget.getBoundingClientRect().right +
       'px';
-    let top =
-      e.screenY -
+    let bottom =
       this.drag.y -
-      e.currentTarget.getBoundingClientRect().top +
+      e.screenY +
+      e.currentTarget.getBoundingClientRect().bottom +
       'px';
-    this.setState({ styles: { left: left, top: top } });
+    this.setState({ styles: { right: right, bottom: bottom } });
     this.drag.frame.style.visibility = 'hidden';
     document.querySelector(
       '.esri-ui-bottom-right.esri-ui-corner',
