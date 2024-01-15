@@ -856,9 +856,12 @@ class HotspotWidget extends React.Component {
     this.getBBoxData();
     this.props.view.when(() => {
       this.props.view.map.layers.on('change', () => {
-        let bookmarkHotspotFilter = JSON.parse(
-          localStorage.getItem('bookmarkHotspotFilter'),
-        );
+        let bookmarkHotspotFilter = null;
+        if (localStorage.getItem('bookmarkHotspotFilter')) {
+          bookmarkHotspotFilter = JSON.parse(
+            localStorage.getItem('bookmarkHotspotFilter'),
+          );
+        }
         if (
           bookmarkHotspotFilter !== null &&
           this.props.view.map.layers.items[0] !== 'bookmark'

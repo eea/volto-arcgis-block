@@ -162,8 +162,8 @@ class BookmarkWidget extends React.Component {
           check.forEach((layer) => {
             opacity.push(this.layers[layer].opacity);
             if (
-              visibleLayers[check] &&
-              visibleLayers[check][1] === 'eye-slash'
+              visibleLayers[layer] &&
+              visibleLayers[layer][1] === 'eye-slash'
             ) {
               visible.push(false);
             } else {
@@ -178,16 +178,22 @@ class BookmarkWidget extends React.Component {
             activeLayers: {},
             filteredLayers: {},
           };
-          Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
-            hotspotFilters.activeLayers[key] = null;
-          });
-          Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
-            hotspotFilters.filteredLayers[
-              key
-            ] = this.props.hotspotData.filteredLayers[
-              key
-            ].customLayerParameters['CQL_FILTER'];
-          });
+          if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+            Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+              hotspotFilters.activeLayers[key] = null;
+            });
+          }
+          if (this.props.hotspotData && this.props.hotspotData.filteredLayers) {
+            Object.keys(this.props.hotspotData.filteredLayers).forEach(
+              (key) => {
+                hotspotFilters.filteredLayers[
+                  key
+                ] = this.props.hotspotData.filteredLayers[
+                  key
+                ].customLayerParameters['CQL_FILTER'];
+              },
+            );
+          }
           this.sessionBookmarkHotspot.push(hotspotFilters);
         } else if (e.removed[0]) {
           for (let index = 0; index < this.sessionBookmarks.length; index++) {
@@ -255,7 +261,7 @@ class BookmarkWidget extends React.Component {
         let visible = [];
         check.forEach((layer) => {
           opacity.push(this.layers[layer].opacity);
-          if (visibleLayers[check] && visibleLayers[check][1] === 'eye-slash') {
+          if (visibleLayers[layer] && visibleLayers[layer][1] === 'eye-slash') {
             visible.push(false);
           } else {
             visible.push(true);
@@ -265,16 +271,20 @@ class BookmarkWidget extends React.Component {
           activeLayers: {},
           filteredLayers: {},
         };
-        Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
-          hotspotFilters.activeLayers[key] = null;
-        });
-        Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
-          hotspotFilters.filteredLayers[
-            key
-          ] = this.props.hotspotData.filteredLayers[key].customLayerParameters[
-            'CQL_FILTER'
-          ];
-        });
+        if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+          Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+            hotspotFilters.activeLayers[key] = null;
+          });
+        }
+        if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+          Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
+            hotspotFilters.filteredLayers[
+              key
+            ] = this.props.hotspotData.filteredLayers[
+              key
+            ].customLayerParameters['CQL_FILTER'];
+          });
+        }
         for (let index = 0; index < this.sessionBookmarks.length; index++) {
           if (e.bookmark === this.sessionBookmarks[index]) {
             this.sessionBookmarks[index] = e.bookmark;
