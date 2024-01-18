@@ -267,9 +267,16 @@
 /* Bookmark*/
 .esri-bookmarks .esri-button {
   border-color: #a0b128;
+  margin-left: 0.25rem;
   background-color: white;
-  color: #a0b128;
+  color: #a0b128 !important;
   transition: all 0.3s ease-out;
+}
+
+.esri-bookmarks .esri-button.esri-bookmarks__authoring-delete-button {
+  padding-right: 0.75rem !important;
+  padding-left: 0.75rem !important;
+  margin-left: 0;
 }
 
 .esri-bookmarks .esri-button:hover {
@@ -1025,6 +1032,11 @@ div.esri-popover
 .react-datepicker__current-month,
 .react-datepicker__day-name {
   color: white !important;
+}
+
+.react-datepicker__day.react-datepicker__day--keyboard-selected {
+  background: none !important;
+  color: black;
 }
 
 .datetime-picker {
