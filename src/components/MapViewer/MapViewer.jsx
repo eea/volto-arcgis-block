@@ -471,6 +471,7 @@ export const CheckLogin = ({ reference }) => {
           download={reference.props.mapviewer_config.Download}
           updateArea={reference.updateArea}
           urls={reference.cfgUrls}
+          mapviewer_config={reference.props.mapviewer_config}
         />
       )}
     </>

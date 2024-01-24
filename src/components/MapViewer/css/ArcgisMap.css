@@ -282,7 +282,7 @@
 .esri-bookmarks .esri-button:hover {
   border-color: #a0b128;
   background-color: #a0b128;
-  color: white;
+  color: white !important;
 }
 
 body.section-map-viewer
