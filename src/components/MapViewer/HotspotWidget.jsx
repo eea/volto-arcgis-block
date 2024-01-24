@@ -191,6 +191,38 @@ class HotspotWidget extends React.Component {
     });
   }
 
+  addFilteredLayersData(
+    filteredLayersData,
+    bboxData,
+    typeLegend,
+    selectBoxTime,
+  ) {
+    //sweep the old filtered data
+    if (filteredLayersData[typeLegend] !== undefined) {
+      delete filteredLayersData[typeLegend];
+    }
+    //Find the bbox data for the chosen region
+    let klc_array = bboxData.find((e) => e.klc_code === this.dataKlc_code);
+
+    //Parse the bbox data into finer detail
+    let klc_bbox_coordinates = klc_array.bbox.split(',');
+    let xmin_ymin = klc_bbox_coordinates[0].split(' ');
+    let xmax_ymax = klc_bbox_coordinates[1].split(' ');
+
+    //Add the filtered data to the filteredLayersData object
+    filteredLayersData[typeLegend] = {
+      klc_code: this.dataKlc_code,
+      year: selectBoxTime,
+      bboxData: {
+        klc_array: klc_array,
+        klc_bbox_coordinates: {
+          xmin_ymin: xmin_ymin,
+          xmax_ymax: xmax_ymax,
+        },
+      },
+    };
+  }
+
   async handleApplyFilter(typeFilter) {
     let typeLegend;
     let activeLayers =
@@ -201,6 +233,7 @@ class HotspotWidget extends React.Component {
       this.props.hotspotData && this.props.hotspotData['filteredLayers']
         ? Object.keys(this.props.hotspotData['filteredLayers'])
         : [];
+    let filteredLayersData = this.props.hotspotData['filteredLayerData'] || [];
     let layersToAdd = {};
     let bookmarkHotspotFilter = JSON.parse(
       localStorage.getItem('bookmarkHotspotFilter'),
@@ -228,6 +261,13 @@ class HotspotWidget extends React.Component {
             typeLegend = 'all_lcc_b_pol';
           }
         }
+
+        this.addFilteredLayersData(
+          filteredLayersData,
+          this.dataBBox,
+          typeLegend,
+          selectLccBoxTime,
+        );
 
         filterLayer = this.esriLayer_lcc;
 
@@ -261,6 +301,14 @@ class HotspotWidget extends React.Component {
 
         let selectLcBoxTime = document.getElementById('select-klc-lcTime')
           .value;
+
+        this.addFilteredLayersData(
+          filteredLayersData,
+          this.dataBBox,
+          typeLegend,
+          selectLcBoxTime,
+        );
+
         //this.lcYear = selectLcBoxTime;
         this.setState({ lcYear: selectLcBoxTime });
         if (document.getElementById('select-klc-lcTime').value.match(/\d+/g)) {
@@ -347,11 +395,15 @@ class HotspotWidget extends React.Component {
     sessionStorage.setItem('hotspotFilterApplied', 'true');
     this.disableButton();
     this.props.mapLayersHandler(this.layers);
-    this.filteredLayersToHotspotData(Object.keys(layersToAdd));
+    this.filteredLayersToHotspotData(
+      Object.keys(layersToAdd),
+      filteredLayersData,
+    );
   }
 
-  filteredLayersToHotspotData(layerIds) {
+  filteredLayersToHotspotData(layerIds, layersData) {
     let updatedFilteredLayers = this.props.hotspotData['filteredLayers'] || {};
+    let filteredLayersData = this.props.hotspotData['filteredLayersData'] || {};
     let newHotspotData = this.props.hotspotData;
     layerIds.forEach((layerId) => {
       let layer = Object.entries(this.layers).find(
@@ -363,10 +415,20 @@ class HotspotWidget extends React.Component {
           delete updatedFilteredLayers[key];
         }
       });
-
       updatedFilteredLayers[layerId] = layer;
     });
+
+    Object.keys(layersData).forEach((layersDataKey) => {
+      Object.keys(filteredLayersData).forEach((filteredLayersDataKey) => {
+        if (layersDataKey === filteredLayersDataKey) {
+          delete filteredLayersData[filteredLayersDataKey];
+        }
+      });
+      filteredLayersData[layersDataKey] = layersData[layersDataKey];
+    });
+
     newHotspotData['filteredLayers'] = updatedFilteredLayers;
+    newHotspotData['filteredLayersData'] = filteredLayersData;
     return this.props.hotspotDataHandler(newHotspotData);
   }
 
