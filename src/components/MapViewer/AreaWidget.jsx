@@ -34,6 +34,7 @@ class AreaWidget extends React.Component {
     this.props.mapViewer.view.popup.defaultPopupTemplateEnabled = true;
     this.nutsUrl = '';
     this.initFMI = this.initFMI.bind(this);
+    this.mapviewer_config = this.props.mapviewer_config;
   }
 
   loader() {
@@ -195,7 +196,9 @@ class AreaWidget extends React.Component {
   }
 
   checkExtent(extent) {
-    if (extent.width * extent.height > 1996137506460) {
+    const areaLimit = this.mapviewer_config.Components[0].Products[0]
+      .Datasets[0].DownloadLimitAreaExtent;
+    if (extent.width * extent.height > areaLimit) {
       return true;
     } else {
       return false;
