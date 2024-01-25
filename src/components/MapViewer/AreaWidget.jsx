@@ -659,7 +659,7 @@ class AreaWidget extends React.Component {
                           id="drawRectanglePopupWarning"
                           href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                         >
                           To download the full dataset consult the "How to
                           download M2M" How to guide.
