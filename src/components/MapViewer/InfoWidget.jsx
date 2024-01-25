@@ -101,7 +101,23 @@ class InfoWidget extends React.Component {
         let promises = [];
         let layerTypes = [];
         layers.forEach((layer, index) => {
-          let title = this.getLayerTitle(layer);
+          let title;
+          if (this?.props?.hotspotData) {
+            let layerId = this.getLayerName(layer);
+            outerLoop: for (let key in this.props.hotspotData) {
+              let item = this.props.hotspotData[key];
+              for (let prop in item) {
+                if (prop === layerId) {
+                  if (this.props.hotspotData[key][prop].Title !== undefined) {
+                    title = this.props.hotspotData[key][prop].Title;
+                    break outerLoop;
+                  }
+                }
+              }
+            }
+          } else {
+            title = this.getLayerTitle(layer);
+          }
           if (layer.isTimeSeries) {
             if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
@@ -246,12 +262,17 @@ class InfoWidget extends React.Component {
                   } else {
                     switch (layer.type) {
                       case 'wms':
-                        if (data.type === 'FeatureCollection') {
+                        if (
+                          data &&
+                          data.type &&
+                          data.type === 'FeatureCollection'
+                        ) {
                           if (data.features.length) {
                             properties = data.features[0].properties;
                             properties = Object.entries(properties);
                           }
                         } else if (
+                          data &&
                           data.doctype &&
                           data.doctype.name === 'html'
                         ) {
@@ -268,6 +289,7 @@ class InfoWidget extends React.Component {
                             properties = fields;
                           }
                         } else if (
+                          data &&
                           data.getElementsByTagName('FIELDS').length &&
                           typeof data !== 'undefined'
                         ) {
@@ -416,13 +438,67 @@ class InfoWidget extends React.Component {
             );
           } else if (format.includes('json')) {
             data = JSON.parse(response.data);
+
           }
-          return data;
+        }
+      }
+    } else {
+      return this.wmsCapabilities(url).then((xml) => {
+        let version = this.parseCapabilities(xml, 'wms_capabilities')[0]
+          .attributes['version'];
+        let format = this.parseFormat(xml);
+        let times = '';
+        let nTimes = 1;
+        if (layer.isTimeSeries) {
+          times = this.parseTime(xml, layerId);
+          nTimes = times.length;
+        }
+        return esriRequest(url, {
+          responseType: 'html',
+          sync: 'true',
+          query: {
+            request: 'GetFeatureInfo',
+            service: 'WMS',
+            version: version,
+            SRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
+            CRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
+            BBOX:
+              '' +
+              this.props.view.extent.xmin +
+              ', ' +
+              this.props.view.extent.ymin +
+              ', ' +
+              this.props.view.extent.xmax +
+              ', ' +
+              this.props.view.extent.ymax,
+            HEIGHT: this.props.view.height,
+            WIDTH: this.props.view.width,
+            X: event.screenPoint.x,
+            Y: event.screenPoint.y,
+            QUERY_LAYERS: layerId,
+            INFO_FORMAT: format,
+            TIME: times ? times[0] + '/' + times[nTimes - 1] : '',
+            FEATURE_COUNT: '' + nTimes,
+          },
         })
-        .then((data) => {
-          return data;
-        });
-    });
+          .then((response) => {
+            let format = response.requestOptions.query.INFO_FORMAT;
+            let data;
+            if (format.includes('text')) {
+              data = new window.DOMParser().parseFromString(
+                response.data,
+                'text/html',
+              );
+            } else if (format.includes('json')) {
+              data = JSON.parse(response.data);
+            }
+            return data;
+          })
+          .then((data) => {
+            return data;
+          });
+      });
+    }
   }
 
   wmsCapabilities(url) {
@@ -441,7 +517,8 @@ class InfoWidget extends React.Component {
   }
 
   parseCapabilities(xml, tag) {
-    return xml.getElementsByTagName(tag);
+    let result = xml.getElementsByTagName(tag);
+    return result;
   }
 
   parseFormat(xml) {

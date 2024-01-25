@@ -356,7 +356,14 @@ class MapViewer extends React.Component {
 
   renderInfo() {
     if (this.view)
-      return <InfoWidget view={this.view} map={this.map} mapViewer={this} />;
+      return (
+        <InfoWidget
+          view={this.view}
+          map={this.map}
+          mapViewer={this}
+          hotspotData={this.state.hotspotData}
+        />
+      );
   }
 
   renderPan() {
