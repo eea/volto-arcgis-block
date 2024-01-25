@@ -1350,7 +1350,7 @@ class MenuWidget extends React.Component {
                     <a
                       href={dataset.DatasetURL}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       onKeyDown={(e) => e.stopPropagation()}
                     >

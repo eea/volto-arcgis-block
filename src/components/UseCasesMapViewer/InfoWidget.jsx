@@ -86,7 +86,7 @@ class InfoWidget extends React.Component {
                     <a
                       href={UseCase.Links_to_web_sites.split(' ')[0]}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                     >
                       {' '}
                       here
