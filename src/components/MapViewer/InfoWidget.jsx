@@ -375,6 +375,7 @@ class InfoWidget extends React.Component {
       let nTimes = 1;
       if (layer.isTimeSeries) {
         times = this.parseTime(xml, layerId);
+        console.log(times);
         nTimes = times.length;
       }
       return esriRequest(url, {
