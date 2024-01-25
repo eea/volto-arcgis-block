@@ -516,7 +516,8 @@ class InfoWidget extends React.Component {
   }
 
   parseCapabilities(xml, tag) {
-    xml.getElementsByTagName(tag);
+    let result = xml.getElementsByTagName(tag);
+    return result;
   }
 
   parseFormat(xml) {
