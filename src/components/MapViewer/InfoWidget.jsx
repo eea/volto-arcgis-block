@@ -420,6 +420,7 @@ class InfoWidget extends React.Component {
           return data;
         })
         .then((data) => {
+          //console.log(data);
           return data;
         });
     });
