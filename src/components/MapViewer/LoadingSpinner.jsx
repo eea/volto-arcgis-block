@@ -1,7 +1,5 @@
 import React, { createRef } from 'react';
 import './css/ArcgisMap.css';
-import { loadModules } from 'esri-loader';
-var watchUtils;
 class LoadingSpinner extends React.Component {
   constructor(props) {
     super(props);
@@ -14,12 +12,6 @@ class LoadingSpinner extends React.Component {
     };
     this.showLoading = this.showLoading.bind(this);
     this.listenForLayerChanges = this.listenForLayerChanges.bind(this);
-  }
-
-  loader() {
-    return loadModules(['esri/core/watchUtils']).then(([_watchUtils]) => {
-      watchUtils = _watchUtils;
-    });
   }
 
   listenForLayerChanges() {
@@ -62,23 +54,10 @@ class LoadingSpinner extends React.Component {
   }
 
   async componentDidMount() {
-    await this.loader();
-    //this.props.view.when(() => {
-    //  this.props.view.ui.add(this.container.current, 'manual');
-    //  this.listenForLayerChanges();
-    //});
-    watchUtils.when(this.props.view, 'ready', (isReady) => {
-      if (isReady) {
-        this.props.view.ui.add(this.container.current, 'manual');
-        this.listenForLayerChanges();
-      }
+    this.props.view.when(() => {
+      this.props.view.ui.add(this.container.current, 'manual');
+      this.listenForLayerChanges();
     });
-  }
-
-  componentDidUpdate(prevState) {
-    //    if (this.state.loading !== prevState.loading) {
-    //      this.showLoading();
-    //    }
   }
 
   render() {
