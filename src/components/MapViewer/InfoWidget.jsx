@@ -437,67 +437,13 @@ class InfoWidget extends React.Component {
             );
           } else if (format.includes('json')) {
             data = JSON.parse(response.data);
-
           }
-        }
-      }
-    } else {
-      return this.wmsCapabilities(url).then((xml) => {
-        let version = this.parseCapabilities(xml, 'wms_capabilities')[0]
-          .attributes['version'];
-        let format = this.parseFormat(xml);
-        let times = '';
-        let nTimes = 1;
-        if (layer.isTimeSeries) {
-          times = this.parseTime(xml, layerId);
-          nTimes = times.length;
-        }
-        return esriRequest(url, {
-          responseType: 'html',
-          sync: 'true',
-          query: {
-            request: 'GetFeatureInfo',
-            service: 'WMS',
-            version: version,
-            SRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
-            CRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
-            BBOX:
-              '' +
-              this.props.view.extent.xmin +
-              ', ' +
-              this.props.view.extent.ymin +
-              ', ' +
-              this.props.view.extent.xmax +
-              ', ' +
-              this.props.view.extent.ymax,
-            HEIGHT: this.props.view.height,
-            WIDTH: this.props.view.width,
-            X: event.screenPoint.x,
-            Y: event.screenPoint.y,
-            QUERY_LAYERS: layerId,
-            INFO_FORMAT: format,
-            TIME: times ? times[0] + '/' + times[nTimes - 1] : '',
-            FEATURE_COUNT: '' + nTimes,
-          },
+          return data; // Added return statement
         })
-          .then((response) => {
-            let format = response.requestOptions.query.INFO_FORMAT;
-            let data;
-            if (format.includes('text')) {
-              data = new window.DOMParser().parseFromString(
-                response.data,
-                'text/html',
-              );
-            } else if (format.includes('json')) {
-              data = JSON.parse(response.data);
-            }
-            return data;
-          })
-          .then((data) => {
-            return data;
-          });
-      });
-    }
+        .then((data) => {
+          return data;
+        });
+    });
   }
 
   wmsCapabilities(url) {
