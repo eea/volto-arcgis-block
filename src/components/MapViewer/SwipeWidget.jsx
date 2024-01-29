@@ -324,7 +324,13 @@ class SwipeWidget extends React.Component {
               aria-label="Swipe"
               onClick={this.openMenu.bind(this)} //aqui deberían ir ocultar panel y mas abajo cerrar (pasar a 3d)
               onKeyDown={(e) => {
-                if (!e.altKey && e.code !== 'Tab' && !e.code.startsWith('F')) {
+                if (
+                  !e.altKey &&
+                  e.code !== 'Tab' &&
+                  !e.ctrlKey &&
+                  e.code !== 'Delete' &&
+                  !e.code.startsWith('F')
+                ) {
                   this.openMenu(this);
                 }
               }}
@@ -343,6 +349,8 @@ class SwipeWidget extends React.Component {
                   if (
                     !e.altKey &&
                     e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
                     !e.code.startsWith('F')
                   ) {
                     this.openMenu(this);
