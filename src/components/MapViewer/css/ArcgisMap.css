@@ -321,6 +321,33 @@ div.esri-popover
   margin-bottom: 1rem;
 }
 
+.area-header {
+  padding: 1rem;
+  background-color: rgba(160, 177, 40, 0.5);
+  font-weight: bold;
+}
+
+.rectangle-header {
+  padding-top: 0.5rem;
+  border-width: 2px;
+  border-style: solid none none none;
+  border-top: #a0b128;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.ccl-form {
+  padding-bottom: 0.5rem !important;
+  border-width: 2px;
+  border-style: none none solid none;
+  border-bottom: #a0b128;
+  margin-left: 1rem !important;
+}
+
+.nuts-form {
+  margin-top: 0.5rem;
+  margin-left: 2rem;
+}
 /* Left menu */
 .map-menu {
   position: relative;
