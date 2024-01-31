@@ -198,14 +198,9 @@ class UseCasesMapViewer extends React.Component {
     this.setState(() => ({ useCaseLevel: 1 }));
   }
   async initFMI() {
-    let currentUrl = window.location.href.split('.eu');
-    let fetchUrl = '';
-    if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea') {
-      fetchUrl =
-        'https://clmsdemo.devel6cph.eea.europa.eu/++api++/@anon-registry';
-    } else {
-      fetchUrl = 'https://land.copernicus.eu/++api++/@anon-registry';
-    }
+    let fetchUrl =
+      window.location.href.replace(window.location.pathname.substring(0), '') +
+      '/++api++/@anon-registry';
     try {
       let highlightResponse = await fetch(
         fetchUrl + this.serviceCfg.Highlight_service,
