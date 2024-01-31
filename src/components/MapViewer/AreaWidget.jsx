@@ -124,21 +124,49 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector('input:checked').click();
     }
   }
+  nutsRadioButton(e) {
+    if (e.target.value === 'nuts') {
+      if (
+        !document.getElementById('download_area_select_nuts2').checked &&
+        !document.getElementById('download_area_select_nuts3').checked
+      ) {
+        document.getElementById('download_area_select_nuts1').checked = true;
+        this.loadNutsService('nuts1', [1, 2]);
+      }
+    }
+    if (
+      e.target.value === 'nuts1' ||
+      e.target.value === 'nuts2' ||
+      e.target.value === 'nuts3'
+    ) {
+      document.getElementById('download_area_select_nuts').checked = true;
+    }
+    if (e.target.value === 'nuts0' || e.target.value === 'area') {
+      document.getElementById('download_area_select_nuts1').checked = false;
+      document.getElementById('download_area_select_nuts2').checked = false;
+      document.getElementById('download_area_select_nuts3').checked = false;
+    }
+  }
   nuts0handler(e) {
     this.loadNutsService(e.target.value, [0]);
+    this.loadCountriesService(e.target.value);
+    this.nutsRadioButton(e);
   }
   nuts1handler(e) {
     this.loadNutsService(e.target.value, [1, 2]);
+    this.nutsRadioButton(e);
   }
   nuts2handler(e) {
     this.loadNutsService(e.target.value, [3, 4, 5]);
+    this.nutsRadioButton(e);
   }
   nuts3handler(e) {
     this.loadNutsService(e.target.value, [6, 7, 8]);
+    this.nutsRadioButton(e);
   }
-  countriesHandler(e) {
-    this.loadCountriesService(e.target.value);
-  }
+  // countriesHandler(e) {
+  //   this.loadCountriesService(e.target.value);
+  // }
 
   loadNutsService(id, levels) {
     this.clearWidget();
@@ -164,7 +192,6 @@ class AreaWidget extends React.Component {
   }
 
   loadCountriesService(id) {
-    this.clearWidget();
     document.querySelector('.esri-attribution__powered-by').style.display =
       'flex';
     var layer = new FeatureLayer({
@@ -205,7 +232,7 @@ class AreaWidget extends React.Component {
     }
   }
 
-  rectanglehandler() {
+  rectanglehandler(event) {
     this.clearWidget();
     window.document.querySelector('.pan-container').style.display = 'flex';
     var fillSymbol = {
@@ -310,6 +337,7 @@ class AreaWidget extends React.Component {
     this.setState({
       ShowGraphics: drawGraphics,
     });
+    this.nutsRadioButton(event);
   }
   clearWidget() {
     window.document.querySelector('.pan-container').style.display = 'none';
@@ -420,14 +448,9 @@ class AreaWidget extends React.Component {
   }
 
   async initFMI() {
-    let currentUrl = window.location.href.split('.eu');
-    let fetchUrl = '';
-    if (currentUrl[0] === 'https://clmsdemo.devel6cph.eea') {
-      fetchUrl =
-        'https://clmsdemo.devel6cph.eea.europa.eu/++api++/@anon-registry';
-    } else {
-      fetchUrl = 'https://land.copernicus.eu/++api++/@anon-registry';
-    }
+    let fetchUrl =
+      window.location.href.replace(window.location.pathname.substring(0), '') +
+      '/++api++/@anon-registry';
     try {
       let nutsResponse = await fetch(
         fetchUrl + '/clms.downloadtool.fme_config_controlpanel.nuts_service',
@@ -499,11 +522,7 @@ class AreaWidget extends React.Component {
             )}
             <div className="right-panel-content">
               <div className="area-panel">
-                <div className="area-header">
-                  For areas of interest in the EU, EFTA, candidate countries or
-                  the United Kingdom: choose NUTS classification or draw a
-                  rectangle on the map.
-                </div>
+                <div className="area-header">Select by country or region</div>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
                     <div className="ccl-form-group">
@@ -520,80 +539,79 @@ class AreaWidget extends React.Component {
                         className="ccl-form-radio-label"
                         htmlFor="download_area_select_nuts0"
                       >
-                        <span>NUTS 0</span>
+                        <span>By country</span>
                       </label>
                     </div>
                     <div className="ccl-form-group">
                       <input
                         type="radio"
-                        id="download_area_select_nuts1"
+                        id="download_area_select_nuts"
                         name="downloadAreaSelect"
-                        value="nuts1"
-                        className="ccl-checkbox ccl-required ccl-form-check-input"
-                        onClick={this.nuts1handler.bind(this)}
+                        value="nuts"
+                        className="ccl-checkbox cl-required ccl-form-check-input"
+                        onClick={this.nutsRadioButton.bind(this)}
                       ></input>
                       <label
                         className="ccl-form-radio-label"
-                        htmlFor="download_area_select_nuts1"
+                        htmlFor="download_area_select_nuts"
                       >
-                        <span>NUTS 1</span>
+                        <span>By NUTS</span>
                       </label>
                     </div>
-                    <div className="ccl-form-group">
-                      <input
-                        type="radio"
-                        id="download_area_select_nuts2"
-                        name="downloadAreaSelect"
-                        value="nuts2"
-                        className="ccl-checkbox ccl-required ccl-form-check-input"
-                        onClick={this.nuts2handler.bind(this)}
-                      ></input>
-                      <label
-                        className="ccl-form-radio-label"
-                        htmlFor="download_area_select_nuts2"
-                      >
-                        <span>NUTS 2</span>
-                      </label>
-                    </div>
-                    <div className="ccl-form-group">
-                      <input
-                        type="radio"
-                        id="download_area_select_nuts3"
-                        name="downloadAreaSelect"
-                        value="nuts3"
-                        className="ccl-radio ccl-required ccl-form-check-input"
-                        onClick={this.nuts3handler.bind(this)}
-                      ></input>
-                      <label
-                        className="ccl-form-radio-label"
-                        htmlFor="download_area_select_nuts3"
-                      >
-                        <span>NUTS 3</span>
-                      </label>
-                    </div>
-                    <div className="ccl-form-group">
-                      <div>
-                        For areas of interest outside{' '}
-                        <b>the above ones, choose a country or</b> draw a
-                        rectangle on the map.
+                    <div className="nuts-form">
+                      <div className="ccl-form-group">
+                        <input
+                          type="radio"
+                          id="download_area_select_nuts1"
+                          name="downloadAreaSelectNuts"
+                          value="nuts1"
+                          className="ccl-checkbox ccl-required ccl-form-check-input"
+                          onClick={this.nuts1handler.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_nuts1"
+                        >
+                          <span>NUTS 1 (major socio-economic regions)</span>
+                        </label>
                       </div>
-                      <br></br>
-                      <input
-                        type="radio"
-                        id="download_area_select_countries"
-                        name="downloadAreaSelect"
-                        value="countries"
-                        className="ccl-radio ccl-required ccl-form-check-input"
-                        onClick={this.countriesHandler.bind(this)}
-                      ></input>
-                      <label
-                        className="ccl-form-radio-label"
-                        htmlFor="download_area_select_countries"
-                      >
-                        <span>Country</span>
-                      </label>
+                      <div className="ccl-form-group">
+                        <input
+                          type="radio"
+                          id="download_area_select_nuts2"
+                          name="downloadAreaSelectNuts"
+                          value="nuts2"
+                          className="ccl-checkbox ccl-required ccl-form-check-input"
+                          onClick={this.nuts2handler.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_nuts2"
+                        >
+                          <span>NUTS 2 (basic regions)</span>
+                        </label>
+                      </div>
+                      <div className="ccl-form-group">
+                        <input
+                          type="radio"
+                          id="download_area_select_nuts3"
+                          name="downloadAreaSelectNuts"
+                          value="nuts3"
+                          className="ccl-radio ccl-required ccl-form-check-input"
+                          onClick={this.nuts3handler.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_nuts3"
+                        >
+                          <span>NUTS 3 (small regions)</span>
+                        </label>
+                      </div>
                     </div>
                     <br></br>
+                    <div className="rectangle-header">
+                      Draw a rectangle on the map
+                    </div>
                     <div className="ccl-form-group">
                       <input
                         type="radio"
@@ -607,13 +625,10 @@ class AreaWidget extends React.Component {
                         className="ccl-form-radio-label"
                         htmlFor="download_area_select_rectangle"
                       >
-                        <span>Draw by rectangle</span>
-                        <div>
-                          (Click and drag your mouse on the map. As you move
-                          your mouse, you’ll see the area of the rectangle next
-                          to your cursor. Finish the rectangle by releasing your
-                          mouse.)
-                        </div>
+                        <span>
+                          Click and drag your mouse on the map to select your
+                          area of interest
+                        </span>
                       </label>
                     </div>
                   </fieldset>
