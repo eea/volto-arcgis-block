@@ -422,6 +422,7 @@ class InfoWidget extends React.Component {
           X: event.screenPoint.x,
           Y: event.screenPoint.y,
           QUERY_LAYERS: layerId,
+          LAYERS: layerId,
           INFO_FORMAT: format,
           TIME: times ? times[0] + '/' + times[nTimes - 1] : '',
           FEATURE_COUNT: '' + nTimes,
@@ -463,19 +464,24 @@ class InfoWidget extends React.Component {
 
   parseCapabilities(xml, tag) {
     let result = xml.getElementsByTagName(tag);
+    
     return result;
   }
 
   parseFormat(xml) {
-    let formats = Array.from(
-      Array.from(this.parseCapabilities(xml, 'getFeatureInfo')).map(
-        (f) => f.children,
-      )[0],
-    ).map((v) => v.textContent);
-    let format = formats.filter((v) => v.includes('json'))[0];
-    if (!format) format = formats.filter((v) => v.includes('html'))[0];
-    if (!format) format = formats.filter((v) => v.includes('text/xml'))[0];
-    if (!format) format = formats[0];
+    // console.log(parseCapabilities(xml, 'getFeatureInfo'));
+    let getFeatureInfo_node = this.parseCapabilities(xml, 'getFeatureInfo');    
+    let format = false;
+    if (getFeatureInfo_node.length > 0) {
+      let formats = Array.from(Array.from(getFeatureInfo_node).map((f) => f.children,)[0],).map((v) => v.textContent);
+     
+      format = formats.filter((v) => v.includes('json'))[0];
+      if (!format) format = formats.filter((v) => v.includes('html'))[0];
+      if (!format) format = formats.filter((v) => v.includes('text/xml'))[0];
+      if (!format) format = formats[0];        
+    } else {
+      format = 'application/json';
+    }    
     return format;
   }
 
