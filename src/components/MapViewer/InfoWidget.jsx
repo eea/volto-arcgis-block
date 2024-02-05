@@ -394,7 +394,7 @@ class InfoWidget extends React.Component {
       let version = this.parseCapabilities(xml, 'wms_capabilities')[0].attributes['version'].nodeValue;      
       let format = this.parseFormat(xml, layerId);
       let times = '';
-      let nTimes = 1;
+      let nTimes = 1;     
       if (layer.isTimeSeries) {
         times = this.parseTime(xml, layerId);
         nTimes = times.length;
@@ -419,8 +419,8 @@ class InfoWidget extends React.Component {
             this.props.view.extent.ymax,
           HEIGHT: this.props.view.height,
           WIDTH: this.props.view.width,
-          X: event.screenPoint.x,
-          Y: event.screenPoint.y,
+          X: Math.round(event.screenPoint.x),
+          Y: Math.round(event.screenPoint.y),
           QUERY_LAYERS: layerId,
           LAYERS: layerId,
           INFO_FORMAT: format,
@@ -428,8 +428,7 @@ class InfoWidget extends React.Component {
           FEATURE_COUNT: '' + nTimes,
         },
       })
-        .then((response) => {
-          console.log(response.data);
+        .then((response) => {          
           let format = response.requestOptions.query.INFO_FORMAT;
           let data;
           if (format.includes('text')) {
