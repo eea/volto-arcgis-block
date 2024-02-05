@@ -390,8 +390,8 @@ class InfoWidget extends React.Component {
     let layerId = this.getLayerName(layer);
     let url = layer.featureInfoUrl ? layer.featureInfoUrl : layer.url;
     return this.wmsCapabilities(url).then((xml) => {
-      let version = this.parseCapabilities(xml, 'wms_capabilities')[0]
-        .attributes['version'];
+      // let version = this.parseCapabilities(xml, 'wms_capabilities')[0].attributes['version'];
+      let version = this.parseCapabilities(xml, 'wms_capabilities')[0].attributes['version'].nodeValue;      
       let format = this.parseFormat(xml, layerId);
       let times = '';
       let nTimes = 1;
@@ -429,6 +429,7 @@ class InfoWidget extends React.Component {
         },
       })
         .then((response) => {
+          console.log(response.data);
           let format = response.requestOptions.query.INFO_FORMAT;
           let data;
           if (format.includes('text')) {
