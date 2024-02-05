@@ -391,10 +391,11 @@ class InfoWidget extends React.Component {
     let url = layer.featureInfoUrl ? layer.featureInfoUrl : layer.url;
     return this.wmsCapabilities(url).then((xml) => {
       // let version = this.parseCapabilities(xml, 'wms_capabilities')[0].attributes['version'];
-      let version = this.parseCapabilities(xml, 'wms_capabilities')[0].attributes['version'].nodeValue;      
+      let version = this.parseCapabilities(xml, 'wms_capabilities')[0]
+        .attributes['version'].nodeValue;
       let format = this.parseFormat(xml, layerId);
       let times = '';
-      let nTimes = 1;     
+      let nTimes = 1;
       if (layer.isTimeSeries) {
         times = this.parseTime(xml, layerId);
         nTimes = times.length;
@@ -428,7 +429,7 @@ class InfoWidget extends React.Component {
           FEATURE_COUNT: '' + nTimes,
         },
       })
-        .then((response) => {          
+        .then((response) => {
           let format = response.requestOptions.query.INFO_FORMAT;
           let data;
           if (format.includes('text')) {
@@ -464,24 +465,26 @@ class InfoWidget extends React.Component {
 
   parseCapabilities(xml, tag) {
     let result = xml.getElementsByTagName(tag);
-    
+
     return result;
   }
 
   parseFormat(xml) {
     // console.log(parseCapabilities(xml, 'getFeatureInfo'));
-    let getFeatureInfo_node = this.parseCapabilities(xml, 'getFeatureInfo');    
+    let getFeatureInfo_node = this.parseCapabilities(xml, 'getFeatureInfo');
     let format = false;
     if (getFeatureInfo_node.length > 0) {
-      let formats = Array.from(Array.from(getFeatureInfo_node).map((f) => f.children,)[0],).map((v) => v.textContent);
-     
+      let formats = Array.from(
+        Array.from(getFeatureInfo_node).map((f) => f.children)[0],
+      ).map((v) => v.textContent);
+
       format = formats.filter((v) => v.includes('json'))[0];
       if (!format) format = formats.filter((v) => v.includes('html'))[0];
       if (!format) format = formats.filter((v) => v.includes('text/xml'))[0];
-      if (!format) format = formats[0];        
+      if (!format) format = formats[0];
     } else {
       format = 'application/json';
-    }    
+    }
     return format;
   }
 
