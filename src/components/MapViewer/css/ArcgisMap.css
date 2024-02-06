@@ -331,22 +331,26 @@ div.esri-popover
   padding-top: 0.5rem;
   border-width: 2px;
   border-style: solid none none none;
-  border-top: #a0b128;
+  border-color: #a0b128;
   margin-bottom: 1rem;
   font-weight: bold;
 }
 
-.ccl-form {
+.area-panel .ccl-form {
   padding-bottom: 0.5rem !important;
   border-width: 2px;
   border-style: none none solid none;
-  border-bottom: #a0b128;
+  border-color: #a0b128;
   margin-left: 1rem !important;
 }
 
 .nuts-form {
   margin-top: 0.5rem;
   margin-left: 2rem;
+}
+
+label.ccl-form-radio-label span.nuts-menu-icon {
+  margin-left: 9rem;
 }
 /* Left menu */
 .map-menu {
