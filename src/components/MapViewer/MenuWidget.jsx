@@ -701,6 +701,16 @@ class MenuWidget extends React.Component {
               }
             }
           }
+          layers.forEach((layer, index) => {
+            let activeLayers = document.querySelectorAll('.active-layer');
+            activeLayers.forEach((item) => {
+              if (layer === item.getAttribute('layer-id')) {
+                item.parentElement.insertBefore(item, activeLayers[index]);
+              }
+            });
+          });
+          this.layersReorder();
+          this.saveLayerOrder();
         }
       });
     });

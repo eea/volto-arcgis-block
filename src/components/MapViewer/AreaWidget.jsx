@@ -556,6 +556,19 @@ class AreaWidget extends React.Component {
                         htmlFor="download_area_select_nuts"
                       >
                         <span>By NUTS</span>
+                        <a
+                          href={
+                            'https://land.copernicus.eu/en/faq/map-viewer/what-are-nuts'
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <span className="map-menu-icon nuts-menu-icon">
+                            <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                          </span>
+                        </a>
                       </label>
                     </div>
                     <div className="nuts-form">
