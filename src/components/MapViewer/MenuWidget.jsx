@@ -711,6 +711,20 @@ class MenuWidget extends React.Component {
           });
           this.layersReorder();
           this.saveLayerOrder();
+          let elementOpacities = document.querySelectorAll(
+            '.active-layer-opacity',
+          );
+          let layerOpacities = JSON.parse(
+            sessionStorage.getItem('layerOpacities'),
+          );
+          elementOpacities.forEach((element) => {
+            let id = element.parentElement.parentElement.getAttribute(
+              'layer-id',
+            );
+            if (layerOpacities[id]) {
+              element.dataset.opacity = layerOpacities[id] * 100;
+            }
+          });
         }
       });
     });
@@ -3075,24 +3089,20 @@ class MenuWidget extends React.Component {
    * @param {*} e From the click event
    */
   showOpacity(elem, e) {
-    if (
-      document.querySelector('.opacity-slider input').dataset.layer !== elem.id
-    ) {
-      let opacity = e.currentTarget.dataset.opacity;
-      document.querySelector('.opacity-slider input').value = opacity;
-      document.querySelector('.opacity-panel').style.display = 'block';
-      let left = e.currentTarget.offsetLeft + 48;
-      document.querySelector('.opacity-panel').style.left = left + 'px';
-      let top =
-        document.querySelector('.tabs').offsetHeight +
-        15 -
-        document.querySelector('.panels').scrollTop +
-        e.currentTarget.closest('.active-layer').offsetTop +
-        e.currentTarget.closest('.active-layer').offsetHeight / 2 -
-        document.querySelector('.opacity-panel').offsetHeight / 2;
-      document.querySelector('.opacity-panel').style.top = top + 'px';
-      document.querySelector('.opacity-slider input').dataset.layer = elem.id;
-    }
+    let opacity = e.currentTarget.dataset.opacity;
+    document.querySelector('.opacity-slider input').value = opacity;
+    document.querySelector('.opacity-panel').style.display = 'block';
+    let left = e.currentTarget.offsetLeft + 48;
+    document.querySelector('.opacity-panel').style.left = left + 'px';
+    let top =
+      document.querySelector('.tabs').offsetHeight +
+      15 -
+      document.querySelector('.panels').scrollTop +
+      e.currentTarget.closest('.active-layer').offsetTop +
+      e.currentTarget.closest('.active-layer').offsetHeight / 2 -
+      document.querySelector('.opacity-panel').offsetHeight / 2;
+    document.querySelector('.opacity-panel').style.top = top + 'px';
+    document.querySelector('.opacity-slider input').dataset.layer = elem.id;
     e.stopPropagation();
     this.hideOnClickOutsideOpacity();
   }
