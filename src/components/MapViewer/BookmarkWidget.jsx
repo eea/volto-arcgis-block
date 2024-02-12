@@ -334,15 +334,21 @@ class BookmarkWidget extends React.Component {
         }
         this.map.layers.removeAll();
         this.map.layers.add('bookmark');
+        let layerOpacities = {};
         for (let index = 0; index < selectLayers.length; index++) {
           if (selectOpacity[index]) {
             this.layers[selectLayers[index]].opacity = selectOpacity[index];
+            layerOpacities[selectLayers[index]] = selectOpacity[index];
           }
           if (selectVisible[index] !== null) {
             this.layers[selectLayers[index]].visible = selectVisible[index];
           }
         }
         sessionStorage.setItem('checkedLayers', JSON.stringify(selectLayers));
+        sessionStorage.setItem(
+          'layerOpacities',
+          JSON.stringify(layerOpacities),
+        );
       });
     });
   }
