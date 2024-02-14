@@ -701,11 +701,13 @@ class MenuWidget extends React.Component {
               }
             }
           }
+          let counter = layers.length - 1;
           layers.forEach((layer, index) => {
+            let order = counter - index;
             let activeLayers = document.querySelectorAll('.active-layer');
             activeLayers.forEach((item) => {
               if (layer === item.getAttribute('layer-id')) {
-                item.parentElement.insertBefore(item, activeLayers[index]);
+                item.parentElement.insertBefore(item, activeLayers[order]);
               }
             });
           });
@@ -2843,7 +2845,7 @@ class MenuWidget extends React.Component {
     let activeLayers = document.querySelectorAll('.active-layer');
     let newLayerOrder = [];
     for (let i = 0; i < activeLayers.length; i++) {
-      newLayerOrder.push(activeLayers[i].getAttribute('layer-id'));
+      newLayerOrder.unshift(activeLayers[i].getAttribute('layer-id'));
     }
     sessionStorage.setItem('checkedLayers', JSON.stringify(newLayerOrder));
     window.dispatchEvent(new Event('storage'));
@@ -3061,6 +3063,9 @@ class MenuWidget extends React.Component {
     });
     if (layers.length === 0 && document.querySelector('.info-container')) {
       document.querySelector('.info-container').style.display = 'none';
+      document
+        .querySelector('.esri-ui-top-right.esri-ui-corner')
+        .classList.remove('show-panel');
     } else if (layers.length > 0) {
       document.querySelector('.info-container').style.display = 'flex';
     }
