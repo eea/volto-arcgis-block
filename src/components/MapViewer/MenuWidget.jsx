@@ -3063,11 +3063,24 @@ class MenuWidget extends React.Component {
     });
     if (layers.length === 0 && document.querySelector('.info-container')) {
       document.querySelector('.info-container').style.display = 'none';
-      document
-        .querySelector('.esri-ui-top-right.esri-ui-corner')
-        .classList.remove('show-panel');
+      if (
+        this.props.mapViewer.activeWidget?.container.current.className ===
+        'info-container esri-component'
+      ) {
+        document
+          .querySelector('.esri-ui-top-right.esri-ui-corner')
+          .classList.remove('show-panel');
+      }
     } else if (layers.length > 0) {
       document.querySelector('.info-container').style.display = 'flex';
+      if (
+        this.props.mapViewer.activeWidget?.container.current.className ===
+        'info-container esri-component'
+      ) {
+        document
+          .querySelector('.esri-ui-top-right.esri-ui-corner')
+          .classList.add('show-panel');
+      }
     }
   }
 
