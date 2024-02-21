@@ -35,6 +35,7 @@ class AreaWidget extends React.Component {
     this.nutsUrl = '';
     this.initFMI = this.initFMI.bind(this);
     this.mapviewer_config = this.props.mapviewer_config;
+    this.fileInput = createRef();
   }
 
   loader() {
@@ -210,6 +211,16 @@ class AreaWidget extends React.Component {
 
     this.props.map.reorder(this.nutsGroupLayer, index + 1);
   }
+
+  handleUploadClick = (event) => {
+    // Trigger the file input click
+    this.fileInput.current.click();
+  };
+
+  handleFileChange = (event) => {
+    // Handle the file upload here
+    console.log(event.target.files[0]);
+  };
 
   getHighestIndex() {
     let index = 0;
@@ -641,6 +652,26 @@ class AreaWidget extends React.Component {
                       </label>
                     </div>
                   </fieldset>
+                </div>
+                <br />
+                <div className="area-header">
+                  Upload a file with your area of interest
+                </div>
+                <div className="ccl-form">
+                  <span>File formats supported: sho, kml, etc.</span>
+                  <input
+                    type="file"
+                    name="fileUpload"
+                    ref={this.fileInput}
+                    style={{ display: 'none' }}
+                    onChange={this.handleFileChange}
+                  />
+                  <button
+                    className="esri-button"
+                    onClick={this.handleUploadClick}
+                  >
+                    Upload File
+                  </button>
                 </div>
               </div>
             </div>

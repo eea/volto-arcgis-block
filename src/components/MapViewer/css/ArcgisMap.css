@@ -352,6 +352,12 @@ div.esri-popover
 label.ccl-form-radio-label span.nuts-menu-icon {
   margin-left: 9rem;
 }
+
+.area-container .esri-button {
+  border: none;
+  background-color: #a0b128;
+}
+
 /* Left menu */
 .map-menu {
   position: relative;
