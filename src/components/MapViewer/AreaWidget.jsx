@@ -1,4 +1,6 @@
 import React, { createRef } from 'react';
+import { geojsonToArcGIS } from '@terraformer/arcgis';
+import { shp } from 'shpjs';
 import { loadModules } from 'esri-loader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -36,6 +38,10 @@ class AreaWidget extends React.Component {
     this.initFMI = this.initFMI.bind(this);
     this.mapviewer_config = this.props.mapviewer_config;
     this.fileInput = createRef();
+    this.handleGeoJson = this.handleGeoJson.bind(this);
+    this.handleCsv = this.handleCsv.bind(this);
+    this.handleKml = this.handleKml.bind(this);
+    this.handleShp = this.handleShp.bind(this);
   }
 
   loader() {
@@ -217,10 +223,119 @@ class AreaWidget extends React.Component {
     this.fileInput.current.click();
   };
 
-  handleFileChange = (event) => {
-    // Handle the file upload here
-    console.log(event.target.files[0]);
+  handleFileChange = (e) => {
+    let file = e.target.files[0];
+    let fileExtensions = ['shp', 'kml', 'geojson', 'csv'];
+    let epsgArray = ['4326', '3857', '3035'];
+
+    // Get the file extension
+    let fileExtension = file.name.split('.').pop();
+
+    //Allow only the following formats: LAEA, SHP, GeoJSON, CSV.
+
+    if (fileExtensions.indexOf(fileExtension) === -1) {
+      alert('The file format is not supported');
+      return;
+    }
+
+    //switch case to handle the different file formats
+    switch (fileExtension) {
+      case 'shp':
+        this.handleShp(file);
+        break;
+      case 'kml':
+        this.handleKml(file);
+        break;
+      case 'geojson':
+        this.handleGeoJson(file);
+        break;
+      case 'csv':
+        this.handleCsv(file);
+        break;
+    }
   };
+
+  //Display Shapefile on the map
+
+  handleShp(file) {
+    let geoJSON = shp(file);
+
+    this.handleGeoJson(geoJSON);
+  }
+
+  //Display KML on the map
+
+  handleKml(file) {}
+
+  //Display GeoJSON on the map
+
+  handleGeoJson(file) {
+    let geoJSON = JSON.parse(file);
+    //check EPSG for 4326
+    if (geoJSON.crs.properties.name.includes('4326')) {
+      //check if the geojson is a polygon
+      if (geoJSON.features[0].geometry.type === 'Polygon') {
+        let arcgis = geojsonToArcGIS(geoJSON);
+        let graphic = new Graphic({
+          geometry: arcgis,
+          symbol: {
+            type: 'simple-fill',
+            color: [255, 255, 255, 0.5],
+            outline: {
+              color: [0, 0, 0],
+              width: 1,
+            },
+          },
+        });
+        this.props.view.graphics.add(graphic);
+        this.props.view.goTo(arcgis);
+        this.props.updateArea(arcgis);
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'download',
+        });
+        if (this.props.download) {
+          document.querySelector('.drawRectanglePopup-block').style.display =
+            'none';
+        }
+      } else {
+        alert('The GeoJSON file is not a polygon');
+      }
+    } else {
+      alert('The GeoJSON file is not in EPSG:4326');
+    }
+  }
+
+  //Display CSV on the map
+
+  handleCsv(file) {}
+
+  //reader.onload = (e) => {
+  //  let fileContent = e.target.result;
+  //  let geojson = JSON.parse(fileContent);
+  //  let arcgis = geojsonToArcGIS(geojson);
+  //  let graphic = new Graphic({
+  //    geometry: arcgis,
+  //    symbol: {
+  //      type: 'simple-fill',
+  //      color: [255, 255, 255, 0.5],
+  //      outline: {
+  //        color: [0, 0, 0],
+  //        width: 1,
+  //      },
+  //    },
+  //  });
+  //  this.props.view.graphics.add(graphic);
+  //  this.props.view.goTo(arcgis);
+  //  this.props.updateArea(arcgis);
+  //  this.setState({
+  //    showInfoPopup: true,
+  //    infoPopupType: 'download',
+  //  });
+  //  if (this.props.download) {
+  //    document.querySelector('.drawRectanglePopup-block').style.display = 'none';
+  //  }
+  //};
 
   getHighestIndex() {
     let index = 0;
