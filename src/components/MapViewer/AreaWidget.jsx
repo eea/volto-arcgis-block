@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
   Extent,
+  CSVLayer,
   FeatureLayer,
   GroupLayer,
   Color,
@@ -48,6 +49,7 @@ class AreaWidget extends React.Component {
     return loadModules([
       'esri/Graphic',
       'esri/geometry/Extent',
+      'esri/layers/CSVLayer',
       'esri/layers/FeatureLayer',
       'esri/layers/GroupLayer',
       'esri/Color',
@@ -57,6 +59,7 @@ class AreaWidget extends React.Component {
       ([
         _Graphic,
         _Extent,
+        _CSVLayer,
         _FeatureLayer,
         _GroupLayer,
         _Color,
@@ -66,6 +69,7 @@ class AreaWidget extends React.Component {
         [
           Graphic,
           Extent,
+          CSVLayer,
           FeatureLayer,
           GroupLayer,
           Color,
@@ -74,6 +78,7 @@ class AreaWidget extends React.Component {
         ] = [
           _Graphic,
           _Extent,
+          _CSVLayer,
           _FeatureLayer,
           _GroupLayer,
           _Color,
@@ -308,7 +313,21 @@ class AreaWidget extends React.Component {
 
   //Display CSV on the map
 
-  handleCsv(file) {}
+  handleCsv(file) {
+    // Pass data by a blob url to create a CSV layer.
+    const csv = `name|year|latitude|Longitude
+aspen|2020|40.418|20.553
+birch|2018|-118.123|35.888`;
+
+    const blob = new Blob([csv], {
+      type: 'plain/text',
+    });
+    let url = URL.createObjectURL(blob);
+
+    const layer = new CSVLayer({
+      url: url,
+    });
+  }
 
   //reader.onload = (e) => {
   //  let fileContent = e.target.result;
