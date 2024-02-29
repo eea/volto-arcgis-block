@@ -3062,7 +3062,6 @@ class MenuWidget extends React.Component {
       }
     });
     if (layers.length === 0 && document.querySelector('.info-container')) {
-      document.querySelector('.info-container').style.display = 'none';
       if (
         this.props.view.graphics.items.find((a) => {
           return a.attributes ? a.attributes.id === 'pixel-info' : false;
@@ -3077,20 +3076,30 @@ class MenuWidget extends React.Component {
         this.props.mapViewer.activeWidget?.container.current.className ===
         'info-container esri-component'
       ) {
+        this.props.mapViewer.activeWidget.setState({
+          showMapMenu: false,
+          pixelInfo: false,
+          popup: false,
+        });
+        this.props.mapViewer.setActiveWidget();
+        let rightPanels = document.querySelectorAll('.right-panel');
+        rightPanels.forEach((panel) => {
+          if (
+            panel.parentElement.className === 'info-container esri-component'
+          ) {
+            panel.style.display = 'none';
+          }
+        });
+        document
+          .querySelector('.esri-icon-description')
+          .classList.remove('active-widget');
         document
           .querySelector('.esri-ui-top-right.esri-ui-corner')
           .classList.remove('show-panel');
       }
+      document.querySelector('.info-container').style.display = 'none';
     } else if (layers.length > 0) {
       document.querySelector('.info-container').style.display = 'flex';
-      if (
-        this.props.mapViewer.activeWidget?.container.current.className ===
-        'info-container esri-component'
-      ) {
-        document
-          .querySelector('.esri-ui-top-right.esri-ui-corner')
-          .classList.add('show-panel');
-      }
     }
   }
 

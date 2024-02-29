@@ -355,15 +355,6 @@ class InfoWidget extends React.Component {
         });
       }
     });
-    this.props.view.graphics.on('change', (e) => {
-      if (e.removed[0] && !e.added[0]) {
-        this.setState({
-          showMapMenu: false,
-          pixelInfo: false,
-          popup: false,
-        });
-      }
-    });
   }
 
   getLayerTitle(layer) {
