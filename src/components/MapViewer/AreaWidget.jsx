@@ -1,6 +1,5 @@
 import React, { createRef } from 'react';
-//import { geojsonToArcGIS } from '@terraformer/arcgis';
-import { shp } from 'shpjs';
+import shp from 'shpjs';
 import { loadModules } from 'esri-loader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -235,83 +234,87 @@ class AreaWidget extends React.Component {
 
   handleFileChange = (e) => {
     let file = e.target.files[0];
-    let fileExtensions = ['shp', 'kml', 'geojson', 'csv'];
-    let epsgArray = ['4326', '3857', '3035'];
+    let fileExtensions = ['zip', 'kml', 'geojson', 'csv'];
 
     // Get the file extension
     let fileExtension = file.name.split('.').pop();
-
-    //Allow only the following formats: LAEA, SHP, GeoJSON, CSV.
 
     if (fileExtensions.indexOf(fileExtension) === -1) {
       alert('The file format is not supported');
       return;
     }
 
-    //switch case to handle the different file formats
+    let reader = new FileReader();
+    reader.onload = (event) => {
+      switch (fileExtension) {
+        case 'zip':
+          this.handleShp(event.target.result);
+          break;
+        case 'kml':
+          this.handleKml(file); // Assuming handleKml expects a File object
+          break;
+        case 'geojson':
+          let parsedData;
+          try {
+            parsedData = JSON.parse(event.target.result);
+          } catch (e) {
+            console.error('Failed to parse JSON', e);
+            return;
+          }
+          this.handleGeoJson(parsedData);
+          break;
+        case 'csv':
+          this.handleCsv(file); // Assuming handleCsv expects a File object
+          break;
+      }
+    };
+
     switch (fileExtension) {
-      case 'shp':
-        this.handleShp(file);
-        break;
-      case 'kml':
-        this.handleKml(file);
+      case 'zip':
+        reader.readAsArrayBuffer(file);
         break;
       case 'geojson':
-        this.handleGeoJson(file);
+        reader.readAsText(file);
         break;
-      case 'csv':
-        this.handleCsv(file);
+      default:
+        alert('File reading not implemented for this file type');
         break;
     }
   };
 
   //Display Shapefile on the map
 
-  handleShp(file) {
-    let geoJSON = shp(file);
-
-    this.handleGeoJson(geoJSON);
-  }
-
-  //Display KML on the map
-
-  handleKml(file) {}
-
-  //Display GeoJSON on the map
-
-  handleGeoJson(file) {
-    new Promise((resolve, reject) => {
-      let reader = new FileReader();
-      reader.onload = (event) => {
-        resolve(event.target.result);
-      };
-      reader.onerror = reject;
-      reader.readAsText(file);
-    })
-      .then((result) => {
-        let parsedResult;
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          console.error('Failed to parse JSON', e);
-          return;
-        }
-        let json = new Blob([JSON.stringify(parsedResult)], {
-          type: 'application/json',
-        });
-        let url = URL.createObjectURL(json);
-        let layer = new GeoJSONLayer({
-          url,
-        });
-        this.props.map.add(layer);
-        this.setState({
-          showInfoPopup: true,
-          infoPopupType: 'download',
-        });
+  async handleShp(data) {
+    await shp(data)
+      .then((geoJSON) => {
+        console.log(geoJSON);
+        this.handleGeoJson(geoJSON);
       })
       .catch((error) => {
         console.error('Failed to read file', error);
       });
+  }
+
+  /*
+  [TBD] Display KML on the map
+
+  handleKml(file) {}
+  */
+
+  //Display GeoJSON on the map
+  handleGeoJson(data) {
+    let jsonBlob = new Blob([JSON.stringify(data)], {
+      type: 'application/json',
+    });
+    let url = URL.createObjectURL(jsonBlob);
+    let layer = new GeoJSONLayer({
+      url,
+    });
+    this.props.map.add(layer);
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'download',
+    });
   }
 
   //Display CSV on the map
