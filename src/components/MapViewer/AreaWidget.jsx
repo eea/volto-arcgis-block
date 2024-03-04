@@ -1,5 +1,5 @@
 import React, { createRef } from 'react';
-import { geojsonToArcGIS } from '@terraformer/arcgis';
+//import { geojsonToArcGIS } from '@terraformer/arcgis';
 import { shp } from 'shpjs';
 import { loadModules } from 'esri-loader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,6 +8,7 @@ var Graphic,
   Extent,
   CSVLayer,
   FeatureLayer,
+  GeoJSONLayer,
   GroupLayer,
   Color,
   SimpleLineSymbol,
@@ -51,6 +52,7 @@ class AreaWidget extends React.Component {
       'esri/geometry/Extent',
       'esri/layers/CSVLayer',
       'esri/layers/FeatureLayer',
+      'esri/layers/GeoJSONLayer',
       'esri/layers/GroupLayer',
       'esri/Color',
       'esri/symbols/SimpleLineSymbol',
@@ -61,6 +63,7 @@ class AreaWidget extends React.Component {
         _Extent,
         _CSVLayer,
         _FeatureLayer,
+        _GeoJSONLayer,
         _GroupLayer,
         _Color,
         _SimpleLineSymbol,
@@ -71,6 +74,7 @@ class AreaWidget extends React.Component {
           Extent,
           CSVLayer,
           FeatureLayer,
+          GeoJSONLayer,
           GroupLayer,
           Color,
           SimpleLineSymbol,
@@ -80,6 +84,7 @@ class AreaWidget extends React.Component {
           _Extent,
           _CSVLayer,
           _FeatureLayer,
+          _GeoJSONLayer,
           _GroupLayer,
           _Color,
           _SimpleLineSymbol,
@@ -275,40 +280,38 @@ class AreaWidget extends React.Component {
   //Display GeoJSON on the map
 
   handleGeoJson(file) {
-    let geoJSON = JSON.parse(file);
-    //check EPSG for 4326
-    if (geoJSON.crs.properties.name.includes('4326')) {
-      //check if the geojson is a polygon
-      if (geoJSON.features[0].geometry.type === 'Polygon') {
-        let arcgis = geojsonToArcGIS(geoJSON);
-        let graphic = new Graphic({
-          geometry: arcgis,
-          symbol: {
-            type: 'simple-fill',
-            color: [255, 255, 255, 0.5],
-            outline: {
-              color: [0, 0, 0],
-              width: 1,
-            },
-          },
+    new Promise((resolve, reject) => {
+      let reader = new FileReader();
+      reader.onload = (event) => {
+        resolve(event.target.result);
+      };
+      reader.onerror = reject;
+      reader.readAsText(file);
+    })
+      .then((result) => {
+        let parsedResult;
+        try {
+          parsedResult = JSON.parse(result);
+        } catch (e) {
+          console.error('Failed to parse JSON', e);
+          return;
+        }
+        let json = new Blob([JSON.stringify(parsedResult)], {
+          type: 'application/json',
         });
-        this.props.view.graphics.add(graphic);
-        this.props.view.goTo(arcgis);
-        this.props.updateArea(arcgis);
+        let url = URL.createObjectURL(json);
+        let layer = new GeoJSONLayer({
+          url,
+        });
+        this.props.map.add(layer);
         this.setState({
           showInfoPopup: true,
           infoPopupType: 'download',
         });
-        if (this.props.download) {
-          document.querySelector('.drawRectanglePopup-block').style.display =
-            'none';
-        }
-      } else {
-        alert('The GeoJSON file is not a polygon');
-      }
-    } else {
-      alert('The GeoJSON file is not in EPSG:4326');
-    }
+      })
+      .catch((error) => {
+        console.error('Failed to read file', error);
+      });
   }
 
   //Display CSV on the map
