@@ -41,7 +41,7 @@ class AreaWidget extends React.Component {
     this.fileInput = createRef();
     this.handleGeoJson = this.handleGeoJson.bind(this);
     this.handleCsv = this.handleCsv.bind(this);
-    this.handleKml = this.handleKml.bind(this);
+    //this.handleKml = this.handleKml.bind(this);
     this.handleShp = this.handleShp.bind(this);
   }
 
@@ -245,6 +245,7 @@ class AreaWidget extends React.Component {
     }
 
     let reader = new FileReader();
+
     reader.onload = (event) => {
       switch (fileExtension) {
         case 'zip':
@@ -264,7 +265,9 @@ class AreaWidget extends React.Component {
           this.handleGeoJson(parsedData);
           break;
         case 'csv':
-          this.handleCsv(file); // Assuming handleCsv expects a File object
+          this.handleCsv(event.target.result);
+          break;
+        default:
           break;
       }
     };
@@ -276,8 +279,10 @@ class AreaWidget extends React.Component {
       case 'geojson':
         reader.readAsText(file);
         break;
+      case 'csv':
+        reader.readAsText(file);
+        break;
       default:
-        alert('File reading not implemented for this file type');
         break;
     }
   };
@@ -302,6 +307,7 @@ class AreaWidget extends React.Component {
   */
 
   //Display GeoJSON on the map
+
   handleGeoJson(data) {
     let jsonBlob = new Blob([JSON.stringify(data)], {
       type: 'application/json',
@@ -319,48 +325,22 @@ class AreaWidget extends React.Component {
 
   //Display CSV on the map
 
-  handleCsv(file) {
-    // Pass data by a blob url to create a CSV layer.
-    const csv = `name|year|latitude|Longitude
-aspen|2020|40.418|20.553
-birch|2018|-118.123|35.888`;
-
-    const blob = new Blob([csv], {
+  handleCsv(data) {
+    const blob = new Blob([data], {
       type: 'plain/text',
     });
+
     let url = URL.createObjectURL(blob);
 
     const layer = new CSVLayer({
-      url: url,
+      url,
+    });
+    this.props.map.add(layer);
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'download',
     });
   }
-
-  //reader.onload = (e) => {
-  //  let fileContent = e.target.result;
-  //  let geojson = JSON.parse(fileContent);
-  //  let arcgis = geojsonToArcGIS(geojson);
-  //  let graphic = new Graphic({
-  //    geometry: arcgis,
-  //    symbol: {
-  //      type: 'simple-fill',
-  //      color: [255, 255, 255, 0.5],
-  //      outline: {
-  //        color: [0, 0, 0],
-  //        width: 1,
-  //      },
-  //    },
-  //  });
-  //  this.props.view.graphics.add(graphic);
-  //  this.props.view.goTo(arcgis);
-  //  this.props.updateArea(arcgis);
-  //  this.setState({
-  //    showInfoPopup: true,
-  //    infoPopupType: 'download',
-  //  });
-  //  if (this.props.download) {
-  //    document.querySelector('.drawRectanglePopup-block').style.display = 'none';
-  //  }
-  //};
 
   getHighestIndex() {
     let index = 0;
