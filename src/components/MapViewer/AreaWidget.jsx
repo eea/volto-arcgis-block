@@ -41,7 +41,6 @@ class AreaWidget extends React.Component {
     this.fileInput = createRef();
     this.handleGeoJson = this.handleGeoJson.bind(this);
     this.handleCsv = this.handleCsv.bind(this);
-    //this.handleKml = this.handleKml.bind(this);
     this.handleShp = this.handleShp.bind(this);
   }
 
@@ -227,32 +226,45 @@ class AreaWidget extends React.Component {
     this.props.map.reorder(this.nutsGroupLayer, index + 1);
   }
 
+  // FILE UPLOAD HANDLERS
+
+  // Trigger the file input click
   handleUploadClick = (event) => {
-    // Trigger the file input click
     this.fileInput.current.click();
   };
 
-  handleFileChange = (e) => {
+  handleFileUpload = (e) => {
     let file = e.target.files[0];
     let fileExtensions = ['zip', 'kml', 'geojson', 'csv'];
 
     // Get the file extension
     let fileExtension = file.name.split('.').pop();
 
+    //Check if the file format is supported
     if (fileExtensions.indexOf(fileExtension) === -1) {
-      alert('The file format is not supported');
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileFormat',
+      });
       return;
     }
 
+    //Check if the file size is less than 10mb
+    if (file.size > 10000000) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileLimit',
+      });
+      return;
+    }
+
+    //Read the file
     let reader = new FileReader();
 
     reader.onload = (event) => {
       switch (fileExtension) {
         case 'zip':
           this.handleShp(event.target.result);
-          break;
-        case 'kml':
-          this.handleKml(file); // Assuming handleKml expects a File object
           break;
         case 'geojson':
           let parsedData;
@@ -299,12 +311,6 @@ class AreaWidget extends React.Component {
         console.error('Failed to read file', error);
       });
   }
-
-  /*
-  [TBD] Display KML on the map
-
-  handleKml(file) {}
-  */
 
   //Display GeoJSON on the map
 
@@ -784,7 +790,7 @@ class AreaWidget extends React.Component {
                     name="fileUpload"
                     ref={this.fileInput}
                     style={{ display: 'none' }}
-                    onChange={this.handleFileChange}
+                    onChange={this.handleFileUpload}
                   />
                   <button
                     className="esri-button"
@@ -822,23 +828,46 @@ class AreaWidget extends React.Component {
                       </div>
                     </>
                   )}
-                  {this.state.infoPopupType === 'fullDataset' && (
+                  {
+                    /*UNAI display this message if fileupload area exceeds limit*/
+                    this.state.infoPopupType === 'fullDataset' && (
+                      <>
+                        <span className="drawRectanglePopup-icon">
+                          <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                        </span>
+                        <div className="drawRectanglePopupWarning-text">
+                          <a
+                            style={{ color: 'black', cursor: 'pointer' }}
+                            className="drawRectanglePopupWarning"
+                            id="drawRectanglePopupWarning"
+                            href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            To download the full dataset consult the "How to
+                            download M2M" How to guide.
+                          </a>
+                        </div>
+                      </>
+                    )
+                  }
+                  {this.state.infoPopupType === 'fileFormat' && (
                     <>
                       <span className="drawRectanglePopup-icon">
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
-                      <div className="drawRectanglePopupWarning-text">
-                        <a
-                          style={{ color: 'black', cursor: 'pointer' }}
-                          className="drawRectanglePopupWarning"
-                          id="drawRectanglePopupWarning"
-                          href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          To download the full dataset consult the "How to
-                          download M2M" How to guide.
-                        </a>
+                      <div className="drawRectanglePopup-text">
+                        The file format is not supported.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'fileLimit' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        The uploaded file exceeds 10mb limit.
                       </div>
                     </>
                   )}
