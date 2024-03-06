@@ -782,9 +782,20 @@ class AreaWidget extends React.Component {
                 <br />
                 <div className="area-header">
                   Upload a file with your area of interest
+                  <a
+                    href={window.location.origin + '/en/faq'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <span className="map-menu-icon nuts-menu-icon">
+                      <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                    </span>
+                  </a>
                 </div>
                 <div className="ccl-form">
-                  <span>File formats supported: sho, kml, etc.</span>
+                  <span>File formats supported: zip, geojson, csv</span>
                   <input
                     type="file"
                     name="fileUpload"
@@ -854,7 +865,7 @@ class AreaWidget extends React.Component {
                   {this.state.infoPopupType === 'fileFormat' && (
                     <>
                       <span className="drawRectanglePopup-icon">
-                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                        <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
                       </span>
                       <div className="drawRectanglePopup-text">
                         The file format is not supported.
@@ -864,7 +875,7 @@ class AreaWidget extends React.Component {
                   {this.state.infoPopupType === 'fileLimit' && (
                     <>
                       <span className="drawRectanglePopup-icon">
-                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                        <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
                       </span>
                       <div className="drawRectanglePopup-text">
                         The uploaded file exceeds 10mb limit.
