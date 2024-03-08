@@ -235,7 +235,7 @@ class AreaWidget extends React.Component {
 
   handleFileUpload = (e) => {
     let file = e.target.files[0];
-    let fileExtensions = ['zip', 'kml', 'geojson', 'csv'];
+    let fileExtensions = ['rar', 'zip', 'kml', 'geojson', 'csv'];
 
     // Get the file extension
     let fileExtension = file.name.split('.').pop();
@@ -266,6 +266,9 @@ class AreaWidget extends React.Component {
         case 'zip':
           this.handleShp(event.target.result);
           break;
+        case 'rar':
+          this.handleShp(event.target.result);
+          break;
         case 'geojson':
           let parsedData;
           try {
@@ -286,6 +289,9 @@ class AreaWidget extends React.Component {
 
     switch (fileExtension) {
       case 'zip':
+        reader.readAsArrayBuffer(file);
+        break;
+      case 'rar':
         reader.readAsArrayBuffer(file);
         break;
       case 'geojson':
@@ -322,11 +328,26 @@ class AreaWidget extends React.Component {
     let layer = new GeoJSONLayer({
       url,
     });
-    this.props.map.add(layer);
-    this.setState({
-      showInfoPopup: true,
-      infoPopupType: 'download',
+    this.checkWkid(layer);
+    let extent = new Extent({
+      xmin: data?.features[0]?.geometry?.bbox[0],
+      ymin: data?.features[0]?.geometry?.bbox[1],
+      xmax: data?.features[0]?.geometry?.bbox[2],
+      ymax: data?.features[0]?.geometry?.bbox[3],
+      spatialReference: { wkid: 4326 },
     });
+    if (this.checkExtent(extent)) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fullDataset',
+      });
+    } else {
+      this.props.map.add(layer);
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'download',
+      });
+    }
   }
 
   //Display CSV on the map
@@ -346,6 +367,21 @@ class AreaWidget extends React.Component {
       showInfoPopup: true,
       infoPopupType: 'download',
     });
+  }
+
+  checkWkid(layer) {
+    if (
+      layer &&
+      layer?.spatialReference?.isWGS84 &&
+      layer?.spatialReference?.wkid === 4326
+    ) {
+      return true;
+    } else {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'incorrectWkid',
+      });
+    }
   }
 
   getHighestIndex() {
@@ -795,7 +831,7 @@ class AreaWidget extends React.Component {
                   </a>
                 </div>
                 <div className="ccl-form">
-                  <span>File formats supported: zip, geojson, csv</span>
+                  <span>File formats supported: shp(zip), geojson, csv</span>
                   <input
                     type="file"
                     name="fileUpload"
@@ -868,7 +904,7 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        The file format is not supported.
+                        The file format is not correct.
                       </div>
                     </>
                   )}
@@ -878,7 +914,17 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        The uploaded file exceeds 10mb limit.
+                        Uploading files larger than 10MB is not allowed.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'incorrectWkid' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        The spatial reference is not correct.
                       </div>
                     </>
                   )}
