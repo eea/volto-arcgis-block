@@ -235,7 +235,7 @@ class AreaWidget extends React.Component {
 
   handleFileUpload = (e) => {
     let file = e.target.files[0];
-    let fileExtensions = ['rar', 'zip', 'kml', 'geojson', 'csv'];
+    let fileExtensions = ['zip', 'kml', 'geojson', 'csv'];
 
     // Get the file extension
     let fileExtension = file.name.split('.').pop();
@@ -266,9 +266,6 @@ class AreaWidget extends React.Component {
         case 'zip':
           this.handleShp(event.target.result);
           break;
-        case 'rar':
-          this.handleShp(event.target.result);
-          break;
         case 'geojson':
           let parsedData;
           try {
@@ -289,9 +286,6 @@ class AreaWidget extends React.Component {
 
     switch (fileExtension) {
       case 'zip':
-        reader.readAsArrayBuffer(file);
-        break;
-      case 'rar':
         reader.readAsArrayBuffer(file);
         break;
       case 'geojson':
@@ -321,22 +315,45 @@ class AreaWidget extends React.Component {
   //Display GeoJSON on the map
 
   handleGeoJson(data) {
+    console.log(data);
+    if (data?.features?.length > 1) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'singleFeature',
+      });
+      return;
+    }
+    if (data?.features?.geometry?.type !== 'polygon') {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'singlePolygon',
+      });
+      return;
+    }
     let jsonBlob = new Blob([JSON.stringify(data)], {
       type: 'application/json',
     });
     let url = URL.createObjectURL(jsonBlob);
-    let layer = new GeoJSONLayer({
-      url,
-    });
+    let layer;
+    try {
+      layer = new GeoJSONLayer({
+        url,
+      });
+      console.log(layer);
+    } catch (error) {
+      console.error('Failed to create GeoJSON layer', error);
+      return;
+    }
     this.checkWkid(layer);
-    let extent = new Extent({
-      xmin: data?.features[0]?.geometry?.bbox[0],
-      ymin: data?.features[0]?.geometry?.bbox[1],
-      xmax: data?.features[0]?.geometry?.bbox[2],
-      ymax: data?.features[0]?.geometry?.bbox[3],
+    let geometry = new Extent({
+      xmin: layer?.fullExtent?.xmin,
+      xmax: layer?.fullExtent?.xmax,
+      ymin: layer?.fullExtent?.ymin,
+      ymax: layer?.fullExtent?.ymax,
       spatialReference: { wkid: 4326 },
     });
-    if (this.checkExtent(extent)) {
+    console.log(geometry);
+    if (this.checkExtent(geometry)) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fullDataset',
@@ -367,6 +384,11 @@ class AreaWidget extends React.Component {
       showInfoPopup: true,
       infoPopupType: 'download',
     });
+  }
+
+  checkPolygon(data) {
+    if (data?.features?.length > 0) {
+    }
   }
 
   checkWkid(layer) {
@@ -901,7 +923,7 @@ class AreaWidget extends React.Component {
                   {this.state.infoPopupType === 'fileFormat' && (
                     <>
                       <span className="drawRectanglePopup-icon">
-                        <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
                         The file format is not correct.
@@ -911,7 +933,7 @@ class AreaWidget extends React.Component {
                   {this.state.infoPopupType === 'fileLimit' && (
                     <>
                       <span className="drawRectanglePopup-icon">
-                        <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
                         Uploading files larger than 10MB is not allowed.
@@ -921,10 +943,32 @@ class AreaWidget extends React.Component {
                   {this.state.infoPopupType === 'incorrectWkid' && (
                     <>
                       <span className="drawRectanglePopup-icon">
-                        <FontAwesomeIcon icon={['fas', 'circle-exclamation']} />
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
                         The spatial reference is not correct.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'singleFeature' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploading files with more than a single feature is not
+                        allowed.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'singlePolygon' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon="fa-solid fa-triangle-exclamation" />
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploaded file is not a polygon geometry type.
                       </div>
                     </>
                   )}
