@@ -42,6 +42,8 @@ class AreaWidget extends React.Component {
     this.handleGeoJson = this.handleGeoJson.bind(this);
     this.handleCsv = this.handleCsv.bind(this);
     this.handleShp = this.handleShp.bind(this);
+    this.fileUploadLayer = null;
+    this.removeFileUploadedLayer = this.removeFileUploadedLayer.bind(this);
   }
 
   loader() {
@@ -198,6 +200,8 @@ class AreaWidget extends React.Component {
         //definitionExpression: 'LEVL_CODE=' + level,
       });
 
+      this.removeFileUploadedLayer();
+
       this.nutsGroupLayer.add(layer);
 
       let index = this.getHighestIndex();
@@ -218,6 +222,8 @@ class AreaWidget extends React.Component {
       outFields: ['*'],
       popupEnabled: false,
     });
+
+    this.removeFileUploadedLayer();
 
     this.nutsGroupLayer.add(layer);
 
@@ -271,7 +277,7 @@ class AreaWidget extends React.Component {
           try {
             parsedData = JSON.parse(event.target.result);
           } catch (e) {
-            console.error('Failed to parse JSON', e);
+            //console.error('Failed to parse JSON', e);
             return;
           }
           this.handleGeoJson(parsedData);
@@ -304,18 +310,17 @@ class AreaWidget extends React.Component {
   async handleShp(data) {
     await shp(data)
       .then((geoJSON) => {
-        console.log(geoJSON);
         this.handleGeoJson(geoJSON);
       })
       .catch((error) => {
-        console.error('Failed to read file', error);
+        //console.error('Failed to read file', error);
       });
   }
 
   //Display GeoJSON on the map
 
   handleGeoJson(data) {
-    console.log(data);
+    //Check if the file has more than one feature
     if (data?.features?.length > 1) {
       this.setState({
         showInfoPopup: true,
@@ -323,13 +328,19 @@ class AreaWidget extends React.Component {
       });
       return;
     }
-    if (data?.features?.geometry?.type !== 'polygon') {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'singlePolygon',
-      });
-      return;
-    }
+    //Check if the file has a polygon geometry type
+
+    /* UNAI uncomment the code below before pushing to DEMO */
+
+    //if (data?.features?.geometry?.type !== 'polygon') {
+    //  this.setState({
+    //    showInfoPopup: true,
+    //    infoPopupType: 'singlePolygon',
+    //  });
+    //  return;
+    //}
+
+    //Create a GeoJSON layer
     let jsonBlob = new Blob([JSON.stringify(data)], {
       type: 'application/json',
     });
@@ -339,27 +350,32 @@ class AreaWidget extends React.Component {
       layer = new GeoJSONLayer({
         url,
       });
-      console.log(layer);
     } catch (error) {
-      console.error('Failed to create GeoJSON layer', error);
+      //console.error('Failed to create GeoJSON layer', error);
       return;
     }
+    //Check if the file has the correct spatial reference
     this.checkWkid(layer);
+    //Check if the file extent is larger than the limit
     let geometry = new Extent({
-      xmin: layer?.fullExtent?.xmin,
-      xmax: layer?.fullExtent?.xmax,
-      ymin: layer?.fullExtent?.ymin,
-      ymax: layer?.fullExtent?.ymax,
+      xmin: data?.features[0]?.geometry.bbox[0],
+      xmax: data?.features[0]?.geometry.bbox[1],
+      ymin: data?.features[0]?.geometry.bbox[2],
+      ymax: data?.features[0]?.geometry.bbox[3],
       spatialReference: { wkid: 4326 },
     });
-    console.log(geometry);
+
+    //If checkExtent returns false, add the layer to the map
     if (this.checkExtent(geometry)) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fullDataset',
       });
     } else {
-      this.props.map.add(layer);
+      this.removeFileUploadedLayer();
+      this.fileUploadLayer = layer;
+      this.removeNutsLayers();
+      this.props.map.add(this.fileUploadLayer);
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'download',
@@ -370,6 +386,7 @@ class AreaWidget extends React.Component {
   //Display CSV on the map
 
   handleCsv(data) {
+    //Create a CSV layer
     const blob = new Blob([data], {
       type: 'plain/text',
     });
@@ -379,15 +396,34 @@ class AreaWidget extends React.Component {
     const layer = new CSVLayer({
       url,
     });
-    this.props.map.add(layer);
-    this.setState({
-      showInfoPopup: true,
-      infoPopupType: 'download',
-    });
-  }
 
-  checkPolygon(data) {
-    if (data?.features?.length > 0) {
+    //Check if the file has the correct spatial reference
+    this.checkWkid(layer);
+
+    //Check if the file extent is larger than the limit
+    let geometry = new Extent({
+      xmin: data?.features[0]?.geometry.bbox[0],
+      xmax: data?.features[0]?.geometry.bbox[1],
+      ymin: data?.features[0]?.geometry.bbox[2],
+      ymax: data?.features[0]?.geometry.bbox[3],
+      spatialReference: { wkid: 4326 },
+    });
+
+    //If checkExtent returns false, add the layer to the map
+    if (this.checkExtent(geometry)) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fullDataset',
+      });
+    } else {
+      this.removeFileUploadedLayer();
+      this.fileUploadLayer = layer;
+      this.removeNutsLayers();
+      this.props.map.add(this.fileUploadLayer);
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'download',
+      });
     }
   }
 
@@ -403,6 +439,35 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'incorrectWkid',
       });
+    }
+  }
+
+  //Remove the NUTS layers from the map
+
+  removeNutsLayers() {
+    //find all the radio buttons
+    let radioButtons = document.querySelectorAll('fieldset.ccl-fieldset');
+
+    // Isolate the the checked radio button
+    let selectedRadioButton = Array.from(radioButtons).find(
+      (radioButton) => radioButton.querySelector('input').checked,
+    );
+
+    //Uncheck the selected radio button
+    if (selectedRadioButton) {
+      selectedRadioButton.querySelector('input').checked = false;
+    }
+
+    //Remove the layers in this.nutsGroupLayer from the map
+    this.nutsGroupLayer.removeAll();
+  }
+
+  //Remove the uploaded layer from the map
+
+  removeFileUploadedLayer() {
+    if (this.fileUploadLayer !== null) {
+      this.props.map.remove(this.fileUploadLayer);
+      this.fileUpload = null;
     }
   }
 
@@ -897,29 +962,26 @@ class AreaWidget extends React.Component {
                       </div>
                     </>
                   )}
-                  {
-                    /*UNAI display this message if fileupload area exceeds limit*/
-                    this.state.infoPopupType === 'fullDataset' && (
-                      <>
-                        <span className="drawRectanglePopup-icon">
-                          <FontAwesomeIcon icon={['fas', 'info-circle']} />
-                        </span>
-                        <div className="drawRectanglePopupWarning-text">
-                          <a
-                            style={{ color: 'black', cursor: 'pointer' }}
-                            className="drawRectanglePopupWarning"
-                            id="drawRectanglePopupWarning"
-                            href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            To download the full dataset consult the "How to
-                            download M2M" How to guide.
-                          </a>
-                        </div>
-                      </>
-                    )
-                  }
+                  {this.state.infoPopupType === 'fullDataset' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopupWarning-text">
+                        <a
+                          style={{ color: 'black', cursor: 'pointer' }}
+                          className="drawRectanglePopupWarning"
+                          id="drawRectanglePopupWarning"
+                          href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          To download the full dataset consult the "How to
+                          download M2M" How to guide.
+                        </a>
+                      </div>
+                    </>
+                  )}
                   {this.state.infoPopupType === 'fileFormat' && (
                     <>
                       <span className="drawRectanglePopup-icon">
@@ -964,7 +1026,6 @@ class AreaWidget extends React.Component {
                   {this.state.infoPopupType === 'singlePolygon' && (
                     <>
                       <span className="drawRectanglePopup-icon">
-                        <FontAwesomeIcon icon="fa-solid fa-triangle-exclamation" />
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
