@@ -461,7 +461,8 @@ class AreaWidget extends React.Component {
     }
 
     //Remove the layers in this.nutsGroupLayer from the map
-    this.nutsGroupLayer.removeAll();
+    //this.nutsGroupLayer.removeAll();
+    this.clearWidget();
   }
 
   //Remove the uploaded layer from the map
