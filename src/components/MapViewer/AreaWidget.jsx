@@ -349,6 +349,7 @@ class AreaWidget extends React.Component {
     try {
       layer = new GeoJSONLayer({
         url,
+        legendEnabled: false,
       });
     } catch (error) {
       //console.error('Failed to create GeoJSON layer', error);
@@ -395,6 +396,7 @@ class AreaWidget extends React.Component {
 
     const layer = new CSVLayer({
       url,
+      legendEnabled: false,
     });
 
     //Check if the file has the correct spatial reference
