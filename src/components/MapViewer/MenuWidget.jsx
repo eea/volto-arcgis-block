@@ -26,6 +26,7 @@ export const AddCartItem = ({
   download,
   areaData,
   dataset,
+  handleOpenPopup,
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
 
@@ -48,7 +49,13 @@ export const AddCartItem = ({
     } else {
       if (areaData) {
         area.type = 'nuts';
-        area.value = areaData;
+        if (areaData.geometry.type === 'polygon') {
+          if ('countries'.includes(areaData.layer.id)) {
+            area.value = areaData.attributes.ISO_2DIGIT;
+          } else {
+            area.value = areaData.attributes.NUTS_ID;
+          }
+        }
       } else {
         area = '';
       }
@@ -66,6 +73,65 @@ export const AddCartItem = ({
         datasetInput.removeAttribute('time-end');
       }
     });
+  };
+  const checkExtent = (e) => {
+    let intersection = false;
+    let areaExtent = null;
+    let check = document.querySelector('.area-panel input:checked').value;
+    if (check === 'area') {
+      areaExtent = new Extent({
+        xmin: Math.min(areaData.end.x, areaData.origin.x),
+        xmax: Math.max(areaData.end.x, areaData.origin.x),
+        ymin: Math.min(areaData.end.y, areaData.origin.y),
+        ymax: Math.max(areaData.end.y, areaData.origin.y),
+      });
+    } else {
+      areaExtent = areaData.geometry;
+    }
+    if (dataset?.DatasetTitle) {
+      Object.keys(props.layers).forEach((id) => {
+        if (
+          props.layers[id]?.DatasetTitle &&
+          dataset.DatasetTitle === props.layers[id].DatasetTitle
+        ) {
+          let layerExtent = null;
+          if (props.layers[id].fullExtent) {
+            layerExtent = new Extent({
+              xmin: props.layers[id].fullExtent.xmin,
+              ymin: props.layers[id].fullExtent.ymin,
+              xmax: props.layers[id].fullExtent.xmax,
+              ymax: props.layers[id].fullExtent.ymax,
+            });
+          } else if (
+            props.layers[id].fullExtents &&
+            props.layers[id].fullExtents[0]
+          ) {
+            layerExtent = new Extent({
+              xmin: props.layers[id].fullExtents[0].xmin,
+              ymin: props.layers[id].fullExtents[0].ymin,
+              xmax: props.layers[id].fullExtents[0].xmax,
+              ymax: props.layers[id].fullExtents[0].ymax,
+            });
+          } else {
+            layerExtent = new Extent({
+              xmin: -20037508.342789,
+              ymin: -20037508.342789,
+              xmax: 20037508.342789,
+              ymax: 20037508.342789,
+            });
+          }
+          if (layerExtent.intersects(areaExtent)) {
+            intersection = true;
+          }
+        }
+      });
+      if (intersection) {
+        checkArea();
+      } else {
+        e.currentTarget.appendChild(document.querySelector('.popup-container'));
+        handleOpenPopup();
+      }
+    }
   };
 
   const checkCartData = (cartData, area, dataset) => {
@@ -112,7 +178,7 @@ export const AddCartItem = ({
                   document.querySelector('.drawRectanglePopup-block').style
                     .display === 'none'
                 ) {
-                  checkArea(e);
+                  checkExtent(e);
                 }
               }
             }}
@@ -144,7 +210,7 @@ export const AddCartItem = ({
                       document.querySelector('#map_area_button').click();
                     }
                   } else {
-                    checkArea(e);
+                    checkExtent(e);
                   }
                 }
               }}
@@ -254,6 +320,7 @@ class MenuWidget extends React.Component {
       setNoServiceModal: true,
       TMSLayerObj: null,
       draggedElements: [],
+      popup: false,
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -269,6 +336,7 @@ class MenuWidget extends React.Component {
     this.prepareHotspotLayers = this.prepareHotspotLayers.bind(this);
     this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
     this.getLimitScale = this.getLimitScale.bind(this);
+    this.handleOpenPopup = this.handleOpenPopup.bind(this);
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
@@ -1403,6 +1471,7 @@ class MenuWidget extends React.Component {
                       download={this.props.download}
                       areaData={this.props.area}
                       dataset={dataset}
+                      handleOpenPopup={this.handleOpenPopup}
                     />
                   ) : (
                     <span
@@ -3758,6 +3827,23 @@ class MenuWidget extends React.Component {
       }, 100);
     }
   }
+  handleOpenPopup = () => {
+    clearTimeout(this.timeout);
+    this.setState({
+      popup: true,
+    });
+
+    this.timeout = setTimeout(() => {
+      this.handleClosePopup();
+    }, 2000);
+  };
+
+  handleClosePopup = () => {
+    this.setState({
+      popup: false,
+    });
+    clearTimeout(this.timeout);
+  };
 
   /**
    * This method renders the component
@@ -3768,6 +3854,15 @@ class MenuWidget extends React.Component {
       <>
         <div ref={this.container} className="map-left-menu-container">
           <div className="map-menu tab-container" id="tabcontainer">
+            <Popup
+              type={'info'}
+              open={this.state.popup}
+              position="right center"
+              trigger={<div className="popup-container"></div>}
+              offset={[0, 20]}
+            >
+              {'No data available on the selected area'}
+            </Popup>
             <div className="tabs" role="tablist">
               <span
                 className={!this.props.download ? 'tab tab-selected' : 'tab'}
@@ -3874,6 +3969,7 @@ class MenuWidget extends React.Component {
                     mapViewer={this.props.mapViewer}
                     download={this.props.download}
                     areaData={this.props.area}
+                    handleOpenPopup={this.handleOpenPopup}
                   />
                 </div>
               )}
