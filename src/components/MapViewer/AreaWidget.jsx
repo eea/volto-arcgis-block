@@ -1,5 +1,5 @@
 import React, { createRef } from 'react';
-import shp from 'shpjs';
+//import shp from 'shpjs';
 import { loadModules } from 'esri-loader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -7,9 +7,11 @@ var Graphic,
   Extent,
   CSVLayer,
   FeatureLayer,
+  Field,
   GeoJSONLayer,
   GroupLayer,
   Color,
+  request,
   SimpleLineSymbol,
   SimpleFillSymbol;
 
@@ -41,9 +43,12 @@ class AreaWidget extends React.Component {
     this.fileInput = createRef();
     this.handleGeoJson = this.handleGeoJson.bind(this);
     this.handleCsv = this.handleCsv.bind(this);
-    this.handleShp = this.handleShp.bind(this);
+    //this.handleShp = this.handleShp.bind(this);
     this.fileUploadLayer = null;
     this.removeFileUploadedLayer = this.removeFileUploadedLayer.bind(this);
+    this.uploadPortal = this.props.urls.uploadPortal;
+    this.generateFeatureCollection = this.generateFeatureCollection.bind(this);
+    this.addFeatureCollectionToMap = this.addFeatureCollectionToMap.bind(this);
   }
 
   loader() {
@@ -52,9 +57,11 @@ class AreaWidget extends React.Component {
       'esri/geometry/Extent',
       'esri/layers/CSVLayer',
       'esri/layers/FeatureLayer',
+      'esri/layers/support/Field',
       'esri/layers/GeoJSONLayer',
       'esri/layers/GroupLayer',
       'esri/Color',
+      'esri/request',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
     ]).then(
@@ -63,9 +70,11 @@ class AreaWidget extends React.Component {
         _Extent,
         _CSVLayer,
         _FeatureLayer,
+        _Field,
         _GeoJSONLayer,
         _GroupLayer,
         _Color,
+        _request,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
       ]) => {
@@ -74,9 +83,11 @@ class AreaWidget extends React.Component {
           Extent,
           CSVLayer,
           FeatureLayer,
+          Field,
           GeoJSONLayer,
           GroupLayer,
           Color,
+          request,
           SimpleLineSymbol,
           SimpleFillSymbol,
         ] = [
@@ -84,9 +95,11 @@ class AreaWidget extends React.Component {
           _Extent,
           _CSVLayer,
           _FeatureLayer,
+          _Field,
           _GeoJSONLayer,
           _GroupLayer,
           _Color,
+          _request,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
         ];
@@ -270,17 +283,27 @@ class AreaWidget extends React.Component {
     reader.onload = (event) => {
       switch (fileExtension) {
         case 'zip':
-          this.handleShp(event.target.result);
+          //  this.handleShp(event.target.result);
+          this.generateFeatureCollection(
+            file.name,
+            event.target.result,
+            'shapefile',
+          );
           break;
         case 'geojson':
-          let parsedData;
-          try {
-            parsedData = JSON.parse(event.target.result);
-          } catch (e) {
-            //console.error('Failed to parse JSON', e);
-            return;
-          }
-          this.handleGeoJson(parsedData);
+          this.generateFeatureCollection(
+            file.name,
+            event.target.result,
+            'geojson',
+          );
+          // let parsedData;
+          // try {
+          // parsedData = JSON.parse(event.target.result);
+          // } catch (e) {
+          //            console.error('Failed to parse JSON', e);
+          // return;
+          // }
+          // this.handleGeoJson(parsedData);
           break;
         case 'csv':
           this.handleCsv(event.target.result);
@@ -305,17 +328,98 @@ class AreaWidget extends React.Component {
     }
   };
 
-  //Display Shapefile on the map
+  generateFeatureCollection(fileName, fileData, inputFormat) {
+    let name = fileName.split('.');
 
-  async handleShp(data) {
-    await shp(data)
-      .then((geoJSON) => {
-        this.handleGeoJson(geoJSON);
+    // Chrome adds c:\fakepath to the value - we need to remove it
+    //name = name[0].replace("c:\\fakepath\\", "");
+    //document.getElementById("upload-status").innerHTML =
+    //    "<b>Loading </b>" + name;
+
+    // define the input params for generate see the rest doc for details
+    // https://developers.arcgis.com/rest/users-groups-and-items/generate.htm
+    const params = {
+      name: name,
+      targetSR: this.props.view.spatialReference,
+      maxRecordCount: 1000,
+      enforceInputFileSizeLimit: true,
+      enforceOutputJsonSizeLimit: true,
+    };
+    // generalize features to 10 meters for better performance
+    params.generalize = true;
+    params.maxAllowableOffset = 10;
+    params.reducePrecision = true;
+    params.numberOfDigitsAfterDecimal = 0;
+
+    const myContent = {
+      filetype: inputFormat,
+      publishParameters: JSON.stringify(params),
+      f: 'json',
+    };
+    // use the REST generate operation to generate a feature collection from the zipped shapefile
+    request(this.uploadPortal + '/sharing/rest/content/features/generate', {
+      query: myContent,
+      body: fileData,
+      responseType: 'json',
+    })
+      .then((response) => {
+        if (response.data && response.data.featureCollection) {
+          //const layerName = response.data.featureCollection.layers[0].layerDefinition.name;
+          //document.getElementById("upload-status").innerHTML =
+          //    "<b>Loaded: </b>" + layerName;
+          console.log('response data: ', response.data);
+          this.addFeatureCollectionToMap(response.data.featureCollection);
+        } else {
+          console.error('Unexpected response structure:', response);
+        }
       })
       .catch((error) => {
-        //console.error('Failed to read file', error);
+        console.error('From generateFeatureCollection function', error);
       });
   }
+
+  addFeatureCollectionToMap(featureCollection) {
+    // add the shapefile to the map and zoom to the feature collection extent
+    // if you want to persist the feature collection when you reload browser, you could store the
+    // collection in local storage by serializing the layer using featureLayer.toJson()
+    // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
+    let sourceGraphics = [];
+    debugger;
+    const layers = featureCollection.layers.map((layer) => {
+      const graphics = layer.featureSet.features.map((feature) => {
+        return Graphic.fromJSON(feature);
+      });
+      sourceGraphics = sourceGraphics.concat(graphics);
+      const featureLayer = new FeatureLayer({
+        objectIdField: 'FID',
+        source: graphics,
+        fields: layer.layerDefinition.fields.map((field) => {
+          return Field.fromJSON(field);
+        }),
+      });
+      return featureLayer;
+      // associate the feature with the popup on click to enable highlight and zoom to
+    });
+    this.props.map.addMany(layers);
+    this.props.view.goTo(sourceGraphics).catch((error) => {
+      console.error('From addFeatureCollectionToMap function', error);
+      //if (error.name != "AbortError") {
+      //    console.error(error);
+      //}
+    });
+  }
+
+  //Display Shapefile on the map
+
+  //async handleShp(data) {
+  //  await shp(data)
+  //    .then((geoJSON) => {
+  //      this.handleGeoJson(geoJSON);
+  //    })
+  //    .catch((error) => {
+  //      //console.error('Failed to read file', error);
+  //    });
+  //}
 
   //Display GeoJSON on the map
 
