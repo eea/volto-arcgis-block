@@ -1,5 +1,4 @@
 import React, { createRef } from 'react';
-//import shp from 'shpjs';
 import { loadModules } from 'esri-loader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -8,9 +7,9 @@ var Graphic,
   CSVLayer,
   FeatureLayer,
   Field,
-  GeoJSONLayer,
   GroupLayer,
   Color,
+  //Query,
   request,
   SimpleLineSymbol,
   SimpleFillSymbol;
@@ -41,14 +40,13 @@ class AreaWidget extends React.Component {
     this.initFMI = this.initFMI.bind(this);
     this.mapviewer_config = this.props.mapviewer_config;
     this.fileInput = createRef();
-    this.handleGeoJson = this.handleGeoJson.bind(this);
     this.handleCsv = this.handleCsv.bind(this);
-    //this.handleShp = this.handleShp.bind(this);
     this.fileUploadLayer = null;
     this.removeFileUploadedLayer = this.removeFileUploadedLayer.bind(this);
     this.uploadPortal = this.props.urls.uploadPortal;
     this.generateFeatureCollection = this.generateFeatureCollection.bind(this);
     this.addFeatureCollectionToMap = this.addFeatureCollectionToMap.bind(this);
+    this.checkFeatureCount = this.checkFeatureCount.bind(this);
   }
 
   loader() {
@@ -58,9 +56,9 @@ class AreaWidget extends React.Component {
       'esri/layers/CSVLayer',
       'esri/layers/FeatureLayer',
       'esri/layers/support/Field',
-      'esri/layers/GeoJSONLayer',
       'esri/layers/GroupLayer',
       'esri/Color',
+      //'esri/rest/support/Query',
       'esri/request',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
@@ -71,9 +69,9 @@ class AreaWidget extends React.Component {
         _CSVLayer,
         _FeatureLayer,
         _Field,
-        _GeoJSONLayer,
         _GroupLayer,
         _Color,
+        //_Query,
         _request,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
@@ -84,9 +82,9 @@ class AreaWidget extends React.Component {
           CSVLayer,
           FeatureLayer,
           Field,
-          GeoJSONLayer,
           GroupLayer,
           Color,
+          //Query,
           request,
           SimpleLineSymbol,
           SimpleFillSymbol,
@@ -96,9 +94,9 @@ class AreaWidget extends React.Component {
           _CSVLayer,
           _FeatureLayer,
           _Field,
-          _GeoJSONLayer,
           _GroupLayer,
           _Color,
+          //_Query,
           _request,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
@@ -131,6 +129,7 @@ class AreaWidget extends React.Component {
         infoPopupType: 'area',
       });
       this.clearWidget();
+      this.removeFileUploadedLayer();
       this.container.current.querySelector(
         '#download_area_select_nuts0',
       ).checked = true;
@@ -249,17 +248,30 @@ class AreaWidget extends React.Component {
 
   // Trigger the file input click
   handleUploadClick = (event) => {
+    event.preventDefault();
     this.fileInput.current.click();
   };
 
   handleFileUpload = (e) => {
-    let file = e.target.files[0];
-    let fileExtensions = ['zip', 'kml', 'geojson', 'csv'];
+    //Store the file as Blob
+    let fileBlob = e.target.files[0];
+    //Get the file name
+    const fileName = e.target.value.toLowerCase();
+    //console.log('file name: ', fileName);
+
+    //Get the file from the form
+    const file = document.getElementById('uploadForm');
+    //console.log('uploaded file from form: ', file);
+
+    //List allowed file extensions
+    let fileExtensions = ['zip', 'geojson', 'csv'];
 
     // Get the file extension
-    let fileExtension = file.name.split('.').pop();
+    let fileExtension = fileName.split('.').pop();
 
-    //Check if the file format is supported
+    //console.log('file extension: ', fileExtension);
+
+    //Check if the file format is not supported
     if (fileExtensions.indexOf(fileExtension) === -1) {
       this.setState({
         showInfoPopup: true,
@@ -268,8 +280,12 @@ class AreaWidget extends React.Component {
       return;
     }
 
-    //Check if the file size is less than 10mb
-    if (file.size > 10000000) {
+    //Check if the file size is over the 10mb file size limit
+    if (
+      (file.size > 2000000 && fileExtension === 'zip') ||
+      (file.size > 1000000 && fileExtension === 'geojson') ||
+      (file.size > 1000000 && fileExtension === 'csv')
+    ) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileLimit',
@@ -282,29 +298,19 @@ class AreaWidget extends React.Component {
 
     reader.onload = (event) => {
       switch (fileExtension) {
-        case 'zip':
-          //  this.handleShp(event.target.result);
-          this.generateFeatureCollection(
-            file.name,
-            event.target.result,
-            'shapefile',
-          );
-          break;
-        case 'geojson':
-          this.generateFeatureCollection(
-            file.name,
-            event.target.result,
-            'geojson',
-          );
-          // let parsedData;
-          // try {
-          // parsedData = JSON.parse(event.target.result);
-          // } catch (e) {
-          //            console.error('Failed to parse JSON', e);
-          // return;
-          // }
-          // this.handleGeoJson(parsedData);
-          break;
+        //    case 'zip':
+        //        this.handleShp(event.target.result);
+        //      break;
+        //    case 'geojson':
+        //      let parsedData;
+        //      try {
+        //        parsedData = JSON.parse(event.target.result);
+        //      } catch (e) {
+        //                   console.error('Failed to parse JSON', e);
+        //        return;
+        //      }
+        //      this.handleGeoJson(parsedData);
+        //      break;
         case 'csv':
           this.handleCsv(event.target.result);
           break;
@@ -315,26 +321,33 @@ class AreaWidget extends React.Component {
 
     switch (fileExtension) {
       case 'zip':
-        reader.readAsArrayBuffer(file);
+        this.generateFeatureCollection(fileName, file, 'shapefile');
+        //reader.readAsArrayBuffer(file);
         break;
       case 'geojson':
-        reader.readAsText(file);
+        this.generateFeatureCollection(fileName, file, 'geojson');
+        //reader.readAsText(file);
         break;
       case 'csv':
-        reader.readAsText(file);
+        //this.generateFeatureCollection(
+        //  fileName,
+        //  file,
+        //  'csv',
+        //);
+        reader.readAsText(fileBlob);
         break;
       default:
         break;
     }
   };
 
-  generateFeatureCollection(fileName, fileData, inputFormat) {
+  generateFeatureCollection(fileName, file, inputFormat) {
     let name = fileName.split('.');
 
     // Chrome adds c:\fakepath to the value - we need to remove it
-    //name = name[0].replace("c:\\fakepath\\", "");
-    //document.getElementById("upload-status").innerHTML =
-    //    "<b>Loading </b>" + name;
+    name = name[0].replace('c:\\fakepath\\', '');
+
+    //console.log('from generateFeatureCollection() name: ', name);
 
     // define the input params for generate see the rest doc for details
     // https://developers.arcgis.com/rest/users-groups-and-items/generate.htm
@@ -359,32 +372,32 @@ class AreaWidget extends React.Component {
     // use the REST generate operation to generate a feature collection from the zipped shapefile
     request(this.uploadPortal + '/sharing/rest/content/features/generate', {
       query: myContent,
-      body: fileData,
+      body: file,
       responseType: 'json',
     })
       .then((response) => {
         if (response.data && response.data.featureCollection) {
-          //const layerName = response.data.featureCollection.layers[0].layerDefinition.name;
-          //document.getElementById("upload-status").innerHTML =
-          //    "<b>Loaded: </b>" + layerName;
-          console.log('response data: ', response.data);
+          //console.log('response data: ', response.data);
+          //Check for more than a single feature
+          if (this.checkFeatureCount(response.data.featureCollection) === false)
+            return;
+          //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(response.data.featureCollection);
         } else {
-          console.error('Unexpected response structure:', response);
+          //console.error('Unexpected response structure:', response);
         }
       })
       .catch((error) => {
-        console.error('From generateFeatureCollection function', error);
+        //console.error('From generateFeatureCollection function', error);
       });
   }
 
+  // add the feature collection to the map and zoom to the feature collection extent
+  // if you want to persist the feature collection when you reload browser, you could store the
+  // collection in local storage by serializing the layer using featureLayer.toJson()
+  // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
   addFeatureCollectionToMap(featureCollection) {
-    // add the shapefile to the map and zoom to the feature collection extent
-    // if you want to persist the feature collection when you reload browser, you could store the
-    // collection in local storage by serializing the layer using featureLayer.toJson()
-    // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
     let sourceGraphics = [];
-    debugger;
     const layers = featureCollection.layers.map((layer) => {
       const graphics = layer.featureSet.features.map((feature) => {
         return Graphic.fromJSON(feature);
@@ -393,100 +406,82 @@ class AreaWidget extends React.Component {
       const featureLayer = new FeatureLayer({
         objectIdField: 'FID',
         source: graphics,
+        legendEnabled: false,
+        title: 'uploadLayer',
         fields: layer.layerDefinition.fields.map((field) => {
           return Field.fromJSON(field);
         }),
       });
       return featureLayer;
-      // associate the feature with the popup on click to enable highlight and zoom to
     });
-    this.props.map.addMany(layers);
-    this.props.view.goTo(sourceGraphics).catch((error) => {
-      console.error('From addFeatureCollectionToMap function', error);
-      //if (error.name != "AbortError") {
-      //    console.error(error);
-      //}
-    });
-  }
 
-  //Display Shapefile on the map
+    //Check for the correct spatial reference
+    //console.log("layer: ", layers);
+    if (this.checkWkid(layers[0]?.spatialReference) === false) return;
 
-  //async handleShp(data) {
-  //  await shp(data)
-  //    .then((geoJSON) => {
-  //      this.handleGeoJson(geoJSON);
-  //    })
-  //    .catch((error) => {
-  //      //console.error('Failed to read file', error);
-  //    });
-  //}
-
-  //Display GeoJSON on the map
-
-  handleGeoJson(data) {
-    //Check if the file has more than one feature
-    if (data?.features?.length > 1) {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'singleFeature',
-      });
-      return;
-    }
-    //Check if the file has a polygon geometry type
-
-    /* UNAI uncomment the code below before pushing to DEMO */
-
-    //if (data?.features?.geometry?.type !== 'polygon') {
-    //  this.setState({
-    //    showInfoPopup: true,
-    //    infoPopupType: 'singlePolygon',
-    //  });
-    //  return;
-    //}
-
-    //Create a GeoJSON layer
-    let jsonBlob = new Blob([JSON.stringify(data)], {
-      type: 'application/json',
-    });
-    let url = URL.createObjectURL(jsonBlob);
-    let layer;
-    try {
-      layer = new GeoJSONLayer({
-        url,
-        legendEnabled: false,
-      });
-    } catch (error) {
-      //console.error('Failed to create GeoJSON layer', error);
-      return;
-    }
-    //Check if the file has the correct spatial reference
-    this.checkWkid(layer);
-    //Check if the file extent is larger than the limit
-    let geometry = new Extent({
-      xmin: data?.features[0]?.geometry.bbox[0],
-      xmax: data?.features[0]?.geometry.bbox[1],
-      ymin: data?.features[0]?.geometry.bbox[2],
-      ymax: data?.features[0]?.geometry.bbox[3],
-      spatialReference: { wkid: 4326 },
-    });
+    let geometry = new Extent(
+      featureCollection.layers[0].layerDefinition.extent,
+    );
 
     //If checkExtent returns false, add the layer to the map
-    if (this.checkExtent(geometry)) {
+    if (this.checkExtent(geometry.extent)) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fullDataset',
       });
     } else {
+      //Remove old uploaded file and save new one to component props for reference
       this.removeFileUploadedLayer();
-      this.fileUploadLayer = layer;
+      this.fileUploadLayer = { layers: layers, sourceGraphics: sourceGraphics };
+      //remove NUTS and COUNTRIES layers from map
       this.removeNutsLayers();
-      this.props.map.add(this.fileUploadLayer);
+
+      //Add uploaded layer to the map and zoom to the extent
+      this.props.map.addMany(layers);
+      this.props.view.goTo(sourceGraphics).catch((error) => {
+        //console.error('From addFeatureCollectionToMap function', error);
+      });
+      //Send the area to the parent component
+      this.props.updateArea({
+        origin: { x: geometry.extent.xmin, y: geometry.extent.ymin },
+        end: { x: geometry.extent.xmax, y: geometry.extent.ymax },
+      });
+      //Order the layer in the map
+      let index = this.getHighestIndex();
+      this.props.map.reorder(this.fileUploadLayer, index + 1);
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'download',
       });
     }
   }
+
+  //check if the featurecollection has more than one feature
+
+  checkFeatureCount(layers) {
+    //debugger;
+    if (layers.layers[0].featureSet.features.length > 1) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'singleFeature',
+      });
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  //Check if the file has a polygon geometry type
+
+  /* uncomment the code below before pushing to DEMO */
+
+  //if (data?.features?.geometry?.type !== 'polygon') {
+  //  this.setState({
+  //    showInfoPopup: true,
+  //    infoPopupType: 'singlePolygon',
+  //  });
+  //  return;
+  //}
 
   //Display CSV on the map
 
@@ -498,46 +493,64 @@ class AreaWidget extends React.Component {
 
     let url = URL.createObjectURL(blob);
 
-    const layer = new CSVLayer({
+    const csvLayer = new CSVLayer({
       url,
       legendEnabled: false,
+      title: 'uploadLayer',
     });
 
+    //debugger;
+    //Query all features insisde the CSV layer
+
+    //csvLayer.load().then(function(){
+    //  let query = new Query({
+    //    where: "mag > 5",
+    //    returnGeometry: true
+    //  });
+    //
+    //  return csvLayer.queryFeatures(query);
+    //})
+    //.then(function(results){
+    //  console.log(results);
+    //})
+    //.catch(function (error) {
+    //  console.error("From CSV query: ", error);
+    //});
     //Check if the file has the correct spatial reference
-    this.checkWkid(layer);
+    if (this.checkWkid(csvLayer?.spatialReference) === false) return;
 
     //Check if the file extent is larger than the limit
-    let geometry = new Extent({
-      xmin: data?.features[0]?.geometry.bbox[0],
-      xmax: data?.features[0]?.geometry.bbox[1],
-      ymin: data?.features[0]?.geometry.bbox[2],
-      ymax: data?.features[0]?.geometry.bbox[3],
-      spatialReference: { wkid: 4326 },
-    });
+    //let geometry = new Extent({
+    //  xmin: data?.features[0]?.geometry.bbox[0],
+    //  xmax: data?.features[0]?.geometry.bbox[1],
+    //  ymin: data?.features[0]?.geometry.bbox[2],
+    //  ymax: data?.features[0]?.geometry.bbox[3],
+    //  spatialReference: { wkid: 4326 },
+    //});
 
     //If checkExtent returns false, add the layer to the map
-    if (this.checkExtent(geometry)) {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'fullDataset',
-      });
-    } else {
-      this.removeFileUploadedLayer();
-      this.fileUploadLayer = layer;
-      this.removeNutsLayers();
-      this.props.map.add(this.fileUploadLayer);
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'download',
-      });
-    }
+    //if (this.checkExtent(geometry)) {
+    //  this.setState({
+    //    showInfoPopup: true,
+    //    infoPopupType: 'fullDataset',
+    //  });
+    //} else {
+    this.removeFileUploadedLayer();
+    this.fileUploadLayer = csvLayer;
+    this.removeNutsLayers();
+    this.props.map.add(this.fileUploadLayer);
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'download',
+    });
+    //}
   }
 
-  checkWkid(layer) {
+  checkWkid(spatialReference) {
     if (
-      layer &&
-      layer?.spatialReference?.isWGS84 &&
-      layer?.spatialReference?.wkid === 4326
+      spatialReference &&
+      spatialReference?.isWGS84 &&
+      spatialReference?.wkid === 4326
     ) {
       return true;
     } else {
@@ -573,8 +586,9 @@ class AreaWidget extends React.Component {
 
   removeFileUploadedLayer() {
     if (this.fileUploadLayer !== null) {
-      this.props.map.remove(this.fileUploadLayer);
-      this.fileUpload = null;
+      this.props.map.removeMany(this.fileUploadLayer.layers);
+      //this.props.view.graphics.removeMany(this.fileUploadLayer.sourceGraphics);
+      this.fileUploadLayer = null;
     }
   }
 
@@ -763,6 +777,8 @@ class AreaWidget extends React.Component {
                 )
               ) {
                 layer = result.graphic;
+              } else {
+                return;
               }
               return layer;
             })[0].graphic;
@@ -1025,17 +1041,32 @@ class AreaWidget extends React.Component {
                   </a>
                 </div>
                 <div className="ccl-form">
-                  <span>File formats supported: shp(zip), geojson, csv</span>
-                  <input
-                    type="file"
-                    name="fileUpload"
-                    ref={this.fileInput}
-                    style={{ display: 'none' }}
-                    onChange={this.handleFileUpload}
-                  />
+                  {/* <form enctype="multipart/form-data" method="post" id="uploadForm" onSubmit={this.handleUploadClick}> */}
+                  <form
+                    enctype="multipart/form-data"
+                    method="post"
+                    id="uploadForm"
+                  >
+                    <div className="field">
+                      <label className="file-upload">
+                        <span>
+                          File formats supported: shp(zip), geojson, csv
+                        </span>
+                        <input
+                          type="file"
+                          name="file"
+                          id="inFile"
+                          ref={this.fileInput}
+                          style={{ display: 'none' }}
+                          onChange={this.handleFileUpload}
+                        />
+                      </label>
+                    </div>
+                  </form>
                   <button
                     className="esri-button"
                     onClick={this.handleUploadClick}
+                    type="submit"
                   >
                     Upload File
                   </button>
