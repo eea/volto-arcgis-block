@@ -777,10 +777,10 @@ class AreaWidget extends React.Component {
                 )
               ) {
                 layer = result.graphic;
+                return layer;
               } else {
                 return;
               }
-              return layer;
             })[0].graphic;
             if (graphic) {
               let geometry = graphic.geometry;
