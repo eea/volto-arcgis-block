@@ -1032,7 +1032,7 @@ class AreaWidget extends React.Component {
                 <div className="area-header">
                   Upload a file with your area of interest
                   <a
-                    href={window.location.origin + '/en/faq'}
+                    href="https://land.copernicus.eu/en/faq/map-viewer/how-can-i-upload-a-file-with-my-area-of-interest"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -1044,7 +1044,6 @@ class AreaWidget extends React.Component {
                   </a>
                 </div>
                 <div className="ccl-form">
-                  {/* <form enctype="multipart/form-data" method="post" id="uploadForm" onSubmit={this.handleUploadClick}> */}
                   <form
                     enctype="multipart/form-data"
                     method="post"
