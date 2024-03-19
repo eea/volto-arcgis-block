@@ -246,6 +246,7 @@ const config = {
       'https://gisco-services.ec.europa.eu/maps/wmts/CountriesWorld/EPSG3857/0/0/0.png',
     countriesWorldTemplate:
       'https://gisco-services.ec.europa.eu/maps/tiles/CountriesWorld/EPSG3857/{z}/{x}/{y}.png',
+    uploadPortal: 'https://www.arcgis.com',
   },
 };
 export default config;

@@ -346,7 +346,7 @@ class MapViewer extends React.Component {
   renderArea() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view) {
-      return <CheckLogin reference={this} />;
+      return <CheckLogin reference={this} urls={this.cfgUrls} />;
     }
   }
 
