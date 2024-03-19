@@ -779,7 +779,7 @@ class AreaWidget extends React.Component {
                 layer = result.graphic;
                 return layer;
               } else {
-                return;
+                return false;
               }
             })[0].graphic;
             if (graphic) {
@@ -809,6 +809,9 @@ class AreaWidget extends React.Component {
         });
       }
     });
+    //this.props.view.watch('updating', () => {
+    //  console.log('graphics: ', this.props.view.graphics);
+    //});
 
     this.props.download
       ? this.container !== null && this.props.view.ui.add(this.container)
