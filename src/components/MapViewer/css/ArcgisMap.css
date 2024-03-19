@@ -352,6 +352,21 @@ div.esri-popover
 label.ccl-form-radio-label span.nuts-menu-icon {
   margin-left: 9rem;
 }
+
+.area-container .esri-button {
+  border-color: #a0b128;
+  margin-left: 0.25rem;
+  background-color: #a0b128;
+  color: white !important;
+  transition: all 0.3s ease-out;
+}
+
+.area-container .esri-button:hover {
+  border-color: #a0b128;
+  background-color: white;
+  color: #a0b128 !important;
+}
+
 /* Left menu */
 .map-menu {
   position: relative;
@@ -1367,7 +1382,7 @@ input[type='range']::-ms-track {
   display: flex;
   width: 19rem;
   height: 60px;
-  justify-content: space-between;
+  justify-content: space-around;
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
   background-color: white;
 }
@@ -1381,6 +1396,7 @@ input[type='range']::-ms-track {
 }
 
 .drawRectanglePopup-text {
+  flex: auto;
   font-family: 'Lato', sans-serif;
   font-size: 0.875rem;
 }

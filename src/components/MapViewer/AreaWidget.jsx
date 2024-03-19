@@ -4,9 +4,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
   Extent,
+  CSVLayer,
   FeatureLayer,
+  Field,
   GroupLayer,
   Color,
+  //Query,
+  request,
   SimpleLineSymbol,
   SimpleFillSymbol;
 
@@ -35,41 +39,65 @@ class AreaWidget extends React.Component {
     this.nutsUrl = '';
     this.initFMI = this.initFMI.bind(this);
     this.mapviewer_config = this.props.mapviewer_config;
+    this.fileInput = createRef();
+    this.handleCsv = this.handleCsv.bind(this);
+    this.fileUploadLayer = null;
+    this.removeFileUploadedLayer = this.removeFileUploadedLayer.bind(this);
+    this.uploadPortal = this.props.urls.uploadPortal;
+    this.generateFeatureCollection = this.generateFeatureCollection.bind(this);
+    this.addFeatureCollectionToMap = this.addFeatureCollectionToMap.bind(this);
+    this.checkFeatureCount = this.checkFeatureCount.bind(this);
   }
 
   loader() {
     return loadModules([
       'esri/Graphic',
       'esri/geometry/Extent',
+      'esri/layers/CSVLayer',
       'esri/layers/FeatureLayer',
+      'esri/layers/support/Field',
       'esri/layers/GroupLayer',
       'esri/Color',
+      //'esri/rest/support/Query',
+      'esri/request',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
     ]).then(
       ([
         _Graphic,
         _Extent,
+        _CSVLayer,
         _FeatureLayer,
+        _Field,
         _GroupLayer,
         _Color,
+        //_Query,
+        _request,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
       ]) => {
         [
           Graphic,
           Extent,
+          CSVLayer,
           FeatureLayer,
+          Field,
           GroupLayer,
           Color,
+          //Query,
+          request,
           SimpleLineSymbol,
           SimpleFillSymbol,
         ] = [
           _Graphic,
           _Extent,
+          _CSVLayer,
           _FeatureLayer,
+          _Field,
           _GroupLayer,
           _Color,
+          //_Query,
+          _request,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
         ];
@@ -101,6 +129,7 @@ class AreaWidget extends React.Component {
         infoPopupType: 'area',
       });
       this.clearWidget();
+      this.removeFileUploadedLayer();
       this.container.current.querySelector(
         '#download_area_select_nuts0',
       ).checked = true;
@@ -183,6 +212,8 @@ class AreaWidget extends React.Component {
         //definitionExpression: 'LEVL_CODE=' + level,
       });
 
+      this.removeFileUploadedLayer();
+
       this.nutsGroupLayer.add(layer);
 
       let index = this.getHighestIndex();
@@ -204,11 +235,361 @@ class AreaWidget extends React.Component {
       popupEnabled: false,
     });
 
+    this.removeFileUploadedLayer();
+
     this.nutsGroupLayer.add(layer);
 
     let index = this.getHighestIndex();
 
     this.props.map.reorder(this.nutsGroupLayer, index + 1);
+  }
+
+  // FILE UPLOAD HANDLERS
+
+  // Trigger the file input click
+  handleUploadClick = (event) => {
+    event.preventDefault();
+    this.fileInput.current.click();
+  };
+
+  handleFileUpload = (e) => {
+    //Store the file as Blob
+    let fileBlob = e.target.files[0];
+    //Get the file name
+    const fileName = e.target.value.toLowerCase();
+    //console.log('file name: ', fileName);
+
+    //Get the file from the form
+    const file = document.getElementById('uploadForm');
+    //console.log('uploaded file from form: ', file);
+
+    //List allowed file extensions
+    let fileExtensions = ['zip', 'geojson', 'csv'];
+
+    // Get the file extension
+    let fileExtension = fileName.split('.').pop();
+
+    //console.log('file extension: ', fileExtension);
+
+    //Check if the file format is not supported
+    if (fileExtensions.indexOf(fileExtension) === -1) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileFormat',
+      });
+      return;
+    }
+
+    //Check if the file size is over the 10mb file size limit
+    if (
+      (file.size > 2000000 && fileExtension === 'zip') ||
+      (file.size > 1000000 && fileExtension === 'geojson') ||
+      (file.size > 1000000 && fileExtension === 'csv')
+    ) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileLimit',
+      });
+      return;
+    }
+
+    //Read the file
+    let reader = new FileReader();
+
+    reader.onload = (event) => {
+      switch (fileExtension) {
+        //    case 'zip':
+        //        this.handleShp(event.target.result);
+        //      break;
+        //    case 'geojson':
+        //      let parsedData;
+        //      try {
+        //        parsedData = JSON.parse(event.target.result);
+        //      } catch (e) {
+        //                   console.error('Failed to parse JSON', e);
+        //        return;
+        //      }
+        //      this.handleGeoJson(parsedData);
+        //      break;
+        case 'csv':
+          this.handleCsv(event.target.result);
+          break;
+        default:
+          break;
+      }
+    };
+
+    switch (fileExtension) {
+      case 'zip':
+        this.generateFeatureCollection(fileName, file, 'shapefile');
+        //reader.readAsArrayBuffer(file);
+        break;
+      case 'geojson':
+        this.generateFeatureCollection(fileName, file, 'geojson');
+        //reader.readAsText(file);
+        break;
+      case 'csv':
+        //this.generateFeatureCollection(
+        //  fileName,
+        //  file,
+        //  'csv',
+        //);
+        reader.readAsText(fileBlob);
+        break;
+      default:
+        break;
+    }
+  };
+
+  generateFeatureCollection(fileName, file, inputFormat) {
+    let name = fileName.split('.');
+
+    // Chrome adds c:\fakepath to the value - we need to remove it
+    name = name[0].replace('c:\\fakepath\\', '');
+
+    //console.log('from generateFeatureCollection() name: ', name);
+
+    // define the input params for generate see the rest doc for details
+    // https://developers.arcgis.com/rest/users-groups-and-items/generate.htm
+    const params = {
+      name: name,
+      targetSR: this.props.view.spatialReference,
+      maxRecordCount: 1000,
+      enforceInputFileSizeLimit: true,
+      enforceOutputJsonSizeLimit: true,
+    };
+    // generalize features to 10 meters for better performance
+    params.generalize = true;
+    params.maxAllowableOffset = 10;
+    params.reducePrecision = true;
+    params.numberOfDigitsAfterDecimal = 0;
+
+    const myContent = {
+      filetype: inputFormat,
+      publishParameters: JSON.stringify(params),
+      f: 'json',
+    };
+    // use the REST generate operation to generate a feature collection from the zipped shapefile
+    request(this.uploadPortal + '/sharing/rest/content/features/generate', {
+      query: myContent,
+      body: file,
+      responseType: 'json',
+    })
+      .then((response) => {
+        if (response.data && response.data.featureCollection) {
+          //console.log('response data: ', response.data);
+          //Check for more than a single feature
+          if (this.checkFeatureCount(response.data.featureCollection) === false)
+            return;
+          //Create a feature layer from the feature collection
+          this.addFeatureCollectionToMap(response.data.featureCollection);
+        } else {
+          //console.error('Unexpected response structure:', response);
+        }
+      })
+      .catch((error) => {
+        //console.error('From generateFeatureCollection function', error);
+      });
+  }
+
+  // add the feature collection to the map and zoom to the feature collection extent
+  // if you want to persist the feature collection when you reload browser, you could store the
+  // collection in local storage by serializing the layer using featureLayer.toJson()
+  // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
+  addFeatureCollectionToMap(featureCollection) {
+    let sourceGraphics = [];
+    const layers = featureCollection.layers.map((layer) => {
+      const graphics = layer.featureSet.features.map((feature) => {
+        return Graphic.fromJSON(feature);
+      });
+      sourceGraphics = sourceGraphics.concat(graphics);
+      const featureLayer = new FeatureLayer({
+        objectIdField: 'FID',
+        source: graphics,
+        legendEnabled: false,
+        title: 'uploadLayer',
+        fields: layer.layerDefinition.fields.map((field) => {
+          return Field.fromJSON(field);
+        }),
+      });
+      return featureLayer;
+    });
+
+    //Check for the correct spatial reference
+    //console.log("layer: ", layers);
+    if (this.checkWkid(layers[0]?.spatialReference) === false) return;
+
+    let geometry = new Extent(
+      featureCollection.layers[0].layerDefinition.extent,
+    );
+
+    //If checkExtent returns false, add the layer to the map
+    if (this.checkExtent(geometry.extent)) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fullDataset',
+      });
+    } else {
+      //Remove old uploaded file and save new one to component props for reference
+      this.removeFileUploadedLayer();
+      this.fileUploadLayer = { layers: layers, sourceGraphics: sourceGraphics };
+      //remove NUTS and COUNTRIES layers from map
+      this.removeNutsLayers();
+
+      //Add uploaded layer to the map and zoom to the extent
+      this.props.map.addMany(layers);
+      this.props.view.goTo(sourceGraphics).catch((error) => {
+        //console.error('From addFeatureCollectionToMap function', error);
+      });
+      //Send the area to the parent component
+      this.props.updateArea({
+        origin: { x: geometry.extent.xmin, y: geometry.extent.ymin },
+        end: { x: geometry.extent.xmax, y: geometry.extent.ymax },
+      });
+      //Order the layer in the map
+      let index = this.getHighestIndex();
+      this.props.map.reorder(this.fileUploadLayer, index + 1);
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'download',
+      });
+    }
+  }
+
+  //check if the featurecollection has more than one feature
+
+  checkFeatureCount(layers) {
+    //debugger;
+    if (layers.layers[0].featureSet.features.length > 1) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'singleFeature',
+      });
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  //Check if the file has a polygon geometry type
+
+  /* uncomment the code below before pushing to DEMO */
+
+  //if (data?.features?.geometry?.type !== 'polygon') {
+  //  this.setState({
+  //    showInfoPopup: true,
+  //    infoPopupType: 'singlePolygon',
+  //  });
+  //  return;
+  //}
+
+  //Display CSV on the map
+
+  handleCsv(data) {
+    //Create a CSV layer
+    const blob = new Blob([data], {
+      type: 'plain/text',
+    });
+
+    let url = URL.createObjectURL(blob);
+
+    const csvLayer = new CSVLayer({
+      url,
+      legendEnabled: false,
+      title: 'uploadLayer',
+    });
+
+    //debugger;
+    //Query all features insisde the CSV layer
+
+    //csvLayer.load().then(function(){
+    //  let query = new Query({
+    //    where: "mag > 5",
+    //    returnGeometry: true
+    //  });
+    //
+    //  return csvLayer.queryFeatures(query);
+    //})
+    //.then(function(results){
+    //  console.log(results);
+    //})
+    //.catch(function (error) {
+    //  console.error("From CSV query: ", error);
+    //});
+    //Check if the file has the correct spatial reference
+    if (this.checkWkid(csvLayer?.spatialReference) === false) return;
+
+    //Check if the file extent is larger than the limit
+    //let geometry = new Extent({
+    //  xmin: data?.features[0]?.geometry.bbox[0],
+    //  xmax: data?.features[0]?.geometry.bbox[1],
+    //  ymin: data?.features[0]?.geometry.bbox[2],
+    //  ymax: data?.features[0]?.geometry.bbox[3],
+    //  spatialReference: { wkid: 4326 },
+    //});
+
+    //If checkExtent returns false, add the layer to the map
+    //if (this.checkExtent(geometry)) {
+    //  this.setState({
+    //    showInfoPopup: true,
+    //    infoPopupType: 'fullDataset',
+    //  });
+    //} else {
+    this.removeFileUploadedLayer();
+    this.fileUploadLayer = csvLayer;
+    this.removeNutsLayers();
+    this.props.map.add(this.fileUploadLayer);
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'download',
+    });
+    //}
+  }
+
+  checkWkid(spatialReference) {
+    if (
+      spatialReference &&
+      spatialReference?.isWGS84 &&
+      spatialReference?.wkid === 4326
+    ) {
+      return true;
+    } else {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'incorrectWkid',
+      });
+    }
+  }
+
+  //Remove the NUTS layers from the map
+
+  removeNutsLayers() {
+    //find all the radio buttons
+    let radioButtons = document.querySelectorAll('fieldset.ccl-fieldset');
+
+    // Isolate the the checked radio button
+    let selectedRadioButton = Array.from(radioButtons).find(
+      (radioButton) => radioButton.querySelector('input').checked,
+    );
+
+    //Uncheck the selected radio button
+    if (selectedRadioButton) {
+      selectedRadioButton.querySelector('input').checked = false;
+    }
+
+    //Remove the layers in this.nutsGroupLayer from the map
+    //this.nutsGroupLayer.removeAll();
+    this.clearWidget();
+  }
+
+  //Remove the uploaded layer from the map
+
+  removeFileUploadedLayer() {
+    if (this.fileUploadLayer !== null) {
+      this.props.map.removeMany(this.fileUploadLayer.layers);
+      //this.props.view.graphics.removeMany(this.fileUploadLayer.sourceGraphics);
+      this.fileUploadLayer = null;
+    }
   }
 
   getHighestIndex() {
@@ -396,8 +777,10 @@ class AreaWidget extends React.Component {
                 )
               ) {
                 layer = result.graphic;
+                return layer;
+              } else {
+                return false;
               }
-              return layer;
             })[0].graphic;
             if (graphic) {
               let geometry = graphic.geometry;
@@ -426,6 +809,9 @@ class AreaWidget extends React.Component {
         });
       }
     });
+    //this.props.view.watch('updating', () => {
+    //  console.log('graphics: ', this.props.view.graphics);
+    //});
 
     this.props.download
       ? this.container !== null && this.props.view.ui.add(this.container)
@@ -642,6 +1028,51 @@ class AreaWidget extends React.Component {
                     </div>
                   </fieldset>
                 </div>
+                <br />
+                <div className="area-header">
+                  Upload a file with your area of interest
+                  <a
+                    href="https://land.copernicus.eu/en/faq/map-viewer/how-can-i-upload-a-file-with-my-area-of-interest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <span className="map-menu-icon nuts-menu-icon">
+                      <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                    </span>
+                  </a>
+                </div>
+                <div className="ccl-form">
+                  <form
+                    enctype="multipart/form-data"
+                    method="post"
+                    id="uploadForm"
+                  >
+                    <div className="field">
+                      <label className="file-upload">
+                        <span>
+                          File formats supported: shp(zip), geojson, csv
+                        </span>
+                        <input
+                          type="file"
+                          name="file"
+                          id="inFile"
+                          ref={this.fileInput}
+                          style={{ display: 'none' }}
+                          onChange={this.handleFileUpload}
+                        />
+                      </label>
+                    </div>
+                  </form>
+                  <button
+                    className="esri-button"
+                    onClick={this.handleUploadClick}
+                    type="submit"
+                  >
+                    Upload File
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -688,6 +1119,57 @@ class AreaWidget extends React.Component {
                           To download the full dataset consult the "How to
                           download M2M" How to guide.
                         </a>
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'fileFormat' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        The file format is not correct.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'fileLimit' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploading files larger than 10MB is not allowed.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'incorrectWkid' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        The spatial reference is not correct.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'singleFeature' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploading files with more than a single feature is not
+                        allowed.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'singlePolygon' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploaded file is not a polygon geometry type.
                       </div>
                     </>
                   )}
