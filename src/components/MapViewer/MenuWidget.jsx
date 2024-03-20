@@ -3132,6 +3132,16 @@ class MenuWidget extends React.Component {
     });
     if (layers.length === 0 && document.querySelector('.info-container')) {
       if (
+        this.props.view.graphics.items.find((a) => {
+          return a.attributes ? a.attributes.id === 'pixel-info' : false;
+        })
+      ) {
+        let marker = this.props.view.graphics.items.find((a) => {
+          return a.attributes && a.attributes.id === 'pixel-info';
+        });
+        this.props.view.graphics.remove(marker);
+      }
+      if (
         this.props.mapViewer.activeWidget?.container.current.className ===
         'info-container esri-component'
       ) {
