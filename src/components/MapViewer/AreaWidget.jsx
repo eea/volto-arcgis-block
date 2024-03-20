@@ -223,6 +223,7 @@ class AreaWidget extends React.Component {
   }
 
   loadCountriesService(id) {
+    //debugger;
     document.querySelector('.esri-attribution__powered-by').style.display =
       'flex';
     var layer = new FeatureLayer({
@@ -388,7 +389,7 @@ class AreaWidget extends React.Component {
         }
       })
       .catch((error) => {
-        //console.error('From generateFeatureCollection function', error);
+        //console.error('Failed to generate feature collection:', error);
       });
   }
 
@@ -404,6 +405,7 @@ class AreaWidget extends React.Component {
       });
       sourceGraphics = sourceGraphics.concat(graphics);
       const featureLayer = new FeatureLayer({
+        //        id: 9,
         objectIdField: 'FID',
         source: graphics,
         legendEnabled: false,
@@ -411,6 +413,9 @@ class AreaWidget extends React.Component {
         fields: layer.layerDefinition.fields.map((field) => {
           return Field.fromJSON(field);
         }),
+        //        layerId: 9,
+        //        outFields: ['*'],
+        //        popupEnabled: false,
       });
       return featureLayer;
     });
@@ -566,15 +571,21 @@ class AreaWidget extends React.Component {
   removeNutsLayers() {
     //find all the radio buttons
     let radioButtons = document.querySelectorAll('fieldset.ccl-fieldset');
-
-    // Isolate the the checked radio button
-    let selectedRadioButton = Array.from(radioButtons).find(
-      (radioButton) => radioButton.querySelector('input').checked,
+    let rectangleRadioButton = document.querySelector(
+      '#download_area_select_rectangle',
     );
+    // Isolate the the checked radio button
+    let selectedRadioButton = Array.from(radioButtons).find((radioButton) => {
+      let input = radioButton.querySelector('input');
+      return input && input.type === 'radio' && input.checked;
+    });
 
     //Uncheck the selected radio button
     if (selectedRadioButton) {
       selectedRadioButton.querySelector('input').checked = false;
+    }
+    if (rectangleRadioButton.checked) {
+      rectangleRadioButton.checked = false;
     }
 
     //Remove the layers in this.nutsGroupLayer from the map
