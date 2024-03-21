@@ -393,11 +393,11 @@ class AreaWidget extends React.Component {
           //console.log(data);
           //this.loadFileUploadService(response.data.featureCollection);
         } else {
-          console.error('Unexpected response structure:', response);
+          //console.error('Unexpected response structure:', response);
         }
       })
       .catch((error) => {
-        console.error('Failed to generate feature collection:', error);
+        //console.error('Failed to generate feature collection:', error);
       });
   }
 
@@ -436,7 +436,7 @@ class AreaWidget extends React.Component {
   // collection in local storage by serializing the layer using featureLayer.toJson()
   // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
   addFeatureCollectionToMap(featureCollection) {
-    console.log('feature collection: ', featureCollection);
+    //console.log('feature collection: ', featureCollection);
     let sourceGraphics = [];
     const symbol = new SimpleFillSymbol({
       //type: 'simple-fill',
@@ -500,7 +500,7 @@ class AreaWidget extends React.Component {
       return featureLayer;
     });
     //Check for the correct spatial reference
-    console.log('layer: ', layers);
+    //console.log('layer: ', layers);
     if (this.checkWkid(layers[0]?.spatialReference) === false) return;
 
     let geometry = new Extent(
@@ -526,7 +526,7 @@ class AreaWidget extends React.Component {
       this.props.view.goTo(sourceGraphics).catch((error) => {
         //console.error('From addFeatureCollectionToMap function', error);
       });
-      console.log('source graphics: ', sourceGraphics);
+      //console.log('source graphics: ', sourceGraphics);
       //Send the area to the parent component
       this.props.updateArea(sourceGraphics[0]);
       //Order the layer in the map
