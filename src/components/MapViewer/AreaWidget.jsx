@@ -272,7 +272,9 @@ class AreaWidget extends React.Component {
 
     //console.log('file extension: ', fileExtension);
     //Check if the file format is not supported
-    if (fileExtensions.indexOf(fileExtension) === -1) {
+
+    // if (fileExtensions.indexOf(fileExtension) === -1) {
+    if (fileExtension !== 'zip') {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileFormat',
@@ -282,13 +284,14 @@ class AreaWidget extends React.Component {
 
     // Check if the file is a geojson or CSV and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
-    if (fileSize > 10485760 && fileExtension === 'geojson') {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'fileLimit',
-      });
-      return;
-    }
+
+    //if (fileSize > 10485760 && fileExtension === 'geojson') {
+    //  this.setState({
+    //    showInfoPopup: true,
+    //    infoPopupType: 'fileLimit',
+    //  });
+    //  return;
+    //}
 
     if (fileSize > 2097152 && fileExtension === 'zip') {
       this.setState({
@@ -301,12 +304,11 @@ class AreaWidget extends React.Component {
     switch (fileExtension) {
       case 'zip':
         this.generateFeatureCollection(fileName, file, 'shapefile');
-        //reader.readAsArrayBuffer(file);
         break;
-      case 'geojson':
-        this.generateFeatureCollection(fileName, file, 'geojson');
-        //reader.readAsText(file);
-        break;
+      //case 'geojson':
+      //  this.generateFeatureCollection(fileName, file, 'geojson');
+      //  //reader.readAsText(file);
+      //  break;
       //case 'csv':
       //this.generateFeatureCollection(
       //  fileName,
@@ -318,6 +320,9 @@ class AreaWidget extends React.Component {
       default:
         break;
     }
+    setTimeout(() => {
+      e.target.value = null;
+    }, 2000);
   };
 
   generateFeatureCollection(fileName, file, inputFormat) {
@@ -372,37 +377,6 @@ class AreaWidget extends React.Component {
         //console.error('Failed to generate feature collection:', error);
       });
   }
-
-  loadFileUploadService(data) {
-    //debugger;
-    document.querySelector('.esri-attribution__powered-by').style.display =
-      'flex';
-    const blob = new Blob([data], {
-      type: 'json',
-    });
-    const url = URL.createObjectURL(blob);
-
-    var layer = new FeatureLayer({
-      id: 9,
-      //url: this.props.urls.outsideEu,
-      url: url,
-      layerId: 9,
-      outFields: ['*'],
-      popupEnabled: false,
-      title: 'upload',
-    });
-
-    //this.removeFileUploadedLayer();
-
-    this.removeNutsLayers();
-
-    this.nutsGroupLayer.add(layer);
-
-    let index = this.getHighestIndex();
-
-    this.props.map.reorder(this.nutsGroupLayer, index + 1);
-  }
-
   // add the feature collection to the map and zoom to the feature collection extent
   // if you want to persist the feature collection when you reload browser, you could store the
   // collection in local storage by serializing the layer using featureLayer.toJson()
@@ -473,7 +447,7 @@ class AreaWidget extends React.Component {
     });
     //Check for the correct spatial reference
     //console.log('layer: ', layers);
-    if (this.checkWkid(layers[0]?.spatialReference) === false) return;
+    //if (this.checkWkid(layers[0]?.spatialReference) === false) return;
 
     let geometry = new Extent(
       featureCollection.layers[0].layerDefinition.extent,
@@ -1113,7 +1087,7 @@ class AreaWidget extends React.Component {
                   >
                     <div className="field">
                       <label className="file-upload">
-                        <span>File formats supported: shp(zip), geojson</span>
+                        <span>File formats supported: shp(zip)</span>
                         <input
                           type="file"
                           name="file"

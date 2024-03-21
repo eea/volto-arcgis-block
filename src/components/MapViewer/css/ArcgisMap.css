@@ -349,8 +349,14 @@ div.esri-popover
   margin-left: 2rem;
 }
 
+div.area-container .ccl-form .ccl-form-check-input + .ccl-form-radio-label {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 1.75rem;
+}
+
 label.ccl-form-radio-label span.nuts-menu-icon {
-  margin-left: 9rem;
+  max-width: 30px;
 }
 
 .area-container .esri-button {
