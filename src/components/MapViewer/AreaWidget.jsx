@@ -212,7 +212,7 @@ class AreaWidget extends React.Component {
         //definitionExpression: 'LEVL_CODE=' + level,
       });
 
-      this.removeFileUploadedLayer();
+      //this.removeFileUploadedLayer();
 
       this.nutsGroupLayer.add(layer);
 
@@ -236,7 +236,7 @@ class AreaWidget extends React.Component {
       popupEnabled: false,
     });
 
-    this.removeFileUploadedLayer();
+    //this.removeFileUploadedLayer();
 
     this.nutsGroupLayer.add(layer);
 
@@ -265,7 +265,7 @@ class AreaWidget extends React.Component {
     //console.log('uploaded file from form: ', file);
 
     //List allowed file extensions
-    let fileExtensions = ['zip', 'geojson', 'csv'];
+    let fileExtensions = ['zip', 'geojson'];
 
     // Get the file extension
     let fileExtension = fileName.split('.').pop();
@@ -281,15 +281,21 @@ class AreaWidget extends React.Component {
       return;
     }
 
-    //Check if the file size is over the 10mb file size limit
+    // Check if the file is a geojson or CSV and the file size is over the 10mb file size limit
+    // or file is a shape file and the file size is over the 2mb file size limit
     if (
-      (file.size > 2000000 && fileExtension === 'zip') ||
       (file.size > 1000000 && fileExtension === 'geojson') ||
       (file.size > 1000000 && fileExtension === 'csv')
     ) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileLimit',
+      });
+      return;
+    } else if (file.size > 2000000 && fileExtension === 'zip') {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'shapefileLimit',
       });
       return;
     }
@@ -312,9 +318,9 @@ class AreaWidget extends React.Component {
         //      }
         //      this.handleGeoJson(parsedData);
         //      break;
-        case 'csv':
-          this.handleCsv(event.target.result);
-          break;
+        //case 'csv':
+        //  this.handleCsv(event.target.result);
+        //  break;
         default:
           break;
       }
@@ -329,14 +335,14 @@ class AreaWidget extends React.Component {
         this.generateFeatureCollection(fileName, file, 'geojson');
         //reader.readAsText(file);
         break;
-      case 'csv':
-        //this.generateFeatureCollection(
-        //  fileName,
-        //  file,
-        //  'csv',
-        //);
-        reader.readAsText(fileBlob);
-        break;
+      //case 'csv':
+      //this.generateFeatureCollection(
+      //  fileName,
+      //  file,
+      //  'csv',
+      //);
+      //  reader.readAsText(fileBlob);
+      //  break;
       default:
         break;
     }
@@ -384,13 +390,45 @@ class AreaWidget extends React.Component {
             return;
           //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(response.data.featureCollection);
+          //console.log(data);
+          //this.loadFileUploadService(response.data.featureCollection);
         } else {
-          //console.error('Unexpected response structure:', response);
+          console.error('Unexpected response structure:', response);
         }
       })
       .catch((error) => {
-        //console.error('Failed to generate feature collection:', error);
+        console.error('Failed to generate feature collection:', error);
       });
+  }
+
+  loadFileUploadService(data) {
+    //debugger;
+    document.querySelector('.esri-attribution__powered-by').style.display =
+      'flex';
+    const blob = new Blob([data], {
+      type: 'json',
+    });
+    const url = URL.createObjectURL(blob);
+
+    var layer = new FeatureLayer({
+      id: 9,
+      //url: this.props.urls.outsideEu,
+      url: url,
+      layerId: 9,
+      outFields: ['*'],
+      popupEnabled: false,
+      title: 'upload',
+    });
+
+    //this.removeFileUploadedLayer();
+
+    this.removeNutsLayers();
+
+    this.nutsGroupLayer.add(layer);
+
+    let index = this.getHighestIndex();
+
+    this.props.map.reorder(this.nutsGroupLayer, index + 1);
   }
 
   // add the feature collection to the map and zoom to the feature collection extent
@@ -398,9 +436,19 @@ class AreaWidget extends React.Component {
   // collection in local storage by serializing the layer using featureLayer.toJson()
   // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
   addFeatureCollectionToMap(featureCollection) {
+    console.log('feature collection: ', featureCollection);
     let sourceGraphics = [];
+    const symbol = new SimpleFillSymbol({
+      //type: 'simple-fill',
+      color: [255, 255, 255, 0.5],
+      outline: {
+        color: [0, 0, 0],
+        width: 1,
+      },
+    });
     const layers = featureCollection.layers.map((layer) => {
       const graphics = layer.featureSet.features.map((feature) => {
+        feature.symbol = symbol;
         return Graphic.fromJSON(feature);
       });
       sourceGraphics = sourceGraphics.concat(graphics);
@@ -417,11 +465,42 @@ class AreaWidget extends React.Component {
         //        outFields: ['*'],
         //        popupEnabled: false,
       });
+      //featureLayer.renderer = {
+      //  type: 'simple-fill',
+      //  color: [255, 255, 255, 0.5],
+      //  outline: {
+      //    color: [0, 0, 0],
+      //    width: 1,
+      //  },
+      //}
+      //featureLayer.renderer = {
+      //  type: "simple",  // autocasts as new SimpleRenderer()
+      //  symbol: {
+      //    type: "simple-fill",  // autocasts as new SimpleMarkerSymbol()
+      //    //size: 20,
+      //    color: [255, 255, 255, 0.5],
+      //    outline: {  // autocasts as new SimpleLineSymbol()
+      //      width: 1,
+      //      color: [0, 0, 0]
+      //    }
+      //  }
+      //};
+      //featureLayer.renderer = {
+      //  type: "simple",  // autocasts as new SimpleRenderer()
+      //  symbol: {
+      //    type: "simple-fill",  // autocasts as new SimpleMarkerSymbol()
+      //    size: 20,
+      //    color: "green",
+      //    outline: {  // autocasts as new SimpleLineSymbol()
+      //      width: 4.5,
+      //      color: "blue"
+      //    }
+      //  }
+      //};
       return featureLayer;
     });
-
     //Check for the correct spatial reference
-    //console.log("layer: ", layers);
+    console.log('layer: ', layers);
     if (this.checkWkid(layers[0]?.spatialReference) === false) return;
 
     let geometry = new Extent(
@@ -442,15 +521,14 @@ class AreaWidget extends React.Component {
       this.removeNutsLayers();
 
       //Add uploaded layer to the map and zoom to the extent
-      this.props.map.addMany(layers);
+      //this.props.map.addMany(layers);
+      this.props.view.graphics.addMany(sourceGraphics);
       this.props.view.goTo(sourceGraphics).catch((error) => {
         //console.error('From addFeatureCollectionToMap function', error);
       });
+      console.log('source graphics: ', sourceGraphics);
       //Send the area to the parent component
-      this.props.updateArea({
-        origin: { x: geometry.extent.xmin, y: geometry.extent.ymin },
-        end: { x: geometry.extent.xmax, y: geometry.extent.ymax },
-      });
+      this.props.updateArea(sourceGraphics[0]);
       //Order the layer in the map
       let index = this.getHighestIndex();
       this.props.map.reorder(this.fileUploadLayer, index + 1);
@@ -597,9 +675,10 @@ class AreaWidget extends React.Component {
 
   removeFileUploadedLayer() {
     if (this.fileUploadLayer !== null) {
-      this.props.map.removeMany(this.fileUploadLayer.layers);
-      //this.props.view.graphics.removeMany(this.fileUploadLayer.sourceGraphics);
-      this.fileUploadLayer = null;
+      //  this.props.map.removeMany(this.fileUploadLayer.layers);
+      //  //this.props.view.graphics.removeMany(this.fileUploadLayer.sourceGraphics);
+      //  this.fileUploadLayer = null;
+      this.clearWidget();
     }
   }
 
@@ -783,7 +862,7 @@ class AreaWidget extends React.Component {
             let graphic = response.results.filter((result) => {
               let layer;
               if (
-                'nuts0 nuts1 nuts2 nuts3 countries'.includes(
+                'nuts0 nuts1 nuts2 nuts3 countries upload'.includes(
                   result.graphic.layer.id,
                 )
               ) {
@@ -1062,9 +1141,7 @@ class AreaWidget extends React.Component {
                   >
                     <div className="field">
                       <label className="file-upload">
-                        <span>
-                          File formats supported: shp(zip), geojson, csv
-                        </span>
+                        <span>File formats supported: shp(zip), geojson</span>
                         <input
                           type="file"
                           name="file"
@@ -1149,7 +1226,19 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Uploading files larger than 10MB is not allowed.
+                        Uploading geojson or csv files larger than 10MB is not
+                        allowed.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'shapefileLimit' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploading shapefiles files larger than 2MB is not
+                        allowed.
                       </div>
                     </>
                   )}
