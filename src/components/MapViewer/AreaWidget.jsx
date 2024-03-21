@@ -254,12 +254,12 @@ class AreaWidget extends React.Component {
   };
 
   handleFileUpload = (e) => {
-    //Store the file as Blob
-    let fileBlob = e.target.files[0];
     //Get the file name
     const fileName = e.target.value.toLowerCase();
     //console.log('file name: ', fileName);
 
+    //Get the file size
+    const fileSize = e.target.files[0].size;
     //Get the file from the form
     const file = document.getElementById('uploadForm');
     //console.log('uploaded file from form: ', file);
@@ -271,7 +271,6 @@ class AreaWidget extends React.Component {
     let fileExtension = fileName.split('.').pop();
 
     //console.log('file extension: ', fileExtension);
-
     //Check if the file format is not supported
     if (fileExtensions.indexOf(fileExtension) === -1) {
       this.setState({
@@ -283,48 +282,21 @@ class AreaWidget extends React.Component {
 
     // Check if the file is a geojson or CSV and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
-    if (
-      (file.size > 1000000 && fileExtension === 'geojson') ||
-      (file.size > 1000000 && fileExtension === 'csv')
-    ) {
+    if (fileSize > 10485760 && fileExtension === 'geojson') {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileLimit',
       });
       return;
-    } else if (file.size > 2000000 && fileExtension === 'zip') {
+    }
+
+    if (fileSize > 2097152 && fileExtension === 'zip') {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'shapefileLimit',
       });
       return;
     }
-
-    //Read the file
-    let reader = new FileReader();
-
-    reader.onload = (event) => {
-      switch (fileExtension) {
-        //    case 'zip':
-        //        this.handleShp(event.target.result);
-        //      break;
-        //    case 'geojson':
-        //      let parsedData;
-        //      try {
-        //        parsedData = JSON.parse(event.target.result);
-        //      } catch (e) {
-        //                   console.error('Failed to parse JSON', e);
-        //        return;
-        //      }
-        //      this.handleGeoJson(parsedData);
-        //      break;
-        //case 'csv':
-        //  this.handleCsv(event.target.result);
-        //  break;
-        default:
-          break;
-      }
-    };
 
     switch (fileExtension) {
       case 'zip':
