@@ -31,7 +31,7 @@ export const AddCartItem = ({
   const { addCartItem, isLoggedIn } = useCartState();
 
   const checkArea = (e) => {
-    let check = document.querySelector('.area-panel input:checked').value;
+    let check = document.querySelector('.area-panel input:checked')?.value;
     let area = {};
     if (check === 'area') {
       let graphics = mapViewer.view.graphics;
@@ -77,7 +77,7 @@ export const AddCartItem = ({
   const checkExtent = (e) => {
     let intersection = false;
     let areaExtent = null;
-    let check = document.querySelector('.area-panel input:checked').value;
+    let check = document.querySelector('.area-panel input:checked')?.value;
     if (check === 'area') {
       areaExtent = new Extent({
         xmin: Math.min(areaData.end.x, areaData.origin.x),
