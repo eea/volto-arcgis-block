@@ -265,7 +265,8 @@ class AreaWidget extends React.Component {
     //console.log('uploaded file from form: ', file);
 
     //List allowed file extensions
-    let fileExtensions = ['zip', 'geojson'];
+
+    //let fileExtensions = ['zip', 'geojson'];
 
     // Get the file extension
     let fileExtension = fileName.split('.').pop();
