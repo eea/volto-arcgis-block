@@ -68,8 +68,9 @@ class LegendWidget extends React.Component {
   brokenLegendImagePatch() {
     let img = {};
     const collection = document.getElementsByClassName('esri-legend__symbol');
+    console.log('collection length:', collection.length);
     if (collection.length === 0) return;
-    Array.prototype.forEach.call(collection, (element) => {
+    Array.prototype.forEach.call(collection, (element, index) => {
       if (element.hasChildNodes()) {
         for (let i = 0; i < element.childNodes.length; i++) {
           let child = element.childNodes[i];
@@ -79,71 +80,98 @@ class LegendWidget extends React.Component {
           }
         }
       } else img = element;
-      if (!(img.complete && img.naturalHeight !== 0)) {
-        // If img src returns a broken link
-        if (img?.src?.includes('all_present_lc_a_pol')) {
-          img.src = this.props.hotspotData.all_present_lc[
-            'all_present_lc_a_pol'
-          ].FilterStaticImageLegend;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Dichotomous Present Land Cover in selected hot spots';
-        } else if (img?.src?.includes('all_present_lc_b_pol')) {
-          img.src = this.props.hotspotData.all_present_lc[
-            'all_present_lc_b_pol'
-          ].FilterStaticImageLegend;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Modular Present Land Cover in selected hot spots';
-        } else if (img?.src?.includes('all_lcc_a_pol')) {
-          img.src = this.props.hotspotData.all_lcc[
-            'all_lcc_a_pol'
-          ].FilterStaticImageLegend;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Dichotomous Land Cover Change in selected hot spots';
-        } else if (img?.src?.includes('all_lcc_b_pol')) {
-          img.src = this.props.hotspotData.all_lcc[
-            'all_lcc_b_pol'
-          ].FilterStaticImageLegend;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Modular Land Cover Change in selected hot spots';
-        } else if (img?.src?.includes('cop_klc')) {
-          img.src = this.props.hotspotData.cop_klc[
-            'cop_klc'
-          ].FilterStaticImageLegend;
-
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Key Landscapes for Conservation borders in selected hotspots';
-        } else if (img?.src?.includes('protected_areas')) {
-          img.src = this.props.hotspotData.protected_areas[
-            'protected_areas'
-          ].FilterStaticImageLegend;
-          img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
-            'Protected Areas in Key Landscapes for Conservation borders in selected hot-spots';
-        } /*  else if (img.style) {
+      //if (!(img.complete && img.naturalHeight !== 0)) {
+      // If img src returns a broken link
+      let imgTitle = document.querySelector('div.esri-legend__layer-caption');
+      let tag;
+      let replacementText;
+      console.log(index);
+      console.log(imgTitle.textContent);
+      if (img?.src?.includes('all_present_lc_a_pol')) {
+        //img.src = this.props.hotspotData.all_present_lc[
+        //  'all_present_lc_a_pol'
+        //].FilterStaticImageLegend;
+        tag = 'all_present_lc_a_pol';
+        replacementText =
+          'Dichotomous Present Land Cover in selected Hot Spots';
+        if (imgTitle && imgTitle.textContent === tag) {
+          imgTitle.textContent = replacementText;
+        }
+        //img.src = this.props.hotspotData.all_present_lc[
+        //  'all_present_lc_b_pol'
+        //].FilterStaticImageLegend;
+      } else if (img?.src?.includes('all_present_lc_b_pol')) {
+        tag = 'all_present_lc_b_pol';
+        replacementText = 'Modular Present Land Cover in selected Hot Spots';
+        if (imgTitle && imgTitle.textContent === tag) {
+          imgTitle.textContent = replacementText;
+        }
+        //  img.parentNode.parentNode.parentNode.parentNode.firstElementChild.textContent =
+        //  'Modular Present Land Cover in selected hot spots';
+      } else if (img?.src?.includes('all_lcc_a_pol')) {
+        //img.src = this.props.hotspotData.all_lcc[
+        //  'all_lcc_a_pol'
+        //].FilterStaticImageLegend;
+        tag = 'all_lcc_a_pol';
+        replacementText = 'Dichotomous Land Cover Change in selected Hot Spots';
+        if (imgTitle && imgTitle.textContent === tag) {
+          imgTitle.textContent = replacementText;
+        }
+      } else if (img?.src?.includes('all_lcc_b_pol')) {
+        //img.src = this.props.hotspotData.all_lcc[
+        //  'all_lcc_b_pol'
+        //].FilterStaticImageLegend;
+        tag = 'all_lcc_b_pol';
+        replacementText = 'Modular Land Cover Change in selected Hot Spots';
+        if (imgTitle && imgTitle.textContent === tag) {
+          imgTitle.textContent = replacementText;
+        }
+      } else if (img?.src?.includes('cop_klc')) {
+        //img.src = this.props.hotspotData.cop_klc[
+        //  'cop_klc'
+        //].FilterStaticImageLegend;
+        tag = 'cop_klc';
+        replacementText =
+          'Key Landscapes for Conservation borders in selected Hot Spots';
+        if (imgTitle && imgTitle.textContent === tag) {
+          imgTitle.textContent = replacementText;
+        }
+      } else if (img?.src?.includes('protected_areas')) {
+        //img.src = this.props.hotspotData.protected_areas[
+        //  'protected_areas'
+        //].FilterStaticImageLegend;
+        tag = 'protected_areas';
+        replacementText =
+          'Protected Areas in Key Landscapes for Conservation borders in selected Hot Spots';
+        if (imgTitle && imgTitle.textContent === tag) {
+          imgTitle.textContent = replacementText;
+        }
+      } /*  else if (img.style) {
           img.parentNode.parentNode.parentNode.parentNode.firstElementChild.style.display =
-            'none';
+          'none';
           img.style.display = 'none';
-
+          
           if (element.parentNode.querySelector('span')) return;
-
+          
           let span = document.createElement('span');
           span.innerHTML = 'No legend available';
           element.parentNode.appendChild(span);
         } */
-        if (
-          typeof img?.closest !== 'undefined' &&
-          img?.closest('.esri-legend__service')?.firstElementChild?.nodeName ===
-            'H3' &&
-          img?.closest('.esri-legend__service')?.firstElementChild
-            ?.textContent === 'WMS'
-        ) {
-          img.closest('.esri-legend__service').firstElementChild.style.display =
-            'none';
-        }
+      if (
+        typeof img?.closest !== 'undefined' &&
+        img?.closest('.esri-legend__service')?.firstElementChild?.nodeName ===
+          'H3' &&
+        img?.closest('.esri-legend__service')?.firstElementChild
+          ?.textContent === 'WMS'
+      ) {
+        //img.closest('.esri-legend__service').firstElementChild.style.display =
+        //  'none';
       }
+      //}
+      console.log(index);
+      console.log(imgTitle.textContent);
+      tag = '';
+      replacementText = '';
     });
   }
 
@@ -219,7 +247,8 @@ class LegendWidget extends React.Component {
     this.LegendWidget.when(() => {
       this.LegendWidget.activeLayerInfos.on('after-changes', (event) => {
         this.setState({ loading: true });
-        this.scanImages();
+        //this.scanImages();
+        //this.brokenLegendImagePatch();
       });
     });
   }

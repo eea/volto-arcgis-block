@@ -774,7 +774,10 @@ class MenuWidget extends React.Component {
             let order = counter - index;
             let activeLayers = document.querySelectorAll('.active-layer');
             activeLayers.forEach((item) => {
-              if (layer === item.getAttribute('layer-id')) {
+              if (
+                item.parentElement &&
+                layer === item.getAttribute('layer-id')
+              ) {
                 item.parentElement.insertBefore(item, activeLayers[order]);
               }
             });
@@ -788,11 +791,14 @@ class MenuWidget extends React.Component {
             sessionStorage.getItem('layerOpacities'),
           );
           elementOpacities.forEach((element) => {
-            let id = element.parentElement.parentElement.getAttribute(
-              'layer-id',
-            );
-            if (layerOpacities[id]) {
-              element.dataset.opacity = layerOpacities[id] * 100;
+            let parentElement = element.parentElement?.parentElement;
+            if (parentElement) {
+              let id = element.parentElement.parentElement.getAttribute(
+                'layer-id',
+              );
+              if (layerOpacities[id]) {
+                element.dataset.opacity = layerOpacities[id] * 100;
+              }
             }
           });
         }
