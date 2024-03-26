@@ -510,9 +510,7 @@ class HotspotWidget extends React.Component {
       .then((data) => {
         this.dataJSONNames = data.nodes;
       })
-      .catch(function (error) {
-        /* console.log('error while getting data'); */
-      });
+      .catch(function (error) {});
   }
 
   renderApplyFilterButton() {
