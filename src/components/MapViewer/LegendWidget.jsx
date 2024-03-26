@@ -76,7 +76,7 @@ class LegendWidget extends React.Component {
           let child = element.childNodes[i];
           if (child.nodeName === 'IMG') {
             img = child;
-            break;
+            //break;
           }
         }
       } else img = element;
@@ -223,7 +223,7 @@ class LegendWidget extends React.Component {
   imageFixWithTimer() {
     this.setState({ loading: true });
     setTimeout(() => {
-      this.brokenLegendImagePatch();
+      //    this.brokenLegendImagePatch();
       if (this.props.download) {
         this.hideNutsLegend();
       }
@@ -309,7 +309,7 @@ class LegendWidget extends React.Component {
           if (this.props.download) {
             this.hideNutsLegend();
           }
-          this.brokenLegendImagePatch();
+          //this.brokenLegendImagePatch();
           this.setState({ loading: false });
         }, 2000);
       }
