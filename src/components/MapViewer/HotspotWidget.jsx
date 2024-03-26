@@ -121,6 +121,7 @@ class HotspotWidget extends React.Component {
     const serviceUrl = this.urls.serviceUrl;
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
+      title: '',
       //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
@@ -133,6 +134,7 @@ class HotspotWidget extends React.Component {
     });
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
+      title: '',
       //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
@@ -145,6 +147,7 @@ class HotspotWidget extends React.Component {
     });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
+      title: '',
       //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
@@ -157,6 +160,7 @@ class HotspotWidget extends React.Component {
     });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
+      title: '',
       //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
@@ -169,6 +173,7 @@ class HotspotWidget extends React.Component {
     });
     this.esriLayer_klc = new WMSLayer({
       url: serviceUrl,
+      title: '',
       //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
@@ -180,6 +185,7 @@ class HotspotWidget extends React.Component {
     });
     this.esriLayer_pa = new WMSLayer({
       url: serviceUrl,
+      title: '',
       //featureInfoFormat: "application/json",
       customLayerParameters: {},
       sublayers: [
@@ -225,6 +231,7 @@ class HotspotWidget extends React.Component {
 
   async handleApplyFilter(typeFilter) {
     let typeLegend;
+    let title;
     let activeLayers =
       this.props.hotspotData && this.props.hotspotData['activeLayers']
         ? Object.keys(this.props.hotspotData['activeLayers'])
@@ -256,9 +263,11 @@ class HotspotWidget extends React.Component {
           let layer = activeLayers[i];
           if (layer.includes('all_lcc_a_pol')) {
             typeLegend = 'all_lcc_a_pol';
+            title = 'Dichotomous Land Cover Change in selected Hot Spots';
             break;
           } else {
             typeLegend = 'all_lcc_b_pol';
+            title = 'Modular Land Cover Change in selected Hot Spots';
           }
         }
 
@@ -275,6 +284,7 @@ class HotspotWidget extends React.Component {
         filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
           typeLegend,
         );
+        filterLayer.sublayers.items[0].title = title;
         if (bookmarkHotspotFilter !== null) {
           filterLayer.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['lcc_filter'];
@@ -293,9 +303,11 @@ class HotspotWidget extends React.Component {
           let layer = activeLayers[i];
           if (layer.includes('all_present_lc_a_pol')) {
             typeLegend = 'all_present_lc_a_pol';
+            title = 'Dichotomous Present Land Cover in selected Hot Spots';
             break;
           } else {
             typeLegend = 'all_present_lc_b_pol';
+            title = 'Modular Present Land Cover in selected Hot Spots';
           }
         }
 
@@ -324,6 +336,7 @@ class HotspotWidget extends React.Component {
         filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
           typeLegend,
         );
+        filterLayer.sublayers.items[0].title = title;
         if (bookmarkHotspotFilter !== null) {
           filterLayer.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['lc_filter'];
@@ -338,6 +351,7 @@ class HotspotWidget extends React.Component {
         }
       }
       if (type === 'klc') {
+        title = 'Key Landscapes for Conservation borders in selected Hot Spots';
         if (bookmarkHotspotFilter !== null) {
           this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['klc_filter'];
@@ -346,8 +360,11 @@ class HotspotWidget extends React.Component {
             "klc_code LIKE '" + this.dataKlc_code + "'";
         }
         filterLayer = this.esriLayer_klc;
+        filterLayer.sublayers.items[0].title = title;
       }
       if (type === 'pa') {
+        title =
+          'Protected Areas in Key Landscapes for Conservation borders in selected Hot Spots';
         if (bookmarkHotspotFilter !== null) {
           this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['pa_filter'];
@@ -356,6 +373,7 @@ class HotspotWidget extends React.Component {
             "klc_code LIKE '" + this.dataKlc_code + "'";
         }
         filterLayer = this.esriLayer_pa;
+        filterLayer.sublayers.items[0].title = title;
       }
       layersToAdd[type + '_filter'] = filterLayer;
     });
