@@ -797,6 +797,8 @@ class MenuWidget extends React.Component {
               );
               if (layerOpacities[id]) {
                 element.dataset.opacity = layerOpacities[id] * 100;
+              } else {
+                element.dataset.opacity = 100;
               }
             }
           });
