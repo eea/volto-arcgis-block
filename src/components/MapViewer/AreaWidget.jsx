@@ -1105,7 +1105,7 @@ class AreaWidget extends React.Component {
                     onClick={this.handleUploadClick}
                     type="submit"
                   >
-                    Upload File
+                    Upload file
                   </button>
                 </div>
               </div>
