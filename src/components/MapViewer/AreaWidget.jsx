@@ -9,7 +9,7 @@ var Graphic,
   Field,
   GroupLayer,
   Color,
-  //Query,
+  Polygon,
   request,
   SimpleLineSymbol,
   SimpleFillSymbol;
@@ -58,7 +58,7 @@ class AreaWidget extends React.Component {
       'esri/layers/support/Field',
       'esri/layers/GroupLayer',
       'esri/Color',
-      //'esri/rest/support/Query',
+      'esri/geometry/Polygon',
       'esri/request',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
@@ -71,7 +71,7 @@ class AreaWidget extends React.Component {
         _Field,
         _GroupLayer,
         _Color,
-        //_Query,
+        _Polygon,
         _request,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
@@ -84,7 +84,7 @@ class AreaWidget extends React.Component {
           Field,
           GroupLayer,
           Color,
-          //Query,
+          Polygon,
           request,
           SimpleLineSymbol,
           SimpleFillSymbol,
@@ -96,7 +96,7 @@ class AreaWidget extends React.Component {
           _Field,
           _GroupLayer,
           _Color,
-          //_Query,
+          _Polygon,
           _request,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
@@ -449,7 +449,6 @@ class AreaWidget extends React.Component {
     //Check for the correct spatial reference
     //console.log('layer: ', layers);
     //if (this.checkWkid(layers[0]?.spatialReference) === false) return;
-
     let geometry = new Extent(
       featureCollection.layers[0].layerDefinition.extent,
     );
@@ -475,6 +474,24 @@ class AreaWidget extends React.Component {
       });
       //console.log('source graphics: ', sourceGraphics);
       //Send the area to the parent component
+      //const origin = this.props.view.toMap({
+      //  x: geometry.extent.xmin,
+      //  y: geometry.extent.ymin,
+      //});
+      //const end = this.props.view.toMap({
+      //  x: geometry.extent.xmax,
+      //  y: geometry.extent.ymax,
+      //});
+      //debugger;
+      //this.props.updateArea({
+      //  origin: { x: origin.longitude, y: origin.latitude },
+      //  end: { x: end.longitude, y: end.latitude },
+      //});
+      //      this.props.updateArea({
+      //        origin: { x: geometry.xmin, y: geometry.ymin },
+      //        end: { x: geometry.xmax, y: geometry.ymax },
+      //      });
+      //debugger;
       this.props.updateArea(sourceGraphics[0]);
       //Order the layer in the map
       let index = this.getHighestIndex();
@@ -483,6 +500,10 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'download',
       });
+      sessionStorage.setItem(
+        'fileUploadLayer',
+        JSON.stringify(this.fileUploadLayer),
+      );
     }
   }
 
@@ -771,6 +792,9 @@ class AreaWidget extends React.Component {
     this.setState({
       infoPopupType: 'area',
     });
+    if (sessionStorage.getItem('fileUploadLayer')) {
+      sessionStorage.removeItem('fileUploadLayer');
+    }
     if (this.props.download) {
       let popup = document.querySelector('.drawRectanglePopup-block');
       popup.innerHTML =
