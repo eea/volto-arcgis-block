@@ -366,6 +366,23 @@ class AreaWidget extends React.Component {
           //Check for more than a single feature
           if (this.checkFeatureCount(response.data.featureCollection) === false)
             return;
+          //Check that attributes and geometry are not null or undefined
+          if (
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .attributes === null ||
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .attributes === undefined ||
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .geometry === null ||
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .geometry === undefined
+          ) {
+            this.setState({
+              showInfoPopup: true,
+              infoPopupType: 'invalidShapefile',
+            });
+            return;
+          }
           //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(response.data.featureCollection);
           //console.log(data);
@@ -375,7 +392,18 @@ class AreaWidget extends React.Component {
         }
       })
       .catch((error) => {
-        //console.error('Failed to generate feature collection:', error);
+        if (
+          error &&
+          error.details.httpStatus === 400 &&
+          error.message === 'Invalid Shapefile: missing shp file.'
+        ) {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'invalidShapefile',
+          });
+        } else {
+          // Handle other errors
+        }
       });
   }
   // add the feature collection to the map and zoom to the feature collection extent
@@ -1241,6 +1269,16 @@ class AreaWidget extends React.Component {
                       </span>
                       <div className="drawRectanglePopup-text">
                         Uploaded file is not a polygon geometry type.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'invalidShapefile' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Invalid Shapefile: missing or incomplete shp file.
                       </div>
                     </>
                   )}
