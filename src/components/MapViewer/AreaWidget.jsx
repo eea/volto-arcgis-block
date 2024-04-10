@@ -9,7 +9,7 @@ var Graphic,
   Field,
   GroupLayer,
   Color,
-  //Query,
+  //Polygon,
   request,
   SimpleLineSymbol,
   SimpleFillSymbol;
@@ -58,7 +58,7 @@ class AreaWidget extends React.Component {
       'esri/layers/support/Field',
       'esri/layers/GroupLayer',
       'esri/Color',
-      //'esri/rest/support/Query',
+      //'esri/geometry/Polygon',
       'esri/request',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
@@ -71,7 +71,7 @@ class AreaWidget extends React.Component {
         _Field,
         _GroupLayer,
         _Color,
-        //_Query,
+        //_Polygon,
         _request,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
@@ -84,7 +84,7 @@ class AreaWidget extends React.Component {
           Field,
           GroupLayer,
           Color,
-          //Query,
+          //Polygon,
           request,
           SimpleLineSymbol,
           SimpleFillSymbol,
@@ -96,7 +96,7 @@ class AreaWidget extends React.Component {
           _Field,
           _GroupLayer,
           _Color,
-          //_Query,
+          //_Polygon,
           _request,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
@@ -266,7 +266,7 @@ class AreaWidget extends React.Component {
 
     //List allowed file extensions
 
-    //let fileExtensions = ['zip', 'geojson'];
+    let fileExtensions = ['zip', 'geojson'];
 
     // Get the file extension
     let fileExtension = fileName.split('.').pop();
@@ -274,8 +274,8 @@ class AreaWidget extends React.Component {
     //console.log('file extension: ', fileExtension);
     //Check if the file format is not supported
 
-    // if (fileExtensions.indexOf(fileExtension) === -1) {
-    if (fileExtension !== 'zip') {
+    if (fileExtensions.indexOf(fileExtension) === -1) {
+      //if (fileExtension !== 'zip') {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileFormat',
@@ -286,13 +286,13 @@ class AreaWidget extends React.Component {
     // Check if the file is a geojson or CSV and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
 
-    //if (fileSize > 10485760 && fileExtension === 'geojson') {
-    //  this.setState({
-    //    showInfoPopup: true,
-    //    infoPopupType: 'fileLimit',
-    //  });
-    //  return;
-    //}
+    if (fileSize > 10485760 && fileExtension === 'geojson') {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileLimit',
+      });
+      return;
+    }
 
     if (fileSize > 2097152 && fileExtension === 'zip') {
       this.setState({
@@ -306,10 +306,10 @@ class AreaWidget extends React.Component {
       case 'zip':
         this.generateFeatureCollection(fileName, file, 'shapefile');
         break;
-      //case 'geojson':
-      //  this.generateFeatureCollection(fileName, file, 'geojson');
-      //  //reader.readAsText(file);
-      //  break;
+      case 'geojson':
+        this.generateFeatureCollection(fileName, file, 'geojson');
+        //  //reader.readAsText(file);
+        break;
       //case 'csv':
       //this.generateFeatureCollection(
       //  fileName,
@@ -366,6 +366,23 @@ class AreaWidget extends React.Component {
           //Check for more than a single feature
           if (this.checkFeatureCount(response.data.featureCollection) === false)
             return;
+          //Check that attributes and geometry are not null or undefined
+          if (
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .attributes === null ||
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .attributes === undefined ||
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .geometry === null ||
+            response.data.featureCollection.layers[0].featureSet.features[0]
+              .geometry === undefined
+          ) {
+            this.setState({
+              showInfoPopup: true,
+              infoPopupType: 'invalidShapefile',
+            });
+            return;
+          }
           //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(response.data.featureCollection);
           //console.log(data);
@@ -375,7 +392,18 @@ class AreaWidget extends React.Component {
         }
       })
       .catch((error) => {
-        //console.error('Failed to generate feature collection:', error);
+        if (
+          error &&
+          error.details.httpStatus === 400 &&
+          error.message === 'Invalid Shapefile: missing shp file.'
+        ) {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'invalidShapefile',
+          });
+        } else {
+          // Handle other errors
+        }
       });
   }
   // add the feature collection to the map and zoom to the feature collection extent
@@ -449,7 +477,6 @@ class AreaWidget extends React.Component {
     //Check for the correct spatial reference
     //console.log('layer: ', layers);
     //if (this.checkWkid(layers[0]?.spatialReference) === false) return;
-
     let geometry = new Extent(
       featureCollection.layers[0].layerDefinition.extent,
     );
@@ -475,6 +502,24 @@ class AreaWidget extends React.Component {
       });
       //console.log('source graphics: ', sourceGraphics);
       //Send the area to the parent component
+      //const origin = this.props.view.toMap({
+      //  x: geometry.extent.xmin,
+      //  y: geometry.extent.ymin,
+      //});
+      //const end = this.props.view.toMap({
+      //  x: geometry.extent.xmax,
+      //  y: geometry.extent.ymax,
+      //});
+      //debugger;
+      //this.props.updateArea({
+      //  origin: { x: origin.longitude, y: origin.latitude },
+      //  end: { x: end.longitude, y: end.latitude },
+      //});
+      //      this.props.updateArea({
+      //        origin: { x: geometry.xmin, y: geometry.ymin },
+      //        end: { x: geometry.xmax, y: geometry.ymax },
+      //      });
+      //debugger;
       this.props.updateArea(sourceGraphics[0]);
       //Order the layer in the map
       let index = this.getHighestIndex();
@@ -483,6 +528,10 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'download',
       });
+      sessionStorage.setItem(
+        'fileUploadLayer',
+        JSON.stringify(this.fileUploadLayer),
+      );
     }
   }
 
@@ -771,6 +820,9 @@ class AreaWidget extends React.Component {
     this.setState({
       infoPopupType: 'area',
     });
+    if (sessionStorage.getItem('fileUploadLayer')) {
+      sessionStorage.removeItem('fileUploadLayer');
+    }
     if (this.props.download) {
       let popup = document.querySelector('.drawRectanglePopup-block');
       popup.innerHTML =
@@ -1217,6 +1269,16 @@ class AreaWidget extends React.Component {
                       </span>
                       <div className="drawRectanglePopup-text">
                         Uploaded file is not a polygon geometry type.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'invalidShapefile' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Invalid Shapefile: missing or incomplete shp file.
                       </div>
                     </>
                   )}
