@@ -9,10 +9,11 @@ var Graphic,
   Field,
   GroupLayer,
   Color,
-  //Polygon,
+  projection,
   request,
   SimpleLineSymbol,
-  SimpleFillSymbol;
+  SimpleFillSymbol,
+  SpatialReference;
 
 class AreaWidget extends React.Component {
   /**
@@ -58,10 +59,11 @@ class AreaWidget extends React.Component {
       'esri/layers/support/Field',
       'esri/layers/GroupLayer',
       'esri/Color',
-      //'esri/geometry/Polygon',
+      'esri/geometry/projection',
       'esri/request',
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
+      'esri/geometry/SpatialReference',
     ]).then(
       ([
         _Graphic,
@@ -71,10 +73,11 @@ class AreaWidget extends React.Component {
         _Field,
         _GroupLayer,
         _Color,
-        //_Polygon,
+        _projection,
         _request,
         _SimpleLineSymbol,
         _SimpleFillSymbol,
+        _SpatialReference,
       ]) => {
         [
           Graphic,
@@ -84,10 +87,11 @@ class AreaWidget extends React.Component {
           Field,
           GroupLayer,
           Color,
-          //Polygon,
+          projection,
           request,
           SimpleLineSymbol,
           SimpleFillSymbol,
+          SpatialReference,
         ] = [
           _Graphic,
           _Extent,
@@ -96,10 +100,11 @@ class AreaWidget extends React.Component {
           _Field,
           _GroupLayer,
           _Color,
-          //_Polygon,
+          _projection,
           _request,
           _SimpleLineSymbol,
           _SimpleFillSymbol,
+          _SpatialReference,
         ];
       },
     );
@@ -223,7 +228,6 @@ class AreaWidget extends React.Component {
   }
 
   loadCountriesService(id) {
-    //debugger;
     document.querySelector('.esri-attribution__powered-by').style.display =
       'flex';
     var layer = new FeatureLayer({
@@ -256,13 +260,12 @@ class AreaWidget extends React.Component {
   handleFileUpload = (e) => {
     //Get the file name
     const fileName = e.target.value.toLowerCase();
-    //console.log('file name: ', fileName);
 
     //Get the file size
     const fileSize = e.target.files[0].size;
+
     //Get the file from the form
     const file = document.getElementById('uploadForm');
-    //console.log('uploaded file from form: ', file);
 
     //List allowed file extensions
 
@@ -271,11 +274,9 @@ class AreaWidget extends React.Component {
     // Get the file extension
     let fileExtension = fileName.split('.').pop();
 
-    //console.log('file extension: ', fileExtension);
     //Check if the file format is not supported
 
     if (fileExtensions.indexOf(fileExtension) === -1) {
-      //if (fileExtension !== 'zip') {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileFormat',
@@ -283,7 +284,7 @@ class AreaWidget extends React.Component {
       return;
     }
 
-    // Check if the file is a geojson or CSV and the file size is over the 10mb file size limit
+    // Check if the file is a geojson and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
 
     if (fileSize > 10485760 && fileExtension === 'geojson') {
@@ -308,7 +309,6 @@ class AreaWidget extends React.Component {
         break;
       case 'geojson':
         this.generateFeatureCollection(fileName, file, 'geojson');
-        //  //reader.readAsText(file);
         break;
       //case 'csv':
       //this.generateFeatureCollection(
@@ -331,8 +331,6 @@ class AreaWidget extends React.Component {
 
     // Chrome adds c:\fakepath to the value - we need to remove it
     name = name[0].replace('c:\\fakepath\\', '');
-
-    //console.log('from generateFeatureCollection() name: ', name);
 
     // define the input params for generate see the rest doc for details
     // https://developers.arcgis.com/rest/users-groups-and-items/generate.htm
@@ -362,10 +360,10 @@ class AreaWidget extends React.Component {
     })
       .then((response) => {
         if (response.data && response.data.featureCollection) {
-          //console.log('response data: ', response.data);
           //Check for more than a single feature
           if (this.checkFeatureCount(response.data.featureCollection) === false)
             return;
+
           //Check that attributes and geometry are not null or undefined
           if (
             response.data.featureCollection.layers[0].featureSet.features[0]
@@ -383,10 +381,9 @@ class AreaWidget extends React.Component {
             });
             return;
           }
+
           //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(response.data.featureCollection);
-          //console.log(data);
-          //this.loadFileUploadService(response.data.featureCollection);
         } else {
           //console.error('Unexpected response structure:', response);
         }
@@ -394,6 +391,7 @@ class AreaWidget extends React.Component {
       .catch((error) => {
         if (
           error &&
+          error.details &&
           error.details.httpStatus === 400 &&
           error.message === 'Invalid Shapefile: missing shp file.'
         ) {
@@ -406,27 +404,33 @@ class AreaWidget extends React.Component {
         }
       });
   }
+
   // add the feature collection to the map and zoom to the feature collection extent
   // if you want to persist the feature collection when you reload browser, you could store the
   // collection in local storage by serializing the layer using featureLayer.toJson()
   // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
   addFeatureCollectionToMap(featureCollection) {
-    //console.log('feature collection: ', featureCollection);
     let sourceGraphics = [];
-    const symbol = new SimpleFillSymbol({
-      //type: 'simple-fill',
-      color: [255, 255, 255, 0.5],
-      outline: {
-        color: [0, 0, 0],
-        width: 1,
-      },
-    });
+    //const symbol = new SimpleFillSymbol({
+    //  //type: 'simple-fill',
+    //  color: [255, 255, 255, 0.5],
+    //  outline: {
+    //    color: [0, 0, 0],
+    //    width: 1,
+    //  },
+    //});
+
+    //Create a graphic for each feature in the feature collection
+
     const layers = featureCollection.layers.map((layer) => {
       const graphics = layer.featureSet.features.map((feature) => {
-        feature.symbol = symbol;
+        //feature.symbol = symbol;
         return Graphic.fromJSON(feature);
       });
       sourceGraphics = sourceGraphics.concat(graphics);
+
+      // Create a feature layer from the feature collection fields and gaphics
+
       const featureLayer = new FeatureLayer({
         //        id: 9,
         objectIdField: 'FID',
@@ -436,52 +440,18 @@ class AreaWidget extends React.Component {
         fields: layer.layerDefinition.fields.map((field) => {
           return Field.fromJSON(field);
         }),
-        //        layerId: 9,
-        //        outFields: ['*'],
-        //        popupEnabled: false,
       });
-      //featureLayer.renderer = {
-      //  type: 'simple-fill',
-      //  color: [255, 255, 255, 0.5],
-      //  outline: {
-      //    color: [0, 0, 0],
-      //    width: 1,
-      //  },
-      //}
-      //featureLayer.renderer = {
-      //  type: "simple",  // autocasts as new SimpleRenderer()
-      //  symbol: {
-      //    type: "simple-fill",  // autocasts as new SimpleMarkerSymbol()
-      //    //size: 20,
-      //    color: [255, 255, 255, 0.5],
-      //    outline: {  // autocasts as new SimpleLineSymbol()
-      //      width: 1,
-      //      color: [0, 0, 0]
-      //    }
-      //  }
-      //};
-      //featureLayer.renderer = {
-      //  type: "simple",  // autocasts as new SimpleRenderer()
-      //  symbol: {
-      //    type: "simple-fill",  // autocasts as new SimpleMarkerSymbol()
-      //    size: 20,
-      //    color: "green",
-      //    outline: {  // autocasts as new SimpleLineSymbol()
-      //      width: 4.5,
-      //      color: "blue"
-      //    }
-      //  }
-      //};
       return featureLayer;
     });
+
     //Check for the correct spatial reference
-    //console.log('layer: ', layers);
-    //if (this.checkWkid(layers[0]?.spatialReference) === false) return;
+
     let geometry = new Extent(
       featureCollection.layers[0].layerDefinition.extent,
     );
 
     //If checkExtent returns false, add the layer to the map
+
     if (this.checkExtent(geometry.extent)) {
       this.setState({
         showInfoPopup: true,
@@ -489,45 +459,52 @@ class AreaWidget extends React.Component {
       });
     } else {
       //Remove old uploaded file and save new one to component props for reference
+
       this.removeFileUploadedLayer();
       this.fileUploadLayer = { layers: layers, sourceGraphics: sourceGraphics };
+
       //remove NUTS and COUNTRIES layers from map
+
       this.removeNutsLayers();
 
       //Add uploaded layer to the map and zoom to the extent
-      //this.props.map.addMany(layers);
+
       this.props.view.graphics.addMany(sourceGraphics);
       this.props.view.goTo(sourceGraphics).catch((error) => {
         //console.error('From addFeatureCollectionToMap function', error);
       });
-      //console.log('source graphics: ', sourceGraphics);
+
+      //Create a spatial reference object for the extent
+
+      let sr4326 = new SpatialReference({
+        wkid: 4326,
+      });
+
+      //Create a projection object for the extent
+
+      let latLongExtent = projection.project(geometry, sr4326);
+
       //Send the area to the parent component
-      //const origin = this.props.view.toMap({
-      //  x: geometry.extent.xmin,
-      //  y: geometry.extent.ymin,
-      //});
-      //const end = this.props.view.toMap({
-      //  x: geometry.extent.xmax,
-      //  y: geometry.extent.ymax,
-      //});
-      //debugger;
-      //this.props.updateArea({
-      //  origin: { x: origin.longitude, y: origin.latitude },
-      //  end: { x: end.longitude, y: end.latitude },
-      //});
-      //      this.props.updateArea({
-      //        origin: { x: geometry.xmin, y: geometry.ymin },
-      //        end: { x: geometry.xmax, y: geometry.ymax },
-      //      });
-      //debugger;
-      this.props.updateArea(sourceGraphics[0]);
+
+      this.props.updateArea({
+        origin: { x: latLongExtent.xmin, y: latLongExtent.ymin },
+        end: { x: latLongExtent.xmax, y: latLongExtent.ymax },
+      });
+
       //Order the layer in the map
+
       let index = this.getHighestIndex();
       this.props.map.reorder(this.fileUploadLayer, index + 1);
+
+      // Refresh the map view
+
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'download',
       });
+
+      //Save file upload layer to session storage as a tag for adding item to cart action
+
       sessionStorage.setItem(
         'fileUploadLayer',
         JSON.stringify(this.fileUploadLayer),
@@ -535,10 +512,9 @@ class AreaWidget extends React.Component {
     }
   }
 
-  //check if the featurecollection has more than one feature
+  //Check if the featurecollection has more than one feature
 
   checkFeatureCount(layers) {
-    //debugger;
     if (layers.layers[0].featureSet.features.length > 1) {
       this.setState({
         showInfoPopup: true,
@@ -549,18 +525,6 @@ class AreaWidget extends React.Component {
       return true;
     }
   }
-
-  //Check if the file has a polygon geometry type
-
-  /* uncomment the code below before pushing to DEMO */
-
-  //if (data?.features?.geometry?.type !== 'polygon') {
-  //  this.setState({
-  //    showInfoPopup: true,
-  //    infoPopupType: 'singlePolygon',
-  //  });
-  //  return;
-  //}
 
   //Display CSV on the map
 
@@ -578,7 +542,6 @@ class AreaWidget extends React.Component {
       title: 'uploadLayer',
     });
 
-    //debugger;
     //Query all features insisde the CSV layer
 
     //csvLayer.load().then(function(){
@@ -644,17 +607,20 @@ class AreaWidget extends React.Component {
 
   removeNutsLayers() {
     //find all the radio buttons
+
     let radioButtons = document.querySelectorAll('fieldset.ccl-fieldset');
     let rectangleRadioButton = document.querySelector(
       '#download_area_select_rectangle',
     );
     // Isolate the the checked radio button
+
     let selectedRadioButton = Array.from(radioButtons).find((radioButton) => {
       let input = radioButton.querySelector('input');
       return input && input.type === 'radio' && input.checked;
     });
 
     //Uncheck the selected radio button
+
     if (selectedRadioButton) {
       selectedRadioButton.querySelector('input').checked = false;
     }
@@ -663,7 +629,7 @@ class AreaWidget extends React.Component {
     }
 
     //Remove the layers in this.nutsGroupLayer from the map
-    //this.nutsGroupLayer.removeAll();
+
     this.clearWidget();
   }
 
@@ -671,9 +637,6 @@ class AreaWidget extends React.Component {
 
   removeFileUploadedLayer() {
     if (this.fileUploadLayer !== null) {
-      //  this.props.map.removeMany(this.fileUploadLayer.layers);
-      //  //this.props.view.graphics.removeMany(this.fileUploadLayer.sourceGraphics);
-      //  this.fileUploadLayer = null;
       this.clearWidget();
     }
   }
@@ -898,9 +861,6 @@ class AreaWidget extends React.Component {
         });
       }
     });
-    //this.props.view.watch('updating', () => {
-    //  console.log('graphics: ', this.props.view.graphics);
-    //});
 
     this.props.download
       ? this.container !== null && this.props.view.ui.add(this.container)
