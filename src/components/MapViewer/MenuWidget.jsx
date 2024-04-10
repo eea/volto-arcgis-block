@@ -34,7 +34,7 @@ export const AddCartItem = ({
     let check = document.querySelector('.area-panel input:checked')?.value;
     let fileUpload = sessionStorage.getItem('fileUploadLayer') ? true : false;
     let area = {};
-    if (check === 'area') {
+    if (check === 'area' || fileUpload) {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
         area = '';
@@ -47,9 +47,6 @@ export const AddCartItem = ({
           areaData.end.y,
         ];
       }
-    } else if (fileUpload) {
-      area.type = 'polygon';
-      area.value = [areaData.xmin, areaData.ymin, areaData.xmax, areaData.ymax];
     } else {
       if (areaData) {
         area.type = 'nuts';
@@ -82,9 +79,8 @@ export const AddCartItem = ({
     let intersection = false;
     let areaExtent = null;
     let check = document.querySelector('.area-panel input:checked')?.value;
-    //let fileUpload = sessionStorage.getItem('fileUploadLayer') ? true : false;
-    //debugger;
-    if (check === 'area') {
+    let fileUpload = sessionStorage.getItem('fileUploadLayer') ? true : false;
+    if (check === 'area' || fileUpload) {
       areaExtent = new Extent({
         xmin: Math.min(areaData.end.x, areaData.origin.x),
         xmax: Math.max(areaData.end.x, areaData.origin.x),
