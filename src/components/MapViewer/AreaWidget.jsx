@@ -266,7 +266,7 @@ class AreaWidget extends React.Component {
 
     //List allowed file extensions
 
-    //let fileExtensions = ['zip', 'geojson'];
+    let fileExtensions = ['zip', 'geojson'];
 
     // Get the file extension
     let fileExtension = fileName.split('.').pop();
@@ -274,8 +274,8 @@ class AreaWidget extends React.Component {
     //console.log('file extension: ', fileExtension);
     //Check if the file format is not supported
 
-    // if (fileExtensions.indexOf(fileExtension) === -1) {
-    if (fileExtension !== 'zip') {
+    if (fileExtensions.indexOf(fileExtension) === -1) {
+      //if (fileExtension !== 'zip') {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileFormat',
@@ -286,13 +286,13 @@ class AreaWidget extends React.Component {
     // Check if the file is a geojson or CSV and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
 
-    //if (fileSize > 10485760 && fileExtension === 'geojson') {
-    //  this.setState({
-    //    showInfoPopup: true,
-    //    infoPopupType: 'fileLimit',
-    //  });
-    //  return;
-    //}
+    if (fileSize > 10485760 && fileExtension === 'geojson') {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileLimit',
+      });
+      return;
+    }
 
     if (fileSize > 2097152 && fileExtension === 'zip') {
       this.setState({
@@ -306,10 +306,10 @@ class AreaWidget extends React.Component {
       case 'zip':
         this.generateFeatureCollection(fileName, file, 'shapefile');
         break;
-      //case 'geojson':
-      //  this.generateFeatureCollection(fileName, file, 'geojson');
-      //  //reader.readAsText(file);
-      //  break;
+      case 'geojson':
+        this.generateFeatureCollection(fileName, file, 'geojson');
+        //  //reader.readAsText(file);
+        break;
       //case 'csv':
       //this.generateFeatureCollection(
       //  fileName,
