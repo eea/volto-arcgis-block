@@ -199,7 +199,9 @@ class UseCasesMapViewer extends React.Component {
   }
   async initFMI() {
     let fetchUrl =
-      window.location.href.replace(window.location.pathname.substring(0), '') +
+      window.location.href
+        .replace(window.location.pathname.substring(0), '')
+        .replace(window.location.search.substring(0), '') +
       '/++api++/@anon-registry';
     try {
       let highlightResponse = await fetch(
