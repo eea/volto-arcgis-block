@@ -329,7 +329,8 @@ class AreaWidget extends React.Component {
   generateFeatureCollection(fileName, file, inputFormat) {
     let name = fileName.split('.');
 
-    // Chrome adds c:\fakepath to the value - we need to remove it
+    // Chrome adds c:\fakepath to the value - we need to remove i
+
     name = name[0].replace('c:\\fakepath\\', '');
 
     // define the input params for generate see the rest doc for details
