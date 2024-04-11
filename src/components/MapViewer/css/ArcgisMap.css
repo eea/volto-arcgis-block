@@ -317,13 +317,12 @@ div.esri-popover
   margin: 0;
 }
 
-.area-container .area-header {
-  margin-bottom: 1rem;
-}
+/* .area-container .area-header { */
+/* margin-bottom: 1rem; */
+/* } */
 
 .area-header {
   padding: 1rem;
-  background-color: rgba(160, 177, 40, 0.5);
   font-weight: bold;
 }
 
@@ -344,6 +343,10 @@ div.esri-popover
   margin-left: 1rem !important;
 }
 
+.area-panel .ccl-form:last-child {
+  border-bottom: none;
+}
+
 .nuts-form {
   margin-top: 0.5rem;
   margin-left: 2rem;
@@ -351,7 +354,7 @@ div.esri-popover
 
 div.area-container .ccl-form .ccl-form-check-input + .ccl-form-radio-label {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding-left: 1.75rem;
 }
 
@@ -360,8 +363,11 @@ label.ccl-form-radio-label span.nuts-menu-icon {
 }
 
 .area-container .esri-button {
+  max-width: fit-content;
+  padding: 6px;
   border-color: #a0b128;
-  margin-left: 0.25rem;
+  margin-left: auto;
+  /* margin-left: 0.25rem; */
   background-color: #a0b128;
   color: white !important;
   transition: all 0.3s ease-out;
