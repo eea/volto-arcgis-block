@@ -120,6 +120,9 @@ class AreaWidget extends React.Component {
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.overflowY = 'auto';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.remove('active-widget');
@@ -142,6 +145,9 @@ class AreaWidget extends React.Component {
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.overflowY = 'hidden';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.add('active-widget');
@@ -1100,7 +1106,7 @@ class AreaWidget extends React.Component {
                   >
                     <div className="field">
                       <label className="file-upload">
-                        <span>File formats supported: shp(zip)</span>
+                        <span>File formats supported: shp(zip), geojson</span>
                         <input
                           type="file"
                           name="file"
