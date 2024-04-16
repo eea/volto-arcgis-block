@@ -367,19 +367,19 @@ class AreaWidget extends React.Component {
       .then((response) => {
         if (response.data && response.data.featureCollection) {
           //Check for more than a single feature
-          if (this.checkFeatureCount(response.data.featureCollection) === false)
-            return;
+          let featureCollection = response.data.featureCollection;
+          if (this.checkFeatureCount(featureCollection) === false) return;
 
           //Check that attributes and geometry are not null or undefined
           if (
-            response.data.featureCollection.layers[0].featureSet.features[0]
-              .attributes === null ||
-            response.data.featureCollection.layers[0].featureSet.features[0]
-              .attributes === undefined ||
-            response.data.featureCollection.layers[0].featureSet.features[0]
-              .geometry === null ||
-            response.data.featureCollection.layers[0].featureSet.features[0]
-              .geometry === undefined
+            featureCollection.layers[0].featureSet.features[0].attributes ===
+              null ||
+            featureCollection.layers[0].featureSet.features[0].attributes ===
+              undefined ||
+            featureCollection.layers[0].featureSet.features[0].geometry ===
+              null ||
+            featureCollection.layers[0].featureSet.features[0].geometry ===
+              undefined
           ) {
             this.setState({
               showInfoPopup: true,
@@ -388,8 +388,15 @@ class AreaWidget extends React.Component {
             return;
           }
 
+          featureCollection.layers[0].layerDefinition.drawingInfo.renderer.symbol.color = [
+            255,
+            165,
+            0,
+            70,
+          ];
+          featureCollection.layers[0].layerDefinition.drawingInfo.renderer.symbol.outline.width = 0.1;
           //Create a feature layer from the feature collection
-          this.addFeatureCollectionToMap(response.data.featureCollection);
+          this.addFeatureCollectionToMap(featureCollection);
         } else {
           //console.error('Unexpected response structure:', response);
         }
@@ -475,6 +482,15 @@ class AreaWidget extends React.Component {
 
       //Add uploaded layer to the map and zoom to the extent
 
+      //debugger;
+
+      sourceGraphics.symbol = new SimpleFillSymbol(
+        'solid',
+        new SimpleLineSymbol('solid', new Color([0, 0, 0]), 2),
+        new Color([0, 255, 0, 0.25]),
+      );
+
+      //map.graphics.redraw();
       this.props.view.graphics.addMany(sourceGraphics);
       this.props.view.goTo(sourceGraphics).catch((error) => {
         //console.error('From addFeatureCollectionToMap function', error);
@@ -1244,7 +1260,7 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Invalid Shapefile: missing or incomplete shp file.
+                        Invalid file format, or incomplete shapefile.
                       </div>
                     </>
                   )}
