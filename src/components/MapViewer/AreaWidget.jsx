@@ -388,13 +388,6 @@ class AreaWidget extends React.Component {
             return;
           }
 
-          featureCollection.layers[0].layerDefinition.drawingInfo.renderer.symbol.color = [
-            255,
-            165,
-            0,
-            70,
-          ];
-          featureCollection.layers[0].layerDefinition.drawingInfo.renderer.symbol.outline.width = 0.1;
           //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(featureCollection);
         } else {
@@ -424,28 +417,29 @@ class AreaWidget extends React.Component {
   // see the 'Feature Collection in Local Storage' sample for an example of how to work with local storage
   addFeatureCollectionToMap(featureCollection) {
     let sourceGraphics = [];
-    //const symbol = new SimpleFillSymbol({
-    //  //type: 'simple-fill',
-    //  color: [255, 255, 255, 0.5],
-    //  outline: {
-    //    color: [0, 0, 0],
-    //    width: 1,
-    //  },
-    //});
 
     //Create a graphic for each feature in the feature collection
 
     const layers = featureCollection.layers.map((layer) => {
       const graphics = layer.featureSet.features.map((feature) => {
-        //feature.symbol = symbol;
-        return Graphic.fromJSON(feature);
+        const polygonSymbol = {
+          type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+          color: [234, 168, 72, 0.8],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: '#000000',
+            width: 0.1,
+          },
+        };
+        let graphic = Graphic.fromJSON(feature);
+        graphic.symbol = polygonSymbol;
+        return graphic;
       });
       sourceGraphics = sourceGraphics.concat(graphics);
 
       // Create a feature layer from the feature collection fields and gaphics
 
       const featureLayer = new FeatureLayer({
-        //        id: 9,
         objectIdField: 'FID',
         source: graphics,
         legendEnabled: false,
@@ -482,15 +476,6 @@ class AreaWidget extends React.Component {
 
       //Add uploaded layer to the map and zoom to the extent
 
-      //debugger;
-
-      sourceGraphics.symbol = new SimpleFillSymbol(
-        'solid',
-        new SimpleLineSymbol('solid', new Color([0, 0, 0]), 2),
-        new Color([0, 255, 0, 0.25]),
-      );
-
-      //map.graphics.redraw();
       this.props.view.graphics.addMany(sourceGraphics);
       this.props.view.goTo(sourceGraphics).catch((error) => {
         //console.error('From addFeatureCollectionToMap function', error);
