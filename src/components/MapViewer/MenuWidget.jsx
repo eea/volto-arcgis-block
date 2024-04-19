@@ -795,7 +795,7 @@ class MenuWidget extends React.Component {
               let id = element.parentElement.parentElement.getAttribute(
                 'layer-id',
               );
-              if (layerOpacities[id]) {
+              if (layerOpacities && layerOpacities[id]) {
                 element.dataset.opacity = layerOpacities[id] * 100;
               } else {
                 element.dataset.opacity = 100;
