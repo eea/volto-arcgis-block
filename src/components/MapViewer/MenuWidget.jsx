@@ -487,7 +487,7 @@ class MenuWidget extends React.Component {
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
-          if (dataset.ViewService.endsWith('file')) {
+          if (dataset.ViewService?.endsWith('file')) {
             let promise = fetch(dataset.ViewService, { mode: 'no-cors' })
               .then((response) => {
                 if (!response.ok) {
@@ -955,18 +955,18 @@ class MenuWidget extends React.Component {
       // dont show the product if all of its datasets has the auxiliary service as its ViewService URL
       //CLMS-1756
       //don´t show the product if MarkAsDownloadableNoServiceToVisualize is true
-      const isAuxiliary = (dataset) =>
-        dataset.MarkAsDownloadableNoServiceToVisualize;
-      if (!component.Products[i].Datasets.every(isAuxiliary)) {
-        products.push(
-          this.metodProcessProduct(
-            component.Products[i],
-            index,
-            inheritedIndexComponent,
-          ),
-        );
-        index++;
-      }
+      // const isAuxiliary = (dataset) =>
+      //   dataset.MarkAsDownloadableNoServiceToVisualize;
+      // if (!component.Products[i].Datasets.every(isAuxiliary)) {
+      products.push(
+        this.metodProcessProduct(
+          component.Products[i],
+          index,
+          inheritedIndexComponent,
+        ),
+      );
+      index++;
+      //}
     }
     let style = this.props.download ? { display: 'none' } : {};
 
@@ -1033,17 +1033,17 @@ class MenuWidget extends React.Component {
       }
 
       // CLMS-1545
-      if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
-        datasets.push(
-          this.metodProcessDataset(
-            product.Datasets[i],
-            index,
-            inheritedIndexProduct,
-            checkProduct,
-          ),
-        );
-        index++;
-      }
+      //if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
+      datasets.push(
+        this.metodProcessDataset(
+          product.Datasets[i],
+          index,
+          inheritedIndexProduct,
+          checkProduct,
+        ),
+      );
+      index++;
+      //}
     }
 
     // Empty vector, add the first dataset
@@ -1204,7 +1204,7 @@ class MenuWidget extends React.Component {
     }
 
     // TMS
-    if (dataset.ViewService.endsWith('file')) {
+    if (dataset.ViewService?.endsWith('file')) {
       let tmsLayerIndex = 0;
 
       dataset.Layer.forEach((layer, sublayerIndex) => {
@@ -1546,8 +1546,8 @@ class MenuWidget extends React.Component {
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      if (viewService.toLowerCase().includes('wms')) {
-        viewService = viewService.endsWith('?')
+      if (viewService?.toLowerCase().includes('wms')) {
+        viewService = viewService?.endsWith('?')
           ? viewService
           : viewService + '?';
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMSLayer({
@@ -1577,9 +1577,9 @@ class MenuWidget extends React.Component {
           ProductId: ProductId,
           ViewService: viewService,
         });
-      } else if (viewService.toLowerCase().includes('wmts')) {
+      } else if (viewService?.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
-          url: viewService.endsWith('?') ? viewService : viewService + '?',
+          url: viewService?.endsWith('?') ? viewService : viewService + '?',
           //id: layer.LayerId,
           title: '',
           _wmtsTitle: layer.Title, // CLMS-1105
@@ -1603,7 +1603,7 @@ class MenuWidget extends React.Component {
         ] = new FeatureLayer({
           url:
             viewService +
-            (viewService.endsWith('/') ? '' : '/') +
+            (viewService?.endsWith('/') ? '' : '/') +
             layer.LayerId,
           id: layer.LayerId,
           title: layer.Title,
@@ -2044,8 +2044,8 @@ class MenuWidget extends React.Component {
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
     if (
-      this.layers[elem.id].ViewService.toLowerCase().includes('wmts') ||
-      this.layers[elem.id].ViewService.toLowerCase().endsWith('file')
+      this.layers[elem.id].ViewService?.toLowerCase().includes('wmts') ||
+      this.layers[elem.id].ViewService?.toLowerCase().endsWith('file')
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
