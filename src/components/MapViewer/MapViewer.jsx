@@ -65,6 +65,7 @@ class MapViewer extends React.Component {
     this.loadingHandler = this.loadingHandler.bind(this);
     this.hotspotDataHandler = this.hotspotDataHandler.bind(this);
     this.mapLayersHandler = this.mapLayersHandler.bind(this);
+    this.bookmarkHandler = this.bookmarkHandler.bind(this);
   }
 
   mapLayersHandler(newLayers) {
@@ -80,6 +81,14 @@ class MapViewer extends React.Component {
       this.setState({ hotspotData: {} });
     }
     this.setState({ hotspotData: newHotspotData });
+  }
+
+  bookmarkHandler(bool) {
+    if (!this.state.bookmark) {
+      this.setState({ bookmark: bool });
+    } else {
+      this.setState({ bookmark: bool });
+    }
   }
 
   activeLayersHandler(newActiveLayers) {
@@ -409,6 +418,7 @@ class MapViewer extends React.Component {
           hotspotDataHandler={this.hotspotDataHandler}
           hotspotData={this.state.hotspotData}
           mapLayersHandler={this.mapLayersHandler}
+          bookmark={this.state.bookmark}
         />
       ); //call conf
   }
@@ -496,6 +506,7 @@ export const CheckUserID = ({ reference }) => {
           mapViewer={reference}
           userID={user_id}
           hotspotData={reference.state.hotspotData}
+          bookmarkHandler={reference.bookmarkHandler}
         />
       }
     </>

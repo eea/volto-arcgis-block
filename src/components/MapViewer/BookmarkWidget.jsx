@@ -196,13 +196,21 @@ class BookmarkWidget extends React.Component {
           }
           this.sessionBookmarkHotspot.push(hotspotFilters);
         } else if (e.removed[0]) {
-          for (let index = 0; index < this.sessionBookmarks.length; index++) {
-            if (e.removed[0] === this.sessionBookmarks[index]) {
-              this.sessionBookmarks.splice(index, 1);
-              this.sessionBookmarkLayers.splice(index, 1);
-              this.sessionBookmarkOpacity.splice(index, 1);
-              this.sessionBookmarkVisible.splice(index, 1);
-              this.sessionBookmarkHotspot.splice(index, 1);
+          if (this.sessionBookmarks.length === 0) {
+            this.sessionBookmarkLayers = [];
+            this.sessionBookmarkOpacity = [];
+            this.sessionBookmarkVisible = [];
+            this.sessionBookmarkHotspot = [];
+            this.props.bookmarkHandler(false);
+          } else {
+            for (let index = 0; index < this.sessionBookmarks.length; index++) {
+              if (e.removed[0] === this.sessionBookmarks[index]) {
+                this.sessionBookmarks.splice(index, 1);
+                this.sessionBookmarkLayers.splice(index, 1);
+                this.sessionBookmarkOpacity.splice(index, 1);
+                this.sessionBookmarkVisible.splice(index, 1);
+                this.sessionBookmarkHotspot.splice(index, 1);
+              }
             }
           }
         } else {
@@ -333,7 +341,7 @@ class BookmarkWidget extends React.Component {
           }
         }
         this.map.layers.removeAll();
-        this.map.layers.add('bookmark');
+        this.props.bookmarkHandler(true);
         let layerOpacities = {};
         for (let index = 0; index < selectLayers.length; index++) {
           if (selectOpacity[index]) {
