@@ -748,7 +748,9 @@ class MenuWidget extends React.Component {
     this.handleRasterVectorLegend();
     this.map.when(() => {
       this.map.layers.on('change', (e) => {
-        if (this.map.layers.items[0] === 'bookmark') {
+        if (this.props.bookmark && this.props.bookmark === false) {
+          return;
+        } else if (this.props.bookmark && this.props.bookmark === true) {
           this.map.layers.remove('bookmark');
           let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
           for (const layer in this.layers) {
