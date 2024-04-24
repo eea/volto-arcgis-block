@@ -507,6 +507,7 @@ export const CheckUserID = ({ reference }) => {
           userID={user_id}
           hotspotData={reference.state.hotspotData}
           bookmarkHandler={reference.bookmarkHandler}
+          mapLayersHandler={reference.mapLayersHandler}
         />
       }
     </>
