@@ -169,10 +169,7 @@ export const AddCartItem = ({
             id="map_download_add"
             className="ccl-button ccl-button-green"
             onClick={(e) => {
-              if (
-                !document.querySelector('.map-menu-layer input:checked') &&
-                !dataset.MarkAsDownloadableNoServiceToVisualize
-              ) {
+              if (!document.querySelector('.map-menu-layer input:checked')) {
                 document.getElementById('products_label').click();
               } else {
                 if (
@@ -318,7 +315,7 @@ class MenuWidget extends React.Component {
     this.view = this.props.view;
     this.state = {
       showMapMenu: false,
-      noServiceModal: true,
+      noServiceModal: false,
       setNoServiceModal: true,
       TMSLayerObj: null,
       draggedElements: [],
@@ -1949,6 +1946,9 @@ class MenuWidget extends React.Component {
   }
 
   async toggleLayer(elem) {
+    if (elem.checked) {
+      this.findCheckedDatasetNoServiceToVisualize(elem);
+    }
     if (this.layers[elem.id] === undefined) return;
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
@@ -2404,7 +2404,9 @@ class MenuWidget extends React.Component {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
           if (dataset.DatasetId === datasetContainerId) {
-            return dataset.MarkAsDownloadableNoServiceToVisualize;
+            if (!dataset.ViewService) {
+              this.showNoServiceModal();
+            }
           }
         });
       });
@@ -2681,10 +2683,10 @@ class MenuWidget extends React.Component {
         });
         this.view.goTo(myExtent);
       }
-    } else if (this.url.toLowerCase().includes('wms')) {
+    } else if (this.url?.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
-    } else if (this.url.toLowerCase().includes('wmts')) {
+    } else if (this.url?.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
@@ -2794,23 +2796,19 @@ class MenuWidget extends React.Component {
               />
             </span>
           )}
-          {!this.findCheckedDatasetNoServiceToVisualize(elem) && (
-            <span
-              className="map-menu-icon active-layer-extent"
-              onClick={() => this.fullExtent(elem)}
-              onKeyDown={() => this.fullExtent(elem)}
-              tabIndex="0"
-              role="button"
-            >
-              <Popup
-                trigger={
-                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
-                }
-                content="Full extent"
-                {...popupSettings}
-              />
-            </span>
-          )}
+          <span
+            className="map-menu-icon active-layer-extent"
+            onClick={() => this.fullExtent(elem)}
+            onKeyDown={() => this.fullExtent(elem)}
+            tabIndex="0"
+            role="button"
+          >
+            <Popup
+              trigger={<FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />}
+              content="Full extent"
+              {...popupSettings}
+            />
+          </span>
           <span
             className="map-menu-icon active-layer-opacity"
             onClick={(e) => this.showOpacity(elem, e)}
@@ -3975,51 +3973,49 @@ class MenuWidget extends React.Component {
                   />
                 </div>
               )}
-              {this.props.download &&
-                this.compCfg[0].Products[0].Datasets[0]
-                  .MarkAsDownloadableNoServiceToVisualize === true && (
-                  // CLMS-1588 show modal if download and dataset has no dataset to show
+              {this.state.noServiceModal && (
+                // CLMS-1588 show modal if download and dataset has no dataset to show
 
-                  <>
-                    <Modal
-                      size="tiny"
-                      open={this.state.noServiceModal}
-                      onClose={() => this.closeNoServiceModal()}
-                      onOpen={() => this.showNoServiceModal()}
-                      className="map-download-modal"
-                    >
-                      <div className="modal-close modal-clms-close">
-                        <span
-                          className="ccl-icon-close"
+                <>
+                  <Modal
+                    size="tiny"
+                    open={this.state.noServiceModal}
+                    onClose={() => this.closeNoServiceModal()}
+                    onOpen={() => this.showNoServiceModal()}
+                    className="map-download-modal"
+                  >
+                    <div className="modal-close modal-clms-close">
+                      <span
+                        className="ccl-icon-close"
+                        onClick={(e) => this.closeNoServiceModal(e)}
+                        onKeyDown={(e) => this.closeNoServiceModal(e)}
+                        aria-label="Close"
+                        tabIndex="0"
+                        role="button"
+                      ></span>
+                    </div>
+                    <Modal.Content>
+                      <p>
+                        This dataset can be downloaded, although it cannot be
+                        visualized on the map.
+                      </p>
+                    </Modal.Content>
+                    <Modal.Actions>
+                      <div
+                        className="map-download-buttons"
+                        style={{ textAlign: 'center', display: 'block' }}
+                      >
+                        <button
+                          className="ccl-button ccl-button-green"
                           onClick={(e) => this.closeNoServiceModal(e)}
-                          onKeyDown={(e) => this.closeNoServiceModal(e)}
-                          aria-label="Close"
-                          tabIndex="0"
-                          role="button"
-                        ></span>
-                      </div>
-                      <Modal.Content>
-                        <p>
-                          This dataset can be downloaded, although it cannot be
-                          visualized on the map.
-                        </p>
-                      </Modal.Content>
-                      <Modal.Actions>
-                        <div
-                          className="map-download-buttons"
-                          style={{ textAlign: 'center', display: 'block' }}
                         >
-                          <button
-                            className="ccl-button ccl-button-green"
-                            onClick={(e) => this.closeNoServiceModal(e)}
-                          >
-                            Continue
-                          </button>
-                        </div>
-                      </Modal.Actions>
-                    </Modal>
-                  </>
-                )}
+                          Continue
+                        </button>
+                      </div>
+                    </Modal.Actions>
+                  </Modal>
+                </>
+              )}
             </div>
           </div>
           <div tooltip="Menu of products" direction="right" type="widget">
