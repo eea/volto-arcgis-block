@@ -752,13 +752,30 @@ class MenuWidget extends React.Component {
         if (this.props.bookmark && this.props.bookmark === false) {
           return;
         } else if (this.props.bookmark && this.props.bookmark === true) {
-          this.map.layers.remove('bookmark');
           let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
           for (const layer in this.layers) {
             let node = document.getElementById(layer);
             if (node) {
               if (layers.includes(layer)) {
-                let visible = this.layers[node.id].visible;
+                let visible;
+                if (
+                  (this.layers['lcc_filter'] &&
+                    node.id.includes('all_lcc') &&
+                    this.layers['lcc_filter'].visible) ||
+                  (this.layers['lc_filter'] &&
+                    node.id.includes('all_present') &&
+                    this.layers['lc_filter'].visible) ||
+                  (this.layers['klc_filter'] &&
+                    node.id.includes('cop_klc') &&
+                    this.layers['klc_filter'].visible) ||
+                  (this.layers['pa_filter'] &&
+                    node.id.includes('protected_areas') &&
+                    this.layers['pa_filter'].visible)
+                ) {
+                  visible = true;
+                } else {
+                  visible = this.layers[node.id].visible;
+                }
                 node.checked = true;
                 this.toggleLayer(node);
                 if (!visible) {

@@ -357,6 +357,7 @@ class BookmarkWidget extends React.Component {
           'layerOpacities',
           JSON.stringify(layerOpacities),
         );
+        //this.props.mapLayersHandler(this.layers);
       });
     });
   }
