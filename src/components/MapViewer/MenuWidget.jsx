@@ -748,76 +748,90 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
     this.handleRasterVectorLegend();
     this.map.when(() => {
-      this.map.layers.on('change', (e) => {
-        if (this.props.bookmark && this.props.bookmark === false) {
-          return;
-        } else if (this.props.bookmark && this.props.bookmark === true) {
-          let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-          for (const layer in this.layers) {
-            let node = document.getElementById(layer);
-            if (node) {
-              if (layers.includes(layer)) {
-                let visible;
-                if (
-                  (this.layers['lcc_filter'] &&
-                    node.id.includes('all_lcc') &&
-                    this.layers['lcc_filter'].visible) ||
-                  (this.layers['lc_filter'] &&
-                    node.id.includes('all_present') &&
-                    this.layers['lc_filter'].visible) ||
-                  (this.layers['klc_filter'] &&
-                    node.id.includes('cop_klc') &&
-                    this.layers['klc_filter'].visible) ||
-                  (this.layers['pa_filter'] &&
-                    node.id.includes('protected_areas') &&
-                    this.layers['pa_filter'].visible)
-                ) {
-                  visible = true;
-                } else {
-                  visible = this.layers[node.id].visible;
+      //this.map.layers.on('change', (e) => {
+      this.props.view.watch('updating', (isUpdating) => {
+        if (!isUpdating) {
+          this.props.view.watch('stationary', (isStationary) => {
+            if (isStationary) {
+              if (this.props.bookmark && this.props.bookmark === false) {
+                return;
+              } else if (this.props.bookmark && this.props.bookmark === true) {
+                let layers = JSON.parse(
+                  sessionStorage.getItem('checkedLayers'),
+                );
+                for (const layer in this.layers) {
+                  let node = document.getElementById(layer);
+                  if (node) {
+                    if (layers.includes(layer)) {
+                      let visible = false;
+                      const layerKeys = {
+                        lcc_filter: 'all_lcc',
+                        lc_filter: 'all_present',
+                        klc_filter: 'cop_klc',
+                        pa_filter: 'protected_areas',
+                      };
+
+                      Object.keys(layerKeys).forEach((key) => {
+                        if (
+                          this.props.hotspotData?.filteredLayers.hasOwnProperty(
+                            key,
+                          ) &&
+                          node.id.includes(layerKeys[key]) &&
+                          this.layers[key]?.visible
+                        ) {
+                          visible = true;
+                        } else {
+                          visible = this.layers[node.id].visible;
+                        }
+                      });
+                      node.checked = true;
+                      this.toggleLayer(node);
+                      if (!visible) {
+                        this.eyeLayer(node);
+                      }
+                    } else if (node.checked) {
+                      node.checked = false;
+                      this.toggleLayer(node);
+                    }
+                  }
                 }
-                node.checked = true;
-                this.toggleLayer(node);
-                if (!visible) {
-                  this.eyeLayer(node);
-                }
-              } else if (node.checked) {
-                node.checked = false;
-                this.toggleLayer(node);
-              }
-            }
-          }
-          let counter = layers.length - 1;
-          layers.forEach((layer, index) => {
-            let order = counter - index;
-            let activeLayers = document.querySelectorAll('.active-layer');
-            activeLayers.forEach((item) => {
-              if (
-                item.parentElement &&
-                layer === item.getAttribute('layer-id')
-              ) {
-                item.parentElement.insertBefore(item, activeLayers[order]);
-              }
-            });
-          });
-          this.layersReorder();
-          this.saveLayerOrder();
-          let elementOpacities = document.querySelectorAll(
-            '.active-layer-opacity',
-          );
-          let layerOpacities = JSON.parse(
-            sessionStorage.getItem('layerOpacities'),
-          );
-          elementOpacities.forEach((element) => {
-            let parentElement = element.parentElement?.parentElement;
-            if (parentElement) {
-              let id = element.parentElement.parentElement.getAttribute(
-                'layer-id',
-              );
-              if (layerOpacities && layerOpacities[id]) {
-                element.dataset.opacity = layerOpacities[id] * 100;
-              } else {
-                element.dataset.opacity = 100;
+                let counter = layers.length - 1;
+                layers.forEach((layer, index) => {
+                  let order = counter - index;
+                  let activeLayers = document.querySelectorAll('.active-layer');
+                  activeLayers.forEach((item) => {
+                    if (
+                      item.parentElement &&
+                      layer === item.getAttribute('layer-id')
+                    ) {
+                      item.parentElement.insertBefore(
+                        item,
+                        activeLayers[order],
+                      );
+                    }
+                  });
+                });
+                this.layersReorder();
+                this.saveLayerOrder();
+                let elementOpacities = document.querySelectorAll(
+                  '.active-layer-opacity',
+                );
+                let layerOpacities = JSON.parse(
+                  sessionStorage.getItem('layerOpacities'),
+                );
+                elementOpacities.forEach((element) => {
+                  let parentElement = element.parentElement?.parentElement;
+                  if (parentElement) {
+                    let id = element.parentElement.parentElement.getAttribute(
+                      'layer-id',
+                    );
+                    if (layerOpacities && layerOpacities[id]) {
+                      element.dataset.opacity = layerOpacities[id] * 100;
+                    } else {
+                      element.dataset.opacity = 100;
+                    }
+                  }
+                });
               }
             }
           });
@@ -2016,8 +2030,10 @@ class MenuWidget extends React.Component {
         ) {
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
-        } else {
-          this.map.add(this.layers[elem.id]);
+        } else if (this.layers['lc_filter'] !== undefined) {
+          this.map.add(this.layers['lc_filter']);
+        } else if (this.layers['lcc_filter'] !== undefined) {
+          this.map.add(this.layers['lcc_filter']);
         }
       } else {
         this.layers[elem.id].visible = true; //layer id
