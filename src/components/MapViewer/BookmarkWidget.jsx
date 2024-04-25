@@ -340,7 +340,7 @@ class BookmarkWidget extends React.Component {
             );
           }
         }
-        this.map.layers.removeAll();
+        //this.map.layers.removeAll();
         this.props.bookmarkHandler(true);
         let layerOpacities = {};
         for (let index = 0; index < selectLayers.length; index++) {
@@ -357,7 +357,6 @@ class BookmarkWidget extends React.Component {
           'layerOpacities',
           JSON.stringify(layerOpacities),
         );
-        //this.props.mapLayersHandler(this.layers);
       });
     });
   }
