@@ -777,7 +777,7 @@ class MenuWidget extends React.Component {
                             key,
                           ) &&
                           node.id.includes(layerKeys[key]) &&
-                          this.layers[key]?.visible
+                          this.layers[key]?.sublayers?.items[0]?.visible
                         ) {
                           visible = true;
                         } else {
