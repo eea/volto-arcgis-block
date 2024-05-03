@@ -942,20 +942,22 @@ class HotspotWidget extends React.Component {
         }
         if (
           bookmarkHotspotFilter !== null &&
-          this.props.view.map.layers.items[0] !== 'bookmark'
+          this.props.bookmarkData.active === true
         ) {
-          let activeLayers = [];
-          let filteredLayers = [];
-          Object.keys(bookmarkHotspotFilter.activeLayers).forEach((key) => {
-            activeLayers[key] = this.layers[key];
-          });
-          Object.keys(bookmarkHotspotFilter.filteredLayers).forEach((key) => {
-            filteredLayers[key] = null;
-          });
-          this.props.hotspotData['activeLayers'] = activeLayers;
-          this.props.hotspotData['filteredLayers'] = filteredLayers;
-          this.renderApplyFilterButton();
-          localStorage.setItem('bookmarkHotspotFilter', null);
+          setTimeout(() => {
+            let activeLayers = [];
+            let filteredLayers = [];
+            Object.keys(bookmarkHotspotFilter.activeLayers).forEach((key) => {
+              activeLayers[key] = this.layers[key];
+            });
+            Object.keys(bookmarkHotspotFilter.filteredLayers).forEach((key) => {
+              filteredLayers[key] = null;
+            });
+            this.props.hotspotData['activeLayers'] = activeLayers;
+            this.props.hotspotData['filteredLayers'] = filteredLayers;
+            this.renderApplyFilterButton();
+            localStorage.setItem('bookmarkHotspotFilter', null);
+          }, 2000);
         }
         this.setState({
           activeLayersArray: Array.from(
