@@ -939,9 +939,12 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter = JSON.parse(
             localStorage.getItem('bookmarkHotspotFilter'),
           );
+        } else {
+          return;
         }
         if (
           bookmarkHotspotFilter !== null &&
+          Object.keys(bookmarkHotspotFilter?.filteredLayers).length !== 0 &&
           this.props.bookmarkData.active === true
         ) {
           setTimeout(() => {
