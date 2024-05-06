@@ -753,11 +753,11 @@ class MenuWidget extends React.Component {
           this.props.bookmarkData === undefined
         ) {
           return;
-        } else if (
-          this.props.bookmarkData &&
-          this.props.bookmarkData.active === false
-        ) {
-          return;
+          //} else if (
+          //  this.props.bookmarkData &&
+          //  this.props.bookmarkData.active === false
+          //) {
+          //  return;
         } else if (
           this.props.bookmarkData &&
           this.props.bookmarkData.active === true
@@ -767,10 +767,7 @@ class MenuWidget extends React.Component {
           for (const layer in this.layers) {
             let node = document.getElementById(layer);
             if (node) {
-              if (node.checked) {
-                node.checked = false;
-                this.toggleLayer(node);
-              } else if (layers.includes(layer)) {
+              if (layers.includes(layer)) {
                 let index = layers.indexOf(layer);
                 let visible;
                 if (this.props.bookmarkData.position !== null) {
@@ -790,6 +787,9 @@ class MenuWidget extends React.Component {
                 if (visible === false) {
                   this.eyeLayer(node);
                 }
+              } else if (node.checked) {
+                node.checked = false;
+                this.toggleLayer(node);
               }
             }
           }
