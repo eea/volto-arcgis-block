@@ -123,6 +123,16 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector(
         '.right-panel-content',
       ).style.overflowY = 'auto';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.display = 'none';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.alignItems = 'none';
+      this.container.current.querySelector('.area-panel').style.display =
+        'none';
+      this.container.current.querySelector('.area-panel').style.flexWrap =
+        'none';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.remove('active-widget');
@@ -148,6 +158,16 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector(
         '.right-panel-content',
       ).style.overflowY = 'hidden';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.display = 'flex';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.alignItems = 'center';
+      this.container.current.querySelector('.area-panel').style.display =
+        'flex';
+      this.container.current.querySelector('.area-panel').style.flexWrap =
+        'wrap';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.add('active-widget');
@@ -1085,7 +1105,6 @@ class AreaWidget extends React.Component {
                     </div>
                   </fieldset>
                 </div>
-                <br />
                 <div className="area-header">
                   Upload a file with your area of interest
                   <a
