@@ -1394,7 +1394,7 @@ input[type='range']::-ms-track {
   display: flex;
   width: 19rem;
   height: 60px;
-  justify-content: space-around;
+  /* justify-content: space-around; */
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
   background-color: white;
 }
