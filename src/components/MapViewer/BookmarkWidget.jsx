@@ -282,12 +282,20 @@ class BookmarkWidget extends React.Component {
           activeLayers: {},
           filteredLayers: {},
         };
-        if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+        if (
+          this.props.hotspotData &&
+          this.props.hotspotData.activeLayers &&
+          Object.keys(this.props.hotspotData.activeLayers).length !== 0
+        ) {
           Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
             hotspotFilters.activeLayers[key] = null;
           });
         }
-        if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+        if (
+          this.props.hotspotData &&
+          this.props.hotspotData.filteredLayers &&
+          Object.keys(this.props.hotspotData.filteredLayers).length !== 0
+        ) {
           Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
             hotspotFilters.filteredLayers[
               key
