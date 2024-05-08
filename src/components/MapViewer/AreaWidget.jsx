@@ -425,6 +425,16 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'invalidShapefile',
           });
+        } else if (
+          error &&
+          error.details &&
+          error.details.httpStatus === 400 &&
+          error.message === 'Invalid spatial reference in geojson.'
+        ) {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'incorrectWkid',
+          });
         } else {
           // Handle other errors
         }
@@ -542,8 +552,8 @@ class AreaWidget extends React.Component {
 
   //Check if the featurecollection has more than one feature
 
-  checkFeatureCount(layers) {
-    if (layers.layers[0].featureSet.features.length > 1) {
+  checkFeatureCount(featureCollection) {
+    if (featureCollection.layers[0].featureSet.features.length > 1) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'singleFeature',
@@ -1244,8 +1254,7 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Uploading files with more than a single feature is not
-                        allowed.
+                        The file can’t contain more than one register.
                       </div>
                     </>
                   )}
