@@ -1222,8 +1222,7 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Uploading geojson or csv files larger than 10MB is not
-                        allowed.
+                        Uploading geojson files larger than 10MB is not allowed.
                       </div>
                     </>
                   )}
