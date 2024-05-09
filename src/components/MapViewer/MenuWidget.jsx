@@ -743,23 +743,48 @@ class MenuWidget extends React.Component {
     this.openMenu();
     this.expandDropdowns();
     this.loadLayers();
-    this.showZoomMessageForDatasets();
     this.loadOpacity();
     this.loadVisibility();
     this.handleRasterVectorLegend();
     this.map.when(() => {
       this.map.layers.on('change', (e) => {
-        if (this.map.layers.items[0] === 'bookmark') {
-          this.map.layers.remove('bookmark');
+        if (
+          this.props.bookmarkData === null ||
+          this.props.bookmarkData === undefined
+        ) {
+          return;
+          //} else if (
+          //  this.props.bookmarkData &&
+          //  this.props.bookmarkData.active === false
+          //) {
+          //  return;
+        } else if (
+          this.props.bookmarkData &&
+          this.props.bookmarkData.active === true
+        ) {
+          this.map.layers.removeAll();
           let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
           for (const layer in this.layers) {
             let node = document.getElementById(layer);
             if (node) {
               if (layers.includes(layer)) {
-                let visible = this.layers[node.id].visible;
+                let index = layers.indexOf(layer);
+                let visible;
+                if (this.props.bookmarkData.position !== null) {
+                  let pos = this.props.bookmarkData.position;
+                  let visibleArray = this.props.bookmarkData.visible[pos];
+                  visible =
+                    String(visibleArray[index]) === 'true' ? true : false;
+                  //this.layers[layer].visible = visible;
+                  if (this.layers[layer]) {
+                    let opacityArray = this.props.bookmarkData.opacity[pos];
+                    this.layers[layer].opacity = opacityArray[index];
+                  }
+                }
+                //this.map.layers.add(this.layers[layer]);
                 node.checked = true;
                 this.toggleLayer(node);
-                if (!visible) {
+                if (visible === false) {
                   this.eyeLayer(node);
                 }
               } else if (node.checked) {
@@ -773,7 +798,10 @@ class MenuWidget extends React.Component {
             let order = counter - index;
             let activeLayers = document.querySelectorAll('.active-layer');
             activeLayers.forEach((item) => {
-              if (layer === item.getAttribute('layer-id')) {
+              if (
+                item.parentElement &&
+                layer === item.getAttribute('layer-id')
+              ) {
                 item.parentElement.insertBefore(item, activeLayers[order]);
               }
             });
@@ -787,13 +815,24 @@ class MenuWidget extends React.Component {
             sessionStorage.getItem('layerOpacities'),
           );
           elementOpacities.forEach((element) => {
-            let id = element.parentElement.parentElement.getAttribute(
-              'layer-id',
-            );
-            if (layerOpacities[id]) {
-              element.dataset.opacity = layerOpacities[id] * 100;
+            let parentElement = element.parentElement?.parentElement;
+            if (parentElement) {
+              let id = element.parentElement.parentElement.getAttribute(
+                'layer-id',
+              );
+              if (layerOpacities && layerOpacities[id]) {
+                element.dataset.opacity = layerOpacities[id] * 100;
+              } else {
+                element.dataset.opacity = 100;
+              }
             }
           });
+          let bookmarkData = {
+            ...(this.props.bookmarkData || {}),
+            active: false,
+            position: null,
+          };
+          this.props.bookmarkHandler(bookmarkData);
         }
       });
     });
@@ -1097,38 +1136,12 @@ class MenuWidget extends React.Component {
                   <legend className="ccl-form-legend">
                     {description ? (
                       <Popup
-                        trigger={
-                          product.ProductId ===
-                          '8474c3b080fa42cc837f1d2338fcf096' /*||
-                          product.ProductTitle === 'Snow and Ice Parameters' */ ? (
-                            <div className="zoom-in-message-container">
-                              <span>{product.ProductTitle}</span>
-                              <div
-                                className="zoom-in-message"
-                                id="snow-and-ice-zoom-message"
-                              >
-                                Zoom in to view on map
-                              </div>
-                            </div>
-                          ) : (
-                            <span>{product.ProductTitle}</span>
-                          )
-                        }
+                        trigger={<span>{product.ProductTitle}</span>}
                         content={description}
                         basic
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
-                    ) : product.ProductId ===
-                      '8474c3b080fa42cc837f1d2338fcf096' /*||
-                      product.ProductTitle ===
-                        'High Resolution Snow and Ice Parameters' */ ? (
-                      <div className="zoom-in-message-container">
-                        <span>{product.ProductTitle}</span>
-                        <div className="zoom-in-message">
-                          Zoom in to view on map
-                        </div>
-                      </div>
                     ) : (
                       <span>{product.ProductTitle}</span>
                     )}
@@ -1368,22 +1381,11 @@ class MenuWidget extends React.Component {
                     {description ? (
                       <Popup
                         trigger={
-                          dataset.ProductId ===
-                          '8474c3b080fa42cc837f1d2338fcf096' ? (
+                          dataset.Message && dataset.Message !== '' ? (
                             <div className="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
                               <div className="zoom-in-message zoom-in-message-dataset">
-                                Zoom in to view on map
-                              </div>
-                            </div>
-                          ) : dataset.DatasetId ===
-                              '9827d711d3e148aabccc76dd501a4b86' ||
-                            dataset.DatasetId ===
-                              'e27dbc8330084b58bb5e282231fca74d' ? (
-                            <div className="zoom-in-message-container">
-                              <span>{dataset.DatasetTitle}</span>
-                              <div className="zoom-in-message">
-                                Use the filter to visualize a KLC area
+                                {dataset.Message}
                               </div>
                             </div>
                           ) : (
@@ -1395,20 +1397,11 @@ class MenuWidget extends React.Component {
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
-                    ) : dataset.ProductId ===
-                      '8474c3b080fa42cc837f1d2338fcf096' ? (
+                    ) : dataset.Message && dataset.Message !== '' ? (
                       <div className="zoom-in-message-container">
                         <span>{dataset.DatasetTitle}</span>
-                        <div className="zoom-in-message">
-                          Zoom in to view on map
-                        </div>
-                      </div>
-                    ) : dataset.productId ===
-                      'd764e020485a402598551fa461bf1db2' ? (
-                      <div className="hotspot-filter-message-container">
-                        <span>{dataset.DatasetTitle}</span>
-                        <div className="hotspot-filter-message hotspot-filter-message-dataset">
-                          Use the filter to visualize a KLC area
+                        <div className="zoom-in-message zoom-in-message-dataset">
+                          {dataset.Message}
                         </div>
                       </div>
                     ) : (
@@ -1509,7 +1502,6 @@ class MenuWidget extends React.Component {
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
     datasetCheck.checked = trueChecks > 0;
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
-    this.showZoomMessageOnDataset(datasetCheck);
   }
 
   /**
@@ -1976,7 +1968,10 @@ class MenuWidget extends React.Component {
           }, 2000);
         }
       }
-      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+      if (
+        (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
+        (this.layers['lc_filter'] || this.layers['lcc_filter'])
+      ) {
         if (
           elem.id.includes('cop_klc') &&
           this.layers['klc_filter'] !== undefined
@@ -1989,8 +1984,18 @@ class MenuWidget extends React.Component {
         ) {
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
-        } else {
-          this.map.add(this.layers[elem.id]);
+        } else if (
+          elem.id.includes('all_present') &&
+          this.layers['lc_filter'] !== undefined
+        ) {
+          this.layers['lc_filter'].visible = true;
+          this.map.add(this.layers['lc_filter']);
+        } else if (
+          elem.id.includes('all_lcc') &&
+          this.layers['lcc_filter'] !== undefined
+        ) {
+          this.layers['lcc_filter'].visible = true;
+          this.map.add(this.layers['lcc_filter']);
         }
       } else {
         this.layers[elem.id].visible = true; //layer id
@@ -2091,37 +2096,6 @@ class MenuWidget extends React.Component {
 
     newHotspotData['activeLayers'] = updatedActiveLayers;
     return this.props.hotspotDataHandler(newHotspotData);
-  }
-  //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
-
-  showZoomMessageOnDataset(dataset) {
-    let datasetContainer = dataset.closest('.map-menu-dataset-dropdown');
-    let datasetContainerId = datasetContainer.getAttribute('datasetid');
-
-    if (this.props.download) return;
-    let snowAndIceParameters;
-    for (let i = 0; i < this.compCfg.length; i++) {
-      for (let j = 0; j < this.compCfg[i].Products.length; j++) {
-        if (
-          this.compCfg[i].Products[j].ProductId ===
-          '8474c3b080fa42cc837f1d2338fcf096'
-        ) {
-          snowAndIceParameters = this.compCfg[i].Products[j];
-          break;
-        }
-      }
-    }
-    snowAndIceParameters.Datasets.forEach((set) => {
-      if (set.DatasetId === datasetContainerId) {
-        let node = document.getElementById(dataset.id).nextElementSibling
-          .lastElementChild.lastChild.lastElementChild;
-        if (dataset.checked) {
-          node.style.display = 'block';
-        } else {
-          node.style.display = 'none';
-        }
-      }
-    });
   }
 
   /**
@@ -3408,15 +3382,6 @@ class MenuWidget extends React.Component {
       let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
 
       if (checkedLayers === null) return;
-
-      for (let i = 0; i < checkedLayers.length; i++) {
-        let layerCheck = document.getElementById(checkedLayers[i]);
-        let datasetParentContainer = layerCheck.closest('.ccl-fieldset');
-        let datasetInputParentContainer =
-          datasetParentContainer.firstElementChild;
-        let datasetCheck = datasetInputParentContainer.querySelector('input');
-        this.showZoomMessageOnDataset(datasetCheck);
-      }
     }
     const latestLayer = JSON.parse(sessionStorage.getItem('TMSLayerObj'));
 
@@ -3668,17 +3633,6 @@ class MenuWidget extends React.Component {
             panelsElem.scrollTop = scrollPosition;
           }
         }
-      }
-    }
-  }
-
-  showZoomMessageForDatasets() {
-    if (!this.props.download) {
-      let nodes = document.querySelectorAll('.zoom-in-message-dataset');
-      if (nodes) {
-        nodes.forEach((node) => {
-          node.style.display = 'none';
-        });
       }
     }
   }

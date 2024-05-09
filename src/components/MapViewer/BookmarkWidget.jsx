@@ -252,6 +252,17 @@ class BookmarkWidget extends React.Component {
             JSON.stringify(this.sessionBookmarkHotspot),
           );
         }
+
+        let bookmarkData = {
+          ...(this.props.bookmarkData || {}),
+          active: false,
+          layers: this.sessionBookmarkLayers,
+          opacity: this.sessionBookmarkOpacity,
+          visible: this.sessionBookmarkVisible,
+          position: null,
+        };
+
+        this.props.bookmarkHandler(bookmarkData);
       });
       this.Bookmarks.on('bookmark-edit', (e) => {
         let check = JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
@@ -271,12 +282,20 @@ class BookmarkWidget extends React.Component {
           activeLayers: {},
           filteredLayers: {},
         };
-        if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+        if (
+          this.props.hotspotData &&
+          this.props.hotspotData.activeLayers &&
+          Object.keys(this.props.hotspotData.activeLayers).length !== 0
+        ) {
           Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
             hotspotFilters.activeLayers[key] = null;
           });
         }
-        if (this.props.hotspotData && this.props.hotspotData.activeLayers) {
+        if (
+          this.props.hotspotData &&
+          this.props.hotspotData.filteredLayers &&
+          Object.keys(this.props.hotspotData.filteredLayers).length !== 0
+        ) {
           Object.keys(this.props.hotspotData.filteredLayers).forEach((key) => {
             hotspotFilters.filteredLayers[
               key
@@ -316,32 +335,69 @@ class BookmarkWidget extends React.Component {
             JSON.stringify(this.sessionBookmarkHotspot),
           );
         }
+
+        let bookmarkData = {
+          ...(this.props.bookmarkData || {}),
+          active: false,
+          layers: this.sessionBookmarkLayers,
+          opacity: this.sessionBookmarkOpacity,
+          visible: this.sessionBookmarkVisible,
+          position: null,
+        };
+
+        this.props.bookmarkHandler(bookmarkData);
       });
       this.Bookmarks.on('bookmark-select', (e) => {
         let selectLayers = [];
         let selectOpacity = [];
         let selectVisible = [];
+        let selectPosition;
         for (let index = 0; index < this.Bookmarks.bookmarks.length; index++) {
           if (e.bookmark === this.Bookmarks.bookmarks.items[index]) {
             selectLayers = this.sessionBookmarkLayers[index];
             selectOpacity = this.sessionBookmarkOpacity[index];
             selectVisible = this.sessionBookmarkVisible[index];
+            selectPosition = index;
             localStorage.setItem(
               'bookmarkHotspotFilter',
               JSON.stringify(this.sessionBookmarkHotspot[index]),
             );
           }
         }
-        this.map.layers.removeAll();
-        this.map.layers.add('bookmark');
         let layerOpacities = {};
+        const layerKeys = {
+          lcc_filter: 'all_lcc',
+          lc_filter: 'all_present',
+          klc_filter: 'cop_klc',
+          pa_filter: 'protected_areas',
+        };
         for (let index = 0; index < selectLayers.length; index++) {
           if (selectOpacity[index]) {
-            this.layers[selectLayers[index]].opacity = selectOpacity[index];
-            layerOpacities[selectLayers[index]] = selectOpacity[index];
+            Object.entries(layerKeys).forEach(([key, val]) => {
+              if (
+                this.props.hotspotData?.filteredLayers?.hasOwnProperty(key) &&
+                this.layers[key] &&
+                selectLayers[index].includes(val)
+              ) {
+                this.layers[key].opacity = selectOpacity[index];
+              } else {
+                this.layers[selectLayers[index]].opacity = selectOpacity[index];
+                layerOpacities[selectLayers[index]] = selectOpacity[index];
+              }
+            });
           }
           if (selectVisible[index] !== null) {
-            this.layers[selectLayers[index]].visible = selectVisible[index];
+            Object.entries(layerKeys).forEach(([key, val]) => {
+              if (
+                this.props.hotspotData?.filteredLayers?.hasOwnProperty(key) &&
+                this.layers[key] &&
+                selectLayers[index].includes(val)
+              ) {
+                this.layers[key].visible = selectVisible[index];
+              } else {
+                this.layers[selectLayers[index]].visible = selectVisible[index];
+              }
+            });
           }
         }
         sessionStorage.setItem('checkedLayers', JSON.stringify(selectLayers));
@@ -349,6 +405,19 @@ class BookmarkWidget extends React.Component {
           'layerOpacities',
           JSON.stringify(layerOpacities),
         );
+        let bookmarkData = {
+          ...(this.props.bookmarkData || {}),
+          active: true,
+          layers: this.sessionBookmarkLayers,
+          opacity: this.sessionBookmarkOpacity,
+          visible: this.sessionBookmarkVisible,
+          position: selectPosition,
+        };
+
+        this.props.bookmarkHandler(bookmarkData);
+        this.map.layers.removeAll();
+        let firstLayer = Object.values(this.layers)[0];
+        this.map.add(firstLayer);
       });
     });
   }

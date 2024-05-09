@@ -327,7 +327,7 @@ div.esri-popover
 }
 
 .rectangle-header {
-  padding-top: 0.5rem;
+  padding-top: 1rem;
   border-width: 2px;
   border-style: solid none none none;
   border-color: #a0b128;
@@ -336,7 +336,7 @@ div.esri-popover
 }
 
 .area-panel .ccl-form {
-  padding-bottom: 0.5rem !important;
+  padding-bottom: 1rem !important;
   border-width: 2px;
   border-style: none none solid none;
   border-color: #a0b128;
@@ -366,8 +366,8 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   max-width: fit-content;
   padding: 6px;
   border-color: #a0b128;
+  margin-top: 1rem;
   margin-left: auto;
-  /* margin-left: 0.25rem; */
   background-color: #a0b128;
   color: white !important;
   transition: all 0.3s ease-out;
@@ -1394,7 +1394,7 @@ input[type='range']::-ms-track {
   display: flex;
   width: 19rem;
   height: 60px;
-  justify-content: space-around;
+  /* justify-content: space-around; */
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
   background-color: white;
 }

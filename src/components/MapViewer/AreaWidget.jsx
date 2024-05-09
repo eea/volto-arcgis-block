@@ -123,6 +123,16 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector(
         '.right-panel-content',
       ).style.overflowY = 'auto';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.display = 'none';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.alignItems = 'none';
+      this.container.current.querySelector('.area-panel').style.display =
+        'none';
+      this.container.current.querySelector('.area-panel').style.flexWrap =
+        'none';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.remove('active-widget');
@@ -148,6 +158,16 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector(
         '.right-panel-content',
       ).style.overflowY = 'hidden';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.display = 'flex';
+      this.container.current.querySelector(
+        '.right-panel-content',
+      ).style.alignItems = 'center';
+      this.container.current.querySelector('.area-panel').style.display =
+        'flex';
+      this.container.current.querySelector('.area-panel').style.flexWrap =
+        'wrap';
       this.container.current
         .querySelector('.esri-widget--button')
         .classList.add('active-widget');
@@ -405,6 +425,16 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'invalidShapefile',
           });
+        } else if (
+          error &&
+          error.details &&
+          error.details.httpStatus === 400 &&
+          error.message === 'Invalid spatial reference in geojson.'
+        ) {
+          this.setState({
+            showInfoPopup: true,
+            infoPopupType: 'incorrectWkid',
+          });
         } else {
           // Handle other errors
         }
@@ -435,6 +465,7 @@ class AreaWidget extends React.Component {
         graphic.symbol = polygonSymbol;
         return graphic;
       });
+
       sourceGraphics = sourceGraphics.concat(graphics);
 
       // Create a feature layer from the feature collection fields and gaphics
@@ -521,8 +552,8 @@ class AreaWidget extends React.Component {
 
   //Check if the featurecollection has more than one feature
 
-  checkFeatureCount(layers) {
-    if (layers.layers[0].featureSet.features.length > 1) {
+  checkFeatureCount(featureCollection) {
+    if (featureCollection.layers[0].featureSet.features.length > 1) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'singleFeature',
@@ -1084,7 +1115,6 @@ class AreaWidget extends React.Component {
                     </div>
                   </fieldset>
                 </div>
-                <br />
                 <div className="area-header">
                   Upload a file with your area of interest
                   <a
@@ -1192,8 +1222,7 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Uploading geojson or csv files larger than 10MB is not
-                        allowed.
+                        Uploading geojson files larger than 10MB is not allowed.
                       </div>
                     </>
                   )}
@@ -1224,8 +1253,7 @@ class AreaWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Uploading files with more than a single feature is not
-                        allowed.
+                        The file can’t contain more than one register.
                       </div>
                     </>
                   )}
