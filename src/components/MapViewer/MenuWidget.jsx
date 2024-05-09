@@ -743,7 +743,6 @@ class MenuWidget extends React.Component {
     this.openMenu();
     this.expandDropdowns();
     this.loadLayers();
-    this.showZoomMessageForDatasets();
     this.loadOpacity();
     this.loadVisibility();
     this.handleRasterVectorLegend();
@@ -1097,38 +1096,12 @@ class MenuWidget extends React.Component {
                   <legend className="ccl-form-legend">
                     {description ? (
                       <Popup
-                        trigger={
-                          product.ProductId ===
-                          '8474c3b080fa42cc837f1d2338fcf096' /*||
-                          product.ProductTitle === 'Snow and Ice Parameters' */ ? (
-                            <div className="zoom-in-message-container">
-                              <span>{product.ProductTitle}</span>
-                              <div
-                                className="zoom-in-message"
-                                id="snow-and-ice-zoom-message"
-                              >
-                                Zoom in to view on map
-                              </div>
-                            </div>
-                          ) : (
-                            <span>{product.ProductTitle}</span>
-                          )
-                        }
+                        trigger={<span>{product.ProductTitle}</span>}
                         content={description}
                         basic
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
-                    ) : product.ProductId ===
-                      '8474c3b080fa42cc837f1d2338fcf096' /*||
-                      product.ProductTitle ===
-                        'High Resolution Snow and Ice Parameters' */ ? (
-                      <div className="zoom-in-message-container">
-                        <span>{product.ProductTitle}</span>
-                        <div className="zoom-in-message">
-                          Zoom in to view on map
-                        </div>
-                      </div>
                     ) : (
                       <span>{product.ProductTitle}</span>
                     )}
@@ -1368,22 +1341,11 @@ class MenuWidget extends React.Component {
                     {description ? (
                       <Popup
                         trigger={
-                          dataset.ProductId ===
-                          '8474c3b080fa42cc837f1d2338fcf096' ? (
+                          dataset.Message && dataset.Message !== '' ? (
                             <div className="zoom-in-message-container">
                               <span>{dataset.DatasetTitle}</span>
                               <div className="zoom-in-message zoom-in-message-dataset">
-                                Zoom in to view on map
-                              </div>
-                            </div>
-                          ) : dataset.DatasetId ===
-                              '9827d711d3e148aabccc76dd501a4b86' ||
-                            dataset.DatasetId ===
-                              'e27dbc8330084b58bb5e282231fca74d' ? (
-                            <div className="zoom-in-message-container">
-                              <span>{dataset.DatasetTitle}</span>
-                              <div className="zoom-in-message">
-                                Use the filter to visualize a KLC area
+                                {dataset.Message}
                               </div>
                             </div>
                           ) : (
@@ -1395,20 +1357,11 @@ class MenuWidget extends React.Component {
                         className="custom"
                         style={{ transform: 'translateX(-4rem)' }}
                       />
-                    ) : dataset.ProductId ===
-                      '8474c3b080fa42cc837f1d2338fcf096' ? (
+                    ) : dataset.Message && dataset.Message !== '' ? (
                       <div className="zoom-in-message-container">
                         <span>{dataset.DatasetTitle}</span>
-                        <div className="zoom-in-message">
-                          Zoom in to view on map
-                        </div>
-                      </div>
-                    ) : dataset.productId ===
-                      'd764e020485a402598551fa461bf1db2' ? (
-                      <div className="hotspot-filter-message-container">
-                        <span>{dataset.DatasetTitle}</span>
-                        <div className="hotspot-filter-message hotspot-filter-message-dataset">
-                          Use the filter to visualize a KLC area
+                        <div className="zoom-in-message zoom-in-message-dataset">
+                          {dataset.Message}
                         </div>
                       </div>
                     ) : (
@@ -1509,7 +1462,6 @@ class MenuWidget extends React.Component {
     let trueChecks = layerChecks.filter((elem) => elem.checked).length;
     datasetCheck.checked = trueChecks > 0;
     this.updateCheckProduct(datasetCheck.getAttribute('parentid'));
-    this.showZoomMessageOnDataset(datasetCheck);
   }
 
   /**
@@ -2091,37 +2043,6 @@ class MenuWidget extends React.Component {
 
     newHotspotData['activeLayers'] = updatedActiveLayers;
     return this.props.hotspotDataHandler(newHotspotData);
-  }
-  //CLMS-1634 - This shows the zoom message for the checked dataset under the Snow and Ice Parameters Products dropdown only.
-
-  showZoomMessageOnDataset(dataset) {
-    let datasetContainer = dataset.closest('.map-menu-dataset-dropdown');
-    let datasetContainerId = datasetContainer.getAttribute('datasetid');
-
-    if (this.props.download) return;
-    let snowAndIceParameters;
-    for (let i = 0; i < this.compCfg.length; i++) {
-      for (let j = 0; j < this.compCfg[i].Products.length; j++) {
-        if (
-          this.compCfg[i].Products[j].ProductId ===
-          '8474c3b080fa42cc837f1d2338fcf096'
-        ) {
-          snowAndIceParameters = this.compCfg[i].Products[j];
-          break;
-        }
-      }
-    }
-    snowAndIceParameters.Datasets.forEach((set) => {
-      if (set.DatasetId === datasetContainerId) {
-        let node = document.getElementById(dataset.id).nextElementSibling
-          .lastElementChild.lastChild.lastElementChild;
-        if (dataset.checked) {
-          node.style.display = 'block';
-        } else {
-          node.style.display = 'none';
-        }
-      }
-    });
   }
 
   /**
@@ -3408,15 +3329,6 @@ class MenuWidget extends React.Component {
       let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
 
       if (checkedLayers === null) return;
-
-      for (let i = 0; i < checkedLayers.length; i++) {
-        let layerCheck = document.getElementById(checkedLayers[i]);
-        let datasetParentContainer = layerCheck.closest('.ccl-fieldset');
-        let datasetInputParentContainer =
-          datasetParentContainer.firstElementChild;
-        let datasetCheck = datasetInputParentContainer.querySelector('input');
-        this.showZoomMessageOnDataset(datasetCheck);
-      }
     }
     const latestLayer = JSON.parse(sessionStorage.getItem('TMSLayerObj'));
 
@@ -3668,17 +3580,6 @@ class MenuWidget extends React.Component {
             panelsElem.scrollTop = scrollPosition;
           }
         }
-      }
-    }
-  }
-
-  showZoomMessageForDatasets() {
-    if (!this.props.download) {
-      let nodes = document.querySelectorAll('.zoom-in-message-dataset');
-      if (nodes) {
-        nodes.forEach((node) => {
-          node.style.display = 'none';
-        });
       }
     }
   }
