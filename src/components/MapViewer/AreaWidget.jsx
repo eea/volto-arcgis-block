@@ -435,6 +435,7 @@ class AreaWidget extends React.Component {
         graphic.symbol = polygonSymbol;
         return graphic;
       });
+
       sourceGraphics = sourceGraphics.concat(graphics);
 
       // Create a feature layer from the feature collection fields and gaphics

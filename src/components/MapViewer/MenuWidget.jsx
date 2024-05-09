@@ -748,17 +748,43 @@ class MenuWidget extends React.Component {
     this.handleRasterVectorLegend();
     this.map.when(() => {
       this.map.layers.on('change', (e) => {
-        if (this.map.layers.items[0] === 'bookmark') {
-          this.map.layers.remove('bookmark');
+        if (
+          this.props.bookmarkData === null ||
+          this.props.bookmarkData === undefined
+        ) {
+          return;
+          //} else if (
+          //  this.props.bookmarkData &&
+          //  this.props.bookmarkData.active === false
+          //) {
+          //  return;
+        } else if (
+          this.props.bookmarkData &&
+          this.props.bookmarkData.active === true
+        ) {
+          this.map.layers.removeAll();
           let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
           for (const layer in this.layers) {
             let node = document.getElementById(layer);
             if (node) {
               if (layers.includes(layer)) {
-                let visible = this.layers[node.id].visible;
+                let index = layers.indexOf(layer);
+                let visible;
+                if (this.props.bookmarkData.position !== null) {
+                  let pos = this.props.bookmarkData.position;
+                  let visibleArray = this.props.bookmarkData.visible[pos];
+                  visible =
+                    String(visibleArray[index]) === 'true' ? true : false;
+                  //this.layers[layer].visible = visible;
+                  if (this.layers[layer]) {
+                    let opacityArray = this.props.bookmarkData.opacity[pos];
+                    this.layers[layer].opacity = opacityArray[index];
+                  }
+                }
+                //this.map.layers.add(this.layers[layer]);
                 node.checked = true;
                 this.toggleLayer(node);
-                if (!visible) {
+                if (visible === false) {
                   this.eyeLayer(node);
                 }
               } else if (node.checked) {
@@ -772,7 +798,10 @@ class MenuWidget extends React.Component {
             let order = counter - index;
             let activeLayers = document.querySelectorAll('.active-layer');
             activeLayers.forEach((item) => {
-              if (layer === item.getAttribute('layer-id')) {
+              if (
+                item.parentElement &&
+                layer === item.getAttribute('layer-id')
+              ) {
                 item.parentElement.insertBefore(item, activeLayers[order]);
               }
             });
@@ -786,13 +815,24 @@ class MenuWidget extends React.Component {
             sessionStorage.getItem('layerOpacities'),
           );
           elementOpacities.forEach((element) => {
-            let id = element.parentElement.parentElement.getAttribute(
-              'layer-id',
-            );
-            if (layerOpacities[id]) {
-              element.dataset.opacity = layerOpacities[id] * 100;
+            let parentElement = element.parentElement?.parentElement;
+            if (parentElement) {
+              let id = element.parentElement.parentElement.getAttribute(
+                'layer-id',
+              );
+              if (layerOpacities && layerOpacities[id]) {
+                element.dataset.opacity = layerOpacities[id] * 100;
+              } else {
+                element.dataset.opacity = 100;
+              }
             }
           });
+          let bookmarkData = {
+            ...(this.props.bookmarkData || {}),
+            active: false,
+            position: null,
+          };
+          this.props.bookmarkHandler(bookmarkData);
         }
       });
     });
@@ -1928,7 +1968,10 @@ class MenuWidget extends React.Component {
           }, 2000);
         }
       }
-      if (this.layers['lc_filter'] || this.layers['lcc_filter']) {
+      if (
+        (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
+        (this.layers['lc_filter'] || this.layers['lcc_filter'])
+      ) {
         if (
           elem.id.includes('cop_klc') &&
           this.layers['klc_filter'] !== undefined
@@ -1941,8 +1984,18 @@ class MenuWidget extends React.Component {
         ) {
           this.layers['pa_filter'].visible = true;
           this.map.add(this.layers['pa_filter']);
-        } else {
-          this.map.add(this.layers[elem.id]);
+        } else if (
+          elem.id.includes('all_present') &&
+          this.layers['lc_filter'] !== undefined
+        ) {
+          this.layers['lc_filter'].visible = true;
+          this.map.add(this.layers['lc_filter']);
+        } else if (
+          elem.id.includes('all_lcc') &&
+          this.layers['lcc_filter'] !== undefined
+        ) {
+          this.layers['lcc_filter'].visible = true;
+          this.map.add(this.layers['lcc_filter']);
         }
       } else {
         this.layers[elem.id].visible = true; //layer id
