@@ -9,7 +9,9 @@ pipeline {
         NAMESPACE = "@eeacms"
         SONARQUBE_TAGS = "volto.eea.europa.eu,clms.land.copernicus.eu,water.europa.eu-freshwater,clmsdemo.devel6cph.eea.europa.eu,land.copernicus.eu"
         DEPENDENCIES = ""
-        VOLTO = "15.16.0"
+        BACKEND_PROFILES = "eea.kitkat:testing"
+        BACKEND_ADDONS = "clms.addon,clms.types,clms.downloadtool,clms.statstool"
+        VOLTO = "16.31.1"
     }
 
   stages {
