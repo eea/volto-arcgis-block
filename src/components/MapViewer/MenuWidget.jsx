@@ -2873,10 +2873,31 @@ class MenuWidget extends React.Component {
   layersReorder() {
     let activeLayers = document.querySelectorAll('.active-layer');
     let counter = activeLayers.length - 1;
+    let filterLayer;
     activeLayers.forEach((item, index) => {
+      if (
+        this.props.hotspotData &&
+        this.props.hotspotData.filteredLayers &&
+        Object.keys(this.props.hotspotData.filteredLayers).length > 0
+      ) {
+        Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+          if (item.id.includes(key)) {
+            if (key.includes('all_lcc')) {
+              filterLayer = this.layers['lcc_filter'];
+            } else if (key.includes('all_present')) {
+              filterLayer = this.layers['lc_filter'];
+            }
+          }
+          this.map.reorder(filterLayer, index);
+        });
+      }
       let order = counter - index;
       item.setAttribute('layer-order', order);
-      this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
+      if (filterLayer === undefined) {
+        this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
+      } else {
+        this.layerReorder(filterLayer, order);
+      }
     });
   }
 
@@ -2901,7 +2922,25 @@ class MenuWidget extends React.Component {
    * @param {*} index
    */
   layerReorder(layer, index) {
+    let filterLayer;
+    //if (this.props.hotspotData &&
+    //  this.props.hotspotData.filteredLayers &&
+    //  Object.keys(this.props.hotspotData.filteredLayers).length > 0
+    //) {
+    //  //debugger;
+    //  Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+    //    if (layer.id === key) {
+    //      if (key.includes('all_lcc')) {
+    //        filterLayer = this.layers['lcc_filter'];
+    //      } else if (key.includes('all_present')) {
+    //        filterLayer = this.layers['lc_filter'];
+    //      }
+    //    }
+    //    this.map.reorder(filterLayer, index);
+    //  });
+    //} else {
     this.map.reorder(layer, index);
+    //}
   }
 
   /**
