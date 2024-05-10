@@ -2922,25 +2922,7 @@ class MenuWidget extends React.Component {
    * @param {*} index
    */
   layerReorder(layer, index) {
-    let filterLayer;
-    //if (this.props.hotspotData &&
-    //  this.props.hotspotData.filteredLayers &&
-    //  Object.keys(this.props.hotspotData.filteredLayers).length > 0
-    //) {
-    //  //debugger;
-    //  Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
-    //    if (layer.id === key) {
-    //      if (key.includes('all_lcc')) {
-    //        filterLayer = this.layers['lcc_filter'];
-    //      } else if (key.includes('all_present')) {
-    //        filterLayer = this.layers['lc_filter'];
-    //      }
-    //    }
-    //    this.map.reorder(filterLayer, index);
-    //  });
-    //} else {
     this.map.reorder(layer, index);
-    //}
   }
 
   /**
