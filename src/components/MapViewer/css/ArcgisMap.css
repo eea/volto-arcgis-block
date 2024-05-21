@@ -379,6 +379,27 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   color: #a0b128 !important;
 }
 
+#area-searchtext {
+  width: 5rem;
+  height: 1.2rem;
+  margin-top: 0.1rem;
+  margin-left: 1rem !important;
+}
+
+.area-searchbutton {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  min-height: 1.5rem !important;
+  margin-top: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+.no-result-message {
+  display: none;
+  margin-top: 0.1rem;
+  margin-left: 0.5rem;
+  color: red;
+}
 /* Left menu */
 .map-menu {
   position: relative;
@@ -1357,7 +1378,6 @@ input[type='range']::-ms-track {
   color: white;
   font-size: 0.875rem;
   text-align: center;
-  white-space: nowrap;
 }
 
 /* Privacy protection tooltip */
