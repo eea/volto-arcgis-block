@@ -1916,7 +1916,6 @@ class MenuWidget extends React.Component {
             this.layers[key].visible = true;
           }
         } else {
-          //debugger
           this.layers[key].visible = false;
         }
       } else if (layerTitle.includes('vector')) {
@@ -1929,7 +1928,6 @@ class MenuWidget extends React.Component {
             this.layers[key].visible = true;
           }
         } else {
-          //debugger
           this.layers[key].visible = false;
         }
       }
@@ -1972,7 +1970,28 @@ class MenuWidget extends React.Component {
         (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
         (this.layers['lc_filter'] || this.layers['lcc_filter'])
       ) {
+        let bookmarkHotspotFilter = localStorage.getItem(
+          'bookmarkHotspotFilter',
+        );
         if (
+          this.props.bookmarkData &&
+          this.props.bookmarkData.active === true
+        ) {
+          if (
+            bookmarkHotspotFilter?.filteredLayers?.hasOwnProperty('lc_filter')
+          ) {
+            this.layers['lc_filter'].visible = true;
+            this.map.add(this.layers['lc_filter']);
+          } else if (
+            bookmarkHotspotFilter?.filteredLayers?.hasOwnProperty('lcc_filter')
+          ) {
+            this.layers['lcc_filter'].visible = true;
+            this.map.add(this.layers['lcc_filter']);
+          } else {
+            this.layers[elem.id].visible = true;
+            this.map.add(this.layers[elem.id]);
+          }
+        } else if (
           elem.id.includes('cop_klc') &&
           this.layers['klc_filter'] !== undefined
         ) {
