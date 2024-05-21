@@ -184,8 +184,8 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector('input:checked').click();
     }
   }
-  nutsRadioButton(e) {
-    if (e.target.value === 'nuts') {
+  nutsRadioButton(id) {
+    if (id === 'nuts') {
       if (
         !document.getElementById('download_area_select_nuts2').checked &&
         !document.getElementById('download_area_select_nuts3').checked
@@ -194,14 +194,10 @@ class AreaWidget extends React.Component {
         this.loadNutsService('nuts1', [1, 2]);
       }
     }
-    if (
-      e.target.value === 'nuts1' ||
-      e.target.value === 'nuts2' ||
-      e.target.value === 'nuts3'
-    ) {
+    if (id === 'nuts1' || id === 'nuts2' || id === 'nuts3') {
       document.getElementById('download_area_select_nuts').checked = true;
     }
-    if (e.target.value === 'nuts0' || e.target.value === 'area') {
+    if (id === 'nuts0' || id === 'area') {
       document.getElementById('download_area_select_nuts1').checked = false;
       document.getElementById('download_area_select_nuts2').checked = false;
       document.getElementById('download_area_select_nuts3').checked = false;
@@ -210,19 +206,19 @@ class AreaWidget extends React.Component {
   nuts0handler(e) {
     this.loadNutsService(e.target.value, [0]);
     this.loadCountriesService(e.target.value);
-    this.nutsRadioButton(e);
+    this.nutsRadioButton(e.target.value);
   }
   nuts1handler(e) {
     this.loadNutsService(e.target.value, [1, 2]);
-    this.nutsRadioButton(e);
+    this.nutsRadioButton(e.target.value);
   }
   nuts2handler(e) {
     this.loadNutsService(e.target.value, [3, 4, 5]);
-    this.nutsRadioButton(e);
+    this.nutsRadioButton(e.target.value);
   }
   nuts3handler(e) {
     this.loadNutsService(e.target.value, [6, 7, 8]);
-    this.nutsRadioButton(e);
+    this.nutsRadioButton(e.target.value);
   }
   // countriesHandler(e) {
   //   this.loadCountriesService(e.target.value);
@@ -805,7 +801,7 @@ class AreaWidget extends React.Component {
     this.setState({
       ShowGraphics: drawGraphics,
     });
-    this.nutsRadioButton(event);
+    this.nutsRadioButton(event.target.value);
   }
   clearWidget() {
     window.document.querySelector('.pan-container').style.display = 'none';
@@ -835,6 +831,55 @@ class AreaWidget extends React.Component {
     }
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
+  }
+  areaSearch() {
+    let searchText = document.querySelector('#area-searchtext').value;
+    if (searchText.length === 2) {
+      this.loadNutsService('nuts0', [0]);
+      this.loadCountriesService('nuts0');
+      document.getElementById('download_area_select_nuts0').checked = true;
+      this.nutsRadioButton('nuts0');
+    } else if (searchText.length === 3) {
+      this.loadNutsService('nuts1', [1, 2]);
+      document.getElementById('download_area_select_nuts1').checked = true;
+      this.nutsRadioButton('nuts1');
+    } else if (searchText.length === 4) {
+      this.loadNutsService('nuts2', [3, 4, 5]);
+      document.getElementById('download_area_select_nuts2').checked = true;
+      this.nutsRadioButton('nuts2');
+    } else if (searchText.length === 5) {
+      this.loadNutsService('nuts3', [6, 7, 8]);
+      document.getElementById('download_area_select_nuts3').checked = true;
+      this.nutsRadioButton('nuts3');
+    }
+    let found = false;
+    document.querySelector('.no-result-message').style.display = 'none';
+    this.nutsGroupLayer.layers.items.forEach((item) => {
+      item.queryFeatures().then((response) => {
+        response.features.forEach((feature) => {
+          if (feature.attributes.NUTS_ID === searchText) {
+            found = true;
+            let symbol = new SimpleFillSymbol(
+              'solid',
+              new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
+              new Color([232, 104, 80, 0.25]),
+            );
+            let highlight = new Graphic(feature.geometry, symbol);
+            this.props.view.graphics.removeAll();
+            this.props.view.graphics.add(highlight);
+          }
+        });
+        if (
+          !found &&
+          item ===
+            this.nutsGroupLayer.layers.items[
+              this.nutsGroupLayer.layers.items.length - 1
+            ]
+        ) {
+          document.querySelector('.no-result-message').style.display = 'block';
+        }
+      });
+    });
   }
 
   /**
@@ -992,6 +1037,32 @@ class AreaWidget extends React.Component {
             <div className="right-panel-content">
               <div className="area-panel">
                 <div className="area-header">Select by country or region</div>
+                <input
+                  type="text"
+                  maxLength="6"
+                  id="area-searchtext"
+                  placeholder="Search"
+                />
+                <button
+                  aria-label="Search"
+                  class="esri-button area-searchbutton"
+                  onClick={this.areaSearch.bind(this)}
+                  onKeyDown={(e) => {
+                    if (
+                      !e.altKey &&
+                      e.code !== 'Tab' &&
+                      !e.ctrlKey &&
+                      e.code !== 'Delete' &&
+                      !e.shiftKey &&
+                      !e.code.startsWith('F')
+                    ) {
+                      this.areaSearch.bind(this);
+                    }
+                  }}
+                >
+                  <span class="ccl-icon-zoom"></span>
+                </button>
+                <div className="no-result-message">No result found</div>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
                     <div className="ccl-form-group">
