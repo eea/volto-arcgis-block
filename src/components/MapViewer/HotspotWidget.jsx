@@ -285,7 +285,11 @@ class HotspotWidget extends React.Component {
           typeLegend,
         );
         filterLayer.sublayers.items[0].title = title;
-        if (bookmarkHotspotFilter !== null) {
+        if (
+          bookmarkHotspotFilter !== null &&
+          bookmarkHotspotFilter.filteredLayers &&
+          bookmarkHotspotFilter.filteredLayers['lcc_filter'] !== undefined
+        ) {
           filterLayer.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['lcc_filter'];
         } else {
@@ -337,7 +341,11 @@ class HotspotWidget extends React.Component {
           typeLegend,
         );
         filterLayer.sublayers.items[0].title = title;
-        if (bookmarkHotspotFilter !== null) {
+        if (
+          bookmarkHotspotFilter !== null &&
+          bookmarkHotspotFilter.filteredLayers &&
+          bookmarkHotspotFilter.filteredLayers['lc_filter'] !== undefined
+        ) {
           filterLayer.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['lc_filter'];
         } else {
@@ -352,7 +360,11 @@ class HotspotWidget extends React.Component {
       }
       if (type === 'klc') {
         title = 'Key Landscapes for Conservation borders in selected Hot Spots';
-        if (bookmarkHotspotFilter !== null) {
+        if (
+          bookmarkHotspotFilter !== null &&
+          bookmarkHotspotFilter.filteredLayers &&
+          bookmarkHotspotFilter.filteredLayers['klc_filter'] !== undefined
+        ) {
           this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['klc_filter'];
         } else {
@@ -365,7 +377,11 @@ class HotspotWidget extends React.Component {
       if (type === 'pa') {
         title =
           'Protected Areas in Key Landscapes for Conservation borders in selected Hot Spots';
-        if (bookmarkHotspotFilter !== null) {
+        if (
+          bookmarkHotspotFilter !== null &&
+          bookmarkHotspotFilter.filteredLayers &&
+          bookmarkHotspotFilter.filteredLayers['pa_filter'] !== undefined
+        ) {
           this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
             bookmarkHotspotFilter.filteredLayers['pa_filter'];
         } else {
