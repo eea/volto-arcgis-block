@@ -184,6 +184,9 @@ class AreaWidget extends React.Component {
       this.container.current.querySelector('input:checked').click();
     }
   }
+  nutsRadioButtonGeneral(event) {
+    this.nutsRadioButton(event.target.value);
+  }
   nutsRadioButton(id) {
     if (id === 'nuts') {
       if (
@@ -832,55 +835,87 @@ class AreaWidget extends React.Component {
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
   }
-  areaSearch() {
-    let searchText = document.querySelector('#area-searchtext').value;
-    if (searchText.length === 2) {
-      this.loadNutsService('nuts0', [0]);
-      this.loadCountriesService('nuts0');
-      document.getElementById('download_area_select_nuts0').checked = true;
-      this.nutsRadioButton('nuts0');
-    } else if (searchText.length === 3) {
-      this.loadNutsService('nuts1', [1, 2]);
-      document.getElementById('download_area_select_nuts1').checked = true;
-      this.nutsRadioButton('nuts1');
-    } else if (searchText.length === 4) {
-      this.loadNutsService('nuts2', [3, 4, 5]);
-      document.getElementById('download_area_select_nuts2').checked = true;
-      this.nutsRadioButton('nuts2');
-    } else if (searchText.length === 5) {
-      this.loadNutsService('nuts3', [6, 7, 8]);
-      document.getElementById('download_area_select_nuts3').checked = true;
-      this.nutsRadioButton('nuts3');
-    }
-    let found = false;
-    document.querySelector('.no-result-message').style.display = 'none';
-    this.nutsGroupLayer.layers.items.forEach((item) => {
-      item.queryFeatures().then((response) => {
-        response.features.forEach((feature) => {
-          if (feature.attributes.NUTS_ID === searchText) {
-            found = true;
-            let symbol = new SimpleFillSymbol(
-              'solid',
-              new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
-              new Color([232, 104, 80, 0.25]),
-            );
-            let highlight = new Graphic(feature.geometry, symbol);
-            this.props.view.graphics.removeAll();
-            this.props.view.graphics.add(highlight);
-          }
-        });
-        if (
-          !found &&
-          item ===
-            this.nutsGroupLayer.layers.items[
-              this.nutsGroupLayer.layers.items.length - 1
-            ]
-        ) {
-          document.querySelector('.no-result-message').style.display = 'block';
-        }
-      });
-    });
-  }
+  //   areaSearch() {
+  //     let searchText = document.querySelector('#area-searchtext').value;
+  //     if (searchText.length === 2) {
+  //       this.loadNutsService('nuts0', [0]);
+  //       this.loadCountriesService('nuts0');
+  //       document.getElementById('download_area_select_nuts0').checked = true;
+  //       this.nutsRadioButton('nuts0');
+  //     } else if (searchText.length === 3) {
+  //       this.loadNutsService('nuts1', [1, 2]);
+  //       document.getElementById('download_area_select_nuts1').checked = true;
+  //       this.nutsRadioButton('nuts1');
+  //     } else if (searchText.length === 4) {
+  //       this.loadNutsService('nuts2', [3, 4, 5]);
+  //       document.getElementById('download_area_select_nuts2').checked = true;
+  //       this.nutsRadioButton('nuts2');
+  //     } else if (searchText.length === 5) {
+  //       this.loadNutsService('nuts3', [6, 7, 8]);
+  //       document.getElementById('download_area_select_nuts3').checked = true;
+  //       this.nutsRadioButton('nuts3');
+  //     }
+  //     let found = false;
+  //     let count = this.nutsGroupLayer.layers.items.length;
+  //     const queryParams = this.nutsGroupLayer.layers.items[0].createQuery();
+  // // set a geometry for filtering features by a region of interest
+  //     //queryParams.geometry = extentForRegionOfInterest;
+  // // Add to the layer's current definitionExpression
+  // //   queryParams =
+  // // ({
+  // //   geometry: point,
+  // //   // distance and units will be null if basic query selected
+  // //   distance: 0.5,
+  // //   units: "miles",
+  // //   spatialRelationship: "intersects",
+  // //   returnGeometry: false,
+  // //   outFields: ["*"],
+  // //})
+  //     // queryParams.where = `(NUTS_ID = '${searchText}')`;//"NUTS_ID = "+ searchText;
+  //      queryParams.outSpatialReference = this.props.view.spatialReference;
+
+  //     // const query = new Query();
+  //     // query.definitionExpression = "NUTS_ID = "+ searchText;
+  //     // query.outSpatialReference = { wkid: 102100 };
+  //     // query.returnGeometry = true;
+  //     // query.outFields = [ "CITY_NAME" ];
+  //     document.querySelector('.no-result-message').style.display = 'none';
+  //     this.nutsGroupLayer.layers.items.forEach((item) => {
+  //       count = count-1;
+  //       item.queryFeatures(queryParams).then((response) => {
+  //         response.features.forEach((feature) => {
+  //           if (feature.attributes.NUTS_ID === searchText) {
+  //             found = true;
+  //             this.props.updateArea(feature);
+  //             let symbol = new SimpleFillSymbol(
+  //               'solid',
+  //               new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
+  //               new Color([232, 104, 80, 0.25]),
+  //             );
+  //             let highlight = new Graphic(feature.geometry, symbol);
+  //             this.props.view.graphics.removeAll();
+  //             this.props.view.graphics.add(highlight);
+  //             this.setState({
+  //               showInfoPopup: true,
+  //               infoPopupType: 'download',
+  //             });
+  //             // if (this.props.download) {
+  //             //   document.querySelector(
+  //             //     '.drawRectanglePopup-block',
+  //             //   ).style.display = 'none';
+  //             // }
+  //           }
+  //         });
+  //         if (
+  //           !found && count==0
+  //         ) {
+  //           document.querySelector('.no-result-message').style.display = 'block';
+  //         } else if (found) {
+  //           document.querySelector('.no-result-message').style.display = 'none';
+  //         }
+  //       });
+  //     });
+  //   }
 
   /**
    * This method is executed after the rener method is executed
@@ -1037,7 +1072,7 @@ class AreaWidget extends React.Component {
             <div className="right-panel-content">
               <div className="area-panel">
                 <div className="area-header">Select by country or region</div>
-                <input
+                {/* <input
                   type="text"
                   maxLength="6"
                   id="area-searchtext"
@@ -1062,7 +1097,7 @@ class AreaWidget extends React.Component {
                 >
                   <span class="ccl-icon-zoom"></span>
                 </button>
-                <div className="no-result-message">No result found</div>
+                <div className="no-result-message">No result found</div> */}
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
                     <div className="ccl-form-group">
@@ -1089,7 +1124,7 @@ class AreaWidget extends React.Component {
                         name="downloadAreaSelect"
                         value="nuts"
                         className="ccl-checkbox cl-required ccl-form-check-input"
-                        onClick={this.nutsRadioButton.bind(this)}
+                        onClick={this.nutsRadioButtonGeneral.bind(this)}
                       ></input>
                       <label
                         className="ccl-form-radio-label"
