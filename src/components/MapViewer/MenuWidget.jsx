@@ -51,7 +51,7 @@ export const AddCartItem = ({
       if (areaData) {
         area.type = 'nuts';
         if (areaData.geometry.type === 'polygon') {
-          if ('countries'.includes(areaData.layer.id)) {
+          if (areaData.attributes.ISO_2DIGIT !== undefined) {
             area.value = areaData.attributes.ISO_2DIGIT;
           } else {
             area.value = areaData.attributes.NUTS_ID;
