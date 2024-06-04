@@ -227,10 +227,12 @@ class SwipeWidget extends React.Component {
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);
     this.hasSwipe = true;
-    let selectedLeadingLayer = document.getElementById('select-leading-layer')
-      .value;
-    let selectedTrailingLayer = document.getElementById('select-trailing-layer')
-      .value;
+    let selectedLeadingLayer = document.getElementById(
+      'select-leading-layer',
+    ).value;
+    let selectedTrailingLayer = document.getElementById(
+      'select-trailing-layer',
+    ).value;
     let selectedSwipeDirection = document.getElementById(
       'select-swipe-direction',
     ).value;
@@ -378,7 +380,7 @@ class SwipeWidget extends React.Component {
                 <br></br>
                 <button
                   id="applySwipeButton"
-                  class="esri-button"
+                  className="esri-button"
                   onClick={() => this.renderApplySwipeButton()}
                 >
                   Swipe
