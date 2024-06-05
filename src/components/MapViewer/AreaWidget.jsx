@@ -292,6 +292,7 @@ class AreaWidget extends React.Component {
   // FILE UPLOAD HANDLERS
 
   // Trigger the file input click
+
   handleUploadClick = (event) => {
     event.preventDefault();
     this.fileInput.current.click();
@@ -299,19 +300,31 @@ class AreaWidget extends React.Component {
 
   handleFileUpload = (e) => {
     //Get the file name
+
     const fileName = e.target.value.toLowerCase();
 
     //Get the file size
+
     const fileSize = e.target.files[0].size;
 
     //Get the file from the form
+
     const file = document.getElementById('uploadForm');
+
+    //Get the file blob
+
+    const fileBlob = e.target.files[0];
+
+    //Create a new file reader
+
+    let reader = new FileReader();
 
     //List allowed file extensions
 
-    let fileExtensions = ['zip', 'geojson'];
+    let fileExtensions = ['zip', 'geojson', 'csv'];
 
     // Get the file extension
+
     let fileExtension = fileName.split('.').pop();
 
     //Check if the file format is not supported
@@ -324,10 +337,13 @@ class AreaWidget extends React.Component {
       return;
     }
 
-    // Check if the file is a geojson and the file size is over the 10mb file size limit
+    // Check if the file format is geojson or csv and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
 
-    if (fileSize > 10485760 && fileExtension === 'geojson') {
+    if (
+      fileSize > 10485760 &&
+      (fileExtension === 'geojson' || fileExtension === 'csv')
+    ) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileLimit',
@@ -350,14 +366,17 @@ class AreaWidget extends React.Component {
       case 'geojson':
         this.generateFeatureCollection(fileName, file, 'geojson');
         break;
-      //case 'csv':
-      //this.generateFeatureCollection(
-      //  fileName,
-      //  file,
-      //  'csv',
-      //);
-      //  reader.readAsText(fileBlob);
-      //  break;
+      case 'csv':
+        //this.generateFeatureCollection(
+        //  fileName,
+        //  file,
+        //  'csv',
+        //);
+        reader.readAsText(fileBlob);
+        reader.onload = () => {
+          this.handleCsv(reader.result);
+        };
+        break;
       default:
         break;
     }
@@ -594,15 +613,25 @@ class AreaWidget extends React.Component {
       title: 'uploadLayer',
     });
 
-    //Query all features insisde the CSV layer
+    // Set a simple renderer on the layer
 
+    csvLayer.renderer = {
+      type: 'simple', // autocasts as new SimpleRenderer()
+      symbol: {
+        type: 'simple-marker', // autocasts as new SimpleMarkerSymbol()
+        size: 6,
+        color: 'black',
+        outline: {
+          // autocasts as new SimpleLineSymbol()
+          width: 0.5,
+          color: 'white',
+        },
+      },
+    };
+
+    //Query extent of the CSV layer
     //csvLayer.load().then(function(){
-    //  let query = new Query({
-    //    where: "mag > 5",
-    //    returnGeometry: true
-    //  });
-    //
-    //  return csvLayer.queryFeatures(query);
+    //  return csvLayer.queryExtent();
     //})
     //.then(function(results){
     //  console.log(results);
@@ -610,10 +639,13 @@ class AreaWidget extends React.Component {
     //.catch(function (error) {
     //  console.error("From CSV query: ", error);
     //});
+
     //Check if the file has the correct spatial reference
+
     if (this.checkWkid(csvLayer?.spatialReference) === false) return;
 
     //Check if the file extent is larger than the limit
+
     //let geometry = new Extent({
     //  xmin: data?.features[0]?.geometry.bbox[0],
     //  xmax: data?.features[0]?.geometry.bbox[1],
@@ -623,6 +655,7 @@ class AreaWidget extends React.Component {
     //});
 
     //If checkExtent returns false, add the layer to the map
+
     //if (this.checkExtent(geometry)) {
     //  this.setState({
     //    showInfoPopup: true,
