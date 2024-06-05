@@ -599,7 +599,7 @@ class AreaWidget extends React.Component {
 
   //Display CSV on the map
 
-  handleCsv(data) {
+  async handleCsv(data) {
     //Create a CSV layer
     const blob = new Blob([data], {
       type: 'plain/text',
@@ -629,48 +629,48 @@ class AreaWidget extends React.Component {
       },
     };
 
-    //Query extent of the CSV layer
-    //csvLayer.load().then(function(){
-    //  return csvLayer.queryExtent();
-    //})
-    //.then(function(results){
-    //  console.log(results);
-    //})
-    //.catch(function (error) {
-    //  console.error("From CSV query: ", error);
-    //});
+    let csvFeatures, csvFeatureCount, csvExtent;
 
-    //Check if the file has the correct spatial reference
+    //Query the CSV layer
 
-    if (this.checkWkid(csvLayer?.spatialReference) === false) return;
+    try {
+      await csvLayer.load();
+      const results = await Promise.all([
+        csvLayer.queryFeatures(),
+        csvLayer.queryFeatureCount(),
+        csvLayer.queryExtent(),
+      ]);
 
-    //Check if the file extent is larger than the limit
+      csvFeatures = results[0];
+      csvFeatureCount = results[1];
+      csvExtent = results[2];
 
-    //let geometry = new Extent({
-    //  xmin: data?.features[0]?.geometry.bbox[0],
-    //  xmax: data?.features[0]?.geometry.bbox[1],
-    //  ymin: data?.features[0]?.geometry.bbox[2],
-    //  ymax: data?.features[0]?.geometry.bbox[3],
-    //  spatialReference: { wkid: 4326 },
-    //});
+      //Check if the file has the correct spatial reference
 
-    //If checkExtent returns false, add the layer to the map
+      if (this.checkWkid(csvLayer?.spatialReference) === false) return;
 
-    //if (this.checkExtent(geometry)) {
-    //  this.setState({
-    //    showInfoPopup: true,
-    //    infoPopupType: 'fullDataset',
-    //  });
-    //} else {
-    this.removeFileUploadedLayer();
-    this.fileUploadLayer = csvLayer;
-    this.removeNutsLayers();
-    this.props.map.add(this.fileUploadLayer);
-    this.setState({
-      showInfoPopup: true,
-      infoPopupType: 'download',
-    });
-    //}
+      //Check if the file extent is larger than the limit
+      //If checkExtent() is false, add the layer to the map
+
+      if (this.checkExtent(csvExtent.extent)) {
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'fullDataset',
+        });
+      } else {
+        this.removeFileUploadedLayer();
+        this.fileUploadLayer = csvLayer;
+        this.removeNutsLayers();
+        this.props.map.add(this.fileUploadLayer);
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'download',
+        });
+      }
+      // Continue to line 645 here
+    } catch (error) {
+      console.error('Error: ', error);
+    }
   }
 
   checkWkid(spatialReference) {
