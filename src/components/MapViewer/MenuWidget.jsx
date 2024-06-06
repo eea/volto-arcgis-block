@@ -3433,6 +3433,7 @@ class MenuWidget extends React.Component {
         }
       });
     }
+    this.setLegendOpacity();
   }
 
   /**
