@@ -422,7 +422,10 @@ class HotspotWidget extends React.Component {
       this.layers[key] = layersToAdd[key];
       this.layers[key].visible = true;
     });
-    if (bookmarkHotspotFilter === null) {
+    if (
+      bookmarkHotspotFilter === null ||
+      Object.keys(bookmarkHotspotFilter?.filteredLayers).length === 0
+    ) {
       this.setBBoxCoordinates(this.dataBBox);
     }
     //set sessionStorage value to keep the widget open
