@@ -61,7 +61,7 @@ class MeasurementWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
-      this.areaMeasurement();
+      //this.areaMeasurement();
       document
         .querySelector('#measurement_area .ccl-expandable__button')
         .nextElementSibling.appendChild(
