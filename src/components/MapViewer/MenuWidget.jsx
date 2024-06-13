@@ -27,6 +27,7 @@ export const AddCartItem = ({
   areaData,
   dataset,
   handleOpenPopup,
+  prepackage,
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
 
@@ -185,7 +186,7 @@ export const AddCartItem = ({
             Add to cart
           </button>
         </div>
-      ) : isLoggedIn ? ( // If isLoggedIn == true and user clicks download
+      ) : isLoggedIn && !prepackage ? ( // If isLoggedIn == true and user clicks download
         <Popup
           trigger={
             <span
@@ -248,6 +249,39 @@ export const AddCartItem = ({
             </span>
           }
           content="Download"
+          {...popupSettings}
+        />
+      ) : isLoggedIn && prepackage ? (
+        <Popup
+          trigger={
+            <span
+              className={
+                'map-menu-icon map-menu-icon-login' +
+                (dataset.HasPrepackagedFiles ? ' logged' : '')
+              }
+              onClick={(e) => {
+                if (dataset.HasPrepackagedFiles) {
+                  window.location = dataset.DatasetURL + '#download';
+                }
+              }}
+              onKeyDown={(e) => {}}
+              tabIndex="0"
+              role="button"
+            >
+              <FontAwesomeIcon
+                className={dataset.HasPrepackagedFiles ? '' : ' locked'}
+                icon={['fas', 'download']}
+              />
+              {!dataset.HasPrepackagedFiles && (
+                <FontAwesomeIcon icon={['fas', 'lock']} />
+              )}
+            </span>
+          }
+          content={
+            dataset.HasPrepackagedFiles
+              ? ' Download Prepackage'
+              : 'No Prepackage available'
+          }
           {...popupSettings}
         />
       ) : (
@@ -1464,6 +1498,7 @@ class MenuWidget extends React.Component {
                       areaData={this.props.area}
                       dataset={dataset}
                       handleOpenPopup={this.handleOpenPopup}
+                      prepackage={this.props.prepackageChecked}
                     />
                   ) : (
                     <span
@@ -3965,6 +4000,7 @@ class MenuWidget extends React.Component {
                     download={this.props.download}
                     areaData={this.props.area}
                     handleOpenPopup={this.handleOpenPopup}
+                    prepackage={this.props.prepackageChecked}
                   />
                 </div>
               )}

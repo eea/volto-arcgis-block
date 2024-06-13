@@ -48,6 +48,7 @@ class AreaWidget extends React.Component {
     this.generateFeatureCollection = this.generateFeatureCollection.bind(this);
     this.addFeatureCollectionToMap = this.addFeatureCollectionToMap.bind(this);
     this.checkFeatureCount = this.checkFeatureCount.bind(this);
+    this.prepackage = false;
   }
 
   loader() {
@@ -200,10 +201,24 @@ class AreaWidget extends React.Component {
     if (id === 'nuts1' || id === 'nuts2' || id === 'nuts3') {
       document.getElementById('download_area_select_nuts').checked = true;
     }
-    if (id === 'nuts0' || id === 'area') {
+    if (id === 'nuts0' || id === 'area' || id === 'prepackage') {
       document.getElementById('download_area_select_nuts1').checked = false;
       document.getElementById('download_area_select_nuts2').checked = false;
       document.getElementById('download_area_select_nuts3').checked = false;
+    }
+    this.props.prepackageHandler(
+      document.querySelector('#download_prepackage').checked,
+    );
+    if (document.querySelector('#download_prepackage').checked) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'download',
+      });
+    } else {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'area',
+      });
     }
   }
   nuts0handler(e) {
@@ -835,87 +850,66 @@ class AreaWidget extends React.Component {
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
   }
-  //   areaSearch() {
-  //     let searchText = document.querySelector('#area-searchtext').value;
-  //     if (searchText.length === 2) {
-  //       this.loadNutsService('nuts0', [0]);
-  //       this.loadCountriesService('nuts0');
-  //       document.getElementById('download_area_select_nuts0').checked = true;
-  //       this.nutsRadioButton('nuts0');
-  //     } else if (searchText.length === 3) {
-  //       this.loadNutsService('nuts1', [1, 2]);
-  //       document.getElementById('download_area_select_nuts1').checked = true;
-  //       this.nutsRadioButton('nuts1');
-  //     } else if (searchText.length === 4) {
-  //       this.loadNutsService('nuts2', [3, 4, 5]);
-  //       document.getElementById('download_area_select_nuts2').checked = true;
-  //       this.nutsRadioButton('nuts2');
-  //     } else if (searchText.length === 5) {
-  //       this.loadNutsService('nuts3', [6, 7, 8]);
-  //       document.getElementById('download_area_select_nuts3').checked = true;
-  //       this.nutsRadioButton('nuts3');
-  //     }
-  //     let found = false;
-  //     let count = this.nutsGroupLayer.layers.items.length;
-  //     const queryParams = this.nutsGroupLayer.layers.items[0].createQuery();
-  // // set a geometry for filtering features by a region of interest
-  //     //queryParams.geometry = extentForRegionOfInterest;
-  // // Add to the layer's current definitionExpression
-  // //   queryParams =
-  // // ({
-  // //   geometry: point,
-  // //   // distance and units will be null if basic query selected
-  // //   distance: 0.5,
-  // //   units: "miles",
-  // //   spatialRelationship: "intersects",
-  // //   returnGeometry: false,
-  // //   outFields: ["*"],
-  // //})
-  //     // queryParams.where = `(NUTS_ID = '${searchText}')`;//"NUTS_ID = "+ searchText;
-  //      queryParams.outSpatialReference = this.props.view.spatialReference;
+  areaSearch() {
+    let searchText = document.querySelector('#area-searchtext').value;
+    if (searchText.length <= 2) {
+      this.loadNutsService('nuts0', [0]);
+      this.loadCountriesService('nuts0');
+      document.getElementById('download_area_select_nuts0').checked = true;
+      this.nutsRadioButton('nuts0');
+    } else if (searchText.length === 3) {
+      this.loadNutsService('nuts1', [1, 2]);
+      document.getElementById('download_area_select_nuts1').checked = true;
+      this.nutsRadioButton('nuts1');
+    } else if (searchText.length === 4) {
+      this.loadNutsService('nuts2', [3, 4, 5]);
+      document.getElementById('download_area_select_nuts2').checked = true;
+      this.nutsRadioButton('nuts2');
+    } else if (searchText.length === 5) {
+      this.loadNutsService('nuts3', [6, 7, 8]);
+      document.getElementById('download_area_select_nuts3').checked = true;
+      this.nutsRadioButton('nuts3');
+    }
+    let found = false;
+    let count = this.nutsGroupLayer.layers.items.length;
+    const queryParams = this.nutsGroupLayer.layers.items[0].createQuery();
+    queryParams.where = `(NUTS_ID = '${searchText}')`;
+    queryParams.outSpatialReference = this.props.view.spatialReference;
+    document.querySelector('.no-result-message').style.display = 'none';
+    this.nutsGroupLayer.layers.items.forEach((item) => {
+      item.queryFeatures(queryParams).then((response) => {
+        count = count - 1;
+        response.features.forEach((feature) => {
+          if (feature.attributes.NUTS_ID === searchText) {
+            found = true;
+            this.props.updateArea(feature);
+            let symbol = new SimpleFillSymbol(
+              'solid',
+              new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
+              new Color([232, 104, 80, 0.25]),
+            );
+            let highlight = new Graphic(feature.geometry, symbol);
+            this.props.view.graphics.removeAll();
+            this.props.view.graphics.add(highlight);
+            this.setState({
+              showInfoPopup: true,
+              infoPopupType: 'download',
+            });
+          }
+        });
+        if (!found && count === 0) {
+          document.querySelector('.no-result-message').style.display = 'block';
+        } else if (found) {
+          document.querySelector('.no-result-message').style.display = 'none';
+        }
+      });
+    });
+  }
 
-  //     // const query = new Query();
-  //     // query.definitionExpression = "NUTS_ID = "+ searchText;
-  //     // query.outSpatialReference = { wkid: 102100 };
-  //     // query.returnGeometry = true;
-  //     // query.outFields = [ "CITY_NAME" ];
-  //     document.querySelector('.no-result-message').style.display = 'none';
-  //     this.nutsGroupLayer.layers.items.forEach((item) => {
-  //       count = count-1;
-  //       item.queryFeatures(queryParams).then((response) => {
-  //         response.features.forEach((feature) => {
-  //           if (feature.attributes.NUTS_ID === searchText) {
-  //             found = true;
-  //             this.props.updateArea(feature);
-  //             let symbol = new SimpleFillSymbol(
-  //               'solid',
-  //               new SimpleLineSymbol('solid', new Color([232, 104, 80]), 2),
-  //               new Color([232, 104, 80, 0.25]),
-  //             );
-  //             let highlight = new Graphic(feature.geometry, symbol);
-  //             this.props.view.graphics.removeAll();
-  //             this.props.view.graphics.add(highlight);
-  //             this.setState({
-  //               showInfoPopup: true,
-  //               infoPopupType: 'download',
-  //             });
-  //             // if (this.props.download) {
-  //             //   document.querySelector(
-  //             //     '.drawRectanglePopup-block',
-  //             //   ).style.display = 'none';
-  //             // }
-  //           }
-  //         });
-  //         if (
-  //           !found && count==0
-  //         ) {
-  //           document.querySelector('.no-result-message').style.display = 'block';
-  //         } else if (found) {
-  //           document.querySelector('.no-result-message').style.display = 'none';
-  //         }
-  //       });
-  //     });
-  //   }
+  prepackageButton(event) {
+    this.clearWidget();
+    this.nutsRadioButton(event.target.value);
+  }
 
   /**
    * This method is executed after the rener method is executed
@@ -1071,8 +1065,137 @@ class AreaWidget extends React.Component {
             )}
             <div className="right-panel-content">
               <div className="area-panel">
-                <div className="area-header">Select by country or region</div>
-                {/* <input
+                <div className="ccl-form ccl-form-head">
+                  <fieldset className="ccl-fieldset">
+                    <div className="ccl-form-group">
+                      <input
+                        type="radio"
+                        id="download_prepackage"
+                        name="downloadAreaSelect"
+                        value="prepackage"
+                        className="ccl-checkbox ccl-required ccl-form-check-input"
+                        onClick={this.prepackageButton.bind(this)}
+                      ></input>
+                      <label
+                        className="ccl-form-radio-label"
+                        htmlFor="download_prepackage"
+                      >
+                        <span>
+                          For fast download check out the pre-packaged data
+                          collection
+                        </span>
+                      </label>
+                    </div>
+                  </fieldset>
+                </div>
+                <div className="area-header">
+                  Area selection options for custom download:
+                </div>
+                <div className="area-header2">
+                  Select by country or region on the map:
+                  <div className="ccl-form">
+                    <fieldset className="ccl-fieldset">
+                      <div className="ccl-form-group">
+                        <input
+                          type="radio"
+                          id="download_area_select_nuts0"
+                          name="downloadAreaSelect"
+                          value="nuts0"
+                          className="ccl-checkbox cl-required ccl-form-check-input"
+                          defaultChecked
+                          onClick={this.nuts0handler.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_nuts0"
+                        >
+                          <span>View countries</span>
+                        </label>
+                      </div>
+                      <div className="ccl-form-group">
+                        <input
+                          type="radio"
+                          id="download_area_select_nuts"
+                          name="downloadAreaSelect"
+                          value="nuts"
+                          className="ccl-checkbox cl-required ccl-form-check-input"
+                          onClick={this.nutsRadioButtonGeneral.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_nuts"
+                        >
+                          <span>View NUTS</span>
+                          <a
+                            href={
+                              'https://land.copernicus.eu/en/faq/map-viewer/what-are-nuts'
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          >
+                            <span className="map-menu-icon nuts-menu-icon">
+                              <FontAwesomeIcon icon={['fa', 'info-circle']} />
+                            </span>
+                          </a>
+                        </label>
+                      </div>
+                      <div className="nuts-form">
+                        <div className="ccl-form-group">
+                          <input
+                            type="radio"
+                            id="download_area_select_nuts1"
+                            name="downloadAreaSelectNuts"
+                            value="nuts1"
+                            className="ccl-checkbox ccl-required ccl-form-check-input"
+                            onClick={this.nuts1handler.bind(this)}
+                          ></input>
+                          <label
+                            className="ccl-form-radio-label"
+                            htmlFor="download_area_select_nuts1"
+                          >
+                            <span>NUTS 1 (major socio-economic regions)</span>
+                          </label>
+                        </div>
+                        <div className="ccl-form-group">
+                          <input
+                            type="radio"
+                            id="download_area_select_nuts2"
+                            name="downloadAreaSelectNuts"
+                            value="nuts2"
+                            className="ccl-checkbox ccl-required ccl-form-check-input"
+                            onClick={this.nuts2handler.bind(this)}
+                          ></input>
+                          <label
+                            className="ccl-form-radio-label"
+                            htmlFor="download_area_select_nuts2"
+                          >
+                            <span>NUTS 2 (basic regions)</span>
+                          </label>
+                        </div>
+                        <div className="ccl-form-group">
+                          <input
+                            type="radio"
+                            id="download_area_select_nuts3"
+                            name="downloadAreaSelectNuts"
+                            value="nuts3"
+                            className="ccl-radio ccl-required ccl-form-check-input"
+                            onClick={this.nuts3handler.bind(this)}
+                          ></input>
+                          <label
+                            className="ccl-form-radio-label"
+                            htmlFor="download_area_select_nuts3"
+                          >
+                            <span>NUTS 3 (small regions)</span>
+                          </label>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                </div>
+                <div className="area-header">Type country or region code:</div>
+                <input
                   type="text"
                   maxLength="6"
                   id="area-searchtext"
@@ -1097,109 +1220,10 @@ class AreaWidget extends React.Component {
                 >
                   <span class="ccl-icon-zoom"></span>
                 </button>
-                <div className="no-result-message">No result found</div> */}
+                <div className="no-result-message">No result found</div>
+                <br></br>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
-                    <div className="ccl-form-group">
-                      <input
-                        type="radio"
-                        id="download_area_select_nuts0"
-                        name="downloadAreaSelect"
-                        value="nuts0"
-                        className="ccl-checkbox cl-required ccl-form-check-input"
-                        defaultChecked
-                        onClick={this.nuts0handler.bind(this)}
-                      ></input>
-                      <label
-                        className="ccl-form-radio-label"
-                        htmlFor="download_area_select_nuts0"
-                      >
-                        <span>By country</span>
-                      </label>
-                    </div>
-                    <div className="ccl-form-group">
-                      <input
-                        type="radio"
-                        id="download_area_select_nuts"
-                        name="downloadAreaSelect"
-                        value="nuts"
-                        className="ccl-checkbox cl-required ccl-form-check-input"
-                        onClick={this.nutsRadioButtonGeneral.bind(this)}
-                      ></input>
-                      <label
-                        className="ccl-form-radio-label"
-                        htmlFor="download_area_select_nuts"
-                      >
-                        <span>By NUTS</span>
-                        <a
-                          href={
-                            'https://land.copernicus.eu/en/faq/map-viewer/what-are-nuts'
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => e.stopPropagation()}
-                        >
-                          <span className="map-menu-icon nuts-menu-icon">
-                            <FontAwesomeIcon icon={['fa', 'info-circle']} />
-                          </span>
-                        </a>
-                      </label>
-                    </div>
-                    <div className="nuts-form">
-                      <div className="ccl-form-group">
-                        <input
-                          type="radio"
-                          id="download_area_select_nuts1"
-                          name="downloadAreaSelectNuts"
-                          value="nuts1"
-                          className="ccl-checkbox ccl-required ccl-form-check-input"
-                          onClick={this.nuts1handler.bind(this)}
-                        ></input>
-                        <label
-                          className="ccl-form-radio-label"
-                          htmlFor="download_area_select_nuts1"
-                        >
-                          <span>NUTS 1 (major socio-economic regions)</span>
-                        </label>
-                      </div>
-                      <div className="ccl-form-group">
-                        <input
-                          type="radio"
-                          id="download_area_select_nuts2"
-                          name="downloadAreaSelectNuts"
-                          value="nuts2"
-                          className="ccl-checkbox ccl-required ccl-form-check-input"
-                          onClick={this.nuts2handler.bind(this)}
-                        ></input>
-                        <label
-                          className="ccl-form-radio-label"
-                          htmlFor="download_area_select_nuts2"
-                        >
-                          <span>NUTS 2 (basic regions)</span>
-                        </label>
-                      </div>
-                      <div className="ccl-form-group">
-                        <input
-                          type="radio"
-                          id="download_area_select_nuts3"
-                          name="downloadAreaSelectNuts"
-                          value="nuts3"
-                          className="ccl-radio ccl-required ccl-form-check-input"
-                          onClick={this.nuts3handler.bind(this)}
-                        ></input>
-                        <label
-                          className="ccl-form-radio-label"
-                          htmlFor="download_area_select_nuts3"
-                        >
-                          <span>NUTS 3 (small regions)</span>
-                        </label>
-                      </div>
-                    </div>
-                    <br></br>
-                    <div className="rectangle-header">
-                      Draw a rectangle on the map
-                    </div>
                     <div className="ccl-form-group">
                       <input
                         type="radio"
@@ -1213,9 +1237,8 @@ class AreaWidget extends React.Component {
                         className="ccl-form-radio-label"
                         htmlFor="download_area_select_rectangle"
                       >
-                        <span>
-                          Click and drag your mouse on the map to select your
-                          area of interest
+                        <span className="rectangle-header">
+                          Draw a rectangle on the map
                         </span>
                       </label>
                     </div>
