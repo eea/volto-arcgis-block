@@ -317,6 +317,10 @@ div.esri-popover
   margin: 0;
 }
 
+.area-panel {
+  padding-top: 13rem;
+}
+
 /* .area-container .area-header { */
 /* margin-bottom: 1rem; */
 /* } */
@@ -326,21 +330,24 @@ div.esri-popover
   font-weight: bold;
 }
 
+.area-header2 {
+  padding-right: 0;
+  margin-left: 1.5rem;
+}
+
 .rectangle-header {
-  padding-top: 1rem;
-  border-width: 2px;
-  border-style: solid none none none;
-  border-color: #a0b128;
-  margin-bottom: 1rem;
   font-weight: bold;
 }
 
 .area-panel .ccl-form {
   padding-bottom: 1rem !important;
+  margin-left: 1rem !important;
+}
+
+.area-panel .ccl-form-head {
   border-width: 2px;
   border-style: none none solid none;
   border-color: #a0b128;
-  margin-left: 1rem !important;
 }
 
 .area-panel .ccl-form:last-child {
@@ -380,9 +387,9 @@ label.ccl-form-radio-label span.nuts-menu-icon {
 }
 
 #area-searchtext {
-  width: 5rem;
-  height: 1.2rem;
-  margin-top: 0.1rem;
+  width: 7rem;
+  height: 1.5rem;
+  margin-bottom: 1rem;
   margin-left: 1rem !important;
 }
 
@@ -391,7 +398,7 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   height: 1.5rem !important;
   min-height: 1.5rem !important;
   margin-top: 0 !important;
-  margin-left: 0.5rem !important;
+  margin-left: 0 !important;
 }
 
 .no-result-message {
@@ -1212,7 +1219,7 @@ label.ccl-form-radio-label span.nuts-menu-icon {
 }
 
 .right-panel-content {
-  overflow: auto;
+  overflow: auto !important;
   height: 100%;
   padding: 1rem;
 }

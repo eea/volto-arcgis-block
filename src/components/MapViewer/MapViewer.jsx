@@ -66,6 +66,7 @@ class MapViewer extends React.Component {
     this.hotspotDataHandler = this.hotspotDataHandler.bind(this);
     this.mapLayersHandler = this.mapLayersHandler.bind(this);
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
+    this.prepackageHandler = this.prepackageHandler.bind(this);
   }
 
   mapLayersHandler(newLayers) {
@@ -112,6 +113,10 @@ class MapViewer extends React.Component {
 
   updateArea(shared_value) {
     this.mapViewer.setState({ area: shared_value });
+  }
+
+  prepackageHandler(prepackage) {
+    this.setState({ prepackageChecked: prepackage });
   }
 
   loader() {
@@ -420,6 +425,8 @@ class MapViewer extends React.Component {
           mapLayersHandler={this.mapLayersHandler}
           bookmarkData={this.state.bookmarkData}
           bookmarkHandler={this.bookmarkHandler}
+          prepackageChecked={this.state.prepackageChecked}
+          prepackageHandler={this.prepackageHandler}
         />
       ); //call conf
   }
@@ -490,6 +497,8 @@ export const CheckLogin = ({ reference }) => {
           updateArea={reference.updateArea}
           urls={reference.cfgUrls}
           mapviewer_config={reference.props.mapviewer_config}
+          prepackageChecked={reference.state.prepackageChecked}
+          prepackageHandler={reference.prepackageHandler}
         />
       )}
     </>
