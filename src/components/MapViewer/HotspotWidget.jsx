@@ -980,6 +980,15 @@ class HotspotWidget extends React.Component {
             this.renderApplyFilterButton();
             localStorage.setItem('bookmarkHotspotFilter', null);
           }, 2000);
+        } else if (
+          bookmarkHotspotFilter !== null &&
+          Object.keys(bookmarkHotspotFilter?.filteredLayers).length === 0 &&
+          this.props.bookmarkData.active === true
+        ) {
+          this.lcYear = null;
+          this.lccYear = null;
+          this.selectedArea = null;
+          this.setState({ lcYear: null, lccYear: null, selectedArea: null });
         }
         this.setState({
           activeLayersArray: Array.from(
