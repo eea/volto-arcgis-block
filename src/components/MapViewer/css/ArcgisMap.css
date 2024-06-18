@@ -318,7 +318,7 @@ div.esri-popover
 }
 
 .area-panel {
-  padding-top: 13rem;
+  padding-top: 0;
 }
 
 /* .area-container .area-header { */
@@ -326,21 +326,59 @@ div.esri-popover
 /* } */
 
 .area-header {
-  padding: 1rem;
+  padding-top: 0.5rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  font-size: 14px;
   font-weight: bold;
 }
 
 .area-header2 {
+  display: flex;
   padding-right: 0;
-  margin-left: 1.5rem;
+  margin-left: 2rem;
+  color: #000;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.file-upload {
+  margin-left: 2rem;
+  color: #5a5a5a;
+  font-size: 14px;
+}
+
+.nuts-selection {
+  margin-left: 2rem;
+  color: #5a5a5a;
+  font-size: 14px;
+}
+
+.area-dot {
+  margin-right: 0.5rem;
+  color: #a0b128;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.area-search-block {
+  display: flex;
+  margin-left: 1rem;
+}
+
+.rectangle-block {
+  display: flex;
+  margin-left: 1rem;
+  font-size: 14px;
 }
 
 .rectangle-header {
-  font-weight: bold;
+  color: #000;
+  font-weight: 400;
 }
 
 .area-panel .ccl-form {
-  padding-bottom: 1rem !important;
+  padding-bottom: 0.5rem !important;
   margin-left: 1rem !important;
 }
 
@@ -373,7 +411,7 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   max-width: fit-content;
   padding: 6px;
   border-color: #a0b128;
-  margin-top: 1rem;
+  margin-top: 0;
   margin-left: auto;
   background-color: #a0b128;
   color: white !important;
@@ -389,8 +427,17 @@ label.ccl-form-radio-label span.nuts-menu-icon {
 #area-searchtext {
   width: 7rem;
   height: 1.5rem;
-  margin-bottom: 1rem;
+  border: 1px solid #dadada;
+  margin-bottom: 0.5rem;
   margin-left: 1rem !important;
+}
+
+#area-searchtext > input:focus-visible {
+  outline: -webkit-focus-ring-color auto 1px;
+}
+
+.prepackage-option {
+  font-size: 14px;
 }
 
 .area-searchbutton {
@@ -406,6 +453,7 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   margin-top: 0.1rem;
   margin-left: 0.5rem;
   color: red;
+  font-size: 12px;
 }
 /* Left menu */
 .map-menu {
@@ -1219,7 +1267,7 @@ label.ccl-form-radio-label span.nuts-menu-icon {
 }
 
 .right-panel-content {
-  overflow: auto !important;
+  overflow: auto;
   height: 100%;
   padding: 1rem;
 }

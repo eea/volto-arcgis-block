@@ -1080,7 +1080,7 @@ class AreaWidget extends React.Component {
                         className="ccl-form-radio-label"
                         htmlFor="download_prepackage"
                       >
-                        <span>
+                        <span className="prepackage-option">
                           For fast download check out the pre-packaged data
                           collection
                         </span>
@@ -1092,7 +1092,10 @@ class AreaWidget extends React.Component {
                   Area selection options for custom download:
                 </div>
                 <div className="area-header2">
+                  <div className="area-dot">·</div>
                   Select by country or region on the map:
+                </div>
+                <div className="nuts-selection">
                   <div className="ccl-form">
                     <fieldset className="ccl-fieldset">
                       <div className="ccl-form-group">
@@ -1194,57 +1197,66 @@ class AreaWidget extends React.Component {
                     </fieldset>
                   </div>
                 </div>
-                <div className="area-header">Type country or region code:</div>
-                <input
-                  type="text"
-                  maxLength="6"
-                  id="area-searchtext"
-                  placeholder="Search"
-                />
-                <button
-                  aria-label="Search"
-                  class="esri-button area-searchbutton"
-                  onClick={this.areaSearch.bind(this)}
-                  onKeyDown={(e) => {
-                    if (
-                      !e.altKey &&
-                      e.code !== 'Tab' &&
-                      !e.ctrlKey &&
-                      e.code !== 'Delete' &&
-                      !e.shiftKey &&
-                      !e.code.startsWith('F')
-                    ) {
-                      this.areaSearch.bind(this);
-                    }
-                  }}
-                >
-                  <span class="ccl-icon-zoom"></span>
-                </button>
-                <div className="no-result-message">No result found</div>
+                <div className="area-header2">
+                  <div className="area-dot">·</div>
+                  Type country or region code:
+                </div>
+                <div className="area-search-block">
+                  <input
+                    type="text"
+                    maxLength="6"
+                    id="area-searchtext"
+                    placeholder="Search"
+                  />
+                  <button
+                    aria-label="Search"
+                    class="esri-button area-searchbutton"
+                    onClick={this.areaSearch.bind(this)}
+                    onKeyDown={(e) => {
+                      if (
+                        !e.altKey &&
+                        e.code !== 'Tab' &&
+                        !e.ctrlKey &&
+                        e.code !== 'Delete' &&
+                        !e.shiftKey &&
+                        !e.code.startsWith('F')
+                      ) {
+                        this.areaSearch.bind(this);
+                      }
+                    }}
+                  >
+                    <span class="ccl-icon-zoom"></span>
+                  </button>
+                  <div className="no-result-message">No result found</div>
+                </div>
                 <br></br>
                 <div className="ccl-form">
                   <fieldset className="ccl-fieldset">
                     <div className="ccl-form-group">
-                      <input
-                        type="radio"
-                        id="download_area_select_rectangle"
-                        name="downloadAreaSelect"
-                        value="area"
-                        className="ccl-radio ccl-required ccl-form-check-input"
-                        onClick={this.rectanglehandler.bind(this)}
-                      ></input>
-                      <label
-                        className="ccl-form-radio-label"
-                        htmlFor="download_area_select_rectangle"
-                      >
-                        <span className="rectangle-header">
-                          Draw a rectangle on the map
-                        </span>
-                      </label>
+                      <div className="rectangle-block">
+                        <div className="area-dot">·</div>
+                        <input
+                          type="radio"
+                          id="download_area_select_rectangle"
+                          name="downloadAreaSelect"
+                          value="area"
+                          className="ccl-radio ccl-required ccl-form-check-input"
+                          onClick={this.rectanglehandler.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_rectangle"
+                        >
+                          <span className="rectangle-header">
+                            Draw a rectangle on the map
+                          </span>
+                        </label>
+                      </div>
                     </div>
                   </fieldset>
                 </div>
-                <div className="area-header">
+                <div className="area-header2">
+                  <div className="area-dot">·</div>
                   Upload a file with your area of interest
                   <a
                     href="https://land.copernicus.eu/en/faq/map-viewer/how-can-i-upload-a-file-with-my-area-of-interest"
