@@ -318,7 +318,7 @@ div.esri-popover
 }
 
 .area-panel {
-  padding-top: 0;
+  padding-top: 1rem;
 }
 
 /* .area-container .area-header { */
@@ -363,7 +363,7 @@ div.esri-popover
 
 .area-search-block {
   display: flex;
-  margin-left: 1rem;
+  margin-left: 1.7rem;
 }
 
 .rectangle-block {
