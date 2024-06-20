@@ -212,7 +212,7 @@ class AreaWidget extends React.Component {
     if (document.querySelector('#download_prepackage').checked) {
       this.setState({
         showInfoPopup: true,
-        infoPopupType: 'download',
+        infoPopupType: 'prepackage',
       });
     } else {
       this.setState({
@@ -851,7 +851,9 @@ class AreaWidget extends React.Component {
       'none';
   }
   areaSearch() {
-    let searchText = document.querySelector('#area-searchtext').value;
+    let searchText = document
+      .querySelector('#area-searchtext')
+      .value.toUpperCase();
     if (searchText.length <= 2) {
       this.loadNutsService('nuts0', [0]);
       this.loadCountriesService('nuts0');
@@ -1324,6 +1326,17 @@ class AreaWidget extends React.Component {
                       <div className="drawRectanglePopup-text">
                         Click on the download icon on “Products and datasets” to
                         add to cart
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'prepackage' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'download']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Click on the download icon on “Products and datasets” to
+                        continue
                       </div>
                     </>
                   )}
