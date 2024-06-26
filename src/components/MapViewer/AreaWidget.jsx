@@ -13,7 +13,8 @@ var Graphic,
   request,
   SimpleLineSymbol,
   SimpleFillSymbol,
-  SpatialReference;
+  SpatialReference,
+  Polygon;
 
 class AreaWidget extends React.Component {
   /**
@@ -65,6 +66,7 @@ class AreaWidget extends React.Component {
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
       'esri/geometry/SpatialReference',
+      'esri/geometry/Polygon',
     ]).then(
       ([
         _Graphic,
@@ -79,6 +81,7 @@ class AreaWidget extends React.Component {
         _SimpleLineSymbol,
         _SimpleFillSymbol,
         _SpatialReference,
+        _Polygon,
       ]) => {
         [
           Graphic,
@@ -93,6 +96,7 @@ class AreaWidget extends React.Component {
           SimpleLineSymbol,
           SimpleFillSymbol,
           SpatialReference,
+          Polygon,
         ] = [
           _Graphic,
           _Extent,
@@ -106,6 +110,7 @@ class AreaWidget extends React.Component {
           _SimpleLineSymbol,
           _SimpleFillSymbol,
           _SpatialReference,
+          _Polygon,
         ];
       },
     );
@@ -658,16 +663,111 @@ class AreaWidget extends React.Component {
           infoPopupType: 'fullDataset',
         });
       } else {
+        //Draw a polygon around of the CSVlayer Features data
+
+        let allRings = [];
+        let currentRing = [];
+        let startingPoint = null;
+
+        for (let i = 0; i < csvFeatureCount; i++) {
+          const currentPoint = [
+            csvFeatures.features[i].geometry.x,
+            csvFeatures.features[i].geometry.y,
+          ];
+          if (!startingPoint) {
+            startingPoint = currentPoint;
+            currentRing.push(currentPoint);
+          } else if (
+            startingPoint[0] === currentPoint[0] &&
+            startingPoint[1] === currentPoint[1]
+          ) {
+            allRings.push(currentRing);
+            currentRing = [];
+            startingPoint = null;
+          } else {
+            currentRing.push(currentPoint);
+          }
+        }
+
+        if (currentRing.length > 0) {
+          allRings.push(currentRing);
+        }
+
+        let idPolygon = new Polygon({
+          isSelfIntersecting: false,
+          rings: allRings,
+          spatialReference: csvExtent.spatialReference,
+          //set type as multi polygon
+        });
+
+        console.log('polygon rings: ', [idPolygon]);
+
+        //Draw a graphic using the polyId polygon data as the geometry
+
+        const polygonSymbol = {
+          type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+          color: [234, 168, 72, 0.8],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: '#000000',
+            width: 0.1,
+          },
+        };
+
+        let polygonGraphic = new Graphic({
+          geometry: idPolygon,
+          symbol: polygonSymbol,
+        });
+
+        //Clear any previously saved file upload data and save the uploaded layer to the component props for reference
+
         this.removeFileUploadedLayer();
-        this.fileUploadLayer = csvLayer;
+        this.fileUploadLayer = {
+          layers: CSVLayer,
+          sourceGraphics: polygonGraphic,
+        };
+
+        //Clean the map before adding the graphic
+
         this.removeNutsLayers();
-        this.props.map.add(this.fileUploadLayer);
+
+        //Add the polygon graphic to the map
+
+        this.props.view.graphics.add(polygonGraphic);
+        //this.props.map.add(this.fileUploadLayer);
+
+        //Refresh the map view
+
+        this.props.view.goTo(polygonGraphic).catch((error) => {
+          //console.error('From handleCsv function', error);
+        });
+
+        //Send the area to the parent component
+
+        this.props.updateArea({
+          origin: { x: csvExtent.extent.xmin, y: csvExtent.extent.ymin },
+          end: { x: csvExtent.extent.xmax, y: csvExtent.extent.ymax },
+        });
+
+        //re order the layer in the map
+
+        let index = this.getHighestIndex();
+        this.props.map.reorder(polygonGraphic, index + 1);
+
+        //Refresh the map view
+
         this.setState({
           showInfoPopup: true,
           infoPopupType: 'download',
         });
+
+        //Save file upload layer to session storage as a tag for adding item to cart action
+
+        sessionStorage.setItem(
+          'fileUploadLayer',
+          JSON.stringify(this.fileUploadLayer),
+        );
       }
-      // Continue to line 645 here
     } catch (error) {
       console.error('Error: ', error);
     }
