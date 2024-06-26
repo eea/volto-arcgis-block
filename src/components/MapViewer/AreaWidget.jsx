@@ -1413,7 +1413,9 @@ class AreaWidget extends React.Component {
                   >
                     <div className="field">
                       <label className="file-upload">
-                        <span>File formats supported: shp(zip), geojson</span>
+                        <span>
+                          File formats supported: shp(zip), geojson, CSV
+                        </span>
                         <input
                           type="file"
                           name="file"
