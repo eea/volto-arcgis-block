@@ -27,7 +27,7 @@ class InfoWidget extends React.Component {
     this.menuClass =
       'esri-icon-description esri-widget--button esri-widget esri-interactive';
     this.infoData = {};
-    this.Highcharts = props.Highcharts;
+    this.Highcharts = props.highcharts;
   }
 
   async loader() {
