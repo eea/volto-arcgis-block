@@ -1005,15 +1005,25 @@ class AreaWidget extends React.Component {
     }
     let found = false;
     let count = this.nutsGroupLayer.layers.items.length;
-    const queryParams = this.nutsGroupLayer.layers.items[0].createQuery();
-    queryParams.where = `(NUTS_ID = '${searchText}')`;
-    queryParams.outSpatialReference = this.props.view.spatialReference;
     document.querySelector('.no-result-message').style.display = 'none';
     this.nutsGroupLayer.layers.items.forEach((item) => {
+      const queryParams = item.createQuery();
+      if (
+        item.url ===
+        'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer'
+      ) {
+        queryParams.where = `(ISO_2DIGIT = '${searchText}')`;
+      } else {
+        queryParams.where = `(NUTS_ID = '${searchText}')`;
+      }
+      queryParams.outSpatialReference = this.props.view.spatialReference;
       item.queryFeatures(queryParams).then((response) => {
         count = count - 1;
         response.features.forEach((feature) => {
-          if (feature.attributes.NUTS_ID === searchText) {
+          if (
+            feature.attributes.NUTS_ID === searchText ||
+            feature.attributes.ISO_2DIGIT === searchText
+          ) {
             found = true;
             this.props.updateArea(feature);
             let symbol = new SimpleFillSymbol(
