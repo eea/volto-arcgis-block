@@ -1,9 +1,9 @@
 import React, { createRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
 import { Loader } from 'semantic-ui-react';
 import loadable from '@loadable/component';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
+import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 
 var GeometryEngine, Graphic, esriRequest;
 

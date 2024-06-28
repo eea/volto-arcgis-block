@@ -65,9 +65,15 @@ export default function applyConfig(config) {
     ...reducers,
   };
 
-  config.settings.loadables.highcharts = loadable.lib(() =>
-    import('highcharts'),
+  config.settings.loadables.highcharts = loadable.lib(
+    () => import('highcharts'),
   );
+
+  if (!config.settings.loadables.fontAwesome) {
+    config.settings.loadables.fontAwesome = loadable.lib(
+      () => import('@fortawesome/react-fontawesome'),
+    );
+  }
 
   return config;
 }
