@@ -700,8 +700,6 @@ class AreaWidget extends React.Component {
           //set type as multi polygon
         });
 
-        console.log('polygon rings: ', [idPolygon]);
-
         //Draw a graphic using the polyId polygon data as the geometry
 
         const polygonSymbol = {
@@ -769,7 +767,7 @@ class AreaWidget extends React.Component {
         );
       }
     } catch (error) {
-      console.error('Error: ', error);
+      //console.error('Error: ', error);
     }
   }
 
