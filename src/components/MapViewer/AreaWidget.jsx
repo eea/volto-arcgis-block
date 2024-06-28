@@ -13,7 +13,8 @@ var Graphic,
   request,
   SimpleLineSymbol,
   SimpleFillSymbol,
-  SpatialReference;
+  SpatialReference,
+  Polygon;
 
 class AreaWidget extends React.Component {
   /**
@@ -65,6 +66,7 @@ class AreaWidget extends React.Component {
       'esri/symbols/SimpleLineSymbol',
       'esri/symbols/SimpleFillSymbol',
       'esri/geometry/SpatialReference',
+      'esri/geometry/Polygon',
     ]).then(
       ([
         _Graphic,
@@ -79,6 +81,7 @@ class AreaWidget extends React.Component {
         _SimpleLineSymbol,
         _SimpleFillSymbol,
         _SpatialReference,
+        _Polygon,
       ]) => {
         [
           Graphic,
@@ -93,6 +96,7 @@ class AreaWidget extends React.Component {
           SimpleLineSymbol,
           SimpleFillSymbol,
           SpatialReference,
+          Polygon,
         ] = [
           _Graphic,
           _Extent,
@@ -106,6 +110,7 @@ class AreaWidget extends React.Component {
           _SimpleLineSymbol,
           _SimpleFillSymbol,
           _SpatialReference,
+          _Polygon,
         ];
       },
     );
@@ -292,6 +297,7 @@ class AreaWidget extends React.Component {
   // FILE UPLOAD HANDLERS
 
   // Trigger the file input click
+
   handleUploadClick = (event) => {
     event.preventDefault();
     this.fileInput.current.click();
@@ -299,19 +305,31 @@ class AreaWidget extends React.Component {
 
   handleFileUpload = (e) => {
     //Get the file name
+
     const fileName = e.target.value.toLowerCase();
 
     //Get the file size
+
     const fileSize = e.target.files[0].size;
 
     //Get the file from the form
+
     const file = document.getElementById('uploadForm');
+
+    //Get the file blob
+
+    const fileBlob = e.target.files[0];
+
+    //Create a new file reader
+
+    let reader = new FileReader();
 
     //List allowed file extensions
 
-    let fileExtensions = ['zip', 'geojson'];
+    let fileExtensions = ['zip', 'geojson', 'csv'];
 
     // Get the file extension
+
     let fileExtension = fileName.split('.').pop();
 
     //Check if the file format is not supported
@@ -324,10 +342,13 @@ class AreaWidget extends React.Component {
       return;
     }
 
-    // Check if the file is a geojson and the file size is over the 10mb file size limit
+    // Check if the file format is geojson or csv and the file size is over the 10mb file size limit
     // or file is a shape file and the file size is over the 2mb file size limit
 
-    if (fileSize > 10485760 && fileExtension === 'geojson') {
+    if (
+      fileSize > 10485760 &&
+      (fileExtension === 'geojson' || fileExtension === 'csv')
+    ) {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'fileLimit',
@@ -350,14 +371,17 @@ class AreaWidget extends React.Component {
       case 'geojson':
         this.generateFeatureCollection(fileName, file, 'geojson');
         break;
-      //case 'csv':
-      //this.generateFeatureCollection(
-      //  fileName,
-      //  file,
-      //  'csv',
-      //);
-      //  reader.readAsText(fileBlob);
-      //  break;
+      case 'csv':
+        //this.generateFeatureCollection(
+        //  fileName,
+        //  file,
+        //  'csv',
+        //);
+        reader.readAsText(fileBlob);
+        reader.onload = () => {
+          this.handleCsv(reader.result);
+        };
+        break;
       default:
         break;
     }
@@ -580,7 +604,7 @@ class AreaWidget extends React.Component {
 
   //Display CSV on the map
 
-  handleCsv(data) {
+  async handleCsv(data) {
     //Create a CSV layer
     const blob = new Blob([data], {
       type: 'plain/text',
@@ -594,50 +618,157 @@ class AreaWidget extends React.Component {
       title: 'uploadLayer',
     });
 
-    //Query all features insisde the CSV layer
+    // Set a simple renderer on the layer
 
-    //csvLayer.load().then(function(){
-    //  let query = new Query({
-    //    where: "mag > 5",
-    //    returnGeometry: true
-    //  });
-    //
-    //  return csvLayer.queryFeatures(query);
-    //})
-    //.then(function(results){
-    //  console.log(results);
-    //})
-    //.catch(function (error) {
-    //  console.error("From CSV query: ", error);
-    //});
-    //Check if the file has the correct spatial reference
-    if (this.checkWkid(csvLayer?.spatialReference) === false) return;
+    csvLayer.renderer = {
+      type: 'simple', // autocasts as new SimpleRenderer()
+      symbol: {
+        type: 'simple-marker', // autocasts as new SimpleMarkerSymbol()
+        size: 6,
+        color: 'black',
+        outline: {
+          // autocasts as new SimpleLineSymbol()
+          width: 0.5,
+          color: 'white',
+        },
+      },
+    };
 
-    //Check if the file extent is larger than the limit
-    //let geometry = new Extent({
-    //  xmin: data?.features[0]?.geometry.bbox[0],
-    //  xmax: data?.features[0]?.geometry.bbox[1],
-    //  ymin: data?.features[0]?.geometry.bbox[2],
-    //  ymax: data?.features[0]?.geometry.bbox[3],
-    //  spatialReference: { wkid: 4326 },
-    //});
+    let csvFeatures, csvFeatureCount, csvExtent;
 
-    //If checkExtent returns false, add the layer to the map
-    //if (this.checkExtent(geometry)) {
-    //  this.setState({
-    //    showInfoPopup: true,
-    //    infoPopupType: 'fullDataset',
-    //  });
-    //} else {
-    this.removeFileUploadedLayer();
-    this.fileUploadLayer = csvLayer;
-    this.removeNutsLayers();
-    this.props.map.add(this.fileUploadLayer);
-    this.setState({
-      showInfoPopup: true,
-      infoPopupType: 'download',
-    });
-    //}
+    //Query the CSV layer
+
+    try {
+      await csvLayer.load();
+      const results = await Promise.all([
+        csvLayer.queryFeatures(),
+        csvLayer.queryFeatureCount(),
+        csvLayer.queryExtent(),
+      ]);
+
+      csvFeatures = results[0];
+      csvFeatureCount = results[1];
+      csvExtent = results[2];
+
+      //Check if the file has the correct spatial reference
+
+      if (this.checkWkid(csvLayer?.spatialReference) === false) return;
+
+      //Check if the file extent is larger than the limit
+      //If checkExtent() is false, add the layer to the map
+
+      if (this.checkExtent(csvExtent.extent)) {
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'fullDataset',
+        });
+      } else {
+        //Draw a polygon around of the CSVlayer Features data
+
+        let allRings = [];
+        let currentRing = [];
+        let startingPoint = null;
+
+        for (let i = 0; i < csvFeatureCount; i++) {
+          const currentPoint = [
+            csvFeatures.features[i].geometry.x,
+            csvFeatures.features[i].geometry.y,
+          ];
+          if (!startingPoint) {
+            startingPoint = currentPoint;
+            currentRing.push(currentPoint);
+          } else if (
+            startingPoint[0] === currentPoint[0] &&
+            startingPoint[1] === currentPoint[1]
+          ) {
+            allRings.push(currentRing);
+            currentRing = [];
+            startingPoint = null;
+          } else {
+            currentRing.push(currentPoint);
+          }
+        }
+
+        if (currentRing.length > 0) {
+          allRings.push(currentRing);
+        }
+
+        let idPolygon = new Polygon({
+          isSelfIntersecting: false,
+          rings: allRings,
+          spatialReference: csvExtent.spatialReference,
+          //set type as multi polygon
+        });
+
+        //Draw a graphic using the polyId polygon data as the geometry
+
+        const polygonSymbol = {
+          type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+          color: [234, 168, 72, 0.8],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: '#000000',
+            width: 0.1,
+          },
+        };
+
+        let polygonGraphic = new Graphic({
+          geometry: idPolygon,
+          symbol: polygonSymbol,
+        });
+
+        //Clear any previously saved file upload data and save the uploaded layer to the component props for reference
+
+        this.removeFileUploadedLayer();
+        this.fileUploadLayer = {
+          layers: CSVLayer,
+          sourceGraphics: polygonGraphic,
+        };
+
+        //Clean the map before adding the graphic
+
+        this.removeNutsLayers();
+
+        //Add the polygon graphic to the map
+
+        this.props.view.graphics.add(polygonGraphic);
+        //this.props.map.add(this.fileUploadLayer);
+
+        //Refresh the map view
+
+        this.props.view.goTo(polygonGraphic).catch((error) => {
+          //console.error('From handleCsv function', error);
+        });
+
+        //Send the area to the parent component
+
+        this.props.updateArea({
+          origin: { x: csvExtent.extent.xmin, y: csvExtent.extent.ymin },
+          end: { x: csvExtent.extent.xmax, y: csvExtent.extent.ymax },
+        });
+
+        //re order the layer in the map
+
+        let index = this.getHighestIndex();
+        this.props.map.reorder(polygonGraphic, index + 1);
+
+        //Refresh the map view
+
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'download',
+        });
+
+        //Save file upload layer to session storage as a tag for adding item to cart action
+
+        sessionStorage.setItem(
+          'fileUploadLayer',
+          JSON.stringify(this.fileUploadLayer),
+        );
+      }
+    } catch (error) {
+      //console.error('Error: ', error);
+    }
   }
 
   checkWkid(spatialReference) {
@@ -1280,7 +1411,9 @@ class AreaWidget extends React.Component {
                   >
                     <div className="field">
                       <label className="file-upload">
-                        <span>File formats supported: shp(zip), geojson</span>
+                        <span>
+                          File formats supported: shp(zip), geojson, CSV
+                        </span>
                         <input
                           type="file"
                           name="file"
