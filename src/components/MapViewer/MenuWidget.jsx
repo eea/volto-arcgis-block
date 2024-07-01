@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom';
 import React, { createRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
@@ -1938,7 +1938,7 @@ class MenuWidget extends React.Component {
     //CLMS-2684
     //let zoom = this.view.get('zoom');
     /* let scale = this.view.scale;
-    Object.keys(this.activeLayersJSON).forEach((key) => { 
+    Object.keys(this.activeLayersJSON).forEach((key) => {
       let activeLayer = this.activeLayersJSON[key];
       let layerTitle = activeLayer.props.children[0].props.children;
       if (layerTitle.includes('raster')) {
@@ -2273,28 +2273,28 @@ class MenuWidget extends React.Component {
 
     // Create node
     let template = `
-    <div class="esri-legend__layer"> 
-      <div class="esri-legend__layer-table esri-legend__layer-table--size-ramp" > 
-        <div class="esri-legend__layer-caption"> 
-          ${title} 
-        </div> 
-        <div class="esri-legend__layer-body"> 
-          <div class="esri-legend__layer-row"> 
-            <div class="esri-legend__layer-cell esri-legend__layer-cell--symbols" > 
-              <div class="esri-legend__symbol"> 
-                <img crossorigin="anonymous" 
-                  alt="" 
+    <div class="esri-legend__layer">
+      <div class="esri-legend__layer-table esri-legend__layer-table--size-ramp" >
+        <div class="esri-legend__layer-caption">
+          ${title}
+        </div>
+        <div class="esri-legend__layer-body">
+          <div class="esri-legend__layer-row">
+            <div class="esri-legend__layer-cell esri-legend__layer-cell--symbols" >
+              <div class="esri-legend__symbol">
+                <img crossorigin="anonymous"
+                  alt=""
                   src="${imageURL}"
-                  style="opacity: 1" 
-                /> 
-              </div> 
-            </div> 
-            <div 
+                  style="opacity: 1"
+                />
+              </div>
+            </div>
+            <div
               class="esri-legend__layer-cell esri-legend__layer-cell--info"
-            ></div> 
-          </div> 
-        </div> 
-      </div> 
+            ></div>
+          </div>
+        </div>
+      </div>
     </div>`;
 
     node.innerHTML = template;

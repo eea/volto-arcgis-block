@@ -1,6 +1,6 @@
 import React, { createRef } from 'react';
 import { Loader } from 'semantic-ui-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 
 let layerControl,
   navigationControl,
