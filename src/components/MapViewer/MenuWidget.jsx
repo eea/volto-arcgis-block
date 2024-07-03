@@ -955,7 +955,7 @@ class MenuWidget extends React.Component {
             .setAttribute('aria-expanded', 'true');
           let mapMenu = document
             .querySelector(elem + ' input')
-            .closest('.map-menu-dataset');
+            .closest('.map-menu-dataset-dropdown');
           if (mapMenu) {
             // mapMenu is null for Corine and was blocking.
             scrollPosition = mapMenu.offsetTop;
