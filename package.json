@@ -58,7 +58,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@eeacms/volto-clms-utils": "0.1.12",
+    "@eeacms/volto-clms-utils": "^0.1.13",
     "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
     "@fortawesome/react-fontawesome": "0.1.14",
