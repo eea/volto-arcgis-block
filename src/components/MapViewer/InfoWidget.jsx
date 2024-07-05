@@ -5,7 +5,7 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { Loader } from 'semantic-ui-react';
 var GeometryEngine, Graphic, esriRequest;
-
+/*no lazy load version */
 class InfoWidget extends React.Component {
   /**
    * Creator of the InfoWidget widget class
