@@ -1,5 +1,3 @@
-import loadable from '@loadable/component';
-
 import world from '@plone/volto/icons/world.svg';
 import menu from '@plone/volto/icons/menu.svg';
 
@@ -13,8 +11,7 @@ import { ARCGIS_BLOCK } from '@eeacms/volto-arcgis-block/constants';
 import { USE_CASES_BLOCK } from '@eeacms/volto-arcgis-block/constants';
 // CUSTOM REDUCERS IMPORT
 import reducers from './reducers';
-
-export default function applyConfig(config) {
+export default (config) => {
   config.blocks.blocksConfig[ARCGIS_BLOCK] = {
     id: ARCGIS_BLOCK, // The name (id) of the block
     title: 'Arcgis Map', // The display name of the block
@@ -64,10 +61,5 @@ export default function applyConfig(config) {
     ...config.addonReducers,
     ...reducers,
   };
-
-  config.settings.loadables.highcharts = loadable.lib(() =>
-    import('highcharts'),
-  );
-
   return config;
-}
+};
