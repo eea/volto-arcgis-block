@@ -852,8 +852,9 @@ class MenuWidget extends React.Component {
           elementOpacities.forEach((element) => {
             let parentElement = element.parentElement?.parentElement;
             if (parentElement) {
-              let id =
-                element.parentElement.parentElement.getAttribute('layer-id');
+              let id = element.parentElement.parentElement.getAttribute(
+                'layer-id',
+              );
               if (layerOpacities && layerOpacities[id]) {
                 element.dataset.opacity = layerOpacities[id] * 100;
               } else {
@@ -1622,23 +1623,24 @@ class MenuWidget extends React.Component {
           LayerTitle: layer.Title,
         });
       } else {
-        this.layers[layer.LayerId + '_' + inheritedIndexLayer] =
-          new FeatureLayer({
-            url:
-              viewService +
-              (viewService?.endsWith('/') ? '' : '/') +
-              layer.LayerId,
-            id: layer.LayerId,
-            title: layer.Title,
-            featureInfoUrl: featureInfoUrl,
-            popupEnabled: true,
-            isTimeSeries: isTimeSeries,
-            fields: layer.Fields,
-            DatasetId: DatasetId,
-            DatasetTitle: DatasetTitle,
-            ProductId: ProductId,
-            ViewService: viewService,
-          });
+        this.layers[
+          layer.LayerId + '_' + inheritedIndexLayer
+        ] = new FeatureLayer({
+          url:
+            viewService +
+            (viewService?.endsWith('/') ? '' : '/') +
+            layer.LayerId,
+          id: layer.LayerId,
+          title: layer.Title,
+          featureInfoUrl: featureInfoUrl,
+          popupEnabled: true,
+          isTimeSeries: isTimeSeries,
+          fields: layer.Fields,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
+          ViewService: viewService,
+        });
       }
     }
 
@@ -1830,8 +1832,9 @@ class MenuWidget extends React.Component {
       for (let g = 1; g < dataSetContents.length; g++) {
         if (dataSetContents[g].checked) {
           currentDataSetLayer = dataSetContents[g];
-          currentDataSetLayerSpan =
-            currentDataSetLayer.nextSibling.querySelector('span');
+          currentDataSetLayerSpan = currentDataSetLayer.nextSibling.querySelector(
+            'span',
+          );
           currentElemContainerSpan = elemContainer.querySelector('span');
 
           if (
@@ -1907,8 +1910,8 @@ class MenuWidget extends React.Component {
     const layerTitleToCompare = layerTitle.includes(' -')
       ? layerTitle.replace(' -', '').trim()
       : layerTitle.includes('raster')
-        ? layerTitle
-        : layerTitle;
+      ? layerTitle
+      : layerTitle;
     let scale;
     //let layerTitleToCompare = layerTitle;
     if (this.layers[key].resourceInfo) {

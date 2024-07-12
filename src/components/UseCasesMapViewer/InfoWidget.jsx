@@ -36,8 +36,8 @@ class InfoWidget extends React.Component {
     let responsibleOrganizationOrPerson = UseCase.Responsible_organisation
       ? UseCase.Responsible_organisation
       : UseCase.Contact_person_name_
-        ? UseCase.Contact_person_name_
-        : '';
+      ? UseCase.Contact_person_name_
+      : '';
     return (
       <>
         <div className="use-cases-products-title">Use case detail</div>
@@ -120,8 +120,8 @@ class InfoWidget extends React.Component {
       let responsibleOrganizationOrPerson = val.Responsible_organisation
         ? val.Responsible_organisation
         : val.Contact_person_name_
-          ? val.Contact_person_name_
-          : '';
+        ? val.Contact_person_name_
+        : '';
       if (
         titles
           .map((a) => {
