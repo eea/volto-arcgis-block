@@ -1,6 +1,7 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
-import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
   Extent,
@@ -278,8 +279,7 @@ class AreaWidget extends React.Component {
     var layer = new FeatureLayer({
       id: id,
       //url: this.props.urls.outsideEu,
-      url:
-        'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
+      url: 'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
       layerId: 0,
       outFields: ['*'],
       popupEnabled: false,
@@ -836,8 +836,9 @@ class AreaWidget extends React.Component {
   }
 
   checkExtent(extent) {
-    const areaLimit = this.mapviewer_config.Components[0].Products[0]
-      .Datasets[0].DownloadLimitAreaExtent;
+    const areaLimit =
+      this.mapviewer_config.Components[0].Products[0].Datasets[0]
+        .DownloadLimitAreaExtent;
     if (extent.width * extent.height > areaLimit) {
       return true;
     } else {
