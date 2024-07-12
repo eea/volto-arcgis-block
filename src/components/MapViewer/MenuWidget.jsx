@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom';
 import React, { createRef } from 'react';
-import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
