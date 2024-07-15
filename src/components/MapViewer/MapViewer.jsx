@@ -56,6 +56,7 @@ class MapViewer extends React.Component {
     this.state = {
       layerLoading: false,
       layers: {},
+      uploadedFile: true,
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -67,6 +68,7 @@ class MapViewer extends React.Component {
     this.mapLayersHandler = this.mapLayersHandler.bind(this);
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
     this.prepackageHandler = this.prepackageHandler.bind(this);
+    this.uploadFileHandler = this.uploadFileHandler.bind(this);
   }
 
   mapLayersHandler(newLayers) {
@@ -117,6 +119,10 @@ class MapViewer extends React.Component {
 
   prepackageHandler(prepackage) {
     this.setState({ prepackageChecked: prepackage });
+  }
+
+  uploadFileHandler(message) {
+    this.setState({ uploadedFile: message });
   }
 
   loader() {
@@ -427,6 +433,8 @@ class MapViewer extends React.Component {
           bookmarkHandler={this.bookmarkHandler}
           prepackageChecked={this.state.prepackageChecked}
           prepackageHandler={this.prepackageHandler}
+          uploadedFile={this.state.uploadedFile}
+          uploadFileHandler={this.uploadFileHandler}
         />
       ); //call conf
   }
@@ -499,6 +507,8 @@ export const CheckLogin = ({ reference }) => {
           mapviewer_config={reference.props.mapviewer_config}
           prepackageChecked={reference.state.prepackageChecked}
           prepackageHandler={reference.prepackageHandler}
+          uploadedFile={reference.state.uploadedFile}
+          uploadFileHandler={reference.uploadFileHandler}
         />
       )}
     </>

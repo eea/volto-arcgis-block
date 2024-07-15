@@ -152,6 +152,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: false,
         infoPopupType: 'area',
       });
+      this.props.uploadFileHandler(true);
       this.clearWidget();
       this.removeFileUploadedLayer();
       this.container.current.querySelector(
@@ -187,6 +188,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'area',
       });
+      this.props.uploadFileHandler(true);
       this.container.current.querySelector('input:checked').click();
     }
   }
@@ -219,11 +221,13 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'prepackage',
       });
+      this.props.uploadFileHandler(true);
     } else {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'area',
       });
+      this.props.uploadFileHandler(true);
     }
   }
   nuts0handler(e) {
@@ -304,6 +308,7 @@ class AreaWidget extends React.Component {
   };
 
   handleFileUpload = (e) => {
+    this.removeNutsLayers();
     //Get the file name
 
     const fileName = e.target.value.toLowerCase();
@@ -339,6 +344,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'fileFormat',
       });
+      this.props.uploadFileHandler(false);
       return;
     }
 
@@ -353,6 +359,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'fileLimit',
       });
+      this.props.uploadFileHandler(false);
       return;
     }
 
@@ -361,6 +368,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'shapefileLimit',
       });
+      this.props.uploadFileHandler(false);
       return;
     }
 
@@ -388,6 +396,7 @@ class AreaWidget extends React.Component {
     setTimeout(() => {
       e.target.value = null;
     }, 2000);
+    this.props.uploadFileHandler(this.state.infoPopupType);
   };
 
   generateFeatureCollection(fileName, file, inputFormat) {
@@ -443,6 +452,7 @@ class AreaWidget extends React.Component {
               showInfoPopup: true,
               infoPopupType: 'invalidShapefile',
             });
+            this.props.uploadFileHandler(false);
             return;
           }
 
@@ -463,6 +473,7 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'invalidShapefile',
           });
+          this.props.uploadFileHandler(false);
         } else if (
           error &&
           error.details &&
@@ -473,7 +484,9 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'incorrectWkid',
           });
+          this.props.uploadFileHandler(false);
         } else {
+          this.props.uploadFileHandler(false);
           // Handle other errors
         }
       });
@@ -533,15 +546,12 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'fullDataset',
       });
+      this.props.uploadFileHandler(true);
     } else {
       //Remove old uploaded file and save new one to component props for reference
 
       this.removeFileUploadedLayer();
       this.fileUploadLayer = { layers: layers, sourceGraphics: sourceGraphics };
-
-      //remove NUTS and COUNTRIES layers from map
-
-      this.removeNutsLayers();
 
       //Add uploaded layer to the map and zoom to the extent
 
@@ -578,7 +588,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'download',
       });
-
+      this.props.uploadFileHandler(true);
       //Save file upload layer to session storage as a tag for adding item to cart action
 
       sessionStorage.setItem(
@@ -596,6 +606,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'singleFeature',
       });
+      this.props.uploadFileHandler(false);
       return false;
     } else {
       return true;
@@ -656,12 +667,23 @@ class AreaWidget extends React.Component {
 
       //Check if the file extent is larger than the limit
       //If checkExtent() is false, add the layer to the map
-
-      if (this.checkExtent(csvExtent.extent)) {
+      if (
+        csvExtent.extent.width === null ||
+        csvExtent.extent.width === undefined ||
+        csvExtent.extent.height === null ||
+        csvExtent.extent.height === undefined
+      ) {
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'fileFormat',
+        });
+        this.props.uploadFileHandler(false);
+      } else if (this.checkExtent(csvExtent.extent)) {
         this.setState({
           showInfoPopup: true,
           infoPopupType: 'fullDataset',
         });
+        this.props.uploadFileHandler(true);
       } else {
         //Draw a polygon around of the CSVlayer Features data
 
@@ -725,10 +747,6 @@ class AreaWidget extends React.Component {
           sourceGraphics: polygonGraphic,
         };
 
-        //Clean the map before adding the graphic
-
-        this.removeNutsLayers();
-
         //Add the polygon graphic to the map
 
         this.props.view.graphics.add(polygonGraphic);
@@ -758,6 +776,7 @@ class AreaWidget extends React.Component {
           showInfoPopup: true,
           infoPopupType: 'download',
         });
+        this.props.uploadFileHandler(true);
 
         //Save file upload layer to session storage as a tag for adding item to cart action
 
@@ -767,6 +786,11 @@ class AreaWidget extends React.Component {
         );
       }
     } catch (error) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileFormat',
+      });
+      this.props.uploadFileHandler(false);
       //console.error('Error: ', error);
     }
   }
@@ -783,6 +807,7 @@ class AreaWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'incorrectWkid',
       });
+      this.props.uploadFileHandler(false);
     }
   }
 
@@ -870,11 +895,13 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'fullDataset',
           });
+          this.props.uploadFileHandler(true);
         } else {
           this.setState({
             showInfoPopup: true,
             infoPopupType: 'download',
           });
+          this.props.uploadFileHandler(true);
         }
         if (this.props.download) {
           if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
@@ -914,11 +941,13 @@ class AreaWidget extends React.Component {
             showInfoPopup: true,
             infoPopupType: 'fullDataset',
           });
+          this.props.uploadFileHandler(true);
         } else {
           this.setState({
             showInfoPopup: true,
             infoPopupType: 'download',
           });
+          this.props.uploadFileHandler(true);
         }
         if (this.props.download) {
           if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
@@ -966,6 +995,7 @@ class AreaWidget extends React.Component {
     this.setState({
       infoPopupType: 'area',
     });
+    this.props.uploadFileHandler(true);
     if (sessionStorage.getItem('fileUploadLayer')) {
       sessionStorage.removeItem('fileUploadLayer');
     }
@@ -1038,6 +1068,7 @@ class AreaWidget extends React.Component {
               showInfoPopup: true,
               infoPopupType: 'download',
             });
+            this.props.uploadFileHandler(true);
           }
         });
         if (!found && count === 0) {
@@ -1105,6 +1136,7 @@ class AreaWidget extends React.Component {
                   showInfoPopup: true,
                   infoPopupType: 'download',
                 });
+                this.props.uploadFileHandler(true);
                 if (this.props.download) {
                   document.querySelector(
                     '.drawRectanglePopup-block',
@@ -1571,6 +1603,16 @@ class AreaWidget extends React.Component {
                       </span>
                       <div className="drawRectanglePopup-text">
                         Invalid file format, or incomplete shapefile.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'invalidFileFormat' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        The file content is not correctly formatted.
                       </div>
                     </>
                   )}
