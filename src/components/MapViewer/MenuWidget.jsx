@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom';
 import React, { createRef } from 'react';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules, loadCss } from 'esri-loader';
 import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
@@ -28,6 +29,7 @@ export const AddCartItem = ({
   dataset,
   handleOpenPopup,
   prepackage,
+  uploadedFile,
 }) => {
   const { addCartItem, isLoggedIn } = useCartState();
 
@@ -186,7 +188,7 @@ export const AddCartItem = ({
             Add to cart
           </button>
         </div>
-      ) : isLoggedIn && !prepackage ? ( // If isLoggedIn == true and user clicks download
+      ) : isLoggedIn && !prepackage && uploadedFile ? ( // If isLoggedIn == true and user clicks download
         <Popup
           trigger={
             <span
@@ -282,6 +284,25 @@ export const AddCartItem = ({
               ? ' Download Prepackage'
               : 'No Prepackage available'
           }
+          {...popupSettings}
+        />
+      ) : isLoggedIn && !uploadedFile ? (
+        <Popup
+          trigger={
+            <span
+              className={'map-menu-icon map-menu-icon-login'}
+              onKeyDown={(e) => {}}
+              tabIndex="0"
+              role="button"
+            >
+              <FontAwesomeIcon
+                className={' locked'}
+                icon={['fas', 'download']}
+              />
+              <FontAwesomeIcon icon={['fas', 'lock']} />
+            </span>
+          }
+          content={'Uploaded file has an error'}
           {...popupSettings}
         />
       ) : (
@@ -1499,6 +1520,7 @@ class MenuWidget extends React.Component {
                       dataset={dataset}
                       handleOpenPopup={this.handleOpenPopup}
                       prepackage={this.props.prepackageChecked}
+                      uploadedFile={this.props.uploadedFile}
                     />
                   ) : (
                     <span
@@ -4001,6 +4023,7 @@ class MenuWidget extends React.Component {
                     areaData={this.props.area}
                     handleOpenPopup={this.handleOpenPopup}
                     prepackage={this.props.prepackageChecked}
+                    uploadedFile={this.props.uploadedFile}
                   />
                 </div>
               )}

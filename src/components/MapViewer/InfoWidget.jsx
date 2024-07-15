@@ -4,6 +4,11 @@ import { loadModules } from 'esri-loader';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { Loader } from 'semantic-ui-react';
+import loadable from '@loadable/component';
+import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 var GeometryEngine, Graphic, esriRequest;
 
 /* no lazy load */
