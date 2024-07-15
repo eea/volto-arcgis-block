@@ -1,12 +1,16 @@
 import React, { createRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { loadModules } from 'esri-loader';
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
 import { Loader } from 'semantic-ui-react';
+import loadable from '@loadable/component';
+import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 var GeometryEngine, Graphic, esriRequest;
 
-/* no lazy load */
+// import Highcharts from 'highcharts';
+
+const HighchartsReact = loadable(() => import('highcharts-react-official'));
 
 class InfoWidget extends React.Component {
   /**
@@ -24,9 +28,10 @@ class InfoWidget extends React.Component {
     this.menuClass =
       'esri-icon-description esri-widget--button esri-widget esri-interactive';
     this.infoData = {};
+    this.Highcharts = props.highcharts;
   }
 
-  loader() {
+  async loader() {
     return loadModules([
       'esri/geometry/geometryEngine',
       'esri/Graphic',
@@ -1074,7 +1079,7 @@ class InfoWidget extends React.Component {
                       <>
                         {this.loadVariableSelector(this.state.layerIndex)}
                         <HighchartsReact
-                          highcharts={Highcharts}
+                          highcharts={this.Highcharts}
                           options={this.loadInfoChart(this.state.layerIndex)}
                         />
                         {this.loadStatisticsSelector(this.state.layerIndex)}
@@ -1113,4 +1118,4 @@ class InfoWidget extends React.Component {
   }
 }
 
-export default InfoWidget;
+export default injectLazyLibs('highcharts')(InfoWidget);
