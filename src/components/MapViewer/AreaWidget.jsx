@@ -1070,6 +1070,7 @@ class AreaWidget extends React.Component {
               infoPopupType: 'download',
             });
             this.props.uploadFileHandler(true);
+            this.props.view.goTo(feature.geometry);
           }
         });
         if (!found && count === 0) {
