@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
