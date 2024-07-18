@@ -816,29 +816,10 @@ class AreaWidget extends React.Component {
 
   removeNutsLayers() {
     //find all the radio buttons
-
-    let radioButtons = document.querySelectorAll('fieldset.ccl-fieldset');
-    let rectangleRadioButton = document.querySelector(
-      '#download_area_select_rectangle',
-    );
-    // Isolate the the checked radio button
-
-    let selectedRadioButton = Array.from(radioButtons).find((radioButton) => {
-      let input = radioButton.querySelector('input');
-      return input && input.type === 'radio' && input.checked;
+    let radioButtons = document.querySelectorAll('.area-radio');
+    radioButtons.forEach((button) => {
+      button.checked = false;
     });
-
-    //Uncheck the selected radio button
-
-    if (selectedRadioButton) {
-      selectedRadioButton.querySelector('input').checked = false;
-    }
-    if (rectangleRadioButton.checked) {
-      rectangleRadioButton.checked = false;
-    }
-
-    //Remove the layers in this.nutsGroupLayer from the map
-
     this.clearWidget();
   }
 
@@ -1070,6 +1051,7 @@ class AreaWidget extends React.Component {
               infoPopupType: 'download',
             });
             this.props.uploadFileHandler(true);
+            this.props.view.goTo(feature.geometry);
           }
         });
         if (!found && count === 0) {
@@ -1249,7 +1231,7 @@ class AreaWidget extends React.Component {
                         id="download_prepackage"
                         name="downloadAreaSelect"
                         value="prepackage"
-                        className="ccl-checkbox ccl-required ccl-form-check-input"
+                        className="ccl-checkbox ccl-required ccl-form-check-input area-radio"
                         onClick={this.prepackageButton.bind(this)}
                       ></input>
                       <label
@@ -1280,7 +1262,7 @@ class AreaWidget extends React.Component {
                           id="download_area_select_nuts0"
                           name="downloadAreaSelect"
                           value="nuts0"
-                          className="ccl-checkbox cl-required ccl-form-check-input"
+                          className="ccl-checkbox cl-required ccl-form-check-input area-radio"
                           defaultChecked
                           onClick={this.nuts0handler.bind(this)}
                         ></input>
@@ -1297,7 +1279,7 @@ class AreaWidget extends React.Component {
                           id="download_area_select_nuts"
                           name="downloadAreaSelect"
                           value="nuts"
-                          className="ccl-checkbox cl-required ccl-form-check-input"
+                          className="ccl-checkbox cl-required ccl-form-check-input area-radio"
                           onClick={this.nutsRadioButtonGeneral.bind(this)}
                         ></input>
                         <label
@@ -1327,7 +1309,7 @@ class AreaWidget extends React.Component {
                             id="download_area_select_nuts1"
                             name="downloadAreaSelectNuts"
                             value="nuts1"
-                            className="ccl-checkbox ccl-required ccl-form-check-input"
+                            className="ccl-checkbox ccl-required ccl-form-check-input area-radio"
                             onClick={this.nuts1handler.bind(this)}
                           ></input>
                           <label
@@ -1343,7 +1325,7 @@ class AreaWidget extends React.Component {
                             id="download_area_select_nuts2"
                             name="downloadAreaSelectNuts"
                             value="nuts2"
-                            className="ccl-checkbox ccl-required ccl-form-check-input"
+                            className="ccl-checkbox ccl-required ccl-form-check-input area-radio"
                             onClick={this.nuts2handler.bind(this)}
                           ></input>
                           <label
@@ -1359,7 +1341,7 @@ class AreaWidget extends React.Component {
                             id="download_area_select_nuts3"
                             name="downloadAreaSelectNuts"
                             value="nuts3"
-                            className="ccl-radio ccl-required ccl-form-check-input"
+                            className="ccl-radio ccl-required ccl-form-check-input area-radio"
                             onClick={this.nuts3handler.bind(this)}
                           ></input>
                           <label
@@ -1416,7 +1398,7 @@ class AreaWidget extends React.Component {
                           id="download_area_select_rectangle"
                           name="downloadAreaSelect"
                           value="area"
-                          className="ccl-radio ccl-required ccl-form-check-input"
+                          className="ccl-radio ccl-required ccl-form-check-input area-radio"
                           onClick={this.rectanglehandler.bind(this)}
                         ></input>
                         <label

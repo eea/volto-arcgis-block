@@ -593,18 +593,28 @@ class MenuWidget extends React.Component {
   storePanelScroll() {
     let paneles = document.querySelector('#paneles');
     var selected_tab = document.querySelector('.tab-selected');
-    let toc_panel_scrolls =
-      JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) || {};
-    toc_panel_scrolls[selected_tab.id] = paneles.scrollTop;
-    sessionStorage.setItem(
-      'toc_panel_scrolls',
-      JSON.stringify(toc_panel_scrolls),
-    );
+
+    if (!paneles || !selected_tab) {
+      return;
+    } else if (paneles && selected_tab) {
+      let toc_panel_scrolls =
+        JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) || {};
+      toc_panel_scrolls[selected_tab.id] = paneles.scrollTop;
+      sessionStorage.setItem(
+        'toc_panel_scrolls',
+        JSON.stringify(toc_panel_scrolls),
+      );
+    }
   }
 
   restorePanelScroll() {
     let paneles = document.querySelector('#paneles');
     var selected_tab = document.querySelector('.tab-selected');
+
+    if (!paneles || !selected_tab) {
+      return;
+    }
+
     let toc_panel_scrolls =
       JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) || {};
     let scroll = toc_panel_scrolls[selected_tab.id];
@@ -644,16 +654,35 @@ class MenuWidget extends React.Component {
         // and ensure that the component is rendered again
         this.setState({ showMapMenu: false });
       } else {
-        this.container.current.querySelector('#tabcontainer').style.display =
-          'block';
-        this.container.current.querySelector('#paneles').style.display =
-          'block';
-        this.container.current
-          .querySelector('.esri-widget--button')
-          .classList.replace('esri-icon-drag-horizontal', 'esri-icon-close');
-        if (document.contains(document.querySelector('.timeslider-container')))
-          document.querySelector('.timeslider-container').style.display =
-            'block';
+        const container = this.container.current;
+        const tabContainer = container.querySelector('#tabcontainer');
+        const paneles = container.querySelector('#paneles');
+        const esriWidgetButton = container.querySelector(
+          '.esri-widget--button',
+        );
+        const timeSliderContainer = document.querySelector(
+          '.timeslider-container',
+        );
+
+        if (tabContainer) {
+          tabContainer.style.display = 'block';
+        }
+
+        if (paneles) {
+          paneles.style.display = 'block';
+        }
+
+        if (esriWidgetButton) {
+          esriWidgetButton.classList.replace(
+            'esri-icon-drag-horizontal',
+            'esri-icon-close',
+          );
+        }
+
+        if (timeSliderContainer && document.contains(timeSliderContainer)) {
+          timeSliderContainer.style.display = 'block';
+        }
+
         this.restorePanelScroll();
 
         // By invoking the setState, we notify the state we want to reach
