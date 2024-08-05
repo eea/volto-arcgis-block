@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
-// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var Graphic,
   Extent,
@@ -1357,7 +1357,7 @@ class AreaWidget extends React.Component {
                 </div>
                 <div className="area-header2">
                   <div className="area-dot">·</div>
-                  Type country or region code:
+                  Type country code or region code:
                 </div>
                 <div className="area-search-block">
                   <input
