@@ -1357,7 +1357,7 @@ class AreaWidget extends React.Component {
                 </div>
                 <div className="area-header2">
                   <div className="area-dot">·</div>
-                  Type country or region code:
+                  Type country code or region code:
                 </div>
                 <div className="area-search-block">
                   <input
