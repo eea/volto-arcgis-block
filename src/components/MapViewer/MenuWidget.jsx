@@ -3854,7 +3854,13 @@ class MenuWidget extends React.Component {
 
   renderTimeslider(elem, layer, fromDownload, hideCalendar) {
     if (this.props.view && layer) {
-      let activeLayer = document.querySelector('#active_' + elem.id);
+      let elemId;
+      if (elem.id.includes('.')) {
+        elemId = elem.id.replaceAll('.', '\\.');
+      } else {
+        elemId = elem.id;
+      }
+      let activeLayer = document.querySelector('#active_' + elemId);
       let time = { elem: activeLayer };
       if (this.props.download) {
         let dataset = document.querySelector('.map-dataset-checkbox input');
