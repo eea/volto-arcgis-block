@@ -71,11 +71,13 @@ class PrintWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
-    this.print = new Print({
-      view: this.props.view,
-      container: this.container.current.querySelector('.print-panel'),
-    });
+    if (this.props.mapDiv.current) {
+      this.props.view.ui.add(this.container.current, 'top-right');
+      this.print = new Print({
+        view: this.props.view,
+        container: this.container.current.querySelector('.print-panel'),
+      });
+    }
   }
 
   componentDidUpdate() {
