@@ -262,12 +262,14 @@ class TimesliderWidget extends React.Component {
         }
       },
     });
-    this.props.view.ui.add(this.container.current, 'bottom-right');
-    this.container.current.insertAdjacentHTML(
-      'beforeend',
-      '<div class="esri-icon-close" id="timeslider_close" role="button"></div>',
-    );
-    this.container.current.style.display = 'block';
+    if (this.props.mapDiv.current) {
+      this.props.view.ui.add(this.container.current, 'bottom-right');
+      this.container.current.insertAdjacentHTML(
+        'beforeend',
+        '<div class="esri-icon-close" id="timeslider_close" role="button"></div>',
+      );
+      this.container.current.style.display = 'block';
+    }
     this.setState({ showDatePanel: true });
 
     document

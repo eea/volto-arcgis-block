@@ -180,11 +180,13 @@ class MeasurementWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
-    this.measurement = new Measurement({
-      view: this.props.view,
-      container: this.container.current.querySelector('.measurement-area'),
-    });
+    if (this.props.mapDiv.current) {
+      this.props.view.ui.add(this.container.current, 'top-right');
+      this.measurement = new Measurement({
+        view: this.props.view,
+        container: this.container.current.querySelector('.measurement-area'),
+      });
+    }
   }
   /**
    * This method renders the component

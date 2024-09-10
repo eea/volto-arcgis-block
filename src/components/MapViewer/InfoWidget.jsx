@@ -90,7 +90,9 @@ class InfoWidget extends React.Component {
    * This method is executed after the rener method is executed
    */ async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
+    if (this.props.mapDiv.current) {
+      this.props.view.ui.add(this.container.current, 'top-right');
+    }
     this.props.view.on('click', (e) => {
       let screenPoint = {
         x: e.x,
