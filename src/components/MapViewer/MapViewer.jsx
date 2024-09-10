@@ -182,89 +182,91 @@ class MapViewer extends React.Component {
       // ],
     });
 
-    this.map = new Map({
-      // basemap: 'topo',
-      basemap: this.positronCompositeBasemap,
-      logo: false,
-    });
+    if (this.mapdiv.current) {
+      this.map = new Map({
+        // basemap: 'topo',
+        basemap: this.positronCompositeBasemap,
+        logo: false,
+      });
 
-    mapStatus = this.recoverState();
+      mapStatus = this.recoverState();
 
-    if (
-      mapStatus === null ||
-      (mapStatus.zoom === null && mapStatus.center === null) ||
-      Object.entries(mapStatus).length === 0
-    ) {
-      mapStatus = {};
-      mapStatus.zoom = this.mapCfg.zoom;
-      mapStatus.center = this.mapCfg.center;
-      mapStatus.activeLayers = this.mapCfg.activeLayers;
-      this.setCenterState(this.mapCfg.center);
-      this.setZoomState(this.mapCfg.zoom);
-      this.activeLayersHandler(this.mapCfg.activeLayers);
+      if (
+        mapStatus === null ||
+        (mapStatus.zoom === null && mapStatus.center === null) ||
+        Object.entries(mapStatus).length === 0
+      ) {
+        mapStatus = {};
+        mapStatus.zoom = this.mapCfg.zoom;
+        mapStatus.center = this.mapCfg.center;
+        mapStatus.activeLayers = this.mapCfg.activeLayers;
+        this.setCenterState(this.mapCfg.center);
+        this.setZoomState(this.mapCfg.zoom);
+        this.activeLayersHandler(this.mapCfg.activeLayers);
+      }
+
+      this.view = new MapView({
+        container: this.mapdiv.current,
+        map: this.map,
+        center: mapStatus.center,
+        zoom: mapStatus.zoom,
+        constraints: {
+          minZoom: this.mapCfg.minZoom,
+          maxZoom: this.mapCfg.maxZoom,
+          rotationEnabled: false,
+          geometry: this.mapCfg.geometry,
+        },
+        ui: {
+          components: ['attribution'],
+        },
+      });
+      this.zoom = new Zoom({
+        view: this.view,
+      });
+      this.view.ui.add(this.zoom, {
+        position: 'top-right',
+      });
+
+      this.view.when(() => {
+        this.view.watch('center', (newValue, oldValue, property, object) => {
+          this.setCenterState(newValue);
+        });
+
+        let constraintExtent = null;
+        this.view.watch('zoom', (newValue, oldValue, property, object) => {
+          this.setZoomState(newValue);
+          if (mapStatus.zoom <= this.mapCfg.minZoom) {
+            constraintExtent = new Extent({
+              xmin: this.mapCfg.geometry.xmin,
+              ymin: this.mapCfg.geometry.ymin,
+              xmax: this.mapCfg.geometry.xmax,
+              ymax: this.mapCfg.geometry.ymax,
+              spatialReference: 4326,
+            });
+          } else {
+            constraintExtent = new Extent({
+              xmin: this.mapCfg.geometryZoomIn.xmin,
+              ymin: this.mapCfg.geometryZoomIn.ymin,
+              xmax: this.mapCfg.geometryZoomIn.xmax,
+              ymax: this.mapCfg.geometryZoomIn.ymax,
+              spatialReference: 4326,
+            });
+          }
+          this.view.constraints.geometry = constraintExtent;
+        });
+        this.view.popup.autoOpenEnabled = false;
+        // After launching the MapViewerConfig action
+        // we will have stored the json response here:
+        // this.props.mapviewer_config
+        this.props.MapViewerConfig(flattenToAppURL(this.props.url));
+        //Once we have created the MapView, we need to ensure that the map div
+        //is refreshed in order to show the map on it. To do so, we need to
+        //trigger the renderization again, and to trigger the renderization
+        //we invoke the setState method, that changes the state and forces a
+        //react component to render itself again
+        //this.setState({});
+      });
     }
-
-    this.view = new MapView({
-      container: this.mapdiv.current,
-      map: this.map,
-      center: mapStatus.center,
-      zoom: mapStatus.zoom,
-      constraints: {
-        minZoom: this.mapCfg.minZoom,
-        maxZoom: this.mapCfg.maxZoom,
-        rotationEnabled: false,
-        geometry: this.mapCfg.geometry,
-      },
-      ui: {
-        components: ['attribution'],
-      },
-    });
-    this.zoom = new Zoom({
-      view: this.view,
-    });
-    this.view.ui.add(this.zoom, {
-      position: 'top-right',
-    });
-
-    this.view.when(() => {
-      this.view.watch('center', (newValue, oldValue, property, object) => {
-        this.setCenterState(newValue);
-      });
-
-      let constraintExtent = null;
-      this.view.watch('zoom', (newValue, oldValue, property, object) => {
-        this.setZoomState(newValue);
-        if (mapStatus.zoom <= this.mapCfg.minZoom) {
-          constraintExtent = new Extent({
-            xmin: this.mapCfg.geometry.xmin,
-            ymin: this.mapCfg.geometry.ymin,
-            xmax: this.mapCfg.geometry.xmax,
-            ymax: this.mapCfg.geometry.ymax,
-            spatialReference: 4326,
-          });
-        } else {
-          constraintExtent = new Extent({
-            xmin: this.mapCfg.geometryZoomIn.xmin,
-            ymin: this.mapCfg.geometryZoomIn.ymin,
-            xmax: this.mapCfg.geometryZoomIn.xmax,
-            ymax: this.mapCfg.geometryZoomIn.ymax,
-            spatialReference: 4326,
-          });
-        }
-        this.view.constraints.geometry = constraintExtent;
-      });
-      this.view.popup.autoOpenEnabled = false;
-      // After launching the MapViewerConfig action
-      // we will have stored the json response here:
-      // this.props.mapviewer_config
-      this.props.MapViewerConfig(flattenToAppURL(this.props.url));
-      //Once we have created the MapView, we need to ensure that the map div
-      //is refreshed in order to show the map on it. To do so, we need to
-      //trigger the renderization again, and to trigger the renderization
-      //we invoke the setState method, that changes the state and forces a
-      //react component to render itself again
-      //this.setState({});
-    });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -319,7 +321,12 @@ class MapViewer extends React.Component {
     if (this.props.mapviewer_config.Download) return;
     if (this.view)
       return (
-        <BasemapWidget view={this.view} mapViewer={this} urls={this.cfgUrls} />
+        <BasemapWidget
+          view={this.view}
+          mapViewer={this}
+          urls={this.cfgUrls}
+          mapDiv={this.mapdiv}
+        />
       );
   }
 
@@ -334,6 +341,7 @@ class MapViewer extends React.Component {
           layerLoading={this.state.layerLoading}
           hotspotData={this.state.hotspotData}
           hotspotDataHandler={this.hotspotDataHandler}
+          mapDiv={this.mapdiv}
         />
       );
   }
@@ -341,12 +349,21 @@ class MapViewer extends React.Component {
   renderMeasurement() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view)
-      return <MeasurementWidget view={this.view} mapViewer={this} />;
+      return (
+        <MeasurementWidget
+          view={this.view}
+          mapViewer={this}
+          mapDiv={this.mapdiv}
+        />
+      );
   }
 
   renderPrint() {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <PrintWidget view={this.view} mapViewer={this} mapDiv={this.mapdiv} />
+      );
   }
 
   renderSwipe() {
@@ -358,6 +375,7 @@ class MapViewer extends React.Component {
           mapViewer={this}
           map={this.map}
           layers={this.state.layers}
+          mapDiv={this.mapdiv}
         />
       );
   }
@@ -365,12 +383,17 @@ class MapViewer extends React.Component {
   renderArea() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view) {
-      return <CheckLogin reference={this} urls={this.cfgUrls} />;
+      return (
+        <CheckLogin reference={this} urls={this.cfgUrls} mapDiv={this.mapdiv} />
+      );
     }
   }
 
   renderScale() {
-    if (this.view) return <ScaleWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <ScaleWidget view={this.view} mapViewer={this} mapDiv={this.mapdiv} />
+      );
   }
 
   renderInfo() {
@@ -381,13 +404,21 @@ class MapViewer extends React.Component {
           map={this.map}
           mapViewer={this}
           hotspotData={this.state.hotspotData}
+          mapDiv={this.mapdiv}
         />
       );
   }
 
   renderPan() {
     if (this.view)
-      return <PanWidget view={this.view} map={this.map} mapViewer={this} />;
+      return (
+        <PanWidget
+          view={this.view}
+          map={this.map}
+          mapViewer={this}
+          mapDiv={this.mapdiv}
+        />
+      );
   }
 
   renderHotspot() {
@@ -406,6 +437,7 @@ class MapViewer extends React.Component {
           hotspotDataHandler={this.hotspotDataHandler}
           mapLayersHandler={this.mapLayersHandler}
           bookmarkData={this.state.bookmarkData}
+          mapDiv={this.mapdiv}
         />
       );
   }
@@ -435,12 +467,13 @@ class MapViewer extends React.Component {
           prepackageHandler={this.prepackageHandler}
           uploadedFile={this.state.uploadedFile}
           uploadFileHandler={this.uploadFileHandler}
+          mapDiv={this.mapdiv}
         />
       ); //call conf
   }
 
   renderBookmark() {
-    if (this.view) return <CheckUserID reference={this} />;
+    if (this.view) return <CheckUserID reference={this} mapDiv={this.mapdiv} />;
   }
 
   appLanguage() {
@@ -449,7 +482,11 @@ class MapViewer extends React.Component {
 
   renderLoadingSpinner() {
     return (
-      <LoadingSpinner view={this.view} layerLoading={this.state.layerLoading} />
+      <LoadingSpinner
+        view={this.view}
+        layerLoading={this.state.layerLoading}
+        mapDiv={this.mapdiv}
+      />
     );
   }
 

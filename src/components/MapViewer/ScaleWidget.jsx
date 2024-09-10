@@ -35,7 +35,9 @@ class ScaleWidget extends React.Component {
       view: this.props.view,
       unit: 'dual',
     });
-    this.props.view.ui.add(this.scaleBar, 'bottom-left');
+    if (this.props.mapDiv.current) {
+      this.props.view.ui.add(this.scaleBar, 'bottom-left');
+    }
   }
   /**
    * This method renders the component
