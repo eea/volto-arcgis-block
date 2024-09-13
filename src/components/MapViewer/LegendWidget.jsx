@@ -232,9 +232,7 @@ class LegendWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    if (this.props.mapDiv.current) {
-      this.props.view.ui.add(this.container.current, 'top-right');
-    }
+    this.props.view.ui.add(this.container.current, 'top-right');
     this.LegendWidget = new Legend({
       view: this.props.view,
       viewModel: new LegendViewModel({
