@@ -91,9 +91,7 @@ class SwipeWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
-    if (this.props.mapDiv.current) {
-      this.props.view.ui.add(this.container.current, 'top-right');
-    }
+    this.props.view.ui.add(this.container.current, 'top-right');
     await this.loader();
     this.swipe = new Swipe({
       view: this.props.view,
