@@ -7,7 +7,13 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
-var WMSLayer, WMTSLayer, FeatureLayer, BaseTileLayer, esriRequest, Extent;
+var WMSLayer,
+  WMTSLayer,
+  FeatureLayer,
+  BaseTileLayer,
+  esriRequest,
+  Extent,
+  MapImageLayer;
 
 const popupSettings = {
   basic: true,
@@ -464,6 +470,7 @@ class MenuWidget extends React.Component {
       'esri/layers/BaseTileLayer',
       'esri/request',
       'esri/geometry/Extent',
+      'esri/layers/MapImageLayer',
     ]).then(
       ([
         _WMSLayer,
@@ -472,6 +479,7 @@ class MenuWidget extends React.Component {
         _BaseTileLayer,
         _esriRequest,
         _Extent,
+        _MapImageLayer,
       ]) => {
         WMSLayer = _WMSLayer;
         WMTSLayer = _WMTSLayer;
@@ -479,6 +487,7 @@ class MenuWidget extends React.Component {
         BaseTileLayer = _BaseTileLayer;
         esriRequest = _esriRequest;
         Extent = _Extent;
+        MapImageLayer = _MapImageLayer;
       },
     );
   }
@@ -1623,7 +1632,18 @@ class MenuWidget extends React.Component {
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      if (viewService?.toLowerCase().includes('wms')) {
+      if (viewService.toLowerCase().endsWith('mapserver')) {
+        this.layers[
+          layer.LayerId + '_' + inheritedIndexLayer
+        ] = new MapImageLayer({
+          url: viewService,
+          title: layer.Title,
+          datasetId: DatasetId,
+          datasetTitle: DatasetTitle,
+          productId: ProductId,
+          layerTitle: layer.Title,
+        });
+      } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.endsWith('?')
           ? viewService
           : viewService + '?';
@@ -2526,83 +2546,161 @@ class MenuWidget extends React.Component {
     BBoxes[0] = { xmin: bbox[0], ymin: bbox[1], xmax: bbox[2], ymax: bbox[3] };
     return BBoxes;
   }
-  parseBBOXWMS(xml) {
-    const layerParentNode = xml.querySelectorAll('Layer');
-    let layersChildren = Array.from(layerParentNode).filter(
-      (v) => v.querySelectorAll('Layer').length === 0,
-    );
-    let layerParent = Array.from(layerParentNode).filter(
-      (v) => v.querySelectorAll('Layer').length !== 0,
-    );
-    let BBoxes = {};
-    let layerGeoGraphic = {};
-    let xList = [];
-    let yList = [];
-    for (let i in layersChildren) {
-      if (
-        layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
-      ) {
-        // If the layer has BBOX
-        layerGeoGraphic = layersChildren[i].querySelector(
-          'EX_GeographicBoundingBox',
-        );
-      } else {
-        // If the layer has no BBOX, it was assigned dataset BBOX
-        layerGeoGraphic = layerParent[0].querySelector(
-          'EX_GeographicBoundingBox',
-        );
-      }
-      BBoxes[layersChildren[i].querySelector('Name').innerText] = {
-        xmin: Number(
-          layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-        ),
-        ymin: Number(
-          layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-        ),
-        xmax: Number(
-          layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-        ),
-        ymax: Number(
-          layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-        ),
-      };
-      xList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
-      );
-      yList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
-      );
-      xList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
-      );
-      yList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
-      );
-    } // For loop
-    // Add dataset bbox
-    BBoxes['dataset'] = {
-      xmin: Math.min.apply(Math, xList),
-      ymin: Math.min.apply(Math, yList),
-      xmax: Math.max.apply(Math, xList),
-      ymax: Math.max.apply(Math, yList),
-    };
-    // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
-    // BBoxes['dataset'] = {
-    //   xmin: Number(
-    //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-    //   ),
-    //   ymin: Number(
-    //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-    //   ),
-    //   xmax: Number(
-    //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-    //   ),
-    //   ymax: Number(
-    //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-    //   ),
-    // };
-    return BBoxes;
-  } // function parseWMS
+  // parseBBOXMAPSERVER(layer) {
+  //   debugger;
+  //   const layerParentNode = xml.querySelectorAll('Layer');
+  //   let layersChildren = Array.from(layerParentNode).filter(
+  //     (v) => v.querySelectorAll('Layer').length === 0,
+  //   );
+  //   let layerParent = Array.from(layerParentNode).filter(
+  //     (v) => v.querySelectorAll('Layer').length !== 0,
+  //   );
+  //   let BBoxes = {};
+  //   let layerGeoGraphic = {};
+  //   let xList = [];
+  //   let yList = [];
+  //   for (let i in layersChildren) {
+  //     if (
+  //       layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
+  //     ) {
+  //       // If the layer has BBOX
+  //       layerGeoGraphic = layersChildren[i].querySelector(
+  //         'EX_GeographicBoundingBox',
+  //       );
+  //     } else {
+  //       // If the layer has no BBOX, it was assigned dataset BBOX
+  //       layerGeoGraphic = layerParent[0].querySelector(
+  //         'EX_GeographicBoundingBox',
+  //       );
+  //     }
+  //     BBoxes[layersChildren[i].querySelector('Name').innerText] = {
+  //       xmin: Number(
+  //         layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+  //       ),
+  //       ymin: Number(
+  //         layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+  //       ),
+  //       xmax: Number(
+  //         layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+  //       ),
+  //       ymax: Number(
+  //         layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+  //       ),
+  //     };
+  //     xList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
+  //     );
+  //     yList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
+  //     );
+  //     xList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
+  //     );
+  //     yList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
+  //     );
+  //   } // For loop
+  //   // Add dataset bbox
+  //   BBoxes['dataset'] = {
+  //     xmin: Math.min.apply(Math, xList),
+  //     ymin: Math.min.apply(Math, yList),
+  //     xmax: Math.max.apply(Math, xList),
+  //     ymax: Math.max.apply(Math, yList),
+  //   };
+  //   // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
+  //   // BBoxes['dataset'] = {
+  //   //   xmin: Number(
+  //   //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+  //   //   ),
+  //   //   ymin: Number(
+  //   //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+  //   //   ),
+  //   //   xmax: Number(
+  //   //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+  //   //   ),
+  //   //   ymax: Number(
+  //   //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+  //   //   ),
+  //   // };
+  //   return BBoxes;
+  // }
+  // parseBBOXWMS(xml) {
+  //   const layerParentNode = xml.querySelectorAll('Layer');
+  //   let layersChildren = Array.from(layerParentNode).filter(
+  //     (v) => v.querySelectorAll('Layer').length === 0,
+  //   );
+  //   let layerParent = Array.from(layerParentNode).filter(
+  //     (v) => v.querySelectorAll('Layer').length !== 0,
+  //   );
+  //   let BBoxes = {};
+  //   let layerGeoGraphic = {};
+  //   let xList = [];
+  //   let yList = [];
+  //   for (let i in layersChildren) {
+  //     if (
+  //       layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
+  //     ) {
+  //       // If the layer has BBOX
+  //       layerGeoGraphic = layersChildren[i].querySelector(
+  //         'EX_GeographicBoundingBox',
+  //       );
+  //     } else {
+  //       // If the layer has no BBOX, it was assigned dataset BBOX
+  //       layerGeoGraphic = layerParent[0].querySelector(
+  //         'EX_GeographicBoundingBox',
+  //       );
+  //     }
+  //     BBoxes[layersChildren[i].querySelector('Name').innerText] = {
+  //       xmin: Number(
+  //         layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+  //       ),
+  //       ymin: Number(
+  //         layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+  //       ),
+  //       xmax: Number(
+  //         layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+  //       ),
+  //       ymax: Number(
+  //         layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+  //       ),
+  //     };
+  //     xList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
+  //     );
+  //     yList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
+  //     );
+  //     xList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
+  //     );
+  //     yList.push(
+  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
+  //     );
+  //   } // For loop
+  //   // Add dataset bbox
+  //   BBoxes['dataset'] = {
+  //     xmin: Math.min.apply(Math, xList),
+  //     ymin: Math.min.apply(Math, yList),
+  //     xmax: Math.max.apply(Math, xList),
+  //     ymax: Math.max.apply(Math, yList),
+  //   };
+  //   // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
+  //   // BBoxes['dataset'] = {
+  //   //   xmin: Number(
+  //   //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+  //   //   ),
+  //   //   ymin: Number(
+  //   //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+  //   //   ),
+  //   //   xmax: Number(
+  //   //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+  //   //   ),
+  //   //   ymax: Number(
+  //   //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+  //   //   ),
+  //   // };
+  //   return BBoxes;
+  // } // function parseWMS
 
   parseCapabilities(xml, tag) {
     return xml.getElementsByTagName(tag);
@@ -2718,7 +2816,10 @@ class MenuWidget extends React.Component {
   async FullExtentDataset(elem) {
     let BBoxes = {};
     this.findCheckedDataset(elem);
-    if (this.url.toLowerCase().includes('wms')) {
+    if (this.url?.toLowerCase().endsWith('mapserver')) {
+      //debugger;
+      BBoxes = this.parseBBOXMAPSERVER(this.layers[elem.id]);
+    } else if (this.url.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url.toLowerCase().includes('wmts')) {
@@ -2764,6 +2865,9 @@ class MenuWidget extends React.Component {
         });
         this.view.goTo(myExtent);
       }
+    } else if (this.url?.ViewService.toLowerCase().endsWith('mapserver')) {
+      //debugger;
+      BBoxes = this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
