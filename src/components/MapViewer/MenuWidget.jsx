@@ -799,11 +799,13 @@ class MenuWidget extends React.Component {
     loadCss();
     await this.loader();
     await this.getTMSLayersJSON();
-    if (this.props.mapDiv.current) {
-      if (!this.props.download) {
-        this.prepareHotspotLayers();
-        this.getHotspotLayerIds();
-      }
+    //let currentContainer;
+    //do {
+    //  currentContainer = await this.container.current;
+    //} while (currentContainer == null);
+    if (!this.props.download) {
+      this.prepareHotspotLayers();
+      this.getHotspotLayerIds();
       this.props.view.ui.add(this.container.current, 'top-left');
     }
     if (this.props.download) {

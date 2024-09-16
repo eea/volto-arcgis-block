@@ -20,13 +20,11 @@ class PanWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
-    if (this.props.mapDiv.current) {
-      this.props.view.ui.add({
-        component: this.container.current,
-        position: 'top-right',
-        index: 0,
-      });
-    }
+    this.props.view.ui.add({
+      component: this.container.current,
+      position: 'top-right',
+      index: 0,
+    });
   }
 
   togglePan() {
