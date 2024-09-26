@@ -1632,7 +1632,7 @@ class MenuWidget extends React.Component {
     if (
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
-      if (viewService.toLowerCase().endsWith('mapserver')) {
+      if (viewService?.toLowerCase().endsWith('mapserver')) {
         this.layers[
           layer.LayerId + '_' + inheritedIndexLayer
         ] = new MapImageLayer({
@@ -1643,6 +1643,7 @@ class MenuWidget extends React.Component {
           productId: ProductId,
           layerTitle: layer.Title,
         });
+        //iterate sublayers fetching all sublayer data
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.endsWith('?')
           ? viewService
@@ -2546,161 +2547,116 @@ class MenuWidget extends React.Component {
     BBoxes[0] = { xmin: bbox[0], ymin: bbox[1], xmax: bbox[2], ymax: bbox[3] };
     return BBoxes;
   }
-  // parseBBOXMAPSERVER(layer) {
-  //   debugger;
-  //   const layerParentNode = xml.querySelectorAll('Layer');
-  //   let layersChildren = Array.from(layerParentNode).filter(
-  //     (v) => v.querySelectorAll('Layer').length === 0,
-  //   );
-  //   let layerParent = Array.from(layerParentNode).filter(
-  //     (v) => v.querySelectorAll('Layer').length !== 0,
-  //   );
-  //   let BBoxes = {};
-  //   let layerGeoGraphic = {};
-  //   let xList = [];
-  //   let yList = [];
-  //   for (let i in layersChildren) {
-  //     if (
-  //       layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
-  //     ) {
-  //       // If the layer has BBOX
-  //       layerGeoGraphic = layersChildren[i].querySelector(
-  //         'EX_GeographicBoundingBox',
-  //       );
-  //     } else {
-  //       // If the layer has no BBOX, it was assigned dataset BBOX
-  //       layerGeoGraphic = layerParent[0].querySelector(
-  //         'EX_GeographicBoundingBox',
-  //       );
-  //     }
-  //     BBoxes[layersChildren[i].querySelector('Name').innerText] = {
-  //       xmin: Number(
-  //         layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-  //       ),
-  //       ymin: Number(
-  //         layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-  //       ),
-  //       xmax: Number(
-  //         layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-  //       ),
-  //       ymax: Number(
-  //         layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-  //       ),
-  //     };
-  //     xList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
-  //     );
-  //     yList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
-  //     );
-  //     xList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
-  //     );
-  //     yList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
-  //     );
-  //   } // For loop
-  //   // Add dataset bbox
-  //   BBoxes['dataset'] = {
-  //     xmin: Math.min.apply(Math, xList),
-  //     ymin: Math.min.apply(Math, yList),
-  //     xmax: Math.max.apply(Math, xList),
-  //     ymax: Math.max.apply(Math, yList),
-  //   };
-  //   // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
-  //   // BBoxes['dataset'] = {
-  //   //   xmin: Number(
-  //   //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-  //   //   ),
-  //   //   ymin: Number(
-  //   //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-  //   //   ),
-  //   //   xmax: Number(
-  //   //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-  //   //   ),
-  //   //   ymax: Number(
-  //   //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-  //   //   ),
-  //   // };
-  //   return BBoxes;
-  // }
-  // parseBBOXWMS(xml) {
-  //   const layerParentNode = xml.querySelectorAll('Layer');
-  //   let layersChildren = Array.from(layerParentNode).filter(
-  //     (v) => v.querySelectorAll('Layer').length === 0,
-  //   );
-  //   let layerParent = Array.from(layerParentNode).filter(
-  //     (v) => v.querySelectorAll('Layer').length !== 0,
-  //   );
-  //   let BBoxes = {};
-  //   let layerGeoGraphic = {};
-  //   let xList = [];
-  //   let yList = [];
-  //   for (let i in layersChildren) {
-  //     if (
-  //       layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
-  //     ) {
-  //       // If the layer has BBOX
-  //       layerGeoGraphic = layersChildren[i].querySelector(
-  //         'EX_GeographicBoundingBox',
-  //       );
-  //     } else {
-  //       // If the layer has no BBOX, it was assigned dataset BBOX
-  //       layerGeoGraphic = layerParent[0].querySelector(
-  //         'EX_GeographicBoundingBox',
-  //       );
-  //     }
-  //     BBoxes[layersChildren[i].querySelector('Name').innerText] = {
-  //       xmin: Number(
-  //         layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-  //       ),
-  //       ymin: Number(
-  //         layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-  //       ),
-  //       xmax: Number(
-  //         layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-  //       ),
-  //       ymax: Number(
-  //         layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-  //       ),
-  //     };
-  //     xList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
-  //     );
-  //     yList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
-  //     );
-  //     xList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
-  //     );
-  //     yList.push(
-  //       BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
-  //     );
-  //   } // For loop
-  //   // Add dataset bbox
-  //   BBoxes['dataset'] = {
-  //     xmin: Math.min.apply(Math, xList),
-  //     ymin: Math.min.apply(Math, yList),
-  //     xmax: Math.max.apply(Math, xList),
-  //     ymax: Math.max.apply(Math, yList),
-  //   };
-  //   // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
-  //   // BBoxes['dataset'] = {
-  //   //   xmin: Number(
-  //   //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-  //   //   ),
-  //   //   ymin: Number(
-  //   //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-  //   //   ),
-  //   //   xmax: Number(
-  //   //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-  //   //   ),
-  //   //   ymax: Number(
-  //   //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-  //   //   ),
-  //   // };
-  //   return BBoxes;
-  // } // function parseWMS
+  async parseBBOXMAPSERVER(layer) {
+    let BBoxes = {};
+    for (let i = 0; i < layer?.allSublayers?.items.length; i++) {
+      const subLayer = layer.allSublayers.items.find(
+        (sublayer) => sublayer.id === i,
+      );
+      try {
+        const response = await fetch(`${subLayer.url}?f=pjson`);
+        if (!response.ok) {
+          //console.log('no response from server');
+          continue; // Skip this iteration on error
+        }
+        const subLayerData = await response.json(); // Await JSON parsing
+        if (subLayerData == null) {
+          //console.log('no data retrieved:', subLayerData);
+          continue;
+        } else {
+          // Store sublayer extent
+          BBoxes[subLayerData.name] = {
+            id: subLayerData.id,
+            extent: subLayerData.extent,
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching sublayer:', error);
+      }
+    }
+
+    BBoxes['dataset'] = layer?.fullExtent?.extent;
+
+    return BBoxes; // Return BBoxes after all fetches are completed
+  }
+
+  parseBBOXWMS(xml) {
+    const layerParentNode = xml.querySelectorAll('Layer');
+    let layersChildren = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length === 0,
+    );
+    let layerParent = Array.from(layerParentNode).filter(
+      (v) => v.querySelectorAll('Layer').length !== 0,
+    );
+    let BBoxes = {};
+    let layerGeoGraphic = {};
+    let xList = [];
+    let yList = [];
+    for (let i in layersChildren) {
+      if (
+        layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
+      ) {
+        // If the layer has BBOX
+        layerGeoGraphic = layersChildren[i].querySelector(
+          'EX_GeographicBoundingBox',
+        );
+      } else {
+        // If the layer has no BBOX, it was assigned dataset BBOX
+        layerGeoGraphic = layerParent[0].querySelector(
+          'EX_GeographicBoundingBox',
+        );
+      }
+      BBoxes[layersChildren[i].querySelector('Name').innerText] = {
+        xmin: Number(
+          layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+        ),
+        ymin: Number(
+          layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+        ),
+        xmax: Number(
+          layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+        ),
+        ymax: Number(
+          layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+        ),
+      };
+      xList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
+      );
+      yList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
+      );
+      xList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
+      );
+      yList.push(
+        BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
+      );
+    } // For loop
+    // Add dataset bbox
+    BBoxes['dataset'] = {
+      xmin: Math.min.apply(Math, xList),
+      ymin: Math.min.apply(Math, yList),
+      xmax: Math.max.apply(Math, xList),
+      ymax: Math.max.apply(Math, yList),
+    };
+    // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
+    // BBoxes['dataset'] = {
+    //   xmin: Number(
+    //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
+    //   ),
+    //   ymin: Number(
+    //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
+    //   ),
+    //   xmax: Number(
+    //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
+    //   ),
+    //   ymax: Number(
+    //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
+    //   ),
+    // };
+    return BBoxes;
+  } // function parseWMS
 
   parseCapabilities(xml, tag) {
     return xml.getElementsByTagName(tag);
@@ -2813,12 +2769,30 @@ class MenuWidget extends React.Component {
       .catch(() => {});
   };
 
+  findBBoxById(obj, id) {
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        // Check if the current object's id matches the desired id
+        if (obj[key].id === id) {
+          return obj[key].extent; // Return the extent if found
+        }
+        // If the current object has nested properties, search deeper
+        if (typeof obj[key] === 'object') {
+          const found = this.findBBoxById(obj[key], id);
+          if (found) {
+            return found; // Return found extent
+          }
+        }
+      }
+    }
+    return null; // Return null if the id is not found
+  }
   async FullExtentDataset(elem) {
     let BBoxes = {};
     this.findCheckedDataset(elem);
     if (this.url?.toLowerCase().endsWith('mapserver')) {
       //debugger;
-      BBoxes = this.parseBBOXMAPSERVER(this.layers[elem.id]);
+      BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
@@ -2865,9 +2839,8 @@ class MenuWidget extends React.Component {
         });
         this.view.goTo(myExtent);
       }
-    } else if (this.url?.ViewService.toLowerCase().endsWith('mapserver')) {
-      //debugger;
-      BBoxes = this.parseBBOXMAPSERVER(this.layers[elem.id]);
+    } else if (this.url?.toLowerCase().endsWith('mapserver')) {
+      BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
@@ -2892,20 +2865,45 @@ class MenuWidget extends React.Component {
         let match = str.match(/layerid="(\d+)"/);
         let layerid = match ? match[1] : null;
         if (layerid === null || layerid === undefined) return;
-        if (layerid === '12' || layerid === '13') {
-          firstLayer = BBoxes['dataset'];
-        } else if (layerid === '1' || layerid === '7') {
-          firstLayer = BBoxes[Object.keys(BBoxes)[0]];
-        } else if (layerid === '2' || layerid === '8') {
-          firstLayer = BBoxes[Object.keys(BBoxes)[1]];
-        } else if (layerid === '3' || layerid === '9') {
-          firstLayer = BBoxes[Object.keys(BBoxes)[2]];
-        } else if (layerid === '4' || layerid === '10') {
-          firstLayer = BBoxes[Object.keys(BBoxes)[3]];
-        } else if (layerid === '5' || layerid === '11') {
-          firstLayer = BBoxes[Object.keys(BBoxes)[4]];
-        } else {
-          firstLayer = BBoxes['dataset'];
+        switch (layerid) {
+          case '1':
+            firstLayer = this.findBBoxById(BBoxes, 13);
+            break;
+          case '2':
+            firstLayer = this.findBBoxById(BBoxes, 12);
+            break;
+          case '3':
+            firstLayer = this.findBBoxById(BBoxes, 11);
+            break;
+          case '4':
+            firstLayer = this.findBBoxById(BBoxes, 10);
+            break;
+          case '5':
+            firstLayer = this.findBBoxById(BBoxes, 9);
+            break;
+          case '7':
+            firstLayer = this.findBBoxById(BBoxes, 7);
+            break;
+          case '8':
+            firstLayer = this.findBBoxById(BBoxes, 6);
+            break;
+          case '9':
+            firstLayer = this.findBBoxById(BBoxes, 5);
+            break;
+          case '10':
+            firstLayer = this.findBBoxById(BBoxes, 4);
+            break;
+          case '11':
+            firstLayer = this.findBBoxById(BBoxes, 3);
+            break;
+          case '12':
+            firstLayer = this.findBBoxById(BBoxes, 0);
+            break;
+          case '13':
+            firstLayer = this.findBBoxById(BBoxes, 1);
+            break;
+          default:
+            return;
         }
       } else if (
         elem.id.includes('all_present') ||
