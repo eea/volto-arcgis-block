@@ -66,12 +66,22 @@ class PrintWidget extends React.Component {
       this.setState({ showMapMenu: true });
     }
   }
+
+  waitForContainer(mapdiv) {
+    while (mapdiv === null) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return mapdiv;
+  }
+
   /**
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
     await this.loader();
+    this.waitForContainer(this.container.current);
     this.props.view.ui.add(this.container.current, 'top-right');
+    this.waitForContainer(this.container.current.querySelector('.print-panel'));
     this.print = new Print({
       view: this.props.view,
       container: this.container.current.querySelector('.print-panel'),
