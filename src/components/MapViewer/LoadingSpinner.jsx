@@ -53,7 +53,15 @@ class LoadingSpinner extends React.Component {
     this.setState({});
   }
 
+  waitForContainer(mapdiv) {
+    while (mapdiv === null) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return mapdiv;
+  }
+
   async componentDidMount() {
+    this.waitForContainer(this.props.view);
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'manual');
       this.listenForLayerChanges();
