@@ -86,10 +86,19 @@ class InfoWidget extends React.Component {
       this.props.mapViewer.view.popup.close();
     }
   }
+
+  waitForContainer(mapdiv) {
+    while (mapdiv === null) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return mapdiv;
+  }
+
   /**
    * This method is executed after the rener method is executed
    */ async componentDidMount() {
     await this.loader();
+    this.waitForContainer(this.container.current);
     this.props.view.ui.add(this.container.current, 'top-right');
     this.props.view.on('click', (e) => {
       let screenPoint = {

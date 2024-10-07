@@ -792,6 +792,13 @@ class MenuWidget extends React.Component {
     }, 1000);
   }
 
+  waitForContainer(mapdiv) {
+    while (mapdiv === null) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return mapdiv;
+  }
+
   /**
    * This method is executed after the render method is executed
    */
@@ -804,6 +811,7 @@ class MenuWidget extends React.Component {
     //  currentContainer = await this.container.current;
     //} while (currentContainer == null);
     if (!this.props.download) {
+      this.waitForContainer(this.container.current);
       this.prepareHotspotLayers();
       this.getHotspotLayerIds();
       this.props.view.ui.add(this.container.current, 'top-left');
