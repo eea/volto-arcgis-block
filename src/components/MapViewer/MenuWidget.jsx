@@ -2594,7 +2594,7 @@ class MenuWidget extends React.Component {
           //console.log('no data retrieved:', subLayerData);
           continue;
         } else {
-          // Convert bounding boxx data to correct extent values for map view
+          // Convert bounding box data to correct extent values for map view
 
           let extent = this.convertBBOXValues(subLayerData.extent);
 
@@ -2606,7 +2606,7 @@ class MenuWidget extends React.Component {
           };
         }
       } catch (error) {
-        console.error('Error fetching sublayer:', error);
+        //console.error('Error fetching sublayer:', error);
       }
     }
 
