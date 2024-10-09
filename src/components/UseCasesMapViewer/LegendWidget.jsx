@@ -94,10 +94,13 @@ class LegendWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    this.view.ui.add(this.container.current, 'top-right');
-    this.LegendWidget = new Legend({
-      view: this.view,
-      container: document.querySelector('.legend-panel'),
+    if (!this.container.current) return;
+    this.view.when(() => {
+      this.view.ui.add(this.container.current, 'top-right');
+      this.LegendWidget = new Legend({
+        view: this.view,
+        container: document.querySelector('.legend-panel'),
+      });
     });
   }
   /**

@@ -20,10 +20,13 @@ class PanWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
-    this.props.view.ui.add({
-      component: this.container.current,
-      position: 'top-right',
-      index: 0,
+    if (!this.container.current) return;
+    this.props.view.when(() => {
+      this.props.view.ui.add({
+        component: this.container.current,
+        position: 'top-right',
+        index: 0,
+      });
     });
   }
 

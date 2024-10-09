@@ -38,12 +38,15 @@ class ScaleWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    this.waitForContainer(this.props.view);
-    this.scaleBar = new ScaleBar({
-      view: this.props.view,
-      unit: 'dual',
+    //this.waitForContainer(this.props.view);
+    if (!this.container.current) return;
+    this.props.view.when(() => {
+      this.scaleBar = new ScaleBar({
+        view: this.props.view,
+        unit: 'dual',
+      });
+      this.props.view.ui.add(this.scaleBar, 'bottom-left');
     });
-    this.props.view.ui.add(this.scaleBar, 'bottom-left');
   }
   /**
    * This method renders the component

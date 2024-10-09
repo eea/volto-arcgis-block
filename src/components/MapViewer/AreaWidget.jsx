@@ -1131,19 +1131,21 @@ class AreaWidget extends React.Component {
         });
       }
     });
+    this.props.view.when(() => {
+      this.props.download
+        ? this.container !== null && this.props.view.ui.add(this.container)
+        : this.container.current !== null &&
+          this.props.view.ui.add(this.container.current, 'top-right');
 
-    this.props.download
-      ? this.container !== null && this.props.view.ui.add(this.container)
-      : this.props.view.ui.add(this.container.current, 'top-right');
-
-    var popup = document.createElement('div');
-    popup.className = 'drawRectanglePopup-block';
-    popup.innerHTML =
-      '<div class="drawRectanglePopup-content">' +
-      '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
-      '<div class="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
-      '</div>';
-    this.props.download && this.props.view.ui.add(popup, 'top-right');
+      var popup = document.createElement('div');
+      popup.className = 'drawRectanglePopup-block';
+      popup.innerHTML =
+        '<div class="drawRectanglePopup-content">' +
+        '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
+        '<div class="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
+        '</div>';
+      this.props.download && this.props.view.ui.add(popup, 'top-right');
+    });
   }
 
   async initFMI() {

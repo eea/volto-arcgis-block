@@ -948,7 +948,10 @@ class HotspotWidget extends React.Component {
   async componentDidMount() {
     await this.getLayerParameters();
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
+    if (!this.container.current) return;
+    this.props.view.when(() => {
+      this.props.view.ui.add(this.container.current, 'top-right');
+    });
     this.layerModelInit();
     this.getBBoxData();
     this.props.view.when(() => {

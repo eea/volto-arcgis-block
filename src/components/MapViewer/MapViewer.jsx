@@ -57,7 +57,7 @@ class MapViewer extends React.Component {
       layerLoading: false,
       layers: {},
       uploadedFile: true,
-      isReady: false,
+      //isReady: false,
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -176,12 +176,16 @@ class MapViewer extends React.Component {
     await this.loader();
     //    this.state.url = window.location.href;
     await this.waitForDataFill(this.compCfg);
-    this.intervalId = setInterval(() => {
-      if (this.mapdiv.current !== null) {
-        this.setState({ isReady: true });
-        clearInterval(this.intervalId);
-      }
-    }, 100);
+    if (!this.mapdiv.current) return;
+    //this.props.view.when(() => {
+    //  this.props.view.ui.add(this.container.current, 'top-right');
+    //});
+    //this.intervalId = setInterval(() => {
+    //  if (this.mapdiv.current !== null) {
+    //    this.setState({ isReady: true });
+    //    clearInterval(this.intervalId);
+    //  }
+    //}, 100);
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl: this.cfgUrls.positronCompositeThumbnail,
@@ -235,11 +239,11 @@ class MapViewer extends React.Component {
     this.zoom = new Zoom({
       view: this.view,
     });
-    this.view.ui.add(this.zoom, {
-      position: 'top-right',
-    });
-
     this.view.when(() => {
+      this.view.ui.add(this.zoom, {
+        position: 'top-right',
+      });
+
       this.view.watch('center', (newValue, oldValue, property, object) => {
         this.setCenterState(newValue);
       });
@@ -296,7 +300,7 @@ class MapViewer extends React.Component {
   componentWillUnmount() {
     // clean up
     if (this.view) {
-      clearInterval(this.intervalId);
+      //clearInterval(this.intervalId);
       this.view.container = null;
       this.view.destroy();
       delete this.view;
@@ -484,26 +488,22 @@ class MapViewer extends React.Component {
     } else {
       return (
         <div className={this.mapClass}>
-          {this.state.isReady ? (
-            <div ref={this.mapdiv} className="map">
-              {this.appLanguage()}
-              {this.renderBasemap()}
-              {this.renderLegend()}
-              {this.renderMeasurement()}
-              {this.renderPrint()}
-              {this.renderSwipe()}
-              {this.renderArea()}
-              {this.renderPan()}
-              {this.renderScale()}
-              {this.renderInfo()}
-              {this.renderHotspot()}
-              {this.renderMenu()}
-              {this.renderBookmark()}
-              {this.renderLoadingSpinner()}
-            </div>
-          ) : (
-            <p>Loading...</p>
-          )}
+          <div ref={this.mapdiv} className="map">
+            {this.appLanguage()}
+            {this.renderBasemap()}
+            {this.renderLegend()}
+            {this.renderMeasurement()}
+            {this.renderPrint()}
+            {this.renderSwipe()}
+            {this.renderArea()}
+            {this.renderPan()}
+            {this.renderScale()}
+            {this.renderInfo()}
+            {this.renderHotspot()}
+            {this.renderMenu()}
+            {this.renderBookmark()}
+            {this.renderLoadingSpinner()}
+          </div>
         </div>
       );
     }

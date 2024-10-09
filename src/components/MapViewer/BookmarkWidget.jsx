@@ -88,7 +88,10 @@ class BookmarkWidget extends React.Component {
 
   async componentDidMount() {
     await this.loader();
-    this.props.view.ui.add(this.container.current, 'top-right');
+    if (!this.container.current) return;
+    this.props.view.when(() => {
+      this.props.view.ui.add(this.container.current, 'top-right');
+    });
     if (this.userID != null) {
       this.sessionBookmarks =
         JSON.parse(
