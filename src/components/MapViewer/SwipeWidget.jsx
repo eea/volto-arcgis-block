@@ -91,14 +91,18 @@ class SwipeWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
-    this.props.view.ui.add(this.container.current, 'top-right');
     await this.loader();
-    this.swipe = new Swipe({
-      view: this.props.view,
-      direction: 'horizontal',
-      position: 50,
+    if (!this.container.current) return;
+    this.props.view.when(() => {
+      this.props.view.ui.add(this.container.current, 'top-right');
+      this.swipe = new Swipe({
+        view: this.props.view,
+        direction: 'horizontal',
+        position: 50,
+      });
     });
   }
+
   getLayerTitle(layer) {
     let title;
     if (layer.url && layer.url.toLowerCase().includes('wmts')) {
