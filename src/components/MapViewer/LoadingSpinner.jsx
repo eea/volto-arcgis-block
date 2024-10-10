@@ -61,7 +61,8 @@ class LoadingSpinner extends React.Component {
   }
 
   async componentDidMount() {
-    this.waitForContainer(this.props.view);
+    //this.waitForContainer(this.props.view);
+    if (!this.container.current) return;
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'manual');
       this.listenForLayerChanges();

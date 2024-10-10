@@ -835,16 +835,12 @@ class MenuWidget extends React.Component {
     loadCss();
     await this.loader();
     await this.getTMSLayersJSON();
-    //let currentContainer;
-    //do {
-    //  currentContainer = await this.container.current;
-    //} while (currentContainer == null);
-    if (!this.props.download) {
-      this.waitForContainer(this.container.current);
+    if (!this.container.current) return;
+    this.props.view.when(() => {
       this.prepareHotspotLayers();
       this.getHotspotLayerIds();
       this.props.view.ui.add(this.container.current, 'top-left');
-    }
+    });
     if (this.props.download) {
       setTimeout(() => {
         document.querySelector('.area-panel input:checked').click();
