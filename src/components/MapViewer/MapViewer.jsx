@@ -236,10 +236,10 @@ class MapViewer extends React.Component {
         components: ['attribution'],
       },
     });
-    this.zoom = new Zoom({
-      view: this.view,
-    });
     this.view.when(() => {
+      this.zoom = new Zoom({
+        view: this.view,
+      });
       this.view.ui.add(this.zoom, {
         position: 'top-right',
       });
@@ -271,17 +271,17 @@ class MapViewer extends React.Component {
         this.view.constraints.geometry = constraintExtent;
       });
       this.view.popup.autoOpenEnabled = false;
-      // After launching the MapViewerConfig action
-      // we will have stored the json response here:
-      // this.props.mapviewer_config
-      this.props.MapViewerConfig(flattenToAppURL(this.props.url));
-      //Once we have created the MapView, we need to ensure that the map div
-      //is refreshed in order to show the map on it. To do so, we need to
-      //trigger the renderization again, and to trigger the renderization
-      //we invoke the setState method, that changes the state and forces a
-      //react component to render itself again
-      //this.setState({});
     });
+    // After launching the MapViewerConfig action
+    // we will have stored the json response here:
+    // this.props.mapviewer_config
+    this.props.MapViewerConfig(flattenToAppURL(this.props.url));
+    //Once we have created the MapView, we need to ensure that the map div
+    //is refreshed in order to show the map on it. To do so, we need to
+    //trigger the renderization again, and to trigger the renderization
+    //we invoke the setState method, that changes the state and forces a
+    //react component to render itself again
+    //this.setState({});
   }
 
   componentDidUpdate(prevProps, prevState) {
