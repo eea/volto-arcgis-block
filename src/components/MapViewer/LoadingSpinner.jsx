@@ -45,6 +45,7 @@ class LoadingSpinner extends React.Component {
   }
 
   showLoading() {
+    if (!this.container.current) return;
     if (this.state.loading === false) {
       this.container.current.style.display = 'none';
     } else {
