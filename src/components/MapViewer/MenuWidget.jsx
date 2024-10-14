@@ -684,6 +684,7 @@ class MenuWidget extends React.Component {
         this.setState({ showMapMenu: false });
       } else {
         const container = this.container.current;
+        if (!this.container.current) return;
         const tabContainer = container.querySelector('#tabcontainer');
         const paneles = container.querySelector('#paneles');
         const esriWidgetButton = container.querySelector(
