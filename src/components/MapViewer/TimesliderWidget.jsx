@@ -391,7 +391,20 @@ class TimesliderWidget extends React.Component {
                 }
 
                 this.setState({ periodicity: periodicity });
-
+                if (this.TimesliderWidget.effectiveStops.length === 11) {
+                  let period =
+                    (this.TimesliderWidget.fullTimeExtent.end -
+                      this.TimesliderWidget.fullTimeExtent.start) /
+                    590000000;
+                  if (period > this.TimesliderWidget.stops.interval.value) {
+                    this.TimesliderWidget.stops = {
+                      interval: {
+                        value: period,
+                        unit: 'minutes',
+                      },
+                    };
+                  }
+                }
                 this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
                   if (!this.container.current ? true : false) {
                     this.TimesliderWidget.stop();
