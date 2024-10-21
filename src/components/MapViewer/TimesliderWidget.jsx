@@ -646,6 +646,8 @@ class TimesliderWidget extends React.Component {
               dropdownMode="select"
               showMonthDropdown
               showYearDropdown
+              minDate={this.TimesliderWidget?.fullTimeExtent?.start}
+              maxDate={this.TimesliderWidget?.fullTimeExtent?.end}
             ></DatePicker>
           </div>
           <div className="datetime-picker">
