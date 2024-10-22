@@ -117,7 +117,7 @@ class UseCasesMapViewer extends React.Component {
       basemap: this.basemap,
     });
 
-    if (!this.mapdiv.current) return;
+    //if (!this.mapdiv.current) return;
     this.view = new MapView({
       container: this.mapdiv.current,
       map: this.map,
@@ -128,70 +128,70 @@ class UseCasesMapViewer extends React.Component {
       },
     });
 
-    this.view.when(() => {
-      this.view.ui.add(this.zoom, {
-        position: 'top-right',
-      });
-
-      layerControl = new LayerControl({
-        map: this.map,
-        view: this.view,
-        mapViewer: this,
-        worldDimensions: this.mapCfg.worldDimensions,
-        maxZoom: this.mapCfg.maxZoom,
-        FeatureLayer: FeatureLayer,
-        Extent: Extent,
-      });
-
-      layerSpatial = layerControl.createLayer({
-        id: this.spatialConfig.id,
-        url: this.spatialConfig.url,
-        legend: this.spatialConfig.showLegend,
-      });
-
-      layerSpatial.renderer = this.spatialConfig.render;
-
-      let layerRegion = layerControl.createLayer({
-        id: this.regionConfig.id,
-        url: this.regionConfig.url,
-        legend: this.regionConfig.showLegend,
-      });
-
-      layerHighlight = layerControl.createLayer({
-        id: this.HighlightConfig.id,
-        url: this.HighlightConfig.url,
-        legend: this.HighlightConfig.showLegend,
-      });
-
-      layerRegion.renderer = this.regionConfig.render;
-      layerRegion.labelingInfo = [this.regionConfig.label];
-      layerHighlight.renderer = this.HighlightConfig.render;
-
-      layerControl.addLayer(layerHighlight);
-      layerControl.addLayer(layerRegion);
-      layerControl.addLayer(layerSpatial);
-
-      layerControl.hideLayer(layerHighlight.id);
-      layerControl.hideLayer(layerSpatial.id);
-
-      navigationControl = new NavigationControl({
-        map: this.map,
-        view: this.view,
-        center: this.mapCfg.center,
-        layerControl: layerControl,
-        mapViewer: this,
-        layerRegion: layerRegion,
-        layerSpatial: layerSpatial,
-        layerHighlight: layerHighlight,
-      });
-
-      this.setMapFunctions(
-        this.view,
-        layerControl,
-        navigationControl,
-        layerSpatial,
-      );
+    // this.view.when(() => {
+    this.view.ui.add(this.zoom, {
+      position: 'top-right',
     });
+
+    layerControl = new LayerControl({
+      map: this.map,
+      view: this.view,
+      mapViewer: this,
+      worldDimensions: this.mapCfg.worldDimensions,
+      maxZoom: this.mapCfg.maxZoom,
+      FeatureLayer: FeatureLayer,
+      Extent: Extent,
+    });
+
+    layerSpatial = layerControl.createLayer({
+      id: this.spatialConfig.id,
+      url: this.spatialConfig.url,
+      legend: this.spatialConfig.showLegend,
+    });
+
+    layerSpatial.renderer = this.spatialConfig.render;
+
+    let layerRegion = layerControl.createLayer({
+      id: this.regionConfig.id,
+      url: this.regionConfig.url,
+      legend: this.regionConfig.showLegend,
+    });
+
+    layerHighlight = layerControl.createLayer({
+      id: this.HighlightConfig.id,
+      url: this.HighlightConfig.url,
+      legend: this.HighlightConfig.showLegend,
+    });
+
+    layerRegion.renderer = this.regionConfig.render;
+    layerRegion.labelingInfo = [this.regionConfig.label];
+    layerHighlight.renderer = this.HighlightConfig.render;
+
+    layerControl.addLayer(layerHighlight);
+    layerControl.addLayer(layerRegion);
+    layerControl.addLayer(layerSpatial);
+
+    layerControl.hideLayer(layerHighlight.id);
+    layerControl.hideLayer(layerSpatial.id);
+
+    navigationControl = new NavigationControl({
+      map: this.map,
+      view: this.view,
+      center: this.mapCfg.center,
+      layerControl: layerControl,
+      mapViewer: this,
+      layerRegion: layerRegion,
+      layerSpatial: layerSpatial,
+      layerHighlight: layerHighlight,
+    });
+
+    this.setMapFunctions(
+      this.view,
+      layerControl,
+      navigationControl,
+      layerSpatial,
+    );
+    // });
 
     //Once we have created the MapView, we need to ensure that the map div
     //is refreshed in order to show the map on it. To do so, we need to
