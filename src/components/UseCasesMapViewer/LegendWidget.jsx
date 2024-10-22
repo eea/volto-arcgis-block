@@ -94,7 +94,7 @@ class LegendWidget extends React.Component {
    */
   async componentDidMount() {
     await this.loader();
-    if (!this.container.current) return;
+    //if (!this.container.current) return;
     this.view.when(() => {
       this.view.ui.add(this.container.current, 'top-right');
       this.LegendWidget = new Legend({
