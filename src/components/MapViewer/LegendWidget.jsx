@@ -312,6 +312,15 @@ class LegendWidget extends React.Component {
           this.setState({ loading: false });
         }, 2000);
       }
+      const collection = document.getElementsByClassName(
+        'esri-legend__layer-caption',
+      );
+
+      Array.prototype.forEach.call(collection, (element) => {
+        if (element?.innerText === 'LABEL3') {
+          element.style.display = 'none';
+        }
+      });
       this.handleNoLegendMessage();
     }
   }
