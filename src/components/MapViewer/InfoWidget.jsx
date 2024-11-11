@@ -137,7 +137,7 @@ class InfoWidget extends React.Component {
           } else {
             title = this.getLayerTitle(layer);
           }
-          if (layer.isTimeSeries) {
+          if (layer?.isTimeSeries) {
             if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
                 isTimeSeries: true,
@@ -164,7 +164,43 @@ class InfoWidget extends React.Component {
               promises.push(this.identify(layer, e));
             }
           } else {
-            if (layer.url.toLowerCase().includes('wms')) {
+            if (layer.url?.toLowerCase().endsWith('mapserver')) {
+              let sublayers = Object.values(layer.allSublayers.items);
+              const fetchPromises = sublayers.map((sublayer) => {
+                return fetch(`${sublayer.url}?f=pjson`)
+                  .then((res) => {
+                    // Ensure the response is OK before parsing
+                    if (!res.ok) {
+                      throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json(); // Parse the response as JSON
+                  })
+                  .then((data) => {
+                    // Push the parsed data to layerTypes
+                    layerTypes.push({
+                      isTimeSeries: false,
+                      type: 'featureLayer',
+                      title: data.title, // Use 'data' instead of 'res'
+                      fields: data.fields,
+                    });
+                  })
+                  .catch((err) => {
+                    console.error('Encountered error: ', err);
+                  });
+              });
+
+              // Add the hitTest promise to the array of promises
+              promises.push(this.props.view.hitTest(screenPoint));
+
+              // Optionally, wait for all fetch promises to resolve
+              Promise.all(fetchPromises)
+                .then(() => {
+                  console.log('All sublayer data fetched successfully.');
+                })
+                .catch((err) => {
+                  console.error('Error fetching sublayer data: ', err);
+                });
+            } else if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
                 isTimeSeries: false,
                 type: 'wms',
@@ -205,7 +241,7 @@ class InfoWidget extends React.Component {
                     fields: layer.fields,
                   };
                 } else {
-                  if (layer.isTimeSeries) {
+                  if (layer?.isTimeSeries) {
                     switch (layer.type) {
                       case 'wms':
                         if (data.type === 'FeatureCollection') {
