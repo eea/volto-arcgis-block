@@ -648,8 +648,6 @@ class TimesliderWidget extends React.Component {
               showYearDropdown
               minDate={this.TimesliderWidget?.fullTimeExtent?.start}
               maxDate={this.TimesliderWidget?.fullTimeExtent?.end}
-              includeDates={this.TimesliderWidget?.stops?.dates}
-              disabledKeyboardNavigation
             ></DatePicker>
           </div>
           <div className="datetime-picker">
