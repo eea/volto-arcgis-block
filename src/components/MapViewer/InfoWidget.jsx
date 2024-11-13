@@ -134,7 +134,8 @@ class InfoWidget extends React.Component {
                 }
               }
             }
-          } else {
+          }
+          if (!title) {
             title = this.getLayerTitle(layer);
           }
           if (layer?.isTimeSeries) {
@@ -165,49 +166,32 @@ class InfoWidget extends React.Component {
             }
           } else {
             if (layer.url?.toLowerCase().endsWith('mapserver')) {
-              let sublayers = Object.values(layer.allSublayers.items);
-              const fetchPromises = sublayers.map((sublayer) => {
-                return fetch(`${sublayer.url}?f=pjson`)
-                  .then((res) => {
-                    // Ensure the response is OK before parsing
-                    if (!res.ok) {
-                      throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    return res.json(); // Parse the response as JSON
-                  })
-                  .then((data) => {
-                    // Push the parsed data to layerTypes
-                    layerTypes.push({
-                      isTimeSeries: false,
-                      type: 'featureLayer',
-                      title: data.title, // Use 'data' instead of 'res'
-                      fields: data.fields,
-                    });
-                  })
-                  .catch((err) => {
-                    console.error('Encountered error: ', err);
-                  });
-              });
+              const capabilitiesIndex = {
+                1: 13,
+                2: 12,
+                3: 11,
+                4: 10,
+                5: 9,
+                7: 7,
+                8: 6,
+                9: 5,
+                10: 4,
+                11: 3,
+                12: 0,
+                13: 1,
+              };
 
-              // Add the hitTest promise to the array of promises
-              promises.push(this.props.view.hitTest(screenPoint));
-
-              // Optionally, wait for all fetch promises to resolve
-              Promise.all(fetchPromises)
-                .then(() => {
-                  console.log('All sublayer data fetched successfully.');
-                })
-                .catch((err) => {
-                  console.error('Error fetching sublayer data: ', err);
-                });
-            } else if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
                 isTimeSeries: false,
-                type: 'wms',
+                type: 'map-image',
                 title: title,
                 fields: layer.fields,
               });
-              promises.push(this.identifyWMS(layer, e));
+              capabilitiesIndex[index] !== undefined
+                ? promises.push(
+                    this.ogcCapabilities(layer, capabilitiesIndex[index]),
+                  )
+                : promises.push(Promise.reject());
             } else if (layer.url.toLowerCase().includes('wmts')) {
               layerTypes.push({
                 isTimeSeries: false,
@@ -391,6 +375,26 @@ class InfoWidget extends React.Component {
                           fields: layer.fields,
                         };
                         break;
+                      case 'map-image':
+                        if (properties.length) properties = [];
+                        if (data && data.fields) {
+                          properties = data.fields
+                            .map((field) => {
+                              return Object.entries(field).map(
+                                ([key, value]) => {
+                                  return [key, value];
+                                },
+                              );
+                            })
+                            .flat();
+                        }
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: properties,
+                          message: message,
+                          fields: layer.fields,
+                        };
+                        break;
                       default:
                         break;
                     }
@@ -417,6 +421,8 @@ class InfoWidget extends React.Component {
     if (layer.url.toLowerCase().includes('wmts')) {
       // CLMS-1105
       title = layer._wmtsTitle;
+    } else if (layer.url.toLowerCase().toLowerCase().endsWith('mapserver')) {
+      title = layer.title;
     } else {
       if (layer.sublayers) {
         title = layer.sublayers.items[0].title;
@@ -515,6 +521,18 @@ class InfoWidget extends React.Component {
       let parser = new DOMParser();
       let xml = parser.parseFromString(response.data, 'text/html');
       return xml;
+    });
+  }
+
+  ogcCapabilities(layer, index) {
+    let url = `${layer.url}/${index}?f=pjson`;
+    return esriRequest(url, {
+      responseType: 'application/json',
+      sync: 'true',
+    }).then((response) => {
+      if (!response) return;
+      let data = JSON.parse(response.data);
+      return data;
     });
   }
 
