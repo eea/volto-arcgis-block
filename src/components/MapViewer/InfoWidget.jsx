@@ -134,10 +134,11 @@ class InfoWidget extends React.Component {
                 }
               }
             }
-          } else {
+          }
+          if (!title) {
             title = this.getLayerTitle(layer);
           }
-          if (layer.isTimeSeries) {
+          if (layer?.isTimeSeries) {
             if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
                 isTimeSeries: true,
@@ -164,14 +165,33 @@ class InfoWidget extends React.Component {
               promises.push(this.identify(layer, e));
             }
           } else {
-            if (layer.url.toLowerCase().includes('wms')) {
+            if (layer.url?.toLowerCase().endsWith('mapserver')) {
+              const capabilitiesIndex = {
+                1: 13,
+                2: 12,
+                3: 11,
+                4: 10,
+                5: 9,
+                7: 7,
+                8: 6,
+                9: 5,
+                10: 4,
+                11: 3,
+                12: 0,
+                13: 1,
+              };
+
               layerTypes.push({
                 isTimeSeries: false,
-                type: 'wms',
+                type: 'map-image',
                 title: title,
                 fields: layer.fields,
               });
-              promises.push(this.identifyWMS(layer, e));
+              capabilitiesIndex[index] !== undefined
+                ? promises.push(
+                    this.ogcCapabilities(layer, capabilitiesIndex[index]),
+                  )
+                : promises.push(Promise.reject());
             } else if (layer.url.toLowerCase().includes('wmts')) {
               layerTypes.push({
                 isTimeSeries: false,
@@ -205,7 +225,7 @@ class InfoWidget extends React.Component {
                     fields: layer.fields,
                   };
                 } else {
-                  if (layer.isTimeSeries) {
+                  if (layer?.isTimeSeries) {
                     switch (layer.type) {
                       case 'wms':
                         if (data.type === 'FeatureCollection') {
@@ -355,6 +375,26 @@ class InfoWidget extends React.Component {
                           fields: layer.fields,
                         };
                         break;
+                      case 'map-image':
+                        if (properties.length) properties = [];
+                        if (data && data.fields) {
+                          properties = data.fields
+                            .map((field) => {
+                              return Object.entries(field).map(
+                                ([key, value]) => {
+                                  return [key, value];
+                                },
+                              );
+                            })
+                            .flat();
+                        }
+                        this.infoData[index] = {
+                          title: layer.title,
+                          data: properties,
+                          message: message,
+                          fields: layer.fields,
+                        };
+                        break;
                       default:
                         break;
                     }
@@ -381,6 +421,8 @@ class InfoWidget extends React.Component {
     if (layer.url.toLowerCase().includes('wmts')) {
       // CLMS-1105
       title = layer._wmtsTitle;
+    } else if (layer.url.toLowerCase().toLowerCase().endsWith('mapserver')) {
+      title = layer.title;
     } else {
       if (layer.sublayers) {
         title = layer.sublayers.items[0].title;
@@ -479,6 +521,18 @@ class InfoWidget extends React.Component {
       let parser = new DOMParser();
       let xml = parser.parseFromString(response.data, 'text/html');
       return xml;
+    });
+  }
+
+  ogcCapabilities(layer, index) {
+    let url = `${layer.url}/${index}?f=pjson`;
+    return esriRequest(url, {
+      responseType: 'application/json',
+      sync: 'true',
+    }).then((response) => {
+      if (!response) return;
+      let data = JSON.parse(response.data);
+      return data;
     });
   }
 
