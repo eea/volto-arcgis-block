@@ -683,11 +683,16 @@ class MenuWidget extends React.Component {
         // and ensure that the component is rendered again
         this.setState({ showMapMenu: false });
       } else {
-        const container = this.container.current;
-        if (!this.container.current) return;
-        const tabContainer = container.querySelector('#tabcontainer');
-        const paneles = container.querySelector('#paneles');
-        const esriWidgetButton = container.querySelector(
+        /*  
+        The following variables have been changed from container
+        to this.container.current to avoid data viewer crash
+        when client comes from dataset / product pages or refreshing
+        */
+        const tabContainer = this.container.current.querySelector(
+          '#tabcontainer',
+        );
+        const paneles = this.container.current.querySelector('#paneles');
+        const esriWidgetButton = this.container.current.querySelector(
           '.esri-widget--button',
         );
         const timeSliderContainer = document.querySelector(
@@ -719,7 +724,7 @@ class MenuWidget extends React.Component {
         // and ensure that the component is rendered again
         this.setState({ showMapMenu: true });
       }
-      if (this.loadFirst) {
+      if (this.loadFirst && this.container.current) {
         this.checkUrl();
         this.loadFirst = false;
         this.zoomTooltips();
@@ -822,13 +827,6 @@ class MenuWidget extends React.Component {
     }, 1000);
   }
 
-  waitForContainer(mapdiv) {
-    while (mapdiv === null) {
-      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return mapdiv;
-  }
-
   /**
    * This method is executed after the render method is executed
    */
@@ -875,11 +873,6 @@ class MenuWidget extends React.Component {
           this.props.bookmarkData === undefined
         ) {
           return;
-          //} else if (
-          //  this.props.bookmarkData &&
-          //  this.props.bookmarkData.active === false
-          //) {
-          //  return;
         } else if (
           this.props.bookmarkData &&
           this.props.bookmarkData.active === true
@@ -897,13 +890,11 @@ class MenuWidget extends React.Component {
                   let visibleArray = this.props.bookmarkData.visible[pos];
                   visible =
                     String(visibleArray[index]) === 'true' ? true : false;
-                  //this.layers[layer].visible = visible;
                   if (this.layers[layer]) {
                     let opacityArray = this.props.bookmarkData.opacity[pos];
                     this.layers[layer].opacity = opacityArray[index];
                   }
                 }
-                //this.map.layers.add(this.layers[layer]);
                 node.checked = true;
                 this.toggleLayer(node);
                 if (visible === false) {
