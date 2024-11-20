@@ -642,6 +642,7 @@ class TimesliderWidget extends React.Component {
               showIcon
               inline
               onChange={(date) => this.setDatepick(date)}
+              openToDate={this.TimesliderWidget?.fullTimeExtent?.start}
               dateFormat="dd.MM.yyyy"
               dropdownMode="select"
               showMonthDropdown
