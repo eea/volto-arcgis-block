@@ -165,7 +165,15 @@ class InfoWidget extends React.Component {
               promises.push(this.identify(layer, e));
             }
           } else {
-            if (layer.url?.toLowerCase().endsWith('mapserver')) {
+            if (layer.url.toLowerCase().includes('wms')) {
+              layerTypes.push({
+                isTimeSeries: false,
+                type: 'wms',
+                title: title,
+                fields: layer.fields,
+              });
+              promises.push(this.identifyWMS(layer, e));
+            } else if (layer.url?.toLowerCase().endsWith('mapserver')) {
               const capabilitiesIndex = {
                 1: 13,
                 2: 12,
@@ -187,11 +195,15 @@ class InfoWidget extends React.Component {
                 title: title,
                 fields: layer.fields,
               });
-              capabilitiesIndex[index] !== undefined
-                ? promises.push(
-                    this.ogcCapabilities(layer, capabilitiesIndex[index]),
-                  )
-                : promises.push(Promise.reject());
+              if (layer.datasetId === '0407d497d3c44bcd93ce8fd5bf78596a') {
+                capabilitiesIndex[index] !== undefined
+                  ? promises.push(
+                      this.ogcCapabilities(layer, capabilitiesIndex[index]),
+                    )
+                  : promises.push(Promise.reject());
+              } else {
+                promises.push(this.ogcCapabilities(layer, index));
+              }
             } else if (layer.url.toLowerCase().includes('wmts')) {
               layerTypes.push({
                 isTimeSeries: false,
