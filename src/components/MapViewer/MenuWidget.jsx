@@ -1656,10 +1656,10 @@ class MenuWidget extends React.Component {
         ] = new MapImageLayer({
           url: viewService,
           title: layer.Title,
-          datasetId: DatasetId,
-          datasetTitle: DatasetTitle,
-          productId: ProductId,
-          layerTitle: layer.Title,
+          DatasetId: DatasetId,
+          DatasetTitle: DatasetTitle,
+          ProductId: ProductId,
+          LayerTitle: layer.Title,
         });
         //iterate sublayers fetching all sublayer data
       } else if (viewService?.toLowerCase().includes('wms')) {
@@ -2200,7 +2200,7 @@ class MenuWidget extends React.Component {
     ) {
       this.toggleCustomLegendItem(this.layers[elem.id]);
     }
-    if (!this.props.download) {
+    if (!this.props.download && this.props.hotspotData) {
       this.activeLayersToHotspotData(elem.id);
     }
     this.renderHotspot();
