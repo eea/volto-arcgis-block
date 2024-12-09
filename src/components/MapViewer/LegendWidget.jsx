@@ -215,18 +215,6 @@ class LegendWidget extends React.Component {
       this.setState({ showMapMenu: true });
     }
   }
-
-  //  imageFixWithTimer() {
-  //    this.setState({ loading: true });
-  //    setTimeout(() => {
-  //      //    this.brokenLegendImagePatch();
-  //      if (this.props.download) {
-  //        this.hideNutsLegend();
-  //      }
-  //      this.setState({ loading: false });
-  //    }, 2000);
-  //  }
-
   /**
    * This method is executed after the rener method is executed
    */
