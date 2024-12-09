@@ -98,6 +98,12 @@ export const AddCartItem = ({
         ymin: Math.min(areaData.end.y, areaData.origin.y),
         ymax: Math.max(areaData.end.y, areaData.origin.y),
       });
+    } else if (areaData.geometry.xmax === undefined &&
+          areaData.geometry.xmin === undefined &&
+          areaData.geometry.ymax === undefined &&
+          areaData.geometry.ymin === undefined &&
+          areaData.geometry.extent !== undefined) {
+        areaExtent = areaData.geometry.extent;
     } else {
       areaExtent = areaData.geometry;
     }
