@@ -15,7 +15,8 @@ var WMSLayer,
   Extent,
   MapImageLayer,
   projection,
-  SpatialReference;
+  SpatialReference,
+  WebMercatorUtils;
 
 const popupSettings = {
   basic: true,
@@ -91,12 +92,22 @@ export const AddCartItem = ({
     let areaExtent = null;
     let check = document.querySelector('.area-panel input:checked')?.value;
     let fileUpload = sessionStorage.getItem('fileUploadLayer') ? true : false;
+    let isMapServer = dataset.ViewService.toLowerCase().endsWith('/mapserver')
+      ? true
+      : false;
     if (check === 'area' || fileUpload) {
       areaExtent = new Extent({
         xmin: Math.min(areaData.end.x, areaData.origin.x),
         xmax: Math.max(areaData.end.x, areaData.origin.x),
         ymin: Math.min(areaData.end.y, areaData.origin.y),
         ymax: Math.max(areaData.end.y, areaData.origin.y),
+      });
+    } else if (isMapServer) {
+      areaExtent = new Extent({
+        xmin: areaData.geometry.extent.xmin,
+        ymin: areaData.geometry.extent.ymin,
+        xmax: areaData.geometry.extent.xmax,
+        ymax: areaData.geometry.extent.ymax,
       });
     } else {
       areaExtent = areaData.geometry;
@@ -133,7 +144,14 @@ export const AddCartItem = ({
               ymax: 20037508.342789,
             });
           }
-          if (layerExtent.intersects(areaExtent)) {
+          if ((check === 'area' || fileUpload) && isMapServer) {
+            const transformedLayerExtent = WebMercatorUtils.webMercatorToGeographic(
+              layerExtent,
+            );
+            if (transformedLayerExtent.intersects(areaExtent)) {
+              intersection = true;
+            }
+          } else if (layerExtent.intersects(areaExtent)) {
             intersection = true;
           }
         }
@@ -475,6 +493,7 @@ class MenuWidget extends React.Component {
       'esri/layers/MapImageLayer',
       'esri/geometry/projection',
       'esri/geometry/SpatialReference',
+      'esri/geometry/support/webMercatorUtils',
     ]).then(
       ([
         _WMSLayer,
@@ -486,6 +505,7 @@ class MenuWidget extends React.Component {
         _MapImageLayer,
         _projection,
         _SpatialReference,
+        _WebMercatorUtils,
       ]) => {
         [
           WMSLayer,
@@ -497,6 +517,7 @@ class MenuWidget extends React.Component {
           MapImageLayer,
           projection,
           SpatialReference,
+          WebMercatorUtils,
         ] = [
           _WMSLayer,
           _WMTSLayer,
@@ -507,6 +528,7 @@ class MenuWidget extends React.Component {
           _MapImageLayer,
           _projection,
           _SpatialReference,
+          _WebMercatorUtils,
         ];
       },
     );
