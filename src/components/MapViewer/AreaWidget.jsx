@@ -394,9 +394,9 @@ class AreaWidget extends React.Component {
       default:
         break;
     }
-    setTimeout(() => {
-      e.target.value = null;
-    }, 2000);
+    // setTimeout(() => {
+    e.target.value = null;
+    // }, 2000);
     this.props.uploadFileHandler(this.state.infoPopupType);
   };
 
