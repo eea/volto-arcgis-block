@@ -57,7 +57,6 @@ class MapViewer extends React.Component {
       layerLoading: false,
       layers: {},
       uploadedFile: true,
-      //isReady: false,
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -157,35 +156,26 @@ class MapViewer extends React.Component {
    * they are already mounted
    */
 
-  waitForDataFill(obj) {
-    while (obj.length === 0) {
-      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return obj;
-  }
+  // waitForDataFill(obj) {
+  //   while (obj.length === 0) {
+  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+  //   }
+  //   return obj;
+  // }
 
-  waitForContainer(mapdiv) {
-    while (mapdiv === null) {
-      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return mapdiv;
-  }
+  // waitForContainer(mapdiv) {
+  //   while (mapdiv === null) {
+  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+  //   }
+  //   return mapdiv;
+  // }
 
   async componentDidMount() {
     loadCss();
     await this.loader();
     //    this.state.url = window.location.href;
-    await this.waitForDataFill(this.compCfg);
-    if (!this.mapdiv.current) return;
-    //this.props.view.when(() => {
-    //  this.props.view.ui.add(this.container.current, 'top-right');
-    //});
-    //this.intervalId = setInterval(() => {
-    //  if (this.mapdiv.current !== null) {
-    //    this.setState({ isReady: true });
-    //    clearInterval(this.intervalId);
-    //  }
-    //}, 100);
+    //  await this.waitForDataFill(this.compCfg);
+
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl: this.cfgUrls.positronCompositeThumbnail,
