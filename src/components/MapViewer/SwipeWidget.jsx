@@ -369,20 +369,26 @@ class SwipeWidget extends React.Component {
             <div className="right-panel-content">
               <div className="swipe-panel">
                 <span>Leading Layer</span>
-                <select id="select-leading-layer" class="esri-select"></select>
+                <select
+                  id="select-leading-layer"
+                  className="esri-select"
+                ></select>
                 <br></br>
                 <span>Trailing Layer</span>
-                <select id="select-trailing-layer" class="esri-select"></select>
+                <select
+                  id="select-trailing-layer"
+                  className="esri-select"
+                ></select>
                 <br></br>
                 <span>Swipe Direction</span>
-                <select id="select-swipe-direction" class="esri-select">
+                <select id="select-swipe-direction" className="esri-select">
                   <option value="horizontal">Horizontal</option>
                   <option value="vertical">Vertical</option>
                 </select>
                 <br></br>
                 <button
                   id="applySwipeButton"
-                  class="esri-button"
+                  className="esri-button"
                   onClick={() => this.renderApplySwipeButton()}
                 >
                   Swipe

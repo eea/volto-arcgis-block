@@ -67,12 +67,12 @@ class PrintWidget extends React.Component {
     }
   }
 
-  waitForContainer(mapdiv) {
-    while (mapdiv === null) {
-      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return mapdiv;
-  }
+  // waitForContainer(mapdiv) {
+  //   while (mapdiv === null) {
+  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+  //   }
+  //   return mapdiv;
+  // }
 
   /**
    * This method is executed after the rener method is executed
