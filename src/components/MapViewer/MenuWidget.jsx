@@ -92,7 +92,7 @@ export const AddCartItem = ({
     let areaExtent = null;
     let check = document.querySelector('.area-panel input:checked')?.value;
     let fileUpload = sessionStorage.getItem('fileUploadLayer') ? true : false;
-    let isMapServer = dataset.ViewService.toLowerCase().endsWith('/mapserver')
+    let isMapServer = dataset?.ViewService?.toLowerCase().endsWith('/mapserver')
       ? true
       : false;
     if (check === 'area' || fileUpload) {

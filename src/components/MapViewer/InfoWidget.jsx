@@ -1156,10 +1156,12 @@ class InfoWidget extends React.Component {
                     {this.state.pixelInfo && !noData && (
                       <>
                         {this.loadVariableSelector(this.state.layerIndex)}
-                        <HighchartsReact
-                          highcharts={this.Highcharts}
-                          options={this.loadInfoChart(this.state.layerIndex)}
-                        />
+                        {this.Highcharts && (
+                          <HighchartsReact
+                            highcharts={this.Highcharts}
+                            options={this.loadInfoChart(this.state.layerIndex)}
+                          />
+                        )}
                         {this.loadStatisticsSelector(this.state.layerIndex)}
                         {this.loadTimeInfoTable(this.state.layerIndex)}
                       </>
