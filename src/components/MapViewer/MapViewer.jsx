@@ -21,6 +21,7 @@ import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
+import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
@@ -549,4 +550,5 @@ export default compose(
     }),
     { MapViewerConfig },
   ),
+  injectLazyLibs('highcharts'),
 )(MapViewer);
