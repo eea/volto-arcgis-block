@@ -1,17 +1,16 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 import { Loader } from 'semantic-ui-react';
-// import loadable from '@loadable/component';
-// import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
-import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
-
-import Highcharts from 'highcharts';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import loadable from '@loadable/component';
+import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
+// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var GeometryEngine, Graphic, esriRequest;
 
-// const HighchartsReact = loadable(() => import('highcharts-react-official'));
+// import Highcharts from 'highcharts';
 
+const HighchartsReact = loadable(() => import('highcharts-react-official'));
 class InfoWidget extends React.Component {
   /**
    * Creator of the InfoWidget widget class
@@ -1156,11 +1155,12 @@ class InfoWidget extends React.Component {
                     {this.state.pixelInfo && !noData && (
                       <>
                         {this.loadVariableSelector(this.state.layerIndex)}
-                        {/* <HighchartsReact */}
-                        <Highcharts
-                          highcharts={this.Highcharts}
-                          options={this.loadInfoChart(this.state.layerIndex)}
-                        />
+                        {this.Highcharts && (
+                          <HighchartsReact
+                            highcharts={this.Highcharts}
+                            options={this.loadInfoChart(this.state.layerIndex)}
+                          />
+                        )}
                         {this.loadStatisticsSelector(this.state.layerIndex)}
                         {this.loadTimeInfoTable(this.state.layerIndex)}
                       </>
@@ -1197,5 +1197,4 @@ class InfoWidget extends React.Component {
   }
 }
 
-// export default injectLazyLibs('highcharts')(InfoWidget);
-export default InfoWidget;
+export default injectLazyLibs('highcharts')(InfoWidget);

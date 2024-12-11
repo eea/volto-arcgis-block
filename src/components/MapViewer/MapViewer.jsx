@@ -21,6 +21,7 @@ import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
+import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
@@ -163,19 +164,9 @@ class MapViewer extends React.Component {
   //   return obj;
   // }
 
-  // waitForContainer(mapdiv) {
-  //   while (mapdiv === null) {
-  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-  //   }
-  //   return mapdiv;
-  // }
-
   async componentDidMount() {
     loadCss();
     await this.loader();
-    //    this.state.url = window.location.href;
-    //  await this.waitForDataFill(this.compCfg);
-
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl: this.cfgUrls.positronCompositeThumbnail,
@@ -185,12 +176,8 @@ class MapViewer extends React.Component {
           copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
         }),
       ],
-      // referenceLayers: [
-      //   new _WebTileLayer(...)
-      // ],
     });
     this.map = new Map({
-      // basemap: 'topo',
       basemap: this.positronCompositeBasemap,
       logo: false,
     });
@@ -290,7 +277,6 @@ class MapViewer extends React.Component {
   componentWillUnmount() {
     // clean up
     if (this.view) {
-      //clearInterval(this.intervalId);
       this.view.container = null;
       this.view.destroy();
       delete this.view;
@@ -549,4 +535,5 @@ export default compose(
     }),
     { MapViewerConfig },
   ),
+  injectLazyLibs('highcharts'),
 )(MapViewer);
