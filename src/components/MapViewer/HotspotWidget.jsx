@@ -969,20 +969,20 @@ class HotspotWidget extends React.Component {
           Object.keys(bookmarkHotspotFilter?.filteredLayers).length !== 0 &&
           this.props.bookmarkData.active === true
         ) {
-          setTimeout(() => {
-            let activeLayers = [];
-            let filteredLayers = [];
-            Object.keys(bookmarkHotspotFilter.activeLayers).forEach((key) => {
-              activeLayers[key] = this.layers[key];
-            });
-            Object.keys(bookmarkHotspotFilter.filteredLayers).forEach((key) => {
-              filteredLayers[key] = null;
-            });
-            this.props.hotspotData['activeLayers'] = activeLayers;
-            this.props.hotspotData['filteredLayers'] = filteredLayers;
-            this.renderApplyFilterButton();
-            localStorage.setItem('bookmarkHotspotFilter', null);
-          }, 2000);
+          // setTimeout(() => {
+          let activeLayers = [];
+          let filteredLayers = [];
+          Object.keys(bookmarkHotspotFilter.activeLayers).forEach((key) => {
+            activeLayers[key] = this.layers[key];
+          });
+          Object.keys(bookmarkHotspotFilter.filteredLayers).forEach((key) => {
+            filteredLayers[key] = null;
+          });
+          this.props.hotspotData['activeLayers'] = activeLayers;
+          this.props.hotspotData['filteredLayers'] = filteredLayers;
+          this.renderApplyFilterButton();
+          localStorage.setItem('bookmarkHotspotFilter', null);
+          // }, 2000);
         } else if (
           bookmarkHotspotFilter !== null &&
           Object.keys(bookmarkHotspotFilter?.filteredLayers).length === 0 &&

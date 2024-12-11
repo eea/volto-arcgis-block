@@ -58,7 +58,6 @@ class MapViewer extends React.Component {
       layerLoading: false,
       layers: {},
       uploadedFile: true,
-      //isReady: false,
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -158,19 +157,16 @@ class MapViewer extends React.Component {
    * they are already mounted
    */
 
-  waitForDataFill(obj) {
-    while (obj.length === 0) {
-      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return obj;
-  }
-
+  // waitForDataFill(obj) {
+  //   while (obj.length === 0) {
+  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+  //   }
+  //   return obj;
+  // }
 
   async componentDidMount() {
     loadCss();
     await this.loader();
-    await this.waitForDataFill(this.compCfg);
-
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl: this.cfgUrls.positronCompositeThumbnail,

@@ -1,16 +1,16 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 import { Loader } from 'semantic-ui-react';
-import loadable from '@loadable/component';
-import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
-// import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+// import loadable from '@loadable/component';
+// import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
+import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
+
+import Highcharts from 'highcharts';
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var GeometryEngine, Graphic, esriRequest;
 
-// import Highcharts from 'highcharts';
-
-const HighchartsReact = loadable(() => import('highcharts-react-official'));
+// const HighchartsReact = loadable(() => import('highcharts-react-official'));
 
 class InfoWidget extends React.Component {
   /**
@@ -87,12 +87,12 @@ class InfoWidget extends React.Component {
     }
   }
 
-  waitForContainer(mapdiv) {
-    while (mapdiv === null) {
-      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-    }
-    return mapdiv;
-  }
+  // waitForContainer(mapdiv) {
+  //   while (mapdiv === null) {
+  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+  //   }
+  //   return mapdiv;
+  // }
 
   /**
    * This method is executed after the rener method is executed
@@ -1198,4 +1198,5 @@ class InfoWidget extends React.Component {
   }
 }
 
-export default injectLazyLibs('highcharts')(InfoWidget);
+// export default injectLazyLibs('highcharts')(InfoWidget);
+export default InfoWidget;
