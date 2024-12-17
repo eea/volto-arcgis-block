@@ -480,6 +480,7 @@ class MenuWidget extends React.Component {
     });
 
     this.activeLayersHandler = this.props.activeLayersHandler;
+    this.getTaxonomy = this.props.getTaxonomy;
   }
 
   loader() {
@@ -878,6 +879,7 @@ class MenuWidget extends React.Component {
     //to watch the component
     //this.setState({});
     this.openMenu();
+    this.loadComponentFilters();
     this.expandDropdowns();
     this.loadLayers();
     this.loadOpacity();
@@ -4100,6 +4102,226 @@ class MenuWidget extends React.Component {
     clearTimeout(this.timeout);
   };
 
+  loadComponentFilters() {
+    var selectedComponent = document.getElementById('select-component');
+    selectedComponent.options.add(
+      new Option('Select a component', 'default', false, false),
+    );
+    selectedComponent.options[0].disabled = true;
+    var selectedProduct = document.getElementById('select-product');
+    selectedProduct.options.add(
+      new Option('Select a product', 'default', false, false),
+    );
+    selectedProduct.options[0].disabled = true;
+    document
+      .querySelector('.menu-family-filter')
+      .setAttribute('style', 'display: none;');
+    this.compCfg.forEach((element) => {
+      selectedComponent.options.add(
+        new Option(
+          element.ComponentTitle,
+          element.ComponentPosition,
+          element.ComponentPosition,
+        ),
+      );
+    });
+  }
+  loadProductFilters() {
+    var selectedComponent = document.getElementById('select-component');
+    var selectedProduct = document.getElementById('select-product');
+    if (
+      document.querySelector('.clear-filters') &&
+      selectedComponent.value !== 'default'
+    ) {
+      document
+        .querySelector('.clear-filters')
+        .setAttribute('style', 'display: block;');
+    }
+    this.removeOptions(selectedProduct);
+    selectedProduct.options.add(
+      new Option('Select a product', 'default', false, false),
+    );
+    selectedProduct.options[0].disabled = true;
+    this.compCfg.forEach((component) => {
+      if (component.ComponentPosition.toString() === selectedComponent.value) {
+        component.Products.forEach((product) => {
+          selectedProduct.options.add(
+            new Option(
+              product.ProductTitle,
+              product.ProductId,
+              product.ProductId,
+            ),
+          );
+        });
+      }
+    });
+    let familyFilter = document.querySelector('.menu-family-filter');
+    if (familyFilter) {
+      familyFilter.setAttribute('style', 'display: none;');
+    }
+  }
+  async loadFamilyFilters() {
+    var selectedFamily = document.getElementById('select-family');
+    var selectedProduct = document.getElementById('select-product');
+    this.removeOptions(selectedFamily);
+    let tax = await this.getTaxonomy('collective.taxonomy.family');
+    //let hasFamily = false;
+    selectedFamily.options.add(
+      new Option('Select a family', 'default', false, false),
+    );
+    //let text = selectedProduct.selectedOptions[0].text
+    tax.tree.forEach((element) => {
+      if (element.title === selectedProduct.selectedOptions[0].text) {
+        //hasFamily = true;
+        element.children.forEach((child) => {
+          selectedFamily.options.add(
+            new Option(child.title, child.key, child.key),
+          );
+        });
+      }
+    });
+    // let familyFilter = document.querySelector('.menu-family-filter');
+    // if (familyFilter) {
+    //   if (!hasFamily) {
+    //     familyFilter.setAttribute('style','display: none;');
+    //   }else{
+    //     familyFilter.setAttribute('style','display: flex;');
+    //   }
+    // }
+  }
+  async menuSearch() {
+    let searchText;
+    let componentFilter;
+    let productFilter;
+    //let familyFilter;
+    if (document.querySelector('#menu-searchtext')) {
+      searchText = document
+        .querySelector('#menu-searchtext')
+        .value?.toUpperCase();
+    }
+    if (document.getElementById('select-component')) {
+      componentFilter = document.getElementById('select-component').value;
+    }
+    if (document.getElementById('select-product')) {
+      productFilter = document.getElementById('select-product').value;
+    }
+    // if (document.getElementById('select-family')) {
+    //   familyFilter = document.getElementById('select-family').text;
+    // }
+    for (let index = 0; index < this.compCfg.length; index++) {
+      let componentFound = false;
+      if (
+        index.toString() === componentFilter ||
+        componentFilter === 'default'
+      ) {
+        this.compCfg[index].Products.forEach((product) => {
+          let productFound = false;
+          if (
+            product.ProductId === productFilter ||
+            productFilter === 'default'
+          ) {
+            product.Datasets.forEach((dataset) => {
+              if (dataset?.DatasetTitle?.toUpperCase().includes(searchText)) {
+                componentFound = true;
+                productFound = true;
+                let componentElem = document.querySelector(
+                  '#component_' + index,
+                );
+                componentElem
+                  .querySelector('.ccl-expandable__button')
+                  .setAttribute('aria-expanded', 'true');
+
+                let productElem = document.querySelector(
+                  '[productid="' + product.ProductId + '"]',
+                );
+                productElem
+                  .querySelector('.ccl-expandable__button')
+                  .setAttribute('aria-expanded', 'true');
+                let datasetElem = document.querySelector(
+                  '[datasetid="' + dataset.DatasetId + '"]',
+                );
+                datasetElem.removeAttribute('style');
+                productElem.removeAttribute('style');
+                componentElem.removeAttribute('style');
+              } else {
+                let datasetElem = document.querySelector(
+                  '[datasetid="' + dataset.DatasetId + '"]',
+                );
+                datasetElem.setAttribute('style', 'display: none;');
+              }
+            });
+          }
+          if (!productFound) {
+            let productElem = document.querySelector(
+              '[productid="' + product.ProductId + '"]',
+            );
+            productElem.setAttribute('style', 'display: none;');
+          }
+        });
+      }
+      if (!componentFound) {
+        let componentElem = document.querySelector('#component_' + index);
+        componentElem.setAttribute('style', 'display: none;');
+      }
+    }
+  }
+  clearMenuText() {
+    if (document.querySelector('#menu-searchtext')) {
+      document.querySelector('#menu-searchtext').value = null;
+    }
+  }
+  openClearButton() {
+    if (document.querySelector('#menu-searchtext').value.length > 0) {
+      document.querySelector('.clearsearch').style.display = 'block';
+    } else {
+      document.querySelector('.clearsearch').style.display = 'none';
+    }
+  }
+  clearFilters() {
+    if (document.getElementById('select-component')) {
+      document.getElementById('select-component').value = 'default';
+    }
+    let selectedProduct = document.getElementById('select-product');
+    if (selectedProduct) {
+      this.removeOptions(selectedProduct);
+      selectedProduct.options.add(
+        new Option('Select a product', 'default', false, false),
+      );
+    }
+    if (document.getElementById('select-family')) {
+      document.getElementById('select-family').value = 'default';
+    }
+    let familyFilter = document.querySelector('.menu-family-filter');
+    if (familyFilter) {
+      familyFilter.setAttribute('style', 'display: none;');
+    }
+    if (document.querySelector('.clear-filters')) {
+      document
+        .querySelector('.clear-filters')
+        .setAttribute('style', 'display: none;');
+    }
+  }
+  closeFilters() {
+    if (document.querySelector('.filters-panel').style.display === 'block') {
+      document
+        .querySelector('.filters-panel')
+        .setAttribute('style', 'display: none;');
+    } else {
+      document
+        .querySelector('.filters-panel')
+        .setAttribute('style', 'display: block;');
+    }
+  }
+
+  removeOptions(selectElement) {
+    if (selectElement.options.length > 0) {
+      var i,
+        L = selectElement.options.length - 1;
+      for (i = L; i >= 0; i--) {
+        selectElement.remove(i);
+      }
+    }
+  }
   /**
    * This method renders the component
    * @returns jsx
@@ -4160,6 +4382,152 @@ class MenuWidget extends React.Component {
                   Download
                 </span>
               )}
+            </div>
+            <div className="search-panel">
+              <div className="menu-searchpanel">
+                <div class="search-input">
+                  <input
+                    type="text"
+                    id="menu-searchtext"
+                    maxlength="200"
+                    placeholder="Search products and datasets"
+                    onChange={() => this.openClearButton()}
+                  />
+                  <div class="search-input-actions">
+                    <button
+                      class="ui basic icon button search-input-clear-icon-button clearsearch"
+                      onClick={() => this.clearMenuText()}
+                      onKeyDown={(e) => {
+                        if (
+                          !e.altKey &&
+                          e.code !== 'Tab' &&
+                          !e.ctrlKey &&
+                          e.code !== 'Delete' &&
+                          !e.shiftKey &&
+                          !e.code.startsWith('F')
+                        ) {
+                          this.clearMenuText();
+                        }
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 26 26"
+                        class="icon"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M27.899 9.515L26.485 8.101 18 16.586 9.514 8.101 8.1 9.515 16.586 18 8.1 26.486 9.514 27.9 18 19.414 26.485 27.9 27.899 26.486 19.414 18z"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    aria-label="Search"
+                    class="button menu-search-button"
+                    onClick={() => this.menuSearch()}
+                    onKeyDown={(e) => {
+                      if (
+                        !e.altKey &&
+                        e.code !== 'Tab' &&
+                        !e.ctrlKey &&
+                        e.code !== 'Delete' &&
+                        !e.shiftKey &&
+                        !e.code.startsWith('F')
+                      ) {
+                        this.menuSearch();
+                      }
+                    }}
+                  >
+                    <span class="ccl-icon-zoom search-menu-icon"></span>
+                  </button>
+                </div>
+                <div class="filters-element filter-logo filters-header">
+                  <div class="filters-title">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 36 36"
+                      class="icon ui"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M5.0916,5.0002 L14.9996,19.3132 L14.9996,34.0002 L20.9996,29.5002 L20.9996,19.3132 L30.9086,5.0002 L5.0916,5.0002 Z M17.0006,18.6872 L8.9086,7.0002 L27.0916,7.0002 L19.0006,18.6872 L19.0006,28.5002 L17.0006,30.0002 L17.0006,18.6872 Z"
+                      ></path>
+                    </svg>
+                    <span class="filters-title-bold">Filters</span>
+                    <div
+                      className="clear-filters"
+                      tabIndex="0"
+                      role="button"
+                      onClick={() => this.clearFilters()}
+                      onKeyDown={(e) => {
+                        if (
+                          !e.altKey &&
+                          e.code !== 'Tab' &&
+                          !e.ctrlKey &&
+                          e.code !== 'Delete' &&
+                          !e.shiftKey &&
+                          !e.code.startsWith('F')
+                        ) {
+                          this.clearFilters();
+                        }
+                      }}
+                    >
+                      Clear filters
+                    </div>
+                  </div>
+
+                  <div
+                    className="dropdown-icon close-filters-icon"
+                    role="button"
+                    tabIndex="0"
+                    onClick={() => this.closeFilters()}
+                    onKeyDown={(e) => {
+                      if (
+                        !e.altKey &&
+                        e.code !== 'Tab' &&
+                        !e.ctrlKey &&
+                        e.code !== 'Delete' &&
+                        !e.shiftKey &&
+                        !e.code.startsWith('F')
+                      ) {
+                        this.closeFilters();
+                      }
+                    }}
+                  >
+                    <FontAwesomeIcon icon={['fas', 'chevron-down']} />
+                  </div>
+                </div>
+                <div className="filters-panel">
+                  <span className="menu-filter">
+                    Component
+                    <select
+                      id="select-component"
+                      class="esri-select filter-select"
+                      onBlur={() => {
+                        this.loadProductFilters();
+                      }}
+                    ></select>
+                  </span>
+                  <span className="menu-filter">
+                    Product
+                    <select
+                      id="select-product"
+                      class="esri-select filter-select"
+                      onBlur={() => {
+                        this.loadFamilyFilters();
+                      }}
+                    ></select>
+                  </span>
+                  <span className="menu-filter menu-family-filter">
+                    Family
+                    <select
+                      id="select-family"
+                      class="esri-select filter-select"
+                    ></select>
+                  </span>
+                </div>
+              </div>
             </div>
             <div
               className="panels"

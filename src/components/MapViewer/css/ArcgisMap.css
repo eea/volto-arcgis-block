@@ -1571,3 +1571,91 @@ div.map-container.popup-block {
 .esri-swipe div {
   outline: none !important;
 }
+
+.search-panel {
+  background-color: white;
+}
+
+.menu-searchpanel {
+  padding: 0.6rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  background-color: rgba(160, 177, 40, 0.1);
+}
+
+.search-input {
+  display: flex;
+}
+
+#menu-searchtext {
+  width: 23.5rem;
+  height: 2rem;
+  padding-left: 0.3rem;
+  border-width: 1px;
+  border-color: rgba(110, 110, 110, 0.3);
+}
+
+.menu-search-button {
+  width: 2rem;
+  height: 2rem;
+  border-width: 1px;
+  border-color: rgba(110, 110, 110, 0.3);
+  margin-left: 0.5rem;
+  background-color: #a0b128;
+  border-radius: 0;
+  color: white;
+}
+
+.search-menu-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.search-input-clear-icon-button {
+  height: 1.5rem;
+}
+
+.filter-logo {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-left: 0 !important;
+}
+
+.menu-filter {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.filter-select {
+  max-width: 19rem;
+  height: 1.5rem !important;
+}
+
+.clear-filters {
+  display: none;
+  margin-left: 16rem;
+  font-size: small;
+  text-decoration: underline;
+}
+
+.clearsearch.search-input-clear-icon-button.button {
+  position: absolute;
+  top: 4.3rem;
+  left: 23rem;
+  display: none;
+}
+
+.close-filters-icon {
+  padding-left: 0.8rem;
+  color: #a0b128;
+}
+
+.filters-panel {
+  display: none;
+}
+
+.filters-element.filter-logo.filters-header {
+  justify-content: space-between;
+}
