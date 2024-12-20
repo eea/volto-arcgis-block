@@ -22,6 +22,7 @@ import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
+//import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
@@ -70,6 +71,7 @@ class MapViewer extends React.Component {
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
     this.prepackageHandler = this.prepackageHandler.bind(this);
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
+    //this.getTaxonomy = this.props.getTaxonomy.bind(this);
   }
 
   mapLayersHandler(newLayers) {
@@ -429,6 +431,7 @@ class MapViewer extends React.Component {
           prepackageHandler={this.prepackageHandler}
           uploadedFile={this.state.uploadedFile}
           uploadFileHandler={this.uploadFileHandler}
+          //getTaxonomy={this.getTaxonomy}
         />
       ); //call conf
   }
@@ -527,6 +530,11 @@ export const CheckUserID = ({ reference }) => {
     </>
   );
 };
+// const mapDispatchToProps = (dispatch) => {
+//   return {
+//     getTaxonomy: (name) => dispatch(getTaxonomy(name)),
+//   };
+// };
 
 export default compose(
   connect(
@@ -535,5 +543,6 @@ export default compose(
     }),
     { MapViewerConfig },
   ),
+  //connect(null, mapDispatchToProps),
   injectLazyLibs('highcharts'),
-)(MapViewer);
+)(MapViewer, MenuWidget);
