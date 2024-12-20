@@ -1583,7 +1583,7 @@ div.map-container.popup-block {
   background-color: rgba(160, 177, 40, 0.1);
 }
 
-.search-input {
+.search-input.menu-search-input {
   display: flex;
 }
 

@@ -401,6 +401,7 @@ class MenuWidget extends React.Component {
       TMSLayerObj: null,
       draggedElements: [],
       popup: false,
+      filterArrow: 'chevron-down',
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -480,7 +481,7 @@ class MenuWidget extends React.Component {
     });
 
     this.activeLayersHandler = this.props.activeLayersHandler;
-    this.getTaxonomy = this.props.getTaxonomy;
+    //this.getTaxonomy = this.props.getTaxonomy;
   }
 
   loader() {
@@ -4161,25 +4162,25 @@ class MenuWidget extends React.Component {
     }
   }
   async loadFamilyFilters() {
-    var selectedFamily = document.getElementById('select-family');
-    var selectedProduct = document.getElementById('select-product');
-    this.removeOptions(selectedFamily);
-    let tax = await this.getTaxonomy('collective.taxonomy.family');
+    // var selectedFamily = document.getElementById('select-family');
+    // var selectedProduct = document.getElementById('select-product');
+    // this.removeOptions(selectedFamily);
+    //let tax = await this.getTaxonomy('collective.taxonomy.family');
     //let hasFamily = false;
-    selectedFamily.options.add(
-      new Option('Select a family', 'default', false, false),
-    );
+    // selectedFamily.options.add(
+    //   new Option('Select a family', 'default', false, false),
+    // );
     //let text = selectedProduct.selectedOptions[0].text
-    tax.tree.forEach((element) => {
-      if (element.title === selectedProduct.selectedOptions[0].text) {
-        //hasFamily = true;
-        element.children.forEach((child) => {
-          selectedFamily.options.add(
-            new Option(child.title, child.key, child.key),
-          );
-        });
-      }
-    });
+    // tax.tree.forEach((element) => {
+    //   if (element.title === selectedProduct.selectedOptions[0].text) {
+    //     //hasFamily = true;
+    //     element.children.forEach((child) => {
+    //       selectedFamily.options.add(
+    //         new Option(child.title, child.key, child.key),
+    //       );
+    //     });
+    //   }
+    // });
     // let familyFilter = document.querySelector('.menu-family-filter');
     // if (familyFilter) {
     //   if (!hasFamily) {
@@ -4306,10 +4307,12 @@ class MenuWidget extends React.Component {
       document
         .querySelector('.filters-panel')
         .setAttribute('style', 'display: none;');
+      this.setState({ filterArrow: 'chevron-down' });
     } else {
       document
         .querySelector('.filters-panel')
         .setAttribute('style', 'display: block;');
+      this.setState({ filterArrow: 'chevron-up' });
     }
   }
 
@@ -4385,7 +4388,7 @@ class MenuWidget extends React.Component {
             </div>
             <div className="search-panel">
               <div className="menu-searchpanel">
-                <div class="search-input">
+                <div class="search-input menu-search-input">
                   <input
                     type="text"
                     id="menu-searchtext"
@@ -4495,7 +4498,7 @@ class MenuWidget extends React.Component {
                       }
                     }}
                   >
-                    <FontAwesomeIcon icon={['fas', 'chevron-down']} />
+                    <FontAwesomeIcon icon={['fas', this.state.filterArrow]} />
                   </div>
                 </div>
                 <div className="filters-panel">
@@ -4504,7 +4507,8 @@ class MenuWidget extends React.Component {
                     <select
                       id="select-component"
                       class="esri-select filter-select"
-                      onBlur={() => {
+                      onBlur={() => {}}
+                      onChange={() => {
                         this.loadProductFilters();
                       }}
                     ></select>
@@ -4514,7 +4518,8 @@ class MenuWidget extends React.Component {
                     <select
                       id="select-product"
                       class="esri-select filter-select"
-                      onBlur={() => {
+                      onBlur={() => {}}
+                      onChange={() => {
                         this.loadFamilyFilters();
                       }}
                     ></select>
