@@ -3957,6 +3957,13 @@ class MenuWidget extends React.Component {
       if (tab.id === 'active_label') {
         this.layersReorder();
       }
+      if (tab.id === 'products_label') {
+        document.querySelector('.search-panel').removeAttribute('style');
+      } else {
+        document
+          .querySelector('.search-panel')
+          .setAttribute('style', 'display: none;');
+      }
 
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
@@ -4195,6 +4202,7 @@ class MenuWidget extends React.Component {
     let componentFilter;
     let productFilter;
     //let familyFilter;
+    let result = false;
     if (document.querySelector('#menu-searchtext')) {
       searchText = document
         .querySelector('#menu-searchtext')
@@ -4215,16 +4223,49 @@ class MenuWidget extends React.Component {
         index.toString() === componentFilter ||
         componentFilter === 'default'
       ) {
-        this.compCfg[index].Products.forEach((product) => {
+        for (let j = 0; j < this.compCfg[index].Products.length; j++) {
+          const product = this.compCfg[index].Products[j];
           let productFound = false;
           if (
             product.ProductId === productFilter ||
             productFilter === 'default'
           ) {
-            product.Datasets.forEach((dataset) => {
-              if (dataset?.DatasetTitle?.toUpperCase().includes(searchText)) {
+            for (let k = 0; k < product.Datasets.length; k++) {
+              const dataset = product.Datasets[k];
+
+              if (
+                searchText === '' &&
+                componentFilter === 'default' &&
+                productFilter === 'default'
+              ) {
                 componentFound = true;
                 productFound = true;
+                result = true;
+                let componentElem = document.querySelector(
+                  '#component_' + index,
+                );
+                componentElem
+                  .querySelector('.ccl-expandable__button')
+                  .setAttribute('aria-expanded', 'false');
+
+                let productElem = document.querySelector(
+                  '[productid="' + product.ProductId + '"]',
+                );
+                productElem
+                  .querySelector('.ccl-expandable__button')
+                  .setAttribute('aria-expanded', 'false');
+                let datasetElem = document.querySelector(
+                  '[datasetid="' + dataset.DatasetId + '"]',
+                );
+                datasetElem.removeAttribute('style');
+                productElem.removeAttribute('style');
+                componentElem.removeAttribute('style');
+              } else if (
+                dataset?.DatasetTitle?.toUpperCase().includes(searchText)
+              ) {
+                componentFound = true;
+                productFound = true;
+                result = true;
                 let componentElem = document.querySelector(
                   '#component_' + index,
                 );
@@ -4250,7 +4291,7 @@ class MenuWidget extends React.Component {
                 );
                 datasetElem.setAttribute('style', 'display: none;');
               }
-            });
+            }
           }
           if (!productFound) {
             let productElem = document.querySelector(
@@ -4258,18 +4299,28 @@ class MenuWidget extends React.Component {
             );
             productElem.setAttribute('style', 'display: none;');
           }
-        });
+        }
+        this.compCfg[index].Products.forEach((product) => {});
       }
       if (!componentFound) {
         let componentElem = document.querySelector('#component_' + index);
         componentElem.setAttribute('style', 'display: none;');
       }
     }
+    if (result) {
+      document.querySelector('.no-filter-result-message').style.display =
+        'none';
+    } else {
+      document.querySelector('.no-filter-result-message').style.display =
+        'block';
+    }
   }
   clearMenuText() {
     if (document.querySelector('#menu-searchtext')) {
       document.querySelector('#menu-searchtext').value = null;
     }
+    this.menuSearch();
+    this.openClearButton();
   }
   openClearButton() {
     if (document.querySelector('#menu-searchtext').value.length > 0) {
@@ -4395,6 +4446,11 @@ class MenuWidget extends React.Component {
                     maxlength="200"
                     placeholder="Search products and datasets"
                     onChange={() => this.openClearButton()}
+                    onKeyDown={(e) => {
+                      if (e.code === 'Enter') {
+                        this.menuSearch();
+                      }
+                    }}
                   />
                   <div class="search-input-actions">
                     <button
@@ -4462,7 +4518,10 @@ class MenuWidget extends React.Component {
                       className="clear-filters"
                       tabIndex="0"
                       role="button"
-                      onClick={() => this.clearFilters()}
+                      onClick={() => {
+                        this.clearFilters();
+                        this.menuSearch();
+                      }}
                       onKeyDown={(e) => {
                         if (
                           !e.altKey &&
@@ -4473,6 +4532,7 @@ class MenuWidget extends React.Component {
                           !e.code.startsWith('F')
                         ) {
                           this.clearFilters();
+                          this.menuSearch();
                         }
                       }}
                     >
@@ -4510,17 +4570,19 @@ class MenuWidget extends React.Component {
                       onBlur={() => {}}
                       onChange={() => {
                         this.loadProductFilters();
+                        this.menuSearch();
                       }}
                     ></select>
                   </span>
                   <span className="menu-filter">
-                    Product
+                    Product groups
                     <select
                       id="select-product"
                       class="esri-select filter-select"
                       onBlur={() => {}}
                       onChange={() => {
                         this.loadFamilyFilters();
+                        this.menuSearch();
                       }}
                     ></select>
                   </span>
@@ -4534,6 +4596,7 @@ class MenuWidget extends React.Component {
                 </div>
               </div>
             </div>
+            <div className="no-filter-result-message">No data available</div>
             <div
               className="panels"
               id="paneles"
