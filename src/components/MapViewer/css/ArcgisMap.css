@@ -455,6 +455,15 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   color: red;
   font-size: 12px;
 }
+
+.no-filter-result-message {
+  display: none;
+  padding-top: 0.3rem;
+  padding-left: 0.5rem;
+  background-color: white;
+  color: red;
+  font-size: 15px;
+}
 /* Left menu */
 .map-menu {
   position: relative;
