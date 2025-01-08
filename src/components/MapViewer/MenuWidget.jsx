@@ -4220,7 +4220,7 @@ class MenuWidget extends React.Component {
     for (let index = 0; index < this.compCfg.length; index++) {
       let componentFound = false;
       if (
-        index.toString() === componentFilter ||
+        this.compCfg[index].ComponentPosition.toString() === componentFilter ||
         componentFilter === 'default'
       ) {
         for (let j = 0; j < this.compCfg[index].Products.length; j++) {
