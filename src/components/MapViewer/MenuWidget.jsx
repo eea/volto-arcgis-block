@@ -4437,171 +4437,171 @@ class MenuWidget extends React.Component {
                 </span>
               )}
             </div>
-            <div className="search-panel">
-              <div className="menu-searchpanel">
-                <div class="search-input menu-search-input">
-                  <input
-                    type="text"
-                    id="menu-searchtext"
-                    maxlength="200"
-                    placeholder="Search products and datasets"
-                    onChange={() => this.openClearButton()}
-                    onKeyDown={(e) => {
-                      if (e.code === 'Enter') {
-                        this.menuSearch();
-                      }
-                    }}
-                  />
-                  <div class="search-input-actions">
-                    <button
-                      class="ui basic icon button search-input-clear-icon-button clearsearch"
-                      onClick={() => this.clearMenuText()}
-                      onKeyDown={(e) => {
-                        if (
-                          !e.altKey &&
-                          e.code !== 'Tab' &&
-                          !e.ctrlKey &&
-                          e.code !== 'Delete' &&
-                          !e.shiftKey &&
-                          !e.code.startsWith('F')
-                        ) {
-                          this.clearMenuText();
-                        }
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 26 26"
-                        class="icon"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M27.899 9.515L26.485 8.101 18 16.586 9.514 8.101 8.1 9.515 16.586 18 8.1 26.486 9.514 27.9 18 19.414 26.485 27.9 27.899 26.486 19.414 18z"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
-                  <button
-                    aria-label="Search"
-                    class="button menu-search-button"
-                    onClick={() => this.menuSearch()}
-                    onKeyDown={(e) => {
-                      if (
-                        !e.altKey &&
-                        e.code !== 'Tab' &&
-                        !e.ctrlKey &&
-                        e.code !== 'Delete' &&
-                        !e.shiftKey &&
-                        !e.code.startsWith('F')
-                      ) {
-                        this.menuSearch();
-                      }
-                    }}
-                  >
-                    <span class="ccl-icon-zoom search-menu-icon"></span>
-                  </button>
-                </div>
-                <div class="filters-element filter-logo filters-header">
-                  <div class="filters-title">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 36 36"
-                      class="icon ui"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M5.0916,5.0002 L14.9996,19.3132 L14.9996,34.0002 L20.9996,29.5002 L20.9996,19.3132 L30.9086,5.0002 L5.0916,5.0002 Z M17.0006,18.6872 L8.9086,7.0002 L27.0916,7.0002 L19.0006,18.6872 L19.0006,28.5002 L17.0006,30.0002 L17.0006,18.6872 Z"
-                      ></path>
-                    </svg>
-                    <span class="filters-title-bold">Filters</span>
-                    <div
-                      className="clear-filters"
-                      tabIndex="0"
-                      role="button"
-                      onClick={() => {
-                        this.clearFilters();
-                        this.menuSearch();
-                      }}
-                      onKeyDown={(e) => {
-                        if (
-                          !e.altKey &&
-                          e.code !== 'Tab' &&
-                          !e.ctrlKey &&
-                          e.code !== 'Delete' &&
-                          !e.shiftKey &&
-                          !e.code.startsWith('F')
-                        ) {
-                          this.clearFilters();
-                          this.menuSearch();
-                        }
-                      }}
-                    >
-                      Clear filters
-                    </div>
-                  </div>
-
-                  <div
-                    className="dropdown-icon close-filters-icon"
-                    role="button"
-                    tabIndex="0"
-                    onClick={() => this.closeFilters()}
-                    onKeyDown={(e) => {
-                      if (
-                        !e.altKey &&
-                        e.code !== 'Tab' &&
-                        !e.ctrlKey &&
-                        e.code !== 'Delete' &&
-                        !e.shiftKey &&
-                        !e.code.startsWith('F')
-                      ) {
-                        this.closeFilters();
-                      }
-                    }}
-                  >
-                    <FontAwesomeIcon icon={['fas', this.state.filterArrow]} />
-                  </div>
-                </div>
-                <div className="filters-panel">
-                  <span className="menu-filter">
-                    Component
-                    <select
-                      id="select-component"
-                      class="esri-select filter-select"
-                      onBlur={() => {}}
-                      onChange={() => {
-                        this.loadProductFilters();
-                        this.menuSearch();
-                      }}
-                    ></select>
-                  </span>
-                  <span className="menu-filter">
-                    Product groups
-                    <select
-                      id="select-product"
-                      class="esri-select filter-select"
-                      onBlur={() => {}}
-                      onChange={() => {
-                        this.loadFamilyFilters();
-                        this.menuSearch();
-                      }}
-                    ></select>
-                  </span>
-                  <span className="menu-filter menu-family-filter">
-                    Family
-                    <select
-                      id="select-family"
-                      class="esri-select filter-select"
-                    ></select>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="no-filter-result-message">No data available</div>
             <div
               className="panels"
               id="paneles"
               onScroll={() => this.storePanelScroll()}
             >
+              <div className="search-panel">
+                <div className="menu-searchpanel">
+                  <div class="search-input menu-search-input">
+                    <input
+                      type="text"
+                      id="menu-searchtext"
+                      maxlength="200"
+                      placeholder="Search products and datasets"
+                      onChange={() => this.openClearButton()}
+                      onKeyDown={(e) => {
+                        if (e.code === 'Enter') {
+                          this.menuSearch();
+                        }
+                      }}
+                    />
+                    <div class="search-input-actions">
+                      <button
+                        class="ui basic icon button search-input-clear-icon-button clearsearch"
+                        onClick={() => this.clearMenuText()}
+                        onKeyDown={(e) => {
+                          if (
+                            !e.altKey &&
+                            e.code !== 'Tab' &&
+                            !e.ctrlKey &&
+                            e.code !== 'Delete' &&
+                            !e.shiftKey &&
+                            !e.code.startsWith('F')
+                          ) {
+                            this.clearMenuText();
+                          }
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 26 26"
+                          class="icon"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M27.899 9.515L26.485 8.101 18 16.586 9.514 8.101 8.1 9.515 16.586 18 8.1 26.486 9.514 27.9 18 19.414 26.485 27.9 27.899 26.486 19.414 18z"
+                          ></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <button
+                      aria-label="Search"
+                      class="button menu-search-button"
+                      onClick={() => this.menuSearch()}
+                      onKeyDown={(e) => {
+                        if (
+                          !e.altKey &&
+                          e.code !== 'Tab' &&
+                          !e.ctrlKey &&
+                          e.code !== 'Delete' &&
+                          !e.shiftKey &&
+                          !e.code.startsWith('F')
+                        ) {
+                          this.menuSearch();
+                        }
+                      }}
+                    >
+                      <span class="ccl-icon-zoom search-menu-icon"></span>
+                    </button>
+                  </div>
+                  <div class="filters-element filter-logo filters-header">
+                    <div class="filters-title">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 36 36"
+                        class="icon ui"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M5.0916,5.0002 L14.9996,19.3132 L14.9996,34.0002 L20.9996,29.5002 L20.9996,19.3132 L30.9086,5.0002 L5.0916,5.0002 Z M17.0006,18.6872 L8.9086,7.0002 L27.0916,7.0002 L19.0006,18.6872 L19.0006,28.5002 L17.0006,30.0002 L17.0006,18.6872 Z"
+                        ></path>
+                      </svg>
+                      <span class="filters-title-bold">Filters</span>
+                      <div
+                        className="clear-filters"
+                        tabIndex="0"
+                        role="button"
+                        onClick={() => {
+                          this.clearFilters();
+                          this.menuSearch();
+                        }}
+                        onKeyDown={(e) => {
+                          if (
+                            !e.altKey &&
+                            e.code !== 'Tab' &&
+                            !e.ctrlKey &&
+                            e.code !== 'Delete' &&
+                            !e.shiftKey &&
+                            !e.code.startsWith('F')
+                          ) {
+                            this.clearFilters();
+                            this.menuSearch();
+                          }
+                        }}
+                      >
+                        Clear filters
+                      </div>
+                    </div>
+
+                    <div
+                      className="dropdown-icon close-filters-icon"
+                      role="button"
+                      tabIndex="0"
+                      onClick={() => this.closeFilters()}
+                      onKeyDown={(e) => {
+                        if (
+                          !e.altKey &&
+                          e.code !== 'Tab' &&
+                          !e.ctrlKey &&
+                          e.code !== 'Delete' &&
+                          !e.shiftKey &&
+                          !e.code.startsWith('F')
+                        ) {
+                          this.closeFilters();
+                        }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={['fas', this.state.filterArrow]} />
+                    </div>
+                  </div>
+                  <div className="filters-panel">
+                    <span className="menu-filter">
+                      Component
+                      <select
+                        id="select-component"
+                        class="esri-select filter-select"
+                        onBlur={() => {}}
+                        onChange={() => {
+                          this.loadProductFilters();
+                          this.menuSearch();
+                        }}
+                      ></select>
+                    </span>
+                    <span className="menu-filter">
+                      Product groups
+                      <select
+                        id="select-product"
+                        class="esri-select filter-select"
+                        onBlur={() => {}}
+                        onChange={() => {
+                          this.loadFamilyFilters();
+                          this.menuSearch();
+                        }}
+                      ></select>
+                    </span>
+                    <span className="menu-filter menu-family-filter">
+                      Family
+                      <select
+                        id="select-family"
+                        class="esri-select filter-select"
+                      ></select>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="no-filter-result-message">No data available</div>
               <div
                 className={
                   !this.props.download ? 'panel panel-selected' : 'panel'
