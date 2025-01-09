@@ -1638,13 +1638,13 @@ div.map-container.popup-block {
 }
 
 .filter-select {
-  max-width: 19rem;
+  max-width: 18rem;
   height: 1.5rem !important;
 }
 
 .clear-filters {
   display: none;
-  margin-left: 16rem;
+  margin-left: 15rem;
   font-size: small;
   text-decoration: underline;
 }
@@ -1652,7 +1652,7 @@ div.map-container.popup-block {
 .clearsearch.search-input-clear-icon-button.button {
   position: absolute;
   top: 4.3rem;
-  left: 23rem;
+  left: 22.5rem;
   display: none;
 }
 
