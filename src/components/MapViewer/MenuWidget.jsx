@@ -743,11 +743,11 @@ class MenuWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: true });
     }
-    if (this.loadFirst && this.container.current) {
-      this.checkUrl();
-      this.loadFirst = false;
-      this.zoomTooltips();
-    }
+    // if (this.loadFirst && this.container.current) {
+    this.checkUrl();
+    // this.loadFirst = false;
+    this.zoomTooltips();
+    // }
 
     let authToken = this.getAuthToken();
     let timeSliderTag = sessionStorage.getItem('timeSliderTag');
@@ -1060,7 +1060,11 @@ class MenuWidget extends React.Component {
             scrollPosition = mapMenu.offsetTop;
           }
         }
-        document.querySelector('.panels').scrollTop = scrollPosition;
+        setTimeout(() => {
+          document.querySelector(
+            'div#paneles.panels',
+          ).scrollTop = scrollPosition;
+        }, 1000);
       }
     }
   }
