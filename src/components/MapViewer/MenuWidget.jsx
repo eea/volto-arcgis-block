@@ -4221,93 +4221,91 @@ class MenuWidget extends React.Component {
     // if (document.getElementById('select-family')) {
     //   familyFilter = document.getElementById('select-family').text;
     // }
+    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     for (let index = 0; index < this.compCfg.length; index++) {
       let componentFound = false;
-      if (
-        this.compCfg[index].ComponentPosition.toString() === componentFilter ||
-        componentFilter === 'default'
-      ) {
-        for (let j = 0; j < this.compCfg[index].Products.length; j++) {
-          const product = this.compCfg[index].Products[j];
-          let productFound = false;
-          if (
-            product.ProductId === productFilter ||
-            productFilter === 'default'
-          ) {
-            for (let k = 0; k < product.Datasets.length; k++) {
-              const dataset = product.Datasets[k];
-
-              if (
-                searchText === '' &&
-                componentFilter === 'default' &&
-                productFilter === 'default'
-              ) {
-                componentFound = true;
-                productFound = true;
-                result = true;
-                let componentElem = document.querySelector(
-                  '#component_' + index,
-                );
-                componentElem
-                  .querySelector('.ccl-expandable__button')
-                  .setAttribute('aria-expanded', 'false');
-
-                let productElem = document.querySelector(
-                  '[productid="' + product.ProductId + '"]',
-                );
-                productElem
-                  .querySelector('.ccl-expandable__button')
-                  .setAttribute('aria-expanded', 'false');
-                let datasetElem = document.querySelector(
-                  '[datasetid="' + dataset.DatasetId + '"]',
-                );
-                datasetElem.removeAttribute('style');
-                productElem.removeAttribute('style');
-                componentElem.removeAttribute('style');
-              } else if (
-                dataset?.DatasetTitle?.toUpperCase().includes(searchText)
-              ) {
-                componentFound = true;
-                productFound = true;
-                result = true;
-                let componentElem = document.querySelector(
-                  '#component_' + index,
-                );
-                componentElem
-                  .querySelector('.ccl-expandable__button')
-                  .setAttribute('aria-expanded', 'true');
-
-                let productElem = document.querySelector(
-                  '[productid="' + product.ProductId + '"]',
-                );
-                productElem
-                  .querySelector('.ccl-expandable__button')
-                  .setAttribute('aria-expanded', 'true');
-                let datasetElem = document.querySelector(
-                  '[datasetid="' + dataset.DatasetId + '"]',
-                );
-                datasetElem.removeAttribute('style');
-                productElem.removeAttribute('style');
-                componentElem.removeAttribute('style');
-              } else {
-                let datasetElem = document.querySelector(
-                  '[datasetid="' + dataset.DatasetId + '"]',
-                );
-                datasetElem.setAttribute('style', 'display: none;');
-              }
+      let componentChecked = false;
+      let componentElem = document.querySelector('#component_' + index);
+      for (let j = 0; j < this.compCfg[index].Products.length; j++) {
+        const product = this.compCfg[index].Products[j];
+        let productFound = false;
+        let productChecked = false;
+        let productElem = document.querySelector(
+          '[productid="' + product.ProductId + '"]',
+        );
+        for (let k = 0; k < product.Datasets.length; k++) {
+          const dataset = product.Datasets[k];
+          let datasetChecked = false;
+          let datasetElem = document.querySelector(
+            '[datasetid="' + dataset.DatasetId + '"]',
+          );
+          for (let l = 0; l < checkedLayers.length; l++) {
+            if (
+              dataset.DatasetTitle ===
+              this.layers[checkedLayers[l]].DatasetTitle
+            ) {
+              componentChecked = true;
+              productChecked = true;
+              datasetChecked = true;
             }
           }
-          if (!productFound) {
-            let productElem = document.querySelector(
-              '[productid="' + product.ProductId + '"]',
-            );
-            productElem.setAttribute('style', 'display: none;');
+          if (
+            searchText === '' &&
+            componentFilter === 'default' &&
+            productFilter === 'default'
+          ) {
+            componentFound = true;
+            productFound = true;
+            result = true;
+            componentElem
+              .querySelector('.ccl-expandable__button')
+              .setAttribute('aria-expanded', 'false');
+            productElem
+              .querySelector('.ccl-expandable__button')
+              .setAttribute('aria-expanded', 'false');
+            datasetElem.removeAttribute('style');
+            productElem.removeAttribute('style');
+            componentElem.removeAttribute('style');
+          } else if (
+            datasetChecked ||
+            (dataset?.DatasetTitle?.toUpperCase().includes(searchText) &&
+              (product.ProductId === productFilter ||
+                productFilter === 'default') &&
+              (this.compCfg[index].ComponentPosition.toString() ===
+                componentFilter ||
+                componentFilter === 'default'))
+          ) {
+            componentFound = true;
+            productFound = true;
+            result = true;
+            componentElem
+              .querySelector('.ccl-expandable__button')
+              .setAttribute('aria-expanded', 'true');
+            productElem
+              .querySelector('.ccl-expandable__button')
+              .setAttribute('aria-expanded', 'true');
+            datasetElem.removeAttribute('style');
+            productElem.removeAttribute('style');
+            componentElem.removeAttribute('style');
+          } else {
+            datasetElem.setAttribute('style', 'display: none;');
           }
         }
-        this.compCfg[index].Products.forEach((product) => {});
+        if (productChecked) {
+          productElem
+            .querySelector('.ccl-expandable__button')
+            .setAttribute('aria-expanded', 'true');
+        }
+        if (!productFound && !productChecked) {
+          productElem.setAttribute('style', 'display: none;');
+        }
       }
-      if (!componentFound) {
-        let componentElem = document.querySelector('#component_' + index);
+      if (componentChecked) {
+        componentElem
+          .querySelector('.ccl-expandable__button')
+          .setAttribute('aria-expanded', 'true');
+      }
+      if (!componentFound && !componentChecked) {
         componentElem.setAttribute('style', 'display: none;');
       }
     }
