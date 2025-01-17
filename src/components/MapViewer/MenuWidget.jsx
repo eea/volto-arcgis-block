@@ -4239,7 +4239,7 @@ class MenuWidget extends React.Component {
           let datasetElem = document.querySelector(
             '[datasetid="' + dataset.DatasetId + '"]',
           );
-          for (let l = 0; l < checkedLayers.length; l++) {
+          for (let l = 0; l < checkedLayers?.length; l++) {
             if (
               dataset.DatasetTitle ===
               this.layers[checkedLayers[l]].DatasetTitle
