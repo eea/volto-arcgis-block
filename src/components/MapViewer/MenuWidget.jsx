@@ -4221,7 +4221,6 @@ class MenuWidget extends React.Component {
     // if (document.getElementById('select-family')) {
     //   familyFilter = document.getElementById('select-family').text;
     // }
-    let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     for (let index = 0; index < this.compCfg.length; index++) {
       let componentFound = false;
       let componentChecked = false;
@@ -4239,10 +4238,10 @@ class MenuWidget extends React.Component {
           let datasetElem = document.querySelector(
             '[datasetid="' + dataset.DatasetId + '"]',
           );
-          for (let l = 0; l < checkedLayers?.length; l++) {
+          for (let l = 0; l < Object.keys(this.activeLayersJSON).length; l++) {
             if (
               dataset.DatasetTitle ===
-              this.layers[checkedLayers[l]].DatasetTitle
+              this.layers[Object.keys(this.activeLayersJSON)[l]].DatasetTitle
             ) {
               componentChecked = true;
               productChecked = true;
