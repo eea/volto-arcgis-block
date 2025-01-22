@@ -215,6 +215,8 @@ const config = {
   ],
   Urls: {
     nutsHandler: '/clms.downloadtool.fme_config_controlpanel.nuts_service',
+    improvedNuts:
+      'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/NUTS_2021_Improved/MapServer/',
     outsideEu:
       'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
     all_present_lc_a_pol:
