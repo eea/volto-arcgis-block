@@ -40,7 +40,6 @@ class AreaWidget extends React.Component {
     // Enable defaultPopup option to charge popup and highlifght feature
     this.props.mapViewer.view.popup.defaultPopupTemplateEnabled = true;
     this.nutsUrl = '';
-    this.countriesUrl = '';
     this.initFMI = this.initFMI.bind(this);
     this.mapviewer_config = this.props.mapviewer_config;
     this.fileInput = createRef();
@@ -283,10 +282,8 @@ class AreaWidget extends React.Component {
       'flex';
     var layer = new FeatureLayer({
       id: id,
-      url: this.countriesUrl,
-      // url:
-      // 'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
-      layerId: 0,
+      url: this.nutsUrl,
+      layerId: 9,
       outFields: ['*'],
       popupEnabled: false,
     });
@@ -1159,19 +1156,10 @@ class AreaWidget extends React.Component {
       let nutsResponse = await fetch(
         fetchUrl + '/clms.downloadtool.fme_config_controlpanel.nuts_service',
       );
-      let countriesResponse = await fetch(
-        fetchUrl +
-          '/clms.downloadtool.fme_config_controlpanel.countries_service',
-      );
       if (nutsResponse.status === 200) {
         this.nutsUrl = await nutsResponse.json();
       } else {
         throw new Error(nutsResponse.status);
-      }
-      if (countriesResponse.status === 200) {
-        this.countriesUrl = await countriesResponse.json();
-      } else {
-        throw new Error(countriesResponse.status);
       }
     } catch (error) {
       //console.error('There was a problem with the fetch operation:', error);
