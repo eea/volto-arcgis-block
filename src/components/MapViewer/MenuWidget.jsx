@@ -2846,20 +2846,31 @@ class MenuWidget extends React.Component {
     this.findCheckedDataset(elem);
     if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url.toLowerCase().includes('wms')) {
+    } else if (this.url?.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
-    } else if (this.url.toLowerCase().includes('wmts')) {
+    } else if (this.url?.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
-    let myExtent = new Extent({
-      xmin: BBoxes['dataset'].xmin,
-      ymin: BBoxes['dataset'].ymin,
-      xmax: BBoxes['dataset'].xmax,
-      ymax: BBoxes['dataset'].ymax,
-      // spatialReference: 4326 // by default wkid 4326
-    });
+    let myExtent;
+    if (Object.values(BBoxes).length === 0) {
+      myExtent = new Extent({
+        xmin: -20037508.342789,
+        ymin: -20037508.342789,
+        xmax: 20037508.342789,
+        ymax: 20037508.342789,
+        spatialReference: 3857, // by default wkid 4326
+      });
+    } else {
+      myExtent = new Extent({
+        xmin: BBoxes['dataset'].xmin,
+        ymin: BBoxes['dataset'].ymin,
+        xmax: BBoxes['dataset'].xmax,
+        ymax: BBoxes['dataset'].ymax,
+        // spatialReference: 4326 // by default wkid 4326
+      });
+    }
     this.view.goTo(myExtent); //
   }
 
