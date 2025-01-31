@@ -978,7 +978,8 @@ class MenuWidget extends React.Component {
   }
 
   getAuthToken() {
-    let tokenResult = null;
+    let tokenResult;
+    tokenResult = null;
     if (this.getCookie('auth_token')) {
       tokenResult = true;
     } else {
