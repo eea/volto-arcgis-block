@@ -1939,6 +1939,7 @@ class MenuWidget extends React.Component {
     let elemContainer = document
       .getElementById(elem.id)
       ?.closest('.ccl-form-group');
+    if (!elemContainer) return;
     let nextElemSibling = elemContainer.nextElementSibling;
     let previousElemSibling = elemContainer.previousElementSibling;
 
@@ -1948,6 +1949,7 @@ class MenuWidget extends React.Component {
     let productContainer = document.querySelector(
       '[productid="' + productContainerId + '"]',
     );
+    if (!productContainer) return;
 
     let datasetArray = productContainer.querySelectorAll('[datasetid]');
 
@@ -1972,6 +1974,7 @@ class MenuWidget extends React.Component {
 
     for (let k = 0; k < dataSetContainer.length; k++) {
       let elemContainerIdElement = elemContainer.closest('[datasetid]');
+      if (!elemContainerIdElement) continue;
       if (
         dataSetContainer[k].getAttribute('datasetid') !==
         elemContainerIdElement.getAttribute('datasetid')
@@ -1989,16 +1992,16 @@ class MenuWidget extends React.Component {
       for (let g = 1; g < dataSetContents.length; g++) {
         if (dataSetContents[g].checked) {
           currentDataSetLayer = dataSetContents[g];
-          currentDataSetLayerSpan = currentDataSetLayer.nextSibling.querySelector(
+          currentDataSetLayerSpan = currentDataSetLayer.nextSibling?.querySelector(
             'span',
           );
           currentElemContainerSpan = elemContainer.querySelector('span');
 
           if (
-            (currentDataSetLayerSpan.innerText.includes('Modular') &&
-              currentElemContainerSpan.innerText.includes('Modular')) ||
-            (currentDataSetLayerSpan.innerText.includes('Dichotomous') &&
-              currentElemContainerSpan.innerText.includes('Dichotomous'))
+            (currentDataSetLayerSpan?.innerText.includes('Modular') &&
+              currentElemContainerSpan?.innerText.includes('Modular')) ||
+            (currentDataSetLayerSpan?.innerText.includes('Dichotomous') &&
+              currentElemContainerSpan?.innerText.includes('Dichotomous'))
           ) {
             continue;
           } else {
@@ -2038,10 +2041,10 @@ class MenuWidget extends React.Component {
         return;
       } else {
         if (
-          (currentDataSetLayerSpan.innerText.includes('Modular') &&
-            currentElemContainerSpan.innerText.includes('Modular')) ||
-          (currentDataSetLayerSpan.innerText.includes('Dichotomous') &&
-            currentElemContainerSpan.innerText.includes('Dichotomous'))
+          (currentDataSetLayerSpan?.innerText.includes('Modular') &&
+            currentElemContainerSpan?.innerText.includes('Modular')) ||
+          (currentDataSetLayerSpan?.innerText.includes('Dichotomous') &&
+            currentElemContainerSpan?.innerText.includes('Dichotomous'))
         ) {
           this.setState({});
           return;
@@ -2050,7 +2053,9 @@ class MenuWidget extends React.Component {
             currentDataSetLayer.click();
           }
           if (currentDataSetLayer && !currentDataSetLayer.checked) {
-            dataSetLayerInput.click();
+            if (dataSetLayerInput) {
+              dataSetLayerInput.click();
+            }
           }
         }
       }
