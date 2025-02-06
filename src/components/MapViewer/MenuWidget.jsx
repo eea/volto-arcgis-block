@@ -778,7 +778,7 @@ class MenuWidget extends React.Component {
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
 
     // "Active on map" section and the time slider opened by default if user is logged in and timeSliderTag is true
-    if (checkedLayers.length && !this.props.download) {
+    if (checkedLayers?.length && !this.props.download) {
       if (authToken && timeSliderTag) {
         for (const layerid of checkedLayers) {
           if (
@@ -1845,10 +1845,12 @@ class MenuWidget extends React.Component {
     let selectedUrl;
     let zoom = this.view.get('zoom');
     if (layer.LayerUrl && Object.keys(layer.LayerUrl).length > 0) {
-      zoom < 10
-        ? (selectedUrl = layer.LayerUrl['longZoom'])
-        : (selectedUrl = layer.LayerUrl['shortZoom']);
-    } else selectedUrl = layer.LayerUrl;
+      selectedUrl =
+        zoom < 10 ? layer.LayerUrl['longZoom'] : layer.LayerUrl['shortZoom'];
+    } else {
+      selectedUrl = layer.LayerUrl;
+    }
+
     const CustomTileLayer = BaseTileLayer.createSubclass({
       properties: {
         urlTemplate: null,
@@ -1860,10 +1862,8 @@ class MenuWidget extends React.Component {
 
       // generate the tile url for a given level, row and column
       getTileUrl: function (level, row, col) {
-        // si es cero será el maximo. las filas serán el array invertido
-        // tengo que extrarer de alguna manera la cantidad de filas y columnas que se muestran.
-
-        return /* this.urlTemplate */ selectedUrl
+        if (!selectedUrl) return '';
+        return selectedUrl
           .replace('{z}', level)
           .replace('{x}', col)
           .replace('{y}', row);
@@ -1872,10 +1872,7 @@ class MenuWidget extends React.Component {
       // This method fetches tiles for the specified level and size.
       // Override this method to process the data returned from the server.
       fetchTile: function (level, row, col, options) {
-        // call getTileUrl() method to construct the URL to tiles
-        // for a given level, row and col provided by the LayerView
-
-        // Images pyramid formula
+        if (!selectedUrl) return Promise.resolve(null);
         if (this.tms) {
           var rowmax = 1 << level; // LEVEL 1 * (2 ** 1) = 1 * (2) = 2   ;   LEVEL 2 * (2 ** 2) = 1 * (4) = 4 ; LEVEL 3 * (2 ** 3) = 1 * (8) = 8 . . .
           row = zoom < 10 ? rowmax - row - 1 : row; // Invert Y axis
@@ -1941,7 +1938,7 @@ class MenuWidget extends React.Component {
       return;
     let elemContainer = document
       .getElementById(elem.id)
-      .closest('.ccl-form-group');
+      ?.closest('.ccl-form-group');
     let nextElemSibling = elemContainer.nextElementSibling;
     let previousElemSibling = elemContainer.previousElementSibling;
 
