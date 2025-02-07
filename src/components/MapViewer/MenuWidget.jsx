@@ -2075,7 +2075,6 @@ class MenuWidget extends React.Component {
       ? layerTitle
       : layerTitle;
     let scale;
-    //let layerTitleToCompare = layerTitle;
     if (this.layers[key].resourceInfo) {
       this.layers[key].resourceInfo.layers.forEach((sublayer) => {
         if (
