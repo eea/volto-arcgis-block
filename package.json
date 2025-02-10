@@ -65,7 +65,7 @@
     "esri-loader": "3.4.0",
     "highcharts": "^9.3.2",
     "highcharts-react-official": "^3.1.0",
-    "react-datepicker": "4.10.0"
+    "react-datepicker": "4.15.0"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.5",
