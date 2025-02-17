@@ -21,6 +21,7 @@ import HotspotWidget from './HotspotWidget';
 import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
+import UploadWidget from './UploadWidget';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 //import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 
@@ -450,6 +451,17 @@ class MapViewer extends React.Component {
     );
   }
 
+  renderUploadService() {
+    if (this.view)
+      return (
+        <UploadWidget
+          mapviewer_config={this.props.mapviewer_config}
+          view={this.view}
+          map={this.map}
+          mapViewer={this}
+        />
+      );
+  }
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -482,6 +494,7 @@ class MapViewer extends React.Component {
             {this.renderMenu()}
             {this.renderBookmark()}
             {this.renderLoadingSpinner()}
+            {this.renderUploadService()}
           </div>
         </div>
       );
