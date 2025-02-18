@@ -7,7 +7,7 @@ var WMSLayer;
 
 class UploadWidget extends React.Component {
   /**
-   * Creator of the Measurement widget class
+   * Creator of the Upload widget class
    * @param {*} props
    */
   constructor(props) {
@@ -98,7 +98,7 @@ class UploadWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({
         showMapMenu: true,
-        showInfoPopup: true,
+        showInfoPopup: false,
         infoPopupType: '',
       });
     }
@@ -136,7 +136,6 @@ class UploadWidget extends React.Component {
       this.setState({ wmsLayer: newWmsLayer, wmsServiceUrl: '' });
     } catch (error) {
       this.setState({
-        showMapMenu: true,
         showInfoPopup: true,
         infoPopupType: 'uploadError',
         wmsServiceUrl: '',
@@ -230,15 +229,23 @@ class UploadWidget extends React.Component {
               </div>
             </div>
           </div>
-          {this.state.infoPopupType === 'uploadError' && (
-            <>
-              <span className="drawRectanglePopup-icon">
-                <FontAwesomeIcon icon={['fas', 'info-circle']} />
-              </span>
-              <div className="drawRectanglePopup-text">
-                Error uploading the map service:
+          {this.state.showInfoPopup && (
+            <div className="map-container popup-block">
+              <div className="drawRectanglePopup-block">
+                <div className="drawRectanglePopup-content">
+                  {this.state.infoPopupType === 'uploadError' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Error uploading the map service:
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </>
