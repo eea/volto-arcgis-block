@@ -214,6 +214,7 @@ class UploadWidget extends React.Component {
                       Map service address
                       <input
                         type="text"
+                        placeholder="Add map service URL (https://...)"
                         value={this.state.wmsServiceUrl}
                         onChange={this.handleWmsServiceUrlChange}
                       />
