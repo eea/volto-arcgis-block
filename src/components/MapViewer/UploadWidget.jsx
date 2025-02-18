@@ -165,7 +165,7 @@ class UploadWidget extends React.Component {
           <div tooltip="Add Map service" direction="left" type="widget">
             <div
               className={this.menuClass}
-              id="map_area_button"
+              id="map_upload_button"
               aria-label="WMS service upload"
               onClick={this.openMenu.bind(this)}
               onKeyDown={(e) => {
@@ -186,7 +186,7 @@ class UploadWidget extends React.Component {
           </div>
           <div className="right-panel">
             <div className="right-panel-header">
-              <span>WMS service upload</span>
+              <span>Add map service</span>
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}

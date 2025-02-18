@@ -469,9 +469,20 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   font-size: 15px;
 }
 /* WMS Upload */
+div.upload-container.esri-component
+  > div.right-panel
+  > div.right-panel-content {
+  display: unset !important;
+}
+
 .upload-container {
   display: flex;
   box-shadow: none !important;
+}
+
+.upload-container input::placeholder {
+  color: #999;
+  font-size: 0.875rem;
 }
 
 .upload-container .esri-button:hover {
@@ -483,6 +494,10 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   border-color: #a0b128;
   background-color: white;
   color: #a0b128;
+}
+
+.upload-panel {
+  display: unset !important;
 }
 /* Left menu */
 .map-menu {
