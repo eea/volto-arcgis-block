@@ -107,11 +107,16 @@ class UploadWidget extends React.Component {
   clearWidget() {
     window.document.querySelector('.pan-container').style.display = 'none';
     this.props.mapViewer.view.popup.close();
-    if (this.state.wmsLayer) {
-      this.state.wmsLayer.remove();
-      this.setState({ wmsLayer: null });
+    const { wmsLayer } = this.state;
+    if (wmsLayer) {
+      this.props.view.map.remove(wmsLayer);
+      // this.props.view.graphics.removeAll();
     }
-    this.props.view.graphics.removeAll();
+    this.setState({
+      wmsLayer: null,
+      wmsServiceUrl: '',
+    });
+
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
   }
@@ -133,7 +138,12 @@ class UploadWidget extends React.Component {
 
       await newWmsLayer.load();
       this.props.view.map.add(newWmsLayer);
-      this.setState({ wmsLayer: newWmsLayer, wmsServiceUrl: '' });
+      this.setState({
+        wmsLayer: newWmsLayer,
+        showInfoPopup: false,
+        infoPopupType: '',
+        wmsServiceUrl: '',
+      });
     } catch (error) {
       this.setState({
         showInfoPopup: true,
@@ -239,7 +249,7 @@ class UploadWidget extends React.Component {
                         <FontAwesomeIcon icon={['fas', 'info-circle']} />
                       </span>
                       <div className="drawRectanglePopup-text">
-                        Error uploading the map service:
+                        Error uploading the map service.
                       </div>
                     </>
                   )}
