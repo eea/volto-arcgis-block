@@ -4289,6 +4289,8 @@ class MenuWidget extends React.Component {
         let productElem = document.querySelector(
           '[productid="' + product.ProductId + '"]',
         );
+        let productCheckbox = document.querySelector('#map_' + productElem.id);
+        let defaultActive = null;
         for (let k = 0; k < product.Datasets.length; k++) {
           const dataset = product.Datasets[k];
           let datasetChecked = false;
@@ -4322,6 +4324,12 @@ class MenuWidget extends React.Component {
             datasetElem.removeAttribute('style');
             productElem.removeAttribute('style');
             componentElem.removeAttribute('style');
+            if (!defaultActive) {
+              defaultActive = 'map_' + datasetElem.id;
+            }
+            if (dataset.Default_active) {
+              defaultActive = 'map_' + datasetElem.id;
+            }
           } else if (
             datasetChecked ||
             (dataset?.DatasetTitle?.toUpperCase().includes(searchText) &&
@@ -4343,10 +4351,17 @@ class MenuWidget extends React.Component {
             datasetElem.removeAttribute('style');
             productElem.removeAttribute('style');
             componentElem.removeAttribute('style');
+            if (!defaultActive) {
+              defaultActive = 'map_' + datasetElem.id;
+            }
+            if (dataset.Default_active) {
+              defaultActive = 'map_' + datasetElem.id;
+            }
           } else {
             datasetElem.setAttribute('style', 'display: none;');
           }
         }
+        productCheckbox.setAttribute('defcheck', defaultActive);
         if (productChecked) {
           productElem
             .querySelector('.ccl-expandable__button')
