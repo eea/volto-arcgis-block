@@ -413,6 +413,7 @@ class MenuWidget extends React.Component {
       popup: false,
       filterArrow: 'chevron-down',
       wmsUserServiceLayers: [],
+      wmsServiceUrl: this.props.wmsServiceUrl,
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -430,6 +431,7 @@ class MenuWidget extends React.Component {
     this.getLimitScale = this.getLimitScale.bind(this);
     this.handleOpenPopup = this.handleOpenPopup.bind(this);
     this.filtersApplied = false;
+    // this.deleteServiceLayer = this.deleteServiceLayer.bind(this);
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
@@ -495,7 +497,6 @@ class MenuWidget extends React.Component {
     });
 
     this.activeLayersHandler = this.props.activeLayersHandler;
-    this.wmsServiceUrl = this.props.wmsServiceUrl;
     //this.getTaxonomy = this.props.getTaxonomy;
   }
 
@@ -549,6 +550,15 @@ class MenuWidget extends React.Component {
         ];
       },
     );
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.wmsServiceUrl !== prevState.wmsServiceUrl) {
+      return {
+        wmsServiceUrl: nextProps.wmsServiceUrl,
+      };
+    }
+    return null;
   }
 
   stringMatch(str1, str2) {
@@ -1148,35 +1158,94 @@ class MenuWidget extends React.Component {
         key="my_services"
         style={myServicesStyle}
       >
-        <div>
-          <div
-            id="dropdown_my_services"
-            className="ccl-expandable__button"
-            aria-expanded="false"
-            onClick={this.toggleDropdownContent.bind(this)}
-            onKeyDown={this.toggleDropdownContent.bind(this)}
-            tabIndex="0"
-            role="button"
-          >
-            <div className="dropdown-icon">
-              <FontAwesomeIcon icon={['fas', 'caret-right']} />
-            </div>
-            <div className="ccl-form map-product-checkbox">
-              <div className="ccl-form-group">
-                <legend className="ccl-form-legend">
-                  <span>My Services</span>
-                </legend>
-              </div>
-            </div>
+        <div
+          id="dropdown_my_services"
+          className="ccl-expandable__button"
+          aria-expanded="true"
+          onClick={this.toggleDropdownContent.bind(this)}
+          onKeyDown={this.toggleDropdownContent.bind(this)}
+          tabIndex="0"
+          role="button"
+        >
+          <div className="dropdown-icon">
+            <FontAwesomeIcon icon={['fas', 'caret-right']} />
           </div>
+          <span>My Services</span>
+        </div>
+        <div className="map-menu-components-container">
           <fieldset className="ccl-fieldset">
-            <div className="ccl-form map-menu-products-container">
-              {this.state.wmsUserServiceLayers.map((layer, index) => (
-                <div key={index} className="map-menu-layer">
-                  <span>{layer.title || `Layer ${index + 1}`}</span>
+            {this.state.wmsUserServiceLayers.map((layer, index) => {
+              return (
+                <div
+                  className="map-menu-product-dropdown"
+                  id={'service_' + index}
+                  serviceid={layer.id}
+                  key={'a' + index}
+                >
+                  <div
+                    id={'dropdown_my_services_layer_' + index}
+                    className="ccl-expandable__button"
+                    aria-expanded="false"
+                    key={'b' + index}
+                    onClick={this.toggleDropdownContent.bind(this)}
+                    onKeyDown={this.toggleDropdownContent.bind(this)}
+                    tabIndex="0"
+                    role="button"
+                  >
+                    <div
+                      className="ccl-form map-dataset-checkbox"
+                      key={'a' + index}
+                    >
+                      <div className="ccl-form-group" key={'b_' + index}>
+                        <input
+                          type="checkbox"
+                          id={'layer_checkbox_' + index}
+                          name=""
+                          value="name"
+                          className="ccl-checkbox ccl-required ccl-form-check-input"
+                          key={'c' + index}
+                          defaultChecked={true} // Ensure the service is checked when loaded
+                        ></input>
+                        <label
+                          className="ccl-form-check-label"
+                          htmlFor={'layer_checkbox_' + index}
+                          key={'d' + index}
+                        >
+                          <legend className="ccl-form-legend">
+                            {layer.description ? (
+                              <Popup
+                                trigger={<span>{layer.title}</span>}
+                                content={layer.description}
+                                basic
+                                className="custom"
+                                style={{ transform: 'translateX(-4rem)' }}
+                              />
+                            ) : (
+                              <span>{layer.title || `Layer ${index + 1}`}</span>
+                            )}
+                          </legend>
+                        </label>
+                        <div className="map-menu-icons">
+                          <span
+                            className="map-menu-icon"
+                            onClick={() =>
+                              this.deleteServiceLayer(layer.id, index)
+                            }
+                            onKeyDown={() =>
+                              this.deleteServiceLayer(layer.id, index)
+                            }
+                            tabIndex="0"
+                            role="button"
+                          >
+                            <FontAwesomeIcon icon={['fas', 'trash']} />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </fieldset>
         </div>
       </div>,
@@ -3844,11 +3913,30 @@ class MenuWidget extends React.Component {
   componentDidUpdate(prevState, prevProps) {
     if (this.props.download) return;
 
-    if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
-      const { wmsServiceUrl } = this.props;
+    if (prevState.wmsServiceUrl !== this.state.wmsServiceUrl) {
+      const { wmsServiceUrl } = this.state;
       if (wmsServiceUrl && typeof wmsServiceUrl === 'string') {
         this.createAndAddWMSLayer(wmsServiceUrl);
       }
+    }
+
+    if (
+      this.state?.wmsUserServiceLayers?.length > 0 &&
+      prevState?.wmsUserServiceLayers?.length === 0
+    ) {
+      // Close other tabs and open "My Services"
+      document
+        .querySelectorAll('.map-menu-product-dropdown')
+        .forEach((dropdown) => {
+          if (dropdown.id !== 'my_services') {
+            dropdown
+              .querySelector('.ccl-expandable__button')
+              .setAttribute('aria-expanded', 'false');
+          }
+        });
+      document
+        .getElementById('dropdown_my_services')
+        .setAttribute('aria-expanded', 'true');
     }
 
     if (sessionStorage.getItem('snowAndIce') === 'true') {
@@ -4060,6 +4148,15 @@ class MenuWidget extends React.Component {
     this.props.hotspotDataHandler(updatedHotspotData);
   }
 
+  deleteServiceLayer(index) {
+    this.setState((prevState) => {
+      const wmsUserServiceLayers = [...prevState.wmsUserServiceLayers];
+      const layerToRemove = wmsUserServiceLayers.splice(index, 1)[0];
+      this.props.view.map.remove(layerToRemove);
+      this.props.map.clear();
+      return { wmsUserServiceLayers };
+    });
+  }
   /**
    * Method to load previously expanded dropdowns according to sessionStorage
    */
