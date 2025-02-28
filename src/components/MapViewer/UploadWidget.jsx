@@ -26,6 +26,7 @@ class UploadWidget extends React.Component {
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
     this.mapviewer_config = this.props.mapviewer_config;
     this.fileInput = createRef();
+    this.wmsServiceUrlHandler = this.props.wmsServiceUrlHandler;
   }
 
   loader() {
@@ -107,15 +108,15 @@ class UploadWidget extends React.Component {
   clearWidget() {
     window.document.querySelector('.pan-container').style.display = 'none';
     this.props.mapViewer.view.popup.close();
-    const { wmsLayer } = this.state;
-    if (wmsLayer) {
-      this.props.view.map.remove(wmsLayer);
-      // this.props.view.graphics.removeAll();
-    }
-    this.setState({
-      wmsLayer: null,
-      wmsServiceUrl: '',
-    });
+    //const { wmsLayer } = this.state;
+    //if (wmsLayer) {
+    //  this.props.view.map.remove(wmsLayer);
+    //  // this.props.view.graphics.removeAll();
+    //}
+    //this.setState({
+    //  wmsLayer: null,
+    //  wmsServiceUrl: '',
+    //});
 
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
@@ -125,33 +126,22 @@ class UploadWidget extends React.Component {
     this.setState({ wmsServiceUrl: event.target.value });
   };
 
-  handleUploadService = async () => {
-    const { wmsServiceUrl, wmsLayer } = this.state;
-    if (wmsLayer) {
-      this.props.view.map.remove(wmsLayer);
-    }
+  handleUploadService = () => {
+    const { wmsServiceUrl } = this.state;
 
-    try {
-      const newWmsLayer = new WMSLayer({
-        url: wmsServiceUrl,
-      });
-
-      await newWmsLayer.load();
-      this.props.view.map.add(newWmsLayer);
+    if (wmsServiceUrl && wmsServiceUrl.trim() !== '') {
+      this.wmsServiceUrlHandler(wmsServiceUrl);
       this.setState({
-        wmsLayer: newWmsLayer,
-        showInfoPopup: false,
-        infoPopupType: '',
         wmsServiceUrl: '',
       });
-    } catch (error) {
+    } else {
       this.setState({
         showInfoPopup: true,
         infoPopupType: 'uploadError',
-        wmsServiceUrl: '',
       });
     }
   };
+
   /**
    * This method is executed after the render method is executed
    */
@@ -160,6 +150,14 @@ class UploadWidget extends React.Component {
     this.props.view.when(() => {
       this.container.current !== null &&
         this.props.view.ui.add(this.container.current, 'top-right');
+      //load an empty wms layer touse the variable
+      const wmsLayer = new WMSLayer({
+        url: '',
+        title: 'WMS Layer',
+      });
+      this.setState({
+        wmsLayer: wmsLayer,
+      });
     });
   }
 

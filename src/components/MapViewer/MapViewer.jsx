@@ -60,6 +60,7 @@ class MapViewer extends React.Component {
       layerLoading: false,
       layers: {},
       uploadedFile: true,
+      wmsServiceUrl: '',
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -72,6 +73,7 @@ class MapViewer extends React.Component {
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
     this.prepackageHandler = this.prepackageHandler.bind(this);
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
+    this.wmsServiceUrlHandler = this.wmsServiceUrlHandler.bind(this);
     //this.getTaxonomy = this.props.getTaxonomy.bind(this);
   }
 
@@ -127,6 +129,12 @@ class MapViewer extends React.Component {
 
   uploadFileHandler(message) {
     this.setState({ uploadedFile: message });
+  }
+
+  wmsServiceUrlHandler(newUrl) {
+    if (newUrl && typeof newUrl === 'string') {
+      this.setState({ wmsServiceUrl: newUrl });
+    }
   }
 
   loader() {
@@ -432,6 +440,8 @@ class MapViewer extends React.Component {
           prepackageHandler={this.prepackageHandler}
           uploadedFile={this.state.uploadedFile}
           uploadFileHandler={this.uploadFileHandler}
+          wmsServiceUrlHandler={this.wmsServiceUrlHandler}
+          wmsServiceUrl={this.state.wmsServiceUrl}
           //getTaxonomy={this.getTaxonomy}
         />
       ); //call conf
@@ -459,6 +469,8 @@ class MapViewer extends React.Component {
           view={this.view}
           map={this.map}
           mapViewer={this}
+          wmsServiceUrl={this.state.wmsServiceUrl}
+          wmsServiceUrlHandler={this.wmsServiceUrlHandler}
         />
       );
   }

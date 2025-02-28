@@ -412,6 +412,7 @@ class MenuWidget extends React.Component {
       draggedElements: [],
       popup: false,
       filterArrow: 'chevron-down',
+      wmsUserServiceLayers: [],
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -494,6 +495,7 @@ class MenuWidget extends React.Component {
     });
 
     this.activeLayersHandler = this.props.activeLayersHandler;
+    this.wmsServiceUrl = this.props.wmsServiceUrl;
     //this.getTaxonomy = this.props.getTaxonomy;
   }
 
@@ -1135,6 +1137,51 @@ class MenuWidget extends React.Component {
         }
       }
     }
+
+    // Create "My Services" component from the start and set its display to none
+    let myServicesStyle =
+      this.state.wmsUserServiceLayers.length > 0 ? {} : { display: 'none' };
+    components.push(
+      <div
+        className="map-menu-dropdown"
+        id="my_services"
+        key="my_services"
+        style={myServicesStyle}
+      >
+        <div>
+          <div
+            id="dropdown_my_services"
+            className="ccl-expandable__button"
+            aria-expanded="false"
+            onClick={this.toggleDropdownContent.bind(this)}
+            onKeyDown={this.toggleDropdownContent.bind(this)}
+            tabIndex="0"
+            role="button"
+          >
+            <div className="dropdown-icon">
+              <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            </div>
+            <div className="ccl-form map-product-checkbox">
+              <div className="ccl-form-group">
+                <legend className="ccl-form-legend">
+                  <span>My Services</span>
+                </legend>
+              </div>
+            </div>
+          </div>
+          <fieldset className="ccl-fieldset">
+            <div className="ccl-form map-menu-products-container">
+              {this.state.wmsUserServiceLayers.map((layer, index) => (
+                <div key={index} className="map-menu-layer">
+                  <span>{layer.title || `Layer ${index + 1}`}</span>
+                </div>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+      </div>,
+    );
+
     return components;
   }
 
@@ -1933,6 +1980,36 @@ class MenuWidget extends React.Component {
     } else {
       this.layers[checkboxId] = customTileLayer;
     }
+  }
+
+  createAndAddWMSLayer(wmsServiceUrl) {
+    // Check if the URL is already in the state to prevent duplicates
+    if (
+      this.state.wmsUserServiceLayers.some(
+        (layer) => layer.url === wmsServiceUrl,
+      )
+    ) {
+      return;
+    }
+
+    const newWmsLayer = new WMSLayer({
+      url: wmsServiceUrl,
+    });
+
+    newWmsLayer
+      .load()
+      .then(() => {
+        this.setState((prevState) => ({
+          wmsUserServiceLayers: [
+            ...prevState.wmsUserServiceLayers,
+            newWmsLayer,
+          ],
+        }));
+        this.props.view.map.add(newWmsLayer);
+      })
+      .catch((error) => {
+        // set a popup error message in here.
+      });
   }
 
   /**
@@ -3766,6 +3843,13 @@ class MenuWidget extends React.Component {
 
   componentDidUpdate(prevState, prevProps) {
     if (this.props.download) return;
+
+    if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
+      const { wmsServiceUrl } = this.props;
+      if (wmsServiceUrl && typeof wmsServiceUrl === 'string') {
+        this.createAndAddWMSLayer(wmsServiceUrl);
+      }
+    }
 
     if (sessionStorage.getItem('snowAndIce') === 'true') {
       //grab all checkedLayers from sessionstorage store them in checkedLayeers
