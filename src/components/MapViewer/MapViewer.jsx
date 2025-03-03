@@ -99,10 +99,33 @@ class MapViewer extends React.Component {
     this.setState({ bookmarkData: newBookmarkData });
   }
 
+  // Function to remove circular references
+  removeCircularReferences(obj) {
+    const seen = new WeakSet();
+    return JSON.parse(
+      JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return;
+          }
+          seen.add(value);
+        }
+        return value;
+      }),
+    );
+  }
+
   activeLayersHandler(newActiveLayers) {
-    this.activeLayers = newActiveLayers;
-    mapStatus.activeLayers = newActiveLayers;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    try {
+      const layersWithoutCircularReferences = this.removeCircularReferences(
+        newActiveLayers,
+      );
+      this.activeLayers = layersWithoutCircularReferences;
+      mapStatus.activeLayers = layersWithoutCircularReferences;
+      sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    } catch (error) {
+      //setup some sort of error message
+    }
   }
 
   setCenterState(centerStatus) {
@@ -290,6 +313,13 @@ class MapViewer extends React.Component {
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
       sessionStorage.clear();
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
+    }
+    if (
+      prevState.wmsServiceUrl !== this.state.wmsServiceUrl &&
+      this.state.wmsServiceUrl === ''
+    ) {
+      // Reset wmsServiceUrl without causing a new update of the children
+      this.setState({ wmsServiceUrl: '' });
     }
   }
 

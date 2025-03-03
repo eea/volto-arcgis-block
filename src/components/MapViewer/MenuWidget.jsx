@@ -2076,7 +2076,15 @@ class MenuWidget extends React.Component {
           ],
         }));
         this.props.view.map.add(newWmsLayer);
-        this.props.onServiceAdded();
+        this.props.onServiceAdded(); // Notify MapViewer that a service has been added
+
+        // Add the new WMS layer to the active layers list
+        this.activeLayersJSON[newWmsLayer.id] = this.addActiveLayer(
+          { id: newWmsLayer.id, title: newWmsLayer.title },
+          Object.keys(this.activeLayersJSON).length,
+        );
+        this.layersReorder();
+        this.saveLayerOrder();
       })
       .catch((error) => {
         // set a popup error message in here.
@@ -2630,6 +2638,104 @@ class MenuWidget extends React.Component {
     for (var i in this.activeLayersJSON) {
       activeLayersArray.push(this.activeLayersJSON[i]);
     }
+
+    // Include wmsUserServiceLayers in the active layers array
+    this.state.wmsUserServiceLayers.forEach((layer) => {
+      activeLayersArray.push(
+        <div
+          className="active-layer"
+          id={'active_' + layer.id}
+          key={'a_' + layer.id}
+          layer-id={layer.id}
+          layer-order={Object.keys(this.activeLayersJSON).length}
+          draggable="true"
+          onDrop={(e) => this.onDrop(e)}
+          onDragOver={(e) => this.onDragOver(e)}
+          onDragStart={(e) => this.onDragStart(e)}
+        >
+          <div
+            className="active-layer-name"
+            name={layer.id}
+            key={'b_' + layer.id}
+          >
+            {layer.title}
+          </div>
+          <div className="active-layer-options" key={'c_' + layer.id}>
+            <span
+              className="map-menu-icon active-layer-extent"
+              onClick={() =>
+                this.fullExtent({ id: layer.id, title: layer.title })
+              }
+              onKeyDown={() =>
+                this.fullExtent({ id: layer.id, title: layer.title })
+              }
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={
+                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
+                }
+                content="Full extent"
+                {...popupSettings}
+              />
+            </span>
+            <span
+              className="map-menu-icon active-layer-opacity"
+              onClick={(e) =>
+                this.showOpacity({ id: layer.id, title: layer.title }, e)
+              }
+              onKeyDown={(e) =>
+                this.showOpacity({ id: layer.id, title: layer.title }, e)
+              }
+              tabIndex="0"
+              role="button"
+              data-opacity="100"
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={['fas', 'sliders-h']} />}
+                content="Opacity"
+                {...popupSettings}
+              />
+            </span>
+            <span
+              className="map-menu-icon active-layer-hide"
+              onClick={() =>
+                this.eyeLayer({ id: layer.id, title: layer.title })
+              }
+              onKeyDown={() =>
+                this.eyeLayer({ id: layer.id, title: layer.title })
+              }
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={['fas', 'eye']} />}
+                content="Hide layer"
+                {...popupSettings}
+              />
+            </span>
+            <span
+              className="map-menu-icon active-layer-delete"
+              onClick={() =>
+                this.deleteCrossEvent({ id: layer.id, title: layer.title })
+              }
+              onKeyDown={() =>
+                this.deleteCrossEvent({ id: layer.id, title: layer.title })
+              }
+              tabIndex="0"
+              role="button"
+            >
+              <Popup
+                trigger={<FontAwesomeIcon icon={['fas', 'times']} />}
+                content="Remove layer"
+                {...popupSettings}
+              />
+            </span>
+          </div>
+        </div>,
+      );
+    });
 
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
