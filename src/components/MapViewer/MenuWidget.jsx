@@ -428,6 +428,7 @@ class MenuWidget extends React.Component {
     this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
     this.getLimitScale = this.getLimitScale.bind(this);
     this.handleOpenPopup = this.handleOpenPopup.bind(this);
+    this.filtersApplied = false;
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
@@ -1234,7 +1235,11 @@ class MenuWidget extends React.Component {
 
     if (product.Datasets && Array.isArray(product.Datasets)) {
       for (var i in product.Datasets) {
-        if (
+        if (this.filtersApplied) {
+          dataset_def = document
+            .querySelector('#' + checkProduct)
+            ?.getAttribute('defcheck');
+        } else if (
           product.Datasets[i] &&
           product.Datasets[i].Default_active === true
         ) {
@@ -4312,6 +4317,7 @@ class MenuWidget extends React.Component {
             componentFilter === 'default' &&
             productFilter === 'default'
           ) {
+            this.filtersApplied = false;
             componentFound = true;
             productFound = true;
             result = true;
@@ -4339,6 +4345,7 @@ class MenuWidget extends React.Component {
                 componentFilter ||
                 componentFilter === 'default'))
           ) {
+            this.filtersApplied = true;
             componentFound = true;
             productFound = true;
             result = true;
