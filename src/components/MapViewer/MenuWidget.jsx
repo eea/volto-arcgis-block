@@ -432,6 +432,7 @@ class MenuWidget extends React.Component {
     this.handleOpenPopup = this.handleOpenPopup.bind(this);
     this.filtersApplied = false;
     // this.deleteServiceLayer = this.deleteServiceLayer.bind(this);
+    this.filtersApplied = false;
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
