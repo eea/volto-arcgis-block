@@ -413,7 +413,7 @@ class MenuWidget extends React.Component {
       popup: false,
       filterArrow: 'chevron-down',
       wmsUserServiceLayers: [],
-      wmsServiceUrl: this.props.wmsServiceUrl,
+      //wmsServiceUrl: this.props.wmsServiceUrl,
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -2076,6 +2076,7 @@ class MenuWidget extends React.Component {
           ],
         }));
         this.props.view.map.add(newWmsLayer);
+        this.props.onServiceAdded();
       })
       .catch((error) => {
         // set a popup error message in here.
@@ -3914,16 +3915,16 @@ class MenuWidget extends React.Component {
   componentDidUpdate(prevState, prevProps) {
     if (this.props.download) return;
 
-    if (prevState.wmsServiceUrl !== this.state.wmsServiceUrl) {
-      const { wmsServiceUrl } = this.state;
+    if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
+      const { wmsServiceUrl } = this.props;
       if (wmsServiceUrl && typeof wmsServiceUrl === 'string') {
         this.createAndAddWMSLayer(wmsServiceUrl);
       }
     }
 
     if (
-      this.state?.wmsUserServiceLayers?.length > 0 &&
-      prevState?.wmsUserServiceLayers?.length === 0
+      this.state.wmsUserServiceLayers.length > 0 &&
+      prevProps.wmsUserServiceLayers.length === 0
     ) {
       // Close other tabs and open "My Services"
       document
@@ -4154,7 +4155,7 @@ class MenuWidget extends React.Component {
       const wmsUserServiceLayers = [...prevState.wmsUserServiceLayers];
       const layerToRemove = wmsUserServiceLayers.splice(index, 1)[0];
       this.props.view.map.remove(layerToRemove);
-      this.props.map.clear();
+      //this.props.map.clear();
       return { wmsUserServiceLayers };
     });
   }

@@ -131,11 +131,19 @@ class MapViewer extends React.Component {
     this.setState({ uploadedFile: message });
   }
 
-  wmsServiceUrlHandler(newUrl) {
+  wmsServiceUrlHandler = (newUrl) => {
     if (newUrl && typeof newUrl === 'string') {
       this.setState({ wmsServiceUrl: newUrl });
+    } else {
+      //set popup error messsage
+      this.setState({ wmsServiceUrl: '' });
     }
-  }
+  };
+
+  handleServiceAdded = () => {
+    // Reset wmsServiceUrl without causing a new update of the children
+    this.setState({ wmsServiceUrl: '' });
+  };
 
   loader() {
     return loadModules([
@@ -442,6 +450,7 @@ class MapViewer extends React.Component {
           uploadFileHandler={this.uploadFileHandler}
           wmsServiceUrlHandler={this.wmsServiceUrlHandler}
           wmsServiceUrl={this.state.wmsServiceUrl}
+          onServiceAdded={this.handleServiceAdded}
           //getTaxonomy={this.getTaxonomy}
         />
       ); //call conf
