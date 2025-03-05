@@ -1737,8 +1737,8 @@ class MenuWidget extends React.Component {
         });
         //iterate sublayers fetching all sublayer data
       } else if (viewService?.toLowerCase().includes('wms')) {
-        viewService = viewService?.endsWith('?')
-          ? viewService
+        viewService = viewService?.includes('?')
+          ? viewService + '&'
           : viewService + '?';
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMSLayer({
           url: viewService,
@@ -1769,7 +1769,9 @@ class MenuWidget extends React.Component {
         });
       } else if (viewService?.toLowerCase().includes('wmts')) {
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
-          url: viewService?.endsWith('?') ? viewService : viewService + '?',
+          url: viewService?.includes('?')
+            ? viewService + '&'
+            : viewService + '?',
           //id: layer.LayerId,
           title: '',
           _wmtsTitle: layer.Title, // CLMS-1105
