@@ -2931,6 +2931,19 @@ class MenuWidget extends React.Component {
     this.findCheckedDataset(elem);
     let BBoxes = {};
     let firstLayer;
+    let landCoverAndLandUseMapping = document.querySelector('#component_0');
+    let productIds = [];
+    if (landCoverAndLandUseMapping) {
+      const productElements = landCoverAndLandUseMapping.querySelectorAll(
+        '.map-menu-product-dropdown',
+      );
+      productElements.forEach((productElement) => {
+        const productId = productElement.getAttribute('productid');
+        if (productId) {
+          productIds.push(productId);
+        }
+      });
+    }
 
     if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
       //global dynamic landCover
@@ -2938,7 +2951,7 @@ class MenuWidget extends React.Component {
 
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
-      this.productId.includes('fe8209dffe13454891cea05998c8e456') || //Low Resolution Vegetation Parameters
+      this.productId.includes('fe8209dffe13454891cea05998c8e456') || // Low Resolution Vegetation Parameters
       this.productId.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
     ) {
       if (
@@ -2977,68 +2990,83 @@ class MenuWidget extends React.Component {
         this.location.search !== ''
       ) {
         firstLayer = BBoxes.dataset;
-      } else if (this.productId.includes('130299ac96e54c30a12edd575eff80f7')) {
+      }
+      if (productIds.includes(this.productId)) {
+        // Your code here for when productIds includes this.productId
         let str = elem.parentNode.outerHTML;
-        let match = str.match(/layerid="(\d+)"/);
+        let match = str.match(/layerid="([a-zA-Z0-9_:-]+)"/);
         let layerid = match ? match[1] : null;
         if (layerid === null || layerid === undefined) return;
-        if (this.url?.toLowerCase().endsWith('mapserver')) {
-          switch (layerid) {
-            case '1':
-              firstLayer = this.findBBoxById(BBoxes, 13);
-              break;
-            case '2':
-              firstLayer = this.findBBoxById(BBoxes, 12);
-              break;
-            case '3':
-              firstLayer = this.findBBoxById(BBoxes, 11);
-              break;
-            case '4':
-              firstLayer = this.findBBoxById(BBoxes, 10);
-              break;
-            case '5':
-              firstLayer = this.findBBoxById(BBoxes, 9);
-              break;
-            case '7':
-              firstLayer = this.findBBoxById(BBoxes, 7);
-              break;
-            case '8':
-              firstLayer = this.findBBoxById(BBoxes, 6);
-              break;
-            case '9':
-              firstLayer = this.findBBoxById(BBoxes, 5);
-              break;
-            case '10':
-              firstLayer = this.findBBoxById(BBoxes, 4);
-              break;
-            case '11':
-              firstLayer = this.findBBoxById(BBoxes, 3);
-              break;
-            case '12':
-              firstLayer = this.findBBoxById(BBoxes, 0);
-              break;
-            case '13':
-              firstLayer = this.findBBoxById(BBoxes, 1);
-              break;
-            default:
-              return;
-          }
-        } else {
-          if (layerid === '12' || layerid === '13') {
-            firstLayer = BBoxes['dataset'];
-          } else if (layerid === '1' || layerid === '7') {
-            firstLayer = BBoxes[Object.keys(BBoxes)[0]];
-          } else if (layerid === '2' || layerid === '8') {
-            firstLayer = BBoxes[Object.keys(BBoxes)[1]];
-          } else if (layerid === '3' || layerid === '9') {
-            firstLayer = BBoxes[Object.keys(BBoxes)[2]];
-          } else if (layerid === '4' || layerid === '10') {
-            firstLayer = BBoxes[Object.keys(BBoxes)[3]];
-          } else if (layerid === '5' || layerid === '11') {
-            firstLayer = BBoxes[Object.keys(BBoxes)[4]];
+        if (
+          this.productId.includes('130299ac96e54c30a12edd575eff80f7') &&
+          layerid.length <= 2
+        ) {
+          //let match = str.match(/layerid="(\d+)"/);
+          //let layerid = match ? match[1] : null;
+          if (this.url?.toLowerCase().endsWith('mapserver')) {
+            switch (layerid) {
+              case '1':
+                firstLayer = this.findBBoxById(BBoxes, 13);
+                break;
+              case '2':
+                firstLayer = this.findBBoxById(BBoxes, 12);
+                break;
+              case '3':
+                firstLayer = this.findBBoxById(BBoxes, 11);
+                break;
+              case '4':
+                firstLayer = this.findBBoxById(BBoxes, 10);
+                break;
+              case '5':
+                firstLayer = this.findBBoxById(BBoxes, 9);
+                break;
+              case '7':
+                firstLayer = this.findBBoxById(BBoxes, 7);
+                break;
+              case '8':
+                firstLayer = this.findBBoxById(BBoxes, 6);
+                break;
+              case '9':
+                firstLayer = this.findBBoxById(BBoxes, 5);
+                break;
+              case '10':
+                firstLayer = this.findBBoxById(BBoxes, 4);
+                break;
+              case '11':
+                firstLayer = this.findBBoxById(BBoxes, 3);
+                break;
+              case '12':
+                firstLayer = this.findBBoxById(BBoxes, 0);
+                break;
+              case '13':
+                firstLayer = this.findBBoxById(BBoxes, 1);
+                break;
+              default:
+                return;
+            }
           } else {
-            firstLayer = BBoxes['dataset'];
+            if (layerid === '12' || layerid === '13') {
+              firstLayer = BBoxes['dataset'];
+            } else if (layerid === '1' || layerid === '7') {
+              firstLayer = BBoxes[Object.keys(BBoxes)[0]];
+            } else if (layerid === '2' || layerid === '8') {
+              firstLayer = BBoxes[Object.keys(BBoxes)[1]];
+            } else if (layerid === '3' || layerid === '9') {
+              firstLayer = BBoxes[Object.keys(BBoxes)[2]];
+            } else if (layerid === '4' || layerid === '10') {
+              firstLayer = BBoxes[Object.keys(BBoxes)[3]];
+            } else if (layerid === '5' || layerid === '11') {
+              firstLayer = BBoxes[Object.keys(BBoxes)[4]];
+            } else {
+              firstLayer = BBoxes['dataset'];
+            }
           }
+        } else if (layerid.length > 2) {
+          firstLayer = BBoxes[layerid];
+        } else if (
+          this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
+        ) {
+          firstLayer = BBoxes[0];
         }
       } else if (
         elem.id.includes('all_present') ||
@@ -3048,10 +3076,7 @@ class MenuWidget extends React.Component {
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else {
-        // Takes the BBOX corresponding to the layer.
-        if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
-          firstLayer = BBoxes[0];
-        } else firstLayer = BBoxes[elem.attributes.layerid.value];
+        firstLayer = BBoxes[elem.attributes.layerid.value];
       }
 
       let myExtent = new Extent({
