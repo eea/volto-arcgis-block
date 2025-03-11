@@ -2062,25 +2062,55 @@ class MenuWidget extends React.Component {
       return;
     }
 
-    const newWmsLayer = new WMSLayer({
+    const legendRequest =
+      'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
+    const layer = new WMSLayer({
       url: wmsServiceUrl,
     });
 
-    newWmsLayer
+    this.layers[layer.LayerId] = new WMSLayer({
+      url: wmsServiceUrl,
+      featureInfoFormat: 'text/html',
+      featureInfoUrl: wmsServiceUrl,
+      title: '',
+      legendEnabled: true,
+      sublayers: [
+        {
+          name: layer.LayerId,
+          title: layer.Title,
+          popupEnabled: true,
+          queryable: true,
+          visible: true,
+          legendEnabled: true,
+          legendUrl: layer.StaticImageLegend
+            ? layer.StaticImageLegend
+            : wmsServiceUrl + legendRequest + layer.LayerId,
+          featureInfoUrl: wmsServiceUrl,
+        },
+      ],
+      //isTimeSeries: isTimeSeries,
+      fields: layer.Fields,
+      //DatasetId: DatasetId,
+      //DatasetTitle: DatasetTitle,
+      //ProductId: ProductId,
+      //ViewService: viewService,
+    });
+
+    this.layers[layer.LayerId]
       .load()
       .then(() => {
         this.setState((prevState) => ({
           wmsUserServiceLayers: [
             ...prevState.wmsUserServiceLayers,
-            newWmsLayer,
+            this.layers[layer.LayerId],
           ],
         }));
-        this.props.view.map.add(newWmsLayer);
+        this.props.view.map.add(this.layers[layer.LayerId]);
         this.props.onServiceAdded(); // Notify MapViewer that a service has been added
 
         // Add the new WMS layer to the active layers list
-        this.activeLayersJSON[newWmsLayer.id] = this.addActiveLayer(
-          { id: newWmsLayer.id, title: newWmsLayer.title },
+        this.activeLayersJSON[layer.LayerId] = this.addActiveLayer(
+          { id: layer.LayerId, title: layer.title },
           Object.keys(this.activeLayersJSON).length,
         );
         this.layersReorder();
