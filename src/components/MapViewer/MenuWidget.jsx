@@ -995,6 +995,12 @@ class MenuWidget extends React.Component {
         this.props.bookmarkHandler(bookmarkData);
       });
     });
+
+    // Add "My Services" component to the UI
+    const myServicesComponent = this.createMyServicesComponent();
+    const myServicesContainer = document.createElement('div');
+    ReactDOM.render(myServicesComponent, myServicesContainer);
+    this.container.current.appendChild(myServicesContainer.firstChild);
   }
 
   setSliderTag(val) {
@@ -1149,108 +1155,8 @@ class MenuWidget extends React.Component {
       }
     }
 
-    // Create "My Services" component from the start and set its display to none
-    let myServicesStyle =
-      this.state.wmsUserServiceLayers.length > 0 ? {} : { display: 'none' };
-    components.push(
-      <div
-        className="map-menu-dropdown"
-        id="my_services"
-        key="my_services"
-        style={myServicesStyle}
-      >
-        <div
-          id="dropdown_my_services"
-          className="ccl-expandable__button"
-          aria-expanded="true"
-          onClick={this.toggleDropdownContent.bind(this)}
-          onKeyDown={this.toggleDropdownContent.bind(this)}
-          tabIndex="0"
-          role="button"
-        >
-          <div className="dropdown-icon">
-            <FontAwesomeIcon icon={['fas', 'caret-right']} />
-          </div>
-          <span>My Services</span>
-        </div>
-        <div className="map-menu-components-container">
-          <fieldset className="ccl-fieldset">
-            {this.state.wmsUserServiceLayers.map((layer, index) => {
-              return (
-                <div
-                  className="map-menu-product-dropdown"
-                  id={'service_' + index}
-                  serviceid={layer.id}
-                  key={'a' + index}
-                >
-                  <div
-                    id={'dropdown_my_services_layer_' + index}
-                    className="ccl-expandable__button"
-                    aria-expanded="false"
-                    key={'b' + index}
-                    onClick={this.toggleDropdownContent.bind(this)}
-                    onKeyDown={this.toggleDropdownContent.bind(this)}
-                    tabIndex="0"
-                    role="button"
-                  >
-                    <div
-                      className="ccl-form map-dataset-checkbox"
-                      key={'a' + index}
-                    >
-                      <div className="ccl-form-group" key={'b_' + index}>
-                        <input
-                          type="checkbox"
-                          id={'layer_checkbox_' + index}
-                          name=""
-                          value="name"
-                          className="ccl-checkbox ccl-required ccl-form-check-input"
-                          key={'c' + index}
-                          defaultChecked={true} // Ensure the service is checked when loaded
-                        ></input>
-                        <label
-                          className="ccl-form-check-label"
-                          htmlFor={'layer_checkbox_' + index}
-                          key={'d' + index}
-                        >
-                          <legend className="ccl-form-legend">
-                            {layer.description ? (
-                              <Popup
-                                trigger={<span>{layer.title}</span>}
-                                content={layer.description}
-                                basic
-                                className="custom"
-                                style={{ transform: 'translateX(-4rem)' }}
-                              />
-                            ) : (
-                              <span>{layer.title || `Layer ${index + 1}`}</span>
-                            )}
-                          </legend>
-                        </label>
-                        <div className="map-menu-icons">
-                          <span
-                            className="map-menu-icon"
-                            onClick={() =>
-                              this.deleteServiceLayer(layer.id, index)
-                            }
-                            onKeyDown={() =>
-                              this.deleteServiceLayer(layer.id, index)
-                            }
-                            tabIndex="0"
-                            role="button"
-                          >
-                            <FontAwesomeIcon icon={['fas', 'trash']} />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </fieldset>
-        </div>
-      </div>,
-    );
+    // Add "My Services" component
+    components.push(this.createMyServicesComponent());
 
     return components;
   }
@@ -2052,73 +1958,221 @@ class MenuWidget extends React.Component {
     }
   }
 
-  createAndAddWMSLayer(wmsServiceUrl) {
+  async handleNewMapServiceLayer(viewService) {
     // Check if the URL is already in the state to prevent duplicates
     if (
-      this.state.wmsUserServiceLayers.some(
-        (layer) => layer.url === wmsServiceUrl,
-      )
+      this.state.wmsUserServiceLayers.some((layer) => layer.url === viewService)
     ) {
+      return;
+    }
+
+    //CREATE A THROW AWAY LAYER OBJECT TO EXTRACT DATA FROM
+
+    let resourceLayer;
+    try {
+      resourceLayer = new WMSLayer({
+        url: viewService,
+      });
+    } catch (error) {
+      // set a popup error message in here.
       return;
     }
 
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
-    const layer = new WMSLayer({
-      url: wmsServiceUrl,
-    });
-
-    this.layers[layer.LayerId] = new WMSLayer({
-      url: wmsServiceUrl,
-      featureInfoFormat: 'text/html',
-      featureInfoUrl: wmsServiceUrl,
-      title: '',
-      legendEnabled: true,
-      sublayers: [
-        {
-          name: layer.LayerId,
-          title: layer.Title,
+    let layerId, layerObj;
+    await resourceLayer.load().then(() => {
+      //EXTRACT DATA FOR NEW LAYER REQUEST
+      let { featureInfoUrl, title } = resourceLayer;
+      layerId = title.toUpperCase().replace(/ /g, '_');
+      const constructedSublayers = resourceLayer.sublayers?.map((sublayer) => {
+        const { index, name, title, legendUrl, featureInfoUrl } = sublayer;
+        return {
+          index,
+          name,
+          title,
           popupEnabled: true,
           queryable: true,
           visible: true,
           legendEnabled: true,
-          legendUrl: layer.StaticImageLegend
-            ? layer.StaticImageLegend
-            : wmsServiceUrl + legendRequest + layer.LayerId,
-          featureInfoUrl: wmsServiceUrl,
-        },
-      ],
-      //isTimeSeries: isTimeSeries,
-      fields: layer.Fields,
-      //DatasetId: DatasetId,
-      //DatasetTitle: DatasetTitle,
-      //ProductId: ProductId,
-      //ViewService: viewService,
+          legendUrl: legendUrl ? legendUrl : viewService + legendRequest + name,
+          featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
+        };
+      });
+
+      layerObj = {
+        url: viewService,
+        featureInfoFormat: 'text/html',
+        featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
+        title,
+        legendEnabled: true,
+        sublayers: constructedSublayers,
+        ViewService: viewService,
+        LayerId: layerId,
+      };
+      return layerObj;
     });
 
-    this.layers[layer.LayerId]
-      .load()
-      .then(() => {
-        this.setState((prevState) => ({
-          wmsUserServiceLayers: [
-            ...prevState.wmsUserServiceLayers,
-            this.layers[layer.LayerId],
-          ],
-        }));
-        this.props.view.map.add(this.layers[layer.LayerId]);
-        this.props.onServiceAdded(); // Notify MapViewer that a service has been added
+    //DESTROY THE THROW AWAY LAYER OBJECT
+    resourceLayer.destroy();
+    resourceLayer = null; // Important: clear the reference to the old layer
 
-        // Add the new WMS layer to the active layers list
-        this.activeLayersJSON[layer.LayerId] = this.addActiveLayer(
-          { id: layer.LayerId, title: layer.title },
-          Object.keys(this.activeLayersJSON).length,
-        );
-        this.layersReorder();
-        this.saveLayerOrder();
-      })
-      .catch((error) => {
-        // set a popup error message in here.
+    // Check if LayerId exists in this.layer object
+    const { LayerId } = layerObj;
+    if (this.layers[LayerId] && this.layers[LayerId] !== null) {
+      //delete the previous layer
+      this.layers[LayerId].destroy();
+      this.layers[LayerId] = null;
+      //remove LayerId key from this.layers object
+      delete this.layers[LayerId];
+    }
+    // Add the new layer to the this.layers
+    try {
+      this.layers[LayerId] = new WMSLayer(layerObj);
+
+      this.setState((prevState) => {
+        let newWmsUserServiceLayers;
+        if (
+          prevState.wmsUserServiceLayers.some(
+            (layer) => layer.LayerId === LayerId,
+          )
+        ) {
+          newWmsUserServiceLayers = prevState.wmsUserServiceLayers;
+          newWmsUserServiceLayers = newWmsUserServiceLayers.filter(
+            (layer) => layer.LayerId !== LayerId,
+          );
+        }
+        newWmsUserServiceLayers = [
+          ...prevState.wmsUserServiceLayers,
+          this.layers[LayerId],
+        ];
+        return {
+          wmsUserServiceLayers: newWmsUserServiceLayers,
+        };
       });
+      this.props.onServiceAdded();
+      // after updating state to reflect the newest updates
+      // we set the actions necessary to add the layer to the map
+      // and notify MapViewer component that a service has been added
+
+      const node = document.getElementById(LayerId);
+      if (node) {
+        node.checked = true;
+        this.toggleLayer(node);
+      }
+    } catch (error) {
+      // set a popup error message in here.
+      return;
+    }
+  }
+
+  createMyServicesComponent() {
+    let dropdowns = document.querySelectorAll('.map-menu-dropdown');
+    let i = dropdowns.length === 0 ? 0 : dropdowns.length - 1;
+    let componentId = `component_${i}`;
+    let dropdownId = `dropdown_${i}`;
+
+    // Create "My Services" component from the start and set its display to none
+    let myServicesStyle =
+      this.state.wmsUserServiceLayers.length > 0 ? {} : { display: 'none' };
+    return (
+      <div
+        className="map-menu-dropdown"
+        id={componentId}
+        key="a5"
+        style={myServicesStyle}
+      >
+        <div
+          id={dropdownId}
+          className="ccl-expandable__button"
+          aria-expanded="false"
+          onClick={this.toggleDropdownContent.bind(this)}
+          onKeyDown={this.toggleDropdownContent.bind(this)}
+          tabIndex="0"
+          role="button"
+        >
+          <div className="dropdown-icon">
+            <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            <span>My Services</span>
+          </div>
+        </div>
+        <div className="map-menu-components-container" id="map-menu-services" />
+      </div>
+    );
+  }
+
+  createUserServices(serviceLayers) {
+    const fieldset = document.getElementById('map-menu-services');
+
+    // Iterate through the serviceLayers array
+    serviceLayers.forEach((layer, index) => {
+      const { LayerId } = layer;
+      let j = 0;
+      let dropdownId = 'dropdown_' + index;
+      let userServicesDropdownId = 'service_' + index + '_' + j;
+      // Check if a layer with the same serviceId already exists
+      const existingLayer = fieldset.querySelector(`#${LayerId}`) || null;
+      if (!existingLayer) {
+        // Create the new layer element
+        let parentIndex = this.layers[layer.id];
+        let checkboxId = LayerId;
+        const layerElement = (
+          <div className="ccl-form-group map-menu-services" key={'b_' + index}>
+            <input
+              type="checkbox"
+              id={checkboxId}
+              parentid={parentIndex}
+              layerid={layer.LayerId}
+              name="layerCheckbox"
+              value="name"
+              className="ccl-checkbox ccl-required ccl-form-check-input"
+              key={'c' + index}
+              title={layer.Title}
+              onChange={(e) => {
+                this.toggleLayer(e.target);
+              }}
+            />
+            <label
+              className="ccl-form-check-label"
+              htmlFor={'layer_checkbox_' + index}
+              key={'d' + index}
+            >
+              <legend className="ccl-form-legend">
+                {layer.description ? (
+                  <Popup
+                    trigger={<span>{layer.title}</span>}
+                    content={layer.description}
+                    basic
+                    className="custom"
+                    style={{ transform: 'translateX(-4rem)' }}
+                  />
+                ) : (
+                  <span>{layer.title || `Layer ${index + 1}`}</span>
+                )}
+              </legend>
+            </label>
+            <div className="map-menu-icons">
+              <span
+                className="map-menu-icon"
+                onClick={() =>
+                  this.deleteServiceLayer(document.getElementById(checkboxId))
+                }
+                onKeyDown={() =>
+                  this.deleteServiceLayer(document.getElementById(checkboxId))
+                }
+                tabIndex="0"
+                role="button"
+              >
+                <FontAwesomeIcon icon={['fas', 'trash']} />
+              </span>
+            </div>
+          </div>
+        );
+
+        // Append the new layer element to the fieldset
+        ReactDOM.render(layerElement, fieldset);
+      }
+    });
   }
 
   /**
@@ -2326,25 +2380,32 @@ class MenuWidget extends React.Component {
   }
 
   async toggleLayer(elem) {
-    if (elem.checked) {
+    const userService =
+      this.state.wmsUserServiceLayers.find(
+        (layer) => layer.LayerId === elem.id,
+      ) || null;
+    if (elem.checked && !userService) {
       this.findCheckedDatasetNoServiceToVisualize(elem);
     }
     if (this.layers[elem.id] === undefined) return;
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
-    let parentId = elem.getAttribute('parentid');
-    let productContainerId = document
-      .getElementById(parentId)
-      .closest('.map-menu-product-dropdown')
-      .getAttribute('productid');
+    let parentId = !userService ? elem.getAttribute('parentid') : null;
+    let productContainerId = !userService
+      ? document
+          .getElementById(parentId)
+          .closest('.map-menu-product-dropdown')
+          .getAttribute('productid')
+      : null;
 
-    let group = this.getGroup(elem);
+    let group = !userService ? this.getGroup(elem) : null;
     if (elem.checked) {
       //this.props.loadingHandler(true);
       if (
         this.props.download ||
         this.location.search.includes('product=') ||
-        this.location.search.includes('dataset=')
+        this.location.search.includes('dataset=') ||
+        !userService
       ) {
         if (
           this.extentInitiated === false &&
@@ -2357,8 +2418,9 @@ class MenuWidget extends React.Component {
         }
       }
       if (
-        (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
-        (this.layers['lc_filter'] || this.layers['lcc_filter'])
+        ((elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
+          (this.layers['lc_filter'] || this.layers['lcc_filter'])) ||
+        !userService
       ) {
         let bookmarkHotspotFilter = localStorage.getItem(
           'bookmarkHotspotFilter',
@@ -2435,14 +2497,14 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      this.checkForHotspots(elem, productContainerId);
+      if (!userService) this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
-      this.deleteFilteredLayer(elem.id);
+      if (!userService) this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
         if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
@@ -2453,7 +2515,7 @@ class MenuWidget extends React.Component {
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
     }
-    this.updateCheckDataset(parentId);
+    if (!userService) this.updateCheckDataset(parentId);
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
@@ -2668,105 +2730,6 @@ class MenuWidget extends React.Component {
     for (var i in this.activeLayersJSON) {
       activeLayersArray.push(this.activeLayersJSON[i]);
     }
-
-    // Include wmsUserServiceLayers in the active layers array
-    this.state.wmsUserServiceLayers.forEach((layer) => {
-      activeLayersArray.push(
-        <div
-          className="active-layer"
-          id={'active_' + layer.id}
-          key={'a_' + layer.id}
-          layer-id={layer.id}
-          layer-order={Object.keys(this.activeLayersJSON).length}
-          draggable="true"
-          onDrop={(e) => this.onDrop(e)}
-          onDragOver={(e) => this.onDragOver(e)}
-          onDragStart={(e) => this.onDragStart(e)}
-        >
-          <div
-            className="active-layer-name"
-            name={layer.id}
-            key={'b_' + layer.id}
-          >
-            {layer.title}
-          </div>
-          <div className="active-layer-options" key={'c_' + layer.id}>
-            <span
-              className="map-menu-icon active-layer-extent"
-              onClick={() =>
-                this.fullExtent({ id: layer.id, title: layer.title })
-              }
-              onKeyDown={() =>
-                this.fullExtent({ id: layer.id, title: layer.title })
-              }
-              tabIndex="0"
-              role="button"
-            >
-              <Popup
-                trigger={
-                  <FontAwesomeIcon icon={['fas', 'expand-arrows-alt']} />
-                }
-                content="Full extent"
-                {...popupSettings}
-              />
-            </span>
-            <span
-              className="map-menu-icon active-layer-opacity"
-              onClick={(e) =>
-                this.showOpacity({ id: layer.id, title: layer.title }, e)
-              }
-              onKeyDown={(e) =>
-                this.showOpacity({ id: layer.id, title: layer.title }, e)
-              }
-              tabIndex="0"
-              role="button"
-              data-opacity="100"
-            >
-              <Popup
-                trigger={<FontAwesomeIcon icon={['fas', 'sliders-h']} />}
-                content="Opacity"
-                {...popupSettings}
-              />
-            </span>
-            <span
-              className="map-menu-icon active-layer-hide"
-              onClick={() =>
-                this.eyeLayer({ id: layer.id, title: layer.title })
-              }
-              onKeyDown={() =>
-                this.eyeLayer({ id: layer.id, title: layer.title })
-              }
-              tabIndex="0"
-              role="button"
-            >
-              <Popup
-                trigger={<FontAwesomeIcon icon={['fas', 'eye']} />}
-                content="Hide layer"
-                {...popupSettings}
-              />
-            </span>
-            <span
-              className="map-menu-icon active-layer-delete"
-              onClick={() =>
-                this.deleteCrossEvent({ id: layer.id, title: layer.title })
-              }
-              onKeyDown={() =>
-                this.deleteCrossEvent({ id: layer.id, title: layer.title })
-              }
-              tabIndex="0"
-              role="button"
-            >
-              <Popup
-                trigger={<FontAwesomeIcon icon={['fas', 'times']} />}
-                content="Remove layer"
-                {...popupSettings}
-              />
-            </span>
-          </div>
-        </div>,
-      );
-    });
-
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
@@ -4053,28 +4016,37 @@ class MenuWidget extends React.Component {
 
     if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
       const { wmsServiceUrl } = this.props;
-      if (wmsServiceUrl && typeof wmsServiceUrl === 'string') {
-        this.createAndAddWMSLayer(wmsServiceUrl);
+      if (
+        wmsServiceUrl &&
+        typeof wmsServiceUrl === 'string' &&
+        wmsServiceUrl !== ''
+      ) {
+        this.handleNewMapServiceLayer(wmsServiceUrl);
       }
     }
 
+    if (prevProps.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {
+      this.createUserServices(this.state.wmsUserServiceLayers);
+    }
     if (
       this.state.wmsUserServiceLayers.length > 0 &&
       prevProps.wmsUserServiceLayers.length === 0
     ) {
       // Close other tabs and open "My Services"
-      document
-        .querySelectorAll('.map-menu-product-dropdown')
-        .forEach((dropdown) => {
-          if (dropdown.id !== 'my_services') {
-            dropdown
-              .querySelector('.ccl-expandable__button')
-              .setAttribute('aria-expanded', 'false');
-          }
-        });
-      document
-        .getElementById('dropdown_my_services')
-        .setAttribute('aria-expanded', 'true');
+      let dropdownsMapMenu = document.querySelectorAll('.map-menu-dropdown');
+      let i = dropdownsMapMenu.length - 1;
+      // let j = 0;
+      let dropdownId = 'dropdown_' + i;
+      // let myServicesId = 'component_' + i;
+      // let mapMenuServiceDropdownId = 'product_' + i + '_' + j;
+      dropdownsMapMenu.forEach((dropdown) => {
+        if (dropdown.id !== dropdownId) {
+          dropdown
+            .querySelector('.ccl-expandable__button')
+            .setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.getElementById(dropdownId).setAttribute('aria-expanded', 'true');
     }
 
     if (sessionStorage.getItem('snowAndIce') === 'true') {
@@ -4286,13 +4258,40 @@ class MenuWidget extends React.Component {
     this.props.hotspotDataHandler(updatedHotspotData);
   }
 
-  deleteServiceLayer(index) {
+  deleteServiceLayer(elemId) {
+    //Remove the layer from the map
+    const node = document.getElementById(elemId);
+    if (node) {
+      node.checked = false;
+      this.toggleLayer(node);
+    }
+    if (this.layers[elemId]) delete this.layers[elemId];
+    let removeLayer = this.props.map.findLayerById(elemId) || null;
+    if (!removeLayer) return;
+    removeLayer.clear();
+    removeLayer.destroy();
+    this.props.map.remove(removeLayer);
+    removeLayer = null;
+
+    //Remove the Parent Node associated to node
+    const parentNode = node.parentNode;
+    if (parentNode) {
+      parentNode.remove();
+    }
     this.setState((prevState) => {
-      const wmsUserServiceLayers = [...prevState.wmsUserServiceLayers];
-      const layerToRemove = wmsUserServiceLayers.splice(index, 1)[0];
-      this.props.view.map.remove(layerToRemove);
-      //this.props.map.clear();
-      return { wmsUserServiceLayers };
+      let newWmsUserServiceLayers;
+      if (
+        prevState.wmsUserServiceLayers.some((layer) => layer.LayerId === elemId)
+      ) {
+        newWmsUserServiceLayers = prevState.wmsUserServiceLayers.filter(
+          (layer) => layer.LayerId !== elemId,
+        );
+      } else {
+        newWmsUserServiceLayers = prevState.wmsUserServiceLayers;
+      }
+      return {
+        wmsUserServiceLayers: newWmsUserServiceLayers,
+      };
     });
   }
   /**

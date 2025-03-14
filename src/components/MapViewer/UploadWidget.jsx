@@ -26,7 +26,7 @@ class UploadWidget extends React.Component {
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
     this.mapviewer_config = this.props.mapviewer_config;
     this.fileInput = createRef();
-    this.wmsServiceUrlHandler = this.props.wmsServiceUrlHandler;
+    this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
   }
 
   loader() {
@@ -129,8 +129,12 @@ class UploadWidget extends React.Component {
   handleUploadService = () => {
     const { wmsServiceUrl } = this.state;
 
-    if (wmsServiceUrl && wmsServiceUrl.trim() !== '') {
-      this.wmsServiceUrlHandler(wmsServiceUrl);
+    if (
+      wmsServiceUrl &&
+      wmsServiceUrl.trim() !== '' &&
+      wmsServiceUrl.toLowerCase().includes('wms')
+    ) {
+      this.uploadUrlServiceHandler(wmsServiceUrl);
       this.setState({
         wmsServiceUrl: '',
       });
@@ -139,6 +143,12 @@ class UploadWidget extends React.Component {
         showInfoPopup: true,
         infoPopupType: 'uploadError',
       });
+      setTimeout(() => {
+        this.setState({
+          showInfoPopup: false,
+          infoPopupType: '',
+        });
+      }, 3000);
     }
   };
 

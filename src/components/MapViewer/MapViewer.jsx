@@ -73,7 +73,7 @@ class MapViewer extends React.Component {
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
     this.prepackageHandler = this.prepackageHandler.bind(this);
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
-    this.wmsServiceUrlHandler = this.wmsServiceUrlHandler.bind(this);
+    this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
     //this.getTaxonomy = this.props.getTaxonomy.bind(this);
   }
 
@@ -130,12 +130,26 @@ class MapViewer extends React.Component {
 
   setCenterState(centerStatus) {
     mapStatus.center = centerStatus;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    try {
+      sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        sessionStorage.clear();
+        sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+      }
+    }
   }
 
   setZoomState(zoomStatus) {
     mapStatus.zoom = zoomStatus;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    try {
+      sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        sessionStorage.clear();
+        sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+      }
+    }
   }
 
   recoverState() {
@@ -154,7 +168,7 @@ class MapViewer extends React.Component {
     this.setState({ uploadedFile: message });
   }
 
-  wmsServiceUrlHandler = (newUrl) => {
+  uploadUrlServiceHandler = (newUrl) => {
     if (newUrl && typeof newUrl === 'string') {
       this.setState({ wmsServiceUrl: newUrl });
     } else {
@@ -163,7 +177,7 @@ class MapViewer extends React.Component {
     }
   };
 
-  handleServiceAdded = () => {
+  serviceAddedHandler = () => {
     // Reset wmsServiceUrl without causing a new update of the children
     this.setState({ wmsServiceUrl: '' });
   };
@@ -314,13 +328,13 @@ class MapViewer extends React.Component {
       sessionStorage.clear();
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
     }
-    if (
-      prevState.wmsServiceUrl !== this.state.wmsServiceUrl &&
-      this.state.wmsServiceUrl === ''
-    ) {
-      // Reset wmsServiceUrl without causing a new update of the children
-      this.setState({ wmsServiceUrl: '' });
-    }
+    // if (
+    //   prevState.wmsServiceUrl !== this.state.wmsServiceUrl &&
+    //   this.state.wmsServiceUrl === ''
+    // ) {
+    //   // Reset wmsServiceUrl without causing a new update of the children
+    //   this.setState({ wmsServiceUrl: '' });
+    // }
   }
 
   componentWillUnmount() {
@@ -478,9 +492,9 @@ class MapViewer extends React.Component {
           prepackageHandler={this.prepackageHandler}
           uploadedFile={this.state.uploadedFile}
           uploadFileHandler={this.uploadFileHandler}
-          wmsServiceUrlHandler={this.wmsServiceUrlHandler}
+          uploadUrlServiceHandler={this.uploadUrlServiceHandler}
           wmsServiceUrl={this.state.wmsServiceUrl}
-          onServiceAdded={this.handleServiceAdded}
+          onServiceAdded={this.serviceAddedHandler}
           //getTaxonomy={this.getTaxonomy}
         />
       ); //call conf
@@ -509,7 +523,7 @@ class MapViewer extends React.Component {
           map={this.map}
           mapViewer={this}
           wmsServiceUrl={this.state.wmsServiceUrl}
-          wmsServiceUrlHandler={this.wmsServiceUrlHandler}
+          uploadUrlServiceHandler={this.uploadUrlServiceHandler}
         />
       );
   }
