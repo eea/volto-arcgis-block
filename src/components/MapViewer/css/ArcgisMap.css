@@ -773,6 +773,10 @@ div.upload-container.esri-component
   text-decoration: none;
 }
 
+.land .map-menu-icon.map-menu-service-icon {
+  margin-left: 1.75rem;
+}
+
 .map-menu-dropdown i:hover {
   color: black;
 }
