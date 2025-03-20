@@ -2432,8 +2432,7 @@ class MenuWidget extends React.Component {
       if (
         this.props.download ||
         this.location.search.includes('product=') ||
-        this.location.search.includes('dataset=') ||
-        !userService
+        (this.location.search.includes('dataset=') && !userService)
       ) {
         if (
           this.extentInitiated === false &&
@@ -2446,8 +2445,8 @@ class MenuWidget extends React.Component {
         }
       }
       if (
-        ((elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
-          (this.layers['lc_filter'] || this.layers['lcc_filter'])) ||
+        (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
+        (this.layers['lc_filter'] || this.layers['lcc_filter']) &&
         !userService
       ) {
         let bookmarkHotspotFilter = localStorage.getItem(
