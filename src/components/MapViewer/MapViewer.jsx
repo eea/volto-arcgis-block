@@ -60,6 +60,7 @@ class MapViewer extends React.Component {
       layerLoading: false,
       layers: {},
       uploadedFile: true,
+      wmsServiceUrl: '',
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -72,6 +73,8 @@ class MapViewer extends React.Component {
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
     this.prepackageHandler = this.prepackageHandler.bind(this);
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
+    this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
+    this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
     //this.getTaxonomy = this.props.getTaxonomy.bind(this);
   }
 
@@ -97,20 +100,57 @@ class MapViewer extends React.Component {
     this.setState({ bookmarkData: newBookmarkData });
   }
 
+  // Function to remove circular references
+  removeCircularReferences(obj) {
+    const seen = new WeakSet();
+    return JSON.parse(
+      JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return;
+          }
+          seen.add(value);
+        }
+        return value;
+      }),
+    );
+  }
+
   activeLayersHandler(newActiveLayers) {
-    this.activeLayers = newActiveLayers;
-    mapStatus.activeLayers = newActiveLayers;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    try {
+      const layersWithoutCircularReferences = this.removeCircularReferences(
+        newActiveLayers,
+      );
+      this.activeLayers = layersWithoutCircularReferences;
+      mapStatus.activeLayers = layersWithoutCircularReferences;
+      sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    } catch (error) {
+      //setup some sort of error message
+    }
   }
 
   setCenterState(centerStatus) {
     mapStatus.center = centerStatus;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    try {
+      sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        sessionStorage.clear();
+        sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+      }
+    }
   }
 
   setZoomState(zoomStatus) {
     mapStatus.zoom = zoomStatus;
-    sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    try {
+      sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        sessionStorage.clear();
+        sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
+      }
+    }
   }
 
   recoverState() {
@@ -128,6 +168,33 @@ class MapViewer extends React.Component {
   uploadFileHandler(message) {
     this.setState({ uploadedFile: message });
   }
+
+  uploadFileErrorHandler = (error) => {
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'uploadError',
+    });
+    setTimeout(() => {
+      this.setState({
+        showInfoPopup: false,
+        infoPopupType: '',
+      });
+    }, 3000);
+  };
+
+  uploadUrlServiceHandler = (newUrl) => {
+    if (newUrl && typeof newUrl === 'string') {
+      this.setState({ wmsServiceUrl: newUrl });
+    } else {
+      //set popup error messsage
+      this.setState({ wmsServiceUrl: '' });
+    }
+  };
+
+  serviceAddedHandler = () => {
+    // Reset wmsServiceUrl without causing a new update of the children
+    this.setState({ wmsServiceUrl: '' });
+  };
 
   loader() {
     return loadModules([
@@ -275,6 +342,13 @@ class MapViewer extends React.Component {
       sessionStorage.clear();
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
     }
+    // if (
+    //   prevState.wmsServiceUrl !== this.state.wmsServiceUrl &&
+    //   this.state.wmsServiceUrl === ''
+    // ) {
+    //   // Reset wmsServiceUrl without causing a new update of the children
+    //   this.setState({ wmsServiceUrl: '' });
+    // }
   }
 
   componentWillUnmount() {
@@ -432,6 +506,10 @@ class MapViewer extends React.Component {
           prepackageHandler={this.prepackageHandler}
           uploadedFile={this.state.uploadedFile}
           uploadFileHandler={this.uploadFileHandler}
+          uploadUrlServiceHandler={this.uploadUrlServiceHandler}
+          wmsServiceUrl={this.state.wmsServiceUrl}
+          onServiceAdded={this.serviceAddedHandler}
+          uploadFileErrorHandler={this.uploadFileErrorHandler}
           //getTaxonomy={this.getTaxonomy}
         />
       ); //call conf
@@ -459,6 +537,9 @@ class MapViewer extends React.Component {
           view={this.view}
           map={this.map}
           mapViewer={this}
+          wmsServiceUrl={this.state.wmsServiceUrl}
+          uploadUrlServiceHandler={this.uploadUrlServiceHandler}
+          uploadfileErrorHandler={this.uploadFileErrorHandler}
         />
       );
   }

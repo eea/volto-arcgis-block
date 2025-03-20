@@ -412,6 +412,8 @@ class MenuWidget extends React.Component {
       draggedElements: [],
       popup: false,
       filterArrow: 'chevron-down',
+      wmsUserServiceLayers: [],
+      //wmsServiceUrl: this.props.wmsServiceUrl,
     };
     this.menuClass =
       'esri-icon-drag-horizontal esri-widget--button esri-widget esri-interactive';
@@ -428,6 +430,7 @@ class MenuWidget extends React.Component {
     this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
     this.getLimitScale = this.getLimitScale.bind(this);
     this.handleOpenPopup = this.handleOpenPopup.bind(this);
+    this.filtersApplied = false;
     this.filtersApplied = false;
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -547,6 +550,15 @@ class MenuWidget extends React.Component {
         ];
       },
     );
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.wmsServiceUrl !== prevState.wmsServiceUrl) {
+      return {
+        wmsServiceUrl: nextProps.wmsServiceUrl,
+      };
+    }
+    return null;
   }
 
   stringMatch(str1, str2) {
@@ -982,6 +994,12 @@ class MenuWidget extends React.Component {
         this.props.bookmarkHandler(bookmarkData);
       });
     });
+
+    // Add "My Services" component to the UI
+    const myServicesComponent = this.createMyServicesComponent();
+    const myServicesContainer = document.createElement('div');
+    ReactDOM.render(myServicesComponent, myServicesContainer);
+    this.container.current.appendChild(myServicesContainer.firstChild);
   }
 
   setSliderTag(val) {
@@ -1135,6 +1153,10 @@ class MenuWidget extends React.Component {
         }
       }
     }
+
+    // Add "My Services" component
+    components.push(this.createMyServicesComponent());
+
     return components;
   }
 
@@ -1935,6 +1957,252 @@ class MenuWidget extends React.Component {
     }
   }
 
+  async handleNewMapServiceLayer(viewService) {
+    // Check if the URL is already in state to prevent duplicates
+    if (
+      this.state.wmsUserServiceLayers.some((layer) => layer.url === viewService)
+    ) {
+      return;
+    }
+
+    // CREATE A TEMPORARY LAYER OBJECT TO EXTRACT DATA
+    let resourceLayer;
+    try {
+      resourceLayer = new WMSLayer({
+        url: viewService,
+      });
+    } catch (error) {
+      // Set a popup error message in here
+      this.props.uploadFileErrorHandler();
+      return;
+    }
+
+    const legendRequest =
+      'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
+    let layerId, layerObj;
+
+    await resourceLayer.load().then(() => {
+      // EXTRACT DATA FOR NEW LAYER REQUEST
+      let { featureInfoUrl, title } = resourceLayer;
+      layerId = title.toUpperCase().replace(/ /g, '_');
+      const constructedSublayers = resourceLayer.sublayers?.items?.map(
+        (sublayer) => {
+          const { index, name, title, legendUrl, featureInfoUrl } = sublayer;
+          return {
+            index,
+            name,
+            title,
+            popupEnabled: true,
+            queryable: true,
+            visible: true,
+            legendEnabled: true,
+            legendUrl: legendUrl
+              ? legendUrl
+              : viewService + legendRequest + name,
+            featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
+          };
+        },
+      );
+
+      layerObj = {
+        url: viewService,
+        featureInfoFormat: 'text/html',
+        featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
+        title,
+        legendEnabled: true,
+        sublayers: constructedSublayers,
+        ViewService: viewService,
+        LayerId: layerId,
+      };
+      return layerObj;
+    });
+
+    // DESTROY THE TEMPORARY LAYER OBJECT
+    resourceLayer.destroy();
+    resourceLayer = null; // Important: clear the reference to the old layer
+
+    const { LayerId } = layerObj;
+
+    // Check if the layer already exists in this.layers before adding
+    if (!this.layers[LayerId]) {
+      try {
+        // Create and add the new layer
+        this.layers[LayerId] = new WMSLayer(layerObj);
+
+        // Update state to include the new layer, which will trigger componentDidUpdate
+        this.setState((prevState) => {
+          return {
+            wmsUserServiceLayers: [
+              ...prevState.wmsUserServiceLayers,
+              this.layers[LayerId],
+            ],
+          };
+        });
+
+        this.props.onServiceAdded();
+
+        // Add the layer to the map
+        const node = document.getElementById(LayerId);
+        if (node) {
+          node.checked = true;
+          this.toggleLayer(node);
+        }
+      } catch (error) {
+        // Set a popup error message in here
+        this.props.uploadFileErrorHandler();
+        return;
+      }
+    }
+  }
+
+  createMyServicesComponent() {
+    let dropdowns = document.querySelectorAll('.map-menu-dropdown');
+    let i = dropdowns.length === 0 ? 0 : dropdowns.length - 1;
+    let componentId = `component_${i}`;
+    let dropdownId = `dropdown_${i}`;
+
+    // Create "My Services" component from the start and set its display to none
+    let myServicesStyle =
+      this.state.wmsUserServiceLayers.length > 0 ? {} : { display: 'none' };
+    return (
+      <div
+        className="map-menu-dropdown"
+        id={componentId}
+        key="a5"
+        style={myServicesStyle}
+      >
+        <div
+          id={dropdownId}
+          className="ccl-expandable__button"
+          aria-expanded="false"
+          onClick={this.toggleDropdownContent.bind(this)}
+          onKeyDown={this.toggleDropdownContent.bind(this)}
+          tabIndex="0"
+          role="button"
+        >
+          <div className="dropdown-icon">
+            <FontAwesomeIcon icon={['fas', 'caret-right']} />
+          </div>
+          {<span>{'My Service'}</span>}
+        </div>
+        <div className="map-menu-components-container" id="map-menu-services" />
+      </div>
+    );
+  }
+
+  createUserServices(serviceLayers) {
+    const fieldset = document.getElementById('map-menu-services');
+    if (!fieldset) return;
+
+    // Create an array of all layer elements
+    const layerElements = serviceLayers.map((layer, index) => {
+      const { LayerId, title, description } = layer;
+      const parentIndex = this.layers[layer.id];
+      const checkboxId = LayerId;
+
+      return (
+        <div className="map-menu-dataset-dropdown">
+          <fieldset className="ccl-fieldset">
+            <div className="ccl-expandable__button" aria-expanded="false">
+              <div className="dropdown-icon">
+                <div className="ccl-form map-dataset-checkbox">
+                  <div
+                    className="ccl-form-group map-menu-service"
+                    key={`service_layer_${LayerId}`}
+                  >
+                    <input
+                      type="checkbox"
+                      id={checkboxId}
+                      parentid={parentIndex}
+                      layerid={LayerId}
+                      name="layerCheckbox"
+                      value="name"
+                      className="ccl-checkbox ccl-required ccl-form-check-input"
+                      title={layer.title}
+                      onChange={(e) => {
+                        this.toggleLayer(e.target);
+                      }}
+                    />
+                    <label
+                      className="ccl-form-check-label"
+                      htmlFor={checkboxId}
+                    >
+                      <legend className="ccl-form-legend">
+                        {description ? (
+                          <Popup
+                            trigger={<span>{title}</span>}
+                            content={description}
+                            basic
+                            className="custom"
+                            style={{ transform: 'translateX(-4rem)' }}
+                          />
+                        ) : (
+                          <span>{title || `Layer ${index + 1}`}</span>
+                        )}
+                      </legend>
+                    </label>
+                    <span
+                      className="map-menu-icon map-menu-service-icon"
+                      onClick={() => this.deleteServiceLayer(LayerId)}
+                      onKeyDown={() => this.deleteServiceLayer(LayerId)}
+                      tabIndex="0"
+                      role="button"
+                    >
+                      <FontAwesomeIcon icon={['fas', 'trash']} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      );
+    });
+
+    // Render all layers at once to avoid overwriting previous layers
+    ReactDOM.render(layerElements, fieldset);
+  }
+
+  deleteServiceLayer(elemId) {
+    // Remove the layer from the map
+    const node = document.getElementById(elemId);
+    if (node) {
+      node.checked = false;
+      this.toggleLayer(node);
+    }
+
+    // Delete from layers object
+    if (this.layers[elemId]) delete this.layers[elemId];
+
+    // Remove from ArcGIS map
+    let removeLayer = this.props.map.findLayerById(elemId) || null;
+    if (removeLayer) {
+      removeLayer.clear();
+      removeLayer.destroy();
+      this.props.map.remove(removeLayer);
+      removeLayer = null;
+    }
+
+    // Update state to trigger componentDidUpdate
+    this.setState((prevState) => {
+      const layerExists = prevState.wmsUserServiceLayers.some(
+        (layer) => layer.LayerId === elemId,
+      );
+
+      if (layerExists) {
+        const newWmsUserServiceLayers = prevState.wmsUserServiceLayers.filter(
+          (layer) => layer.LayerId !== elemId,
+        );
+        return {
+          wmsUserServiceLayers: newWmsUserServiceLayers,
+        };
+      }
+
+      // If layer doesn't exist, return unchanged state to avoid issues
+      return null;
+    });
+  }
+
   /**
    * Method to show/hide a layer. Update checkboxes from dataset and products
    * @param {*} elem Is the checkbox
@@ -2140,17 +2408,23 @@ class MenuWidget extends React.Component {
   }
 
   async toggleLayer(elem) {
-    if (elem.checked) {
+    const userService =
+      this.state.wmsUserServiceLayers.find(
+        (layer) => layer.LayerId === elem.id,
+      ) || null;
+    if (elem.checked && !userService) {
       this.findCheckedDatasetNoServiceToVisualize(elem);
     }
     if (this.layers[elem.id] === undefined) return;
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
-    let parentId = elem.getAttribute('parentid');
-    let productContainerId = document
-      .getElementById(parentId)
-      .closest('.map-menu-product-dropdown')
-      .getAttribute('productid');
+    let parentId = !userService ? elem.getAttribute('parentid') : null;
+    let productContainerId = !userService
+      ? document
+          .getElementById(parentId)
+          .closest('.map-menu-product-dropdown')
+          .getAttribute('productid')
+      : null;
 
     let group = this.getGroup(elem);
     if (elem.checked) {
@@ -2158,7 +2432,8 @@ class MenuWidget extends React.Component {
       if (
         this.props.download ||
         this.location.search.includes('product=') ||
-        this.location.search.includes('dataset=')
+        this.location.search.includes('dataset=') ||
+        !userService
       ) {
         if (
           this.extentInitiated === false &&
@@ -2171,8 +2446,9 @@ class MenuWidget extends React.Component {
         }
       }
       if (
-        (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
-        (this.layers['lc_filter'] || this.layers['lcc_filter'])
+        ((elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
+          (this.layers['lc_filter'] || this.layers['lcc_filter'])) ||
+        !userService
       ) {
         let bookmarkHotspotFilter = localStorage.getItem(
           'bookmarkHotspotFilter',
@@ -2249,14 +2525,14 @@ class MenuWidget extends React.Component {
       if (nuts) {
         this.map.reorder(nuts, this.map.layers.items.length + 1);
       }
-      this.checkForHotspots(elem, productContainerId);
+      if (!userService) this.checkForHotspots(elem, productContainerId);
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
       this.layers[elem.id].opacity = 1;
       this.layers[elem.id].visible = false;
-      this.deleteFilteredLayer(elem.id);
+      if (!userService) this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
         if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
@@ -2267,7 +2543,7 @@ class MenuWidget extends React.Component {
       delete this.visibleLayers[elem.id];
       delete this.timeLayers[elem.id];
     }
-    this.updateCheckDataset(parentId);
+    if (!userService) this.updateCheckDataset(parentId);
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
@@ -2482,7 +2758,6 @@ class MenuWidget extends React.Component {
     for (var i in this.activeLayersJSON) {
       activeLayersArray.push(this.activeLayersJSON[i]);
     }
-
     if (!activeLayersArray.length) {
       messageLayers && (messageLayers.style.display = 'block');
     } else messageLayers && (messageLayers.style.display = 'none');
@@ -2895,11 +3170,19 @@ class MenuWidget extends React.Component {
   }
 
   async FullExtentDataset(elem) {
+    const serviceLayer = this.state.wmsUserServiceLayers.find(
+      (layer) => layer.LayerId === elem.id,
+    );
+
+    if (!serviceLayer) {
+      this.findCheckedDataset(elem);
+    } else {
+      this.url = serviceLayer.ViewService;
+    }
     let BBoxes = {};
-    this.findCheckedDataset(elem);
     if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url?.toLowerCase().includes('wms')) {
+    } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
@@ -2928,7 +3211,16 @@ class MenuWidget extends React.Component {
   }
 
   async fullExtent(elem) {
-    this.findCheckedDataset(elem);
+    const serviceLayer = this.state.wmsUserServiceLayers.find(
+      (layer) => layer.LayerId === elem.id,
+    );
+
+    if (!serviceLayer) {
+      this.findCheckedDataset(elem);
+    } else {
+      this.productId = null;
+      this.url = serviceLayer.ViewService;
+    }
     let BBoxes = {};
     let firstLayer;
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
@@ -2945,14 +3237,14 @@ class MenuWidget extends React.Component {
       });
     }
 
-    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+    if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
       //global dynamic landCover
       this.findDatasetBoundingBox(elem);
 
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
-      this.productId.includes('fe8209dffe13454891cea05998c8e456') || // Low Resolution Vegetation Parameters
-      this.productId.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
+      this.productId?.includes('fe8209dffe13454891cea05998c8e456') || // Low Resolution Vegetation Parameters
+      this.productId?.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
     ) {
       if (
         this.layers[elem.id].fullExtents &&
@@ -2971,7 +3263,7 @@ class MenuWidget extends React.Component {
       }
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url?.toLowerCase().includes('wms')) {
+    } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
@@ -2986,19 +3278,19 @@ class MenuWidget extends React.Component {
     ) {
       if (
         this.extentInitiated === false &&
-        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
+        !this.productId?.includes('333e4100b79045daa0ff16466ac83b7f') &&
         this.location.search !== ''
       ) {
         firstLayer = BBoxes.dataset;
       }
-      if (productIds.includes(this.productId)) {
+      if (productIds?.includes(this.productId)) {
         // Your code here for when productIds includes this.productId
         let str = elem.parentNode.outerHTML;
         let match = str.match(/layerid="([a-zA-Z0-9_:-]+)"/);
         let layerid = match ? match[1] : null;
         if (layerid === null || layerid === undefined) return;
         if (
-          this.productId.includes('130299ac96e54c30a12edd575eff80f7') &&
+          this.productId?.includes('130299ac96e54c30a12edd575eff80f7') &&
           layerid.length <= 2
         ) {
           //let match = str.match(/layerid="(\d+)"/);
@@ -3064,7 +3356,7 @@ class MenuWidget extends React.Component {
         } else if (layerid.length > 2) {
           firstLayer = BBoxes[layerid];
         } else if (
-          this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
+          this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')
         ) {
           firstLayer = BBoxes[0];
         }
@@ -3075,6 +3367,9 @@ class MenuWidget extends React.Component {
         elem.id.includes('protected_areas')
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
+      } else if (serviceLayer) {
+        // Full extent treatment for service layers
+        firstLayer = BBoxes['dataset'];
       } else {
         firstLayer = BBoxes[elem.attributes.layerid.value];
       }
@@ -3613,8 +3908,15 @@ class MenuWidget extends React.Component {
     }, 100);
   }
 
+  waitForDataFill(obj) {
+    while (obj.length === 0) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return obj;
+  }
+
   setLegendOpacity() {
-    const collection = document.getElementsByClassName('esri-legend__symbol');
+    let collection = document.getElementsByClassName('esri-legend__symbol');
 
     Array.prototype.forEach.call(collection, function (element) {
       let img = {};
@@ -3692,7 +3994,15 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    this.findCheckedDataset(elem);
+    // Check if this is a user service layer
+    const isUserServiceLayer = this.state.wmsUserServiceLayers.some(
+      (layer) => layer.LayerId === elem.id,
+    );
+
+    // Only call findCheckedDataset for non-service layers (this method looks for parent datasets)
+    if (!isUserServiceLayer) {
+      this.findCheckedDataset(elem);
+    }
     if (
       this.visibleLayers[elem.id] &&
       this.visibleLayers[elem.id][1] === 'eye'
@@ -3738,7 +4048,11 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
 
-    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+    if (
+      !isUserServiceLayer &&
+      this.productId &&
+      this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
+    ) {
       // global dynamic land cover
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
         this.map.findLayerById(elem.id).visible = false;
@@ -3764,8 +4078,43 @@ class MenuWidget extends React.Component {
     this.setState({});
   }
 
-  componentDidUpdate(prevState, prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.download) return;
+
+    if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
+      const { wmsServiceUrl } = this.props;
+      if (
+        wmsServiceUrl &&
+        typeof wmsServiceUrl === 'string' &&
+        wmsServiceUrl !== ''
+      ) {
+        this.handleNewMapServiceLayer(wmsServiceUrl);
+      }
+    }
+
+    if (prevState.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {
+      this.createUserServices(this.state.wmsUserServiceLayers);
+    }
+    if (
+      this.state.wmsUserServiceLayers.length > 0 &&
+      prevState.wmsUserServiceLayers.length === 0
+    ) {
+      // Close other tabs and open "My Services"
+      let dropdownsMapMenu = document.querySelectorAll('.map-menu-dropdown');
+      let i = dropdownsMapMenu.length - 1;
+      // let j = 0;
+      let dropdownId = 'dropdown_' + i;
+      // let myServicesId = 'component_' + i;
+      // let mapMenuServiceDropdownId = 'product_' + i + '_' + j;
+      dropdownsMapMenu.forEach((dropdown) => {
+        if (dropdown.id !== dropdownId) {
+          dropdown
+            .querySelector('.ccl-expandable__button')
+            .setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.getElementById(dropdownId).setAttribute('aria-expanded', 'true');
+    }
 
     if (sessionStorage.getItem('snowAndIce') === 'true') {
       //grab all checkedLayers from sessionstorage store them in checkedLayeers
@@ -3848,6 +4197,12 @@ class MenuWidget extends React.Component {
       let layerId = layer.getAttribute('layer-id');
       let elem = document.getElementById(layerId);
       this.deleteCrossEvent(elem);
+      if (
+        this.state.wmsUserServiceLayers ||
+        this.state.wmsUserServiceLayers.length > 0
+      ) {
+        this.setState({ wmsUserServiceLayers: [] });
+      }
     });
   }
 
