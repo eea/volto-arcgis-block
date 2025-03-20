@@ -4098,7 +4098,7 @@ class MenuWidget extends React.Component {
       this.state.wmsUserServiceLayers.length > 0 &&
       prevState.wmsUserServiceLayers.length === 0
     ) {
-      // Close other tabs and open "My Services"
+      // Close other tabs and open "My Services" tab
       let dropdownsMapMenu = document.querySelectorAll('.map-menu-dropdown');
       let i = dropdownsMapMenu.length - 1;
       // let j = 0;
