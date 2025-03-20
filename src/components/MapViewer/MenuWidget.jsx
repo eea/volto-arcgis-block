@@ -431,7 +431,6 @@ class MenuWidget extends React.Component {
     this.getLimitScale = this.getLimitScale.bind(this);
     this.handleOpenPopup = this.handleOpenPopup.bind(this);
     this.filtersApplied = false;
-    // this.deleteServiceLayer = this.deleteServiceLayer.bind(this);
     this.filtersApplied = false;
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
@@ -1959,46 +1958,50 @@ class MenuWidget extends React.Component {
   }
 
   async handleNewMapServiceLayer(viewService) {
-    // Check if the URL is already in the state to prevent duplicates
+    // Check if the URL is already in state to prevent duplicates
     if (
       this.state.wmsUserServiceLayers.some((layer) => layer.url === viewService)
     ) {
       return;
     }
 
-    //CREATE A THROW AWAY LAYER OBJECT TO EXTRACT DATA FROM
-
+    // CREATE A TEMPORARY LAYER OBJECT TO EXTRACT DATA
     let resourceLayer;
     try {
       resourceLayer = new WMSLayer({
         url: viewService,
       });
     } catch (error) {
-      // set a popup error message in here.
+      // Set a popup error message in here
       return;
     }
 
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     let layerId, layerObj;
+
     await resourceLayer.load().then(() => {
-      //EXTRACT DATA FOR NEW LAYER REQUEST
+      // EXTRACT DATA FOR NEW LAYER REQUEST
       let { featureInfoUrl, title } = resourceLayer;
       layerId = title.toUpperCase().replace(/ /g, '_');
-      const constructedSublayers = resourceLayer.sublayers?.map((sublayer) => {
-        const { index, name, title, legendUrl, featureInfoUrl } = sublayer;
-        return {
-          index,
-          name,
-          title,
-          popupEnabled: true,
-          queryable: true,
-          visible: true,
-          legendEnabled: true,
-          legendUrl: legendUrl ? legendUrl : viewService + legendRequest + name,
-          featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
-        };
-      });
+      const constructedSublayers = resourceLayer.sublayers?.items?.map(
+        (sublayer) => {
+          const { index, name, title, legendUrl, featureInfoUrl } = sublayer;
+          return {
+            index,
+            name,
+            title,
+            popupEnabled: true,
+            queryable: true,
+            visible: true,
+            legendEnabled: true,
+            legendUrl: legendUrl
+              ? legendUrl
+              : viewService + legendRequest + name,
+            featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
+          };
+        },
+      );
 
       layerObj = {
         url: viewService,
@@ -2013,56 +2016,40 @@ class MenuWidget extends React.Component {
       return layerObj;
     });
 
-    //DESTROY THE THROW AWAY LAYER OBJECT
+    // DESTROY THE TEMPORARY LAYER OBJECT
     resourceLayer.destroy();
     resourceLayer = null; // Important: clear the reference to the old layer
 
-    // Check if LayerId exists in this.layer object
     const { LayerId } = layerObj;
-    if (this.layers[LayerId] && this.layers[LayerId] !== null) {
-      //delete the previous layer
-      this.layers[LayerId].destroy();
-      this.layers[LayerId] = null;
-      //remove LayerId key from this.layers object
-      delete this.layers[LayerId];
-    }
-    // Add the new layer to the this.layers
-    try {
-      this.layers[LayerId] = new WMSLayer(layerObj);
 
-      this.setState((prevState) => {
-        let newWmsUserServiceLayers;
-        if (
-          prevState.wmsUserServiceLayers.some(
-            (layer) => layer.LayerId === LayerId,
-          )
-        ) {
-          newWmsUserServiceLayers = prevState.wmsUserServiceLayers;
-          newWmsUserServiceLayers = newWmsUserServiceLayers.filter(
-            (layer) => layer.LayerId !== LayerId,
-          );
+    // Check if the layer already exists in this.layers before adding
+    if (!this.layers[LayerId]) {
+      try {
+        // Create and add the new layer
+        this.layers[LayerId] = new WMSLayer(layerObj);
+
+        // Update state to include the new layer, which will trigger componentDidUpdate
+        this.setState((prevState) => {
+          return {
+            wmsUserServiceLayers: [
+              ...prevState.wmsUserServiceLayers,
+              this.layers[LayerId],
+            ],
+          };
+        });
+
+        this.props.onServiceAdded();
+
+        // Add the layer to the map
+        const node = document.getElementById(LayerId);
+        if (node) {
+          node.checked = true;
+          this.toggleLayer(node);
         }
-        newWmsUserServiceLayers = [
-          ...prevState.wmsUserServiceLayers,
-          this.layers[LayerId],
-        ];
-        return {
-          wmsUserServiceLayers: newWmsUserServiceLayers,
-        };
-      });
-      this.props.onServiceAdded();
-      // after updating state to reflect the newest updates
-      // we set the actions necessary to add the layer to the map
-      // and notify MapViewer component that a service has been added
-
-      const node = document.getElementById(LayerId);
-      if (node) {
-        node.checked = true;
-        this.toggleLayer(node);
+      } catch (error) {
+        // Set a popup error message in here
+        return;
       }
-    } catch (error) {
-      // set a popup error message in here.
-      return;
     }
   }
 
@@ -2103,75 +2090,101 @@ class MenuWidget extends React.Component {
 
   createUserServices(serviceLayers) {
     const fieldset = document.getElementById('map-menu-services');
+    if (!fieldset) return;
 
-    // Iterate through the serviceLayers array
-    serviceLayers.forEach((layer, index) => {
-      const { LayerId } = layer;
-      let j = 0;
-      let dropdownId = 'dropdown_' + index;
-      let userServicesDropdownId = 'service_' + index + '_' + j;
-      // Check if a layer with the same serviceId already exists
-      const existingLayer = fieldset.querySelector(`#${LayerId}`) || null;
-      if (!existingLayer) {
-        // Create the new layer element
-        let parentIndex = this.layers[layer.id];
-        let checkboxId = LayerId;
-        const layerElement = (
-          <div className="ccl-form-group map-menu-services" key={'b_' + index}>
-            <input
-              type="checkbox"
-              id={checkboxId}
-              parentid={parentIndex}
-              layerid={layer.LayerId}
-              name="layerCheckbox"
-              value="name"
-              className="ccl-checkbox ccl-required ccl-form-check-input"
-              key={'c' + index}
-              title={layer.Title}
-              onChange={(e) => {
-                this.toggleLayer(e.target);
-              }}
-            />
-            <label
-              className="ccl-form-check-label"
-              htmlFor={'layer_checkbox_' + index}
-              key={'d' + index}
-            >
-              <legend className="ccl-form-legend">
-                {layer.description ? (
-                  <Popup
-                    trigger={<span>{layer.title}</span>}
-                    content={layer.description}
-                    basic
-                    className="custom"
-                    style={{ transform: 'translateX(-4rem)' }}
-                  />
-                ) : (
-                  <span>{layer.title || `Layer ${index + 1}`}</span>
-                )}
-              </legend>
-            </label>
-            <div className="map-menu-icons">
-              <span
-                className="map-menu-icon"
-                onClick={() =>
-                  this.deleteServiceLayer(document.getElementById(checkboxId))
-                }
-                onKeyDown={() =>
-                  this.deleteServiceLayer(document.getElementById(checkboxId))
-                }
-                tabIndex="0"
-                role="button"
-              >
-                <FontAwesomeIcon icon={['fas', 'trash']} />
-              </span>
-            </div>
-          </div>
+    // Create an array of all layer elements
+    const layerElements = serviceLayers.map((layer, index) => {
+      const { LayerId, title, description } = layer;
+      const parentIndex = this.layers[layer.id];
+      const checkboxId = LayerId;
+
+      return (
+        <div
+          className="ccl-form-group map-menu-service"
+          key={`service_layer_${LayerId}`}
+        >
+          <input
+            type="checkbox"
+            id={checkboxId}
+            parentid={parentIndex}
+            layerid={LayerId}
+            name="layerCheckbox"
+            value="name"
+            className="ccl-checkbox ccl-required ccl-form-check-input"
+            title={layer.title}
+            onChange={(e) => {
+              this.toggleLayer(e.target);
+            }}
+          />
+          <label className="ccl-form-check-label" htmlFor={checkboxId}>
+            <legend className="ccl-form-legend">
+              {description ? (
+                <Popup
+                  trigger={<span>{title}</span>}
+                  content={description}
+                  basic
+                  className="custom"
+                  style={{ transform: 'translateX(-4rem)' }}
+                />
+              ) : (
+                <span>{title || `Layer ${index + 1}`}</span>
+              )}
+            </legend>
+          </label>
+          <span
+            className="map-menu-icon"
+            onClick={() => this.deleteServiceLayer(LayerId)}
+            onKeyDown={() => this.deleteServiceLayer(LayerId)}
+            tabIndex="0"
+            role="button"
+          >
+            <FontAwesomeIcon icon={['fas', 'trash']} />
+          </span>
+        </div>
+      );
+    });
+
+    // Render all layers at once to avoid overwriting previous layers
+    ReactDOM.render(<div>{layerElements}</div>, fieldset);
+  }
+
+  deleteServiceLayer(elemId) {
+    // Remove the layer from the map
+    const node = document.getElementById(elemId);
+    if (node) {
+      node.checked = false;
+      this.toggleLayer(node);
+    }
+
+    // Delete from layers object
+    if (this.layers[elemId]) delete this.layers[elemId];
+
+    // Remove from ArcGIS map
+    let removeLayer = this.props.map.findLayerById(elemId) || null;
+    if (removeLayer) {
+      removeLayer.clear();
+      removeLayer.destroy();
+      this.props.map.remove(removeLayer);
+      removeLayer = null;
+    }
+
+    // Update state to trigger componentDidUpdate
+    this.setState((prevState) => {
+      const layerExists = prevState.wmsUserServiceLayers.some(
+        (layer) => layer.LayerId === elemId,
+      );
+
+      if (layerExists) {
+        const newWmsUserServiceLayers = prevState.wmsUserServiceLayers.filter(
+          (layer) => layer.LayerId !== elemId,
         );
-
-        // Append the new layer element to the fieldset
-        ReactDOM.render(layerElement, fieldset);
+        return {
+          wmsUserServiceLayers: newWmsUserServiceLayers,
+        };
       }
+
+      // If layer doesn't exist, return unchanged state to avoid issues
+      return null;
     });
   }
 
@@ -2398,7 +2411,7 @@ class MenuWidget extends React.Component {
           .getAttribute('productid')
       : null;
 
-    let group = !userService ? this.getGroup(elem) : null;
+    let group = this.getGroup(elem);
     if (elem.checked) {
       //this.props.loadingHandler(true);
       if (
@@ -3142,11 +3155,19 @@ class MenuWidget extends React.Component {
   }
 
   async FullExtentDataset(elem) {
+    const serviceLayer = this.state.wmsUserServiceLayers.find(
+      (layer) => layer.LayerId === elem.id,
+    );
+
+    if (!serviceLayer) {
+      this.findCheckedDataset(elem);
+    } else {
+      this.url = serviceLayer.ViewService;
+    }
     let BBoxes = {};
-    this.findCheckedDataset(elem);
     if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url?.toLowerCase().includes('wms')) {
+    } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
@@ -3175,7 +3196,16 @@ class MenuWidget extends React.Component {
   }
 
   async fullExtent(elem) {
-    this.findCheckedDataset(elem);
+    const serviceLayer = this.state.wmsUserServiceLayers.find(
+      (layer) => layer.LayerId === elem.id,
+    );
+
+    if (!serviceLayer) {
+      this.findCheckedDataset(elem);
+    } else {
+      this.productId = null;
+      this.url = serviceLayer.ViewService;
+    }
     let BBoxes = {};
     let firstLayer;
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
@@ -3192,14 +3222,14 @@ class MenuWidget extends React.Component {
       });
     }
 
-    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+    if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
       //global dynamic landCover
       this.findDatasetBoundingBox(elem);
 
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
-      this.productId.includes('fe8209dffe13454891cea05998c8e456') || // Low Resolution Vegetation Parameters
-      this.productId.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
+      this.productId?.includes('fe8209dffe13454891cea05998c8e456') || // Low Resolution Vegetation Parameters
+      this.productId?.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
     ) {
       if (
         this.layers[elem.id].fullExtents &&
@@ -3218,7 +3248,7 @@ class MenuWidget extends React.Component {
       }
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url?.toLowerCase().includes('wms')) {
+    } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
@@ -3233,19 +3263,19 @@ class MenuWidget extends React.Component {
     ) {
       if (
         this.extentInitiated === false &&
-        !this.productId.includes('333e4100b79045daa0ff16466ac83b7f') &&
+        !this.productId?.includes('333e4100b79045daa0ff16466ac83b7f') &&
         this.location.search !== ''
       ) {
         firstLayer = BBoxes.dataset;
       }
-      if (productIds.includes(this.productId)) {
+      if (productIds?.includes(this.productId)) {
         // Your code here for when productIds includes this.productId
         let str = elem.parentNode.outerHTML;
         let match = str.match(/layerid="([a-zA-Z0-9_:-]+)"/);
         let layerid = match ? match[1] : null;
         if (layerid === null || layerid === undefined) return;
         if (
-          this.productId.includes('130299ac96e54c30a12edd575eff80f7') &&
+          this.productId?.includes('130299ac96e54c30a12edd575eff80f7') &&
           layerid.length <= 2
         ) {
           //let match = str.match(/layerid="(\d+)"/);
@@ -3311,7 +3341,7 @@ class MenuWidget extends React.Component {
         } else if (layerid.length > 2) {
           firstLayer = BBoxes[layerid];
         } else if (
-          this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
+          this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')
         ) {
           firstLayer = BBoxes[0];
         }
@@ -3322,6 +3352,9 @@ class MenuWidget extends React.Component {
         elem.id.includes('protected_areas')
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
+      } else if (serviceLayer) {
+        // Full extent treatment for service layers
+        firstLayer = BBoxes['dataset'];
       } else {
         firstLayer = BBoxes[elem.attributes.layerid.value];
       }
@@ -3860,8 +3893,15 @@ class MenuWidget extends React.Component {
     }, 100);
   }
 
+  waitForDataFill(obj) {
+    while (obj.length === 0) {
+      new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
+    }
+    return obj;
+  }
+
   setLegendOpacity() {
-    const collection = document.getElementsByClassName('esri-legend__symbol');
+    let collection = document.getElementsByClassName('esri-legend__symbol');
 
     Array.prototype.forEach.call(collection, function (element) {
       let img = {};
@@ -3939,7 +3979,15 @@ class MenuWidget extends React.Component {
    * @param {*} id id from elem
    */
   eyeLayer(elem) {
-    this.findCheckedDataset(elem);
+    // Check if this is a user service layer
+    const isUserServiceLayer = this.state.wmsUserServiceLayers.some(
+      (layer) => layer.LayerId === elem.id,
+    );
+
+    // Only call findCheckedDataset for non-service layers (this method looks for parent datasets)
+    if (!isUserServiceLayer) {
+      this.findCheckedDataset(elem);
+    }
     if (
       this.visibleLayers[elem.id] &&
       this.visibleLayers[elem.id][1] === 'eye'
@@ -3985,7 +4033,11 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
     }
 
-    if (this.productId.includes('333e4100b79045daa0ff16466ac83b7f')) {
+    if (
+      !isUserServiceLayer &&
+      this.productId &&
+      this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
+    ) {
       // global dynamic land cover
       if (this.visibleLayers[elem.id][1] === 'eye-slash') {
         this.map.findLayerById(elem.id).visible = false;
@@ -4011,7 +4063,7 @@ class MenuWidget extends React.Component {
     this.setState({});
   }
 
-  componentDidUpdate(prevState, prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.download) return;
 
     if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
@@ -4025,12 +4077,12 @@ class MenuWidget extends React.Component {
       }
     }
 
-    if (prevProps.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {
+    if (prevState.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {
       this.createUserServices(this.state.wmsUserServiceLayers);
     }
     if (
       this.state.wmsUserServiceLayers.length > 0 &&
-      prevProps.wmsUserServiceLayers.length === 0
+      prevState.wmsUserServiceLayers.length === 0
     ) {
       // Close other tabs and open "My Services"
       let dropdownsMapMenu = document.querySelectorAll('.map-menu-dropdown');
@@ -4130,6 +4182,12 @@ class MenuWidget extends React.Component {
       let layerId = layer.getAttribute('layer-id');
       let elem = document.getElementById(layerId);
       this.deleteCrossEvent(elem);
+      if (
+        this.state.wmsUserServiceLayers ||
+        this.state.wmsUserServiceLayers.length > 0
+      ) {
+        this.setState({ wmsUserServiceLayers: [] });
+      }
     });
   }
 
@@ -4258,42 +4316,6 @@ class MenuWidget extends React.Component {
     this.props.hotspotDataHandler(updatedHotspotData);
   }
 
-  deleteServiceLayer(elemId) {
-    //Remove the layer from the map
-    const node = document.getElementById(elemId);
-    if (node) {
-      node.checked = false;
-      this.toggleLayer(node);
-    }
-    if (this.layers[elemId]) delete this.layers[elemId];
-    let removeLayer = this.props.map.findLayerById(elemId) || null;
-    if (!removeLayer) return;
-    removeLayer.clear();
-    removeLayer.destroy();
-    this.props.map.remove(removeLayer);
-    removeLayer = null;
-
-    //Remove the Parent Node associated to node
-    const parentNode = node.parentNode;
-    if (parentNode) {
-      parentNode.remove();
-    }
-    this.setState((prevState) => {
-      let newWmsUserServiceLayers;
-      if (
-        prevState.wmsUserServiceLayers.some((layer) => layer.LayerId === elemId)
-      ) {
-        newWmsUserServiceLayers = prevState.wmsUserServiceLayers.filter(
-          (layer) => layer.LayerId !== elemId,
-        );
-      } else {
-        newWmsUserServiceLayers = prevState.wmsUserServiceLayers;
-      }
-      return {
-        wmsUserServiceLayers: newWmsUserServiceLayers,
-      };
-    });
-  }
   /**
    * Method to load previously expanded dropdowns according to sessionStorage
    */
