@@ -73,6 +73,7 @@ class MapViewer extends React.Component {
     this.bookmarkHandler = this.bookmarkHandler.bind(this);
     this.prepackageHandler = this.prepackageHandler.bind(this);
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
+    this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
     this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
     //this.getTaxonomy = this.props.getTaxonomy.bind(this);
   }
@@ -167,6 +168,19 @@ class MapViewer extends React.Component {
   uploadFileHandler(message) {
     this.setState({ uploadedFile: message });
   }
+
+  uploadFileErrorHandler = (error) => {
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'uploadError',
+    });
+    setTimeout(() => {
+      this.setState({
+        showInfoPopup: false,
+        infoPopupType: '',
+      });
+    }, 3000);
+  };
 
   uploadUrlServiceHandler = (newUrl) => {
     if (newUrl && typeof newUrl === 'string') {
@@ -495,6 +509,7 @@ class MapViewer extends React.Component {
           uploadUrlServiceHandler={this.uploadUrlServiceHandler}
           wmsServiceUrl={this.state.wmsServiceUrl}
           onServiceAdded={this.serviceAddedHandler}
+          uploadFileErrorHandler={this.uploadFileErrorHandler}
           //getTaxonomy={this.getTaxonomy}
         />
       ); //call conf
@@ -524,6 +539,7 @@ class MapViewer extends React.Component {
           mapViewer={this}
           wmsServiceUrl={this.state.wmsServiceUrl}
           uploadUrlServiceHandler={this.uploadUrlServiceHandler}
+          uploadfileErrorHandler={this.uploadFileErrorHandler}
         />
       );
   }

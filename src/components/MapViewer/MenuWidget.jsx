@@ -1973,6 +1973,7 @@ class MenuWidget extends React.Component {
       });
     } catch (error) {
       // Set a popup error message in here
+      this.props.uploadFileErrorHandler();
       return;
     }
 
@@ -2048,6 +2049,7 @@ class MenuWidget extends React.Component {
         }
       } catch (error) {
         // Set a popup error message in here
+        this.props.uploadFileErrorHandler();
         return;
       }
     }
@@ -2080,8 +2082,8 @@ class MenuWidget extends React.Component {
         >
           <div className="dropdown-icon">
             <FontAwesomeIcon icon={['fas', 'caret-right']} />
-            <span>My Services</span>
           </div>
+          {<span>{'My Service'}</span>}
         </div>
         <div className="map-menu-components-container" id="map-menu-services" />
       </div>
@@ -2099,53 +2101,66 @@ class MenuWidget extends React.Component {
       const checkboxId = LayerId;
 
       return (
-        <div
-          className="ccl-form-group map-menu-service"
-          key={`service_layer_${LayerId}`}
-        >
-          <input
-            type="checkbox"
-            id={checkboxId}
-            parentid={parentIndex}
-            layerid={LayerId}
-            name="layerCheckbox"
-            value="name"
-            className="ccl-checkbox ccl-required ccl-form-check-input"
-            title={layer.title}
-            onChange={(e) => {
-              this.toggleLayer(e.target);
-            }}
-          />
-          <label className="ccl-form-check-label" htmlFor={checkboxId}>
-            <legend className="ccl-form-legend">
-              {description ? (
-                <Popup
-                  trigger={<span>{title}</span>}
-                  content={description}
-                  basic
-                  className="custom"
-                  style={{ transform: 'translateX(-4rem)' }}
-                />
-              ) : (
-                <span>{title || `Layer ${index + 1}`}</span>
-              )}
-            </legend>
-          </label>
-          <span
-            className="map-menu-icon"
-            onClick={() => this.deleteServiceLayer(LayerId)}
-            onKeyDown={() => this.deleteServiceLayer(LayerId)}
-            tabIndex="0"
-            role="button"
-          >
-            <FontAwesomeIcon icon={['fas', 'trash']} />
-          </span>
+        <div className="map-menu-dataset-dropdown">
+          <fieldset className="ccl-fieldset">
+            <div className="ccl-expandable__button" aria-expanded="false">
+              <div className="dropdown-icon">
+                <div className="ccl-form map-dataset-checkbox">
+                  <div
+                    className="ccl-form-group map-menu-service"
+                    key={`service_layer_${LayerId}`}
+                  >
+                    <input
+                      type="checkbox"
+                      id={checkboxId}
+                      parentid={parentIndex}
+                      layerid={LayerId}
+                      name="layerCheckbox"
+                      value="name"
+                      className="ccl-checkbox ccl-required ccl-form-check-input"
+                      title={layer.title}
+                      onChange={(e) => {
+                        this.toggleLayer(e.target);
+                      }}
+                    />
+                    <label
+                      className="ccl-form-check-label"
+                      htmlFor={checkboxId}
+                    >
+                      <legend className="ccl-form-legend">
+                        {description ? (
+                          <Popup
+                            trigger={<span>{title}</span>}
+                            content={description}
+                            basic
+                            className="custom"
+                            style={{ transform: 'translateX(-4rem)' }}
+                          />
+                        ) : (
+                          <span>{title || `Layer ${index + 1}`}</span>
+                        )}
+                      </legend>
+                    </label>
+                    <span
+                      className="map-menu-icon map-menu-service-icon"
+                      onClick={() => this.deleteServiceLayer(LayerId)}
+                      onKeyDown={() => this.deleteServiceLayer(LayerId)}
+                      tabIndex="0"
+                      role="button"
+                    >
+                      <FontAwesomeIcon icon={['fas', 'trash']} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </fieldset>
         </div>
       );
     });
 
     // Render all layers at once to avoid overwriting previous layers
-    ReactDOM.render(<div>{layerElements}</div>, fieldset);
+    ReactDOM.render(layerElements, fieldset);
   }
 
   deleteServiceLayer(elemId) {

@@ -160,7 +160,7 @@ class UploadWidget extends React.Component {
     this.props.view.when(() => {
       this.container.current !== null &&
         this.props.view.ui.add(this.container.current, 'top-right');
-      //load an empty wms layer touse the variable
+      //load an empty wms layer to use the variable
       const wmsLayer = new WMSLayer({
         url: '',
         title: 'WMS Layer',
