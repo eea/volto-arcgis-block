@@ -4558,132 +4558,83 @@ class MenuWidget extends React.Component {
   };
 
   loadComponentFilters() {
-    var checkList = document.getElementById('select-component');
-    checkList.getElementsByClassName('anchor')[0].onclick = function (evt) {
-      if (checkList.classList.contains('visible'))
-        checkList.classList.remove('visible');
-      else checkList.classList.add('visible');
-    };
-    let list = document.querySelector('.component-items');
+    var selectedComponent = document.getElementById('select-component');
+    selectedComponent.options.add(
+      new Option('Select a component', 'default', false, false),
+    );
+    selectedComponent.options[0].disabled = true;
+    var selectedProduct = document.getElementById('select-product');
+    selectedProduct.options.add(
+      new Option('Select a product', 'default', false, false),
+    );
+    selectedProduct.options[0].disabled = true;
+    document
+      .querySelector('.menu-family-filter')
+      .setAttribute('style', 'display: none;');
     this.compCfg.forEach((element) => {
-      let inputNode = document.createElement('input');
-      let lavelNode = document.createElement('lavel');
-      inputNode.setAttribute('type', 'checkbox');
-      inputNode.classList.add('component_item');
-      inputNode.setAttribute('value', element.ComponentPosition);
-      lavelNode.innerText = element.ComponentTitle;
-      let listNode = document.createElement('li');
-      listNode.appendChild(inputNode);
-      listNode.appendChild(lavelNode);
-      list.appendChild(listNode);
-      inputNode.onclick = () => {
-        this.loadProductFilters();
-        this.menuSearch();
-      };
+      selectedComponent.options.add(
+        new Option(
+          element.ComponentTitle,
+          element.ComponentPosition,
+          element.ComponentPosition,
+        ),
+      );
     });
   }
   loadProductFilters() {
-    var checkList = document.getElementById('select-product');
-    checkList.getElementsByClassName('anchor')[0].onclick = function (evt) {
-      if (checkList.classList.contains('visible'))
-        checkList.classList.remove('visible');
-      else checkList.classList.add('visible');
-    };
-    let list = document.querySelector('.product-items');
-    while (list.firstChild) {
-      list.removeChild(list.lastChild);
-    }
-
-    let componentList = document.getElementsByClassName('component_item');
-    let componentFilter = [];
-    for (let m = 0; m < componentList.length; m++) {
-      if (componentList[m].checked) {
-        componentFilter.push(componentList[m].value);
-      }
-    }
+    var selectedComponent = document.getElementById('select-component');
+    var selectedProduct = document.getElementById('select-product');
     if (
       document.querySelector('.clear-filters') &&
-      componentFilter.length !== 0
+      selectedComponent.value !== 'default'
     ) {
       document
         .querySelector('.clear-filters')
         .setAttribute('style', 'display: block;');
     }
-    componentFilter.forEach((component) => {
-      this.compCfg[component].Products.forEach((product) => {
-        let inputNode = document.createElement('input');
-        let lavelNode = document.createElement('lavel');
-        inputNode.setAttribute('type', 'checkbox');
-        inputNode.classList.add('product_item');
-        inputNode.setAttribute('value', product.ProductId);
-        lavelNode.innerText = product.ProductTitle;
-        let listNode = document.createElement('li');
-        listNode.appendChild(inputNode);
-        listNode.appendChild(lavelNode);
-        list.appendChild(listNode);
-        inputNode.onclick = () => {
-          this.loadFamilyFilters();
-          this.menuSearch();
-        };
-      });
+    this.removeOptions(selectedProduct);
+    selectedProduct.options.add(
+      new Option('Select a product', 'default', false, false),
+    );
+    selectedProduct.options[0].disabled = true;
+    this.compCfg.forEach((component) => {
+      if (component.ComponentPosition.toString() === selectedComponent.value) {
+        component.Products.forEach((product) => {
+          selectedProduct.options.add(
+            new Option(
+              product.ProductTitle,
+              product.ProductId,
+              product.ProductId,
+            ),
+          );
+        });
+      }
     });
+    let familyFilter = document.querySelector('.menu-family-filter');
+    if (familyFilter) {
+      familyFilter.setAttribute('style', 'display: none;');
+    }
   }
   async loadFamilyFilters() {
-    // let tax = await this.getTaxonomy('collective.taxonomy.family');
-    // var checkList = document.getElementById('select-family');
-    // checkList.getElementsByClassName('anchor')[0].onclick = function(evt) {
-    //   if (checkList.classList.contains('visible'))
-    //     checkList.classList.remove('visible');
-    //   else
-    //     checkList.classList.add('visible');
-    // }
-    // let list = document.querySelector('.family-items');
-    // while (list.firstChild) {
-    //   list.removeChild(list.lastChild);
-    // }
-    // let componentList = document.getElementsByClassName('component_item');
-    // let componentFilter = [];
-    // for (let m = 0; m < componentList.length; m++) {
-    //   if (componentList[m].checked) {
-    //     componentFilter.push(componentList[m].value)
+    // var selectedFamily = document.getElementById('select-family');
+    // var selectedProduct = document.getElementById('select-product');
+    // this.removeOptions(selectedFamily);
+    //let tax = await this.getTaxonomy('collective.taxonomy.family');
+    //let hasFamily = false;
+    // selectedFamily.options.add(
+    //   new Option('Select a family', 'default', false, false),
+    // );
+    //let text = selectedProduct.selectedOptions[0].text
+    // tax.tree.forEach((element) => {
+    //   if (element.title === selectedProduct.selectedOptions[0].text) {
+    //     //hasFamily = true;
+    //     element.children.forEach((child) => {
+    //       selectedFamily.options.add(
+    //         new Option(child.title, child.key, child.key),
+    //       );
+    //     });
     //   }
-    // }
-    // componentFilter.forEach(component => {
-    //   this.compCfg[component].Products.forEach(product => {
-    //     let inputNode = document.createElement('input');
-    //     let lavelNode = document.createElement('lavel');
-    //     inputNode.setAttribute('type','checkbox');
-    //     inputNode.classList.add('product_item')
-    //     inputNode.setAttribute('value', product.ProductId)
-    //     lavelNode.innerText = product.ProductTitle;
-    //     let listNode = document.createElement('li');
-    //     listNode.appendChild(inputNode);
-    //     listNode.appendChild(lavelNode);
-    //     list.appendChild(listNode)
-    //     inputNode.onclick= () => {
-    //       this.loadFamilyFilters();
-    //       this.menuSearch();
-    //     };
-    //   })
     // });
-    // // var selectedFamily = document.getElementById('select-family');
-    // // var selectedProduct = document.getElementById('select-product');
-    // // this.removeOptions(selectedFamily);
-    // let hasFamily = false;
-    // // selectedFamily.options.add(
-    // //   new Option('Select a family', 'default', false, false),
-    // // );
-    // // let text = selectedProduct.selectedOptions[0].text
-    // // tax.tree.forEach((element) => {
-    // //   if (element.title === selectedProduct.selectedOptions[0].text) {
-    // //     //hasFamily = true;
-    // //     element.children.forEach((child) => {
-    // //       selectedFamily.options.add(
-    // //         new Option(child.title, child.key, child.key),
-    // //       );
-    // //     });
-    // //   }
-    // // });
     // let familyFilter = document.querySelector('.menu-family-filter');
     // if (familyFilter) {
     //   if (!hasFamily) {
@@ -4695,8 +4646,8 @@ class MenuWidget extends React.Component {
   }
   async menuSearch() {
     let searchText;
-    let componentFilter = [];
-    let productFilter = [];
+    let componentFilter;
+    let productFilter;
     //let familyFilter;
     let result = false;
     if (document.querySelector('#menu-searchtext')) {
@@ -4705,20 +4656,10 @@ class MenuWidget extends React.Component {
         .value?.toUpperCase();
     }
     if (document.getElementById('select-component')) {
-      let componentList = document.getElementsByClassName('component_item');
-      for (let m = 0; m < componentList.length; m++) {
-        if (componentList[m].checked) {
-          componentFilter.push(componentList[m].value);
-        }
-      }
+      componentFilter = document.getElementById('select-component').value;
     }
     if (document.getElementById('select-product')) {
-      let productList = document.getElementsByClassName('product_item');
-      for (let n = 0; n < productList.length; n++) {
-        if (productList[n].checked) {
-          productFilter.push(productList[n].value);
-        }
-      }
+      productFilter = document.getElementById('select-product').value;
     }
     // if (document.getElementById('select-family')) {
     //   familyFilter = document.getElementById('select-family').text;
@@ -4754,8 +4695,8 @@ class MenuWidget extends React.Component {
           }
           if (
             searchText === '' &&
-            componentFilter.length === 0 &&
-            productFilter.length === 0
+            componentFilter === 'default' &&
+            productFilter === 'default'
           ) {
             this.filtersApplied = false;
             componentFound = true;
@@ -4779,12 +4720,11 @@ class MenuWidget extends React.Component {
           } else if (
             datasetChecked ||
             (dataset?.DatasetTitle?.toUpperCase().includes(searchText) &&
-              (productFilter.includes(product.ProductId) ||
-                productFilter.length === 0) &&
-              (componentFilter.includes(
-                this.compCfg[index].ComponentPosition.toString(),
-              ) ||
-                componentFilter.length === 0))
+              (product.ProductId === productFilter ||
+                productFilter === 'default') &&
+              (this.compCfg[index].ComponentPosition.toString() ===
+                componentFilter ||
+                componentFilter === 'default'))
           ) {
             this.filtersApplied = true;
             componentFound = true;
@@ -4851,13 +4791,22 @@ class MenuWidget extends React.Component {
     }
   }
   clearFilters() {
-    let componentList = document.getElementsByClassName('component_item');
-    for (let m = 0; m < componentList.length; m++) {
-      componentList[m].checked = false;
+    if (document.getElementById('select-component')) {
+      document.getElementById('select-component').value = 'default';
     }
-    let list = document.querySelector('.product-items');
-    while (list.firstChild) {
-      list.removeChild(list.lastChild);
+    let selectedProduct = document.getElementById('select-product');
+    if (selectedProduct) {
+      this.removeOptions(selectedProduct);
+      selectedProduct.options.add(
+        new Option('Select a product', 'default', false, false),
+      );
+    }
+    if (document.getElementById('select-family')) {
+      document.getElementById('select-family').value = 'default';
+    }
+    let familyFilter = document.querySelector('.menu-family-filter');
+    if (familyFilter) {
+      familyFilter.setAttribute('style', 'display: none;');
     }
     if (document.querySelector('.clear-filters')) {
       document
@@ -5081,11 +5030,7 @@ class MenuWidget extends React.Component {
                   <div className="filters-panel">
                     <span className="menu-filter">
                       Component
-                      <div id="select-component" class="dropdown-check-list">
-                        <span class="anchor">Select a Component</span>
-                        <ul class="items component-items"></ul>
-                      </div>
-                      {/* <select
+                      <select
                         id="select-component"
                         class="esri-select filter-select"
                         onBlur={() => {}}
@@ -5093,15 +5038,11 @@ class MenuWidget extends React.Component {
                           this.loadProductFilters();
                           this.menuSearch();
                         }}
-                      ></select> */}
+                      ></select>
                     </span>
                     <span className="menu-filter">
                       Product groups
-                      <div id="select-product" class="dropdown-check-list">
-                        <span class="anchor">Select a Product</span>
-                        <ul class="items product-items"></ul>
-                      </div>
-                      {/* <select
+                      <select
                         id="select-product"
                         class="esri-select filter-select"
                         onBlur={() => {}}
@@ -5109,20 +5050,15 @@ class MenuWidget extends React.Component {
                           this.loadFamilyFilters();
                           this.menuSearch();
                         }}
-                      ></select> */}
+                      ></select>
                     </span>
-                    {/* <span className="menu-filter menu-family-filter">
+                    <span className="menu-filter menu-family-filter">
                       Family
-                      <div id="select-family" class="dropdown-check-list">
-                        <span class="anchor">Select a Family</span>
-                        <ul class="items family-items">
-                        </ul>
-                      </div>
                       <select
                         id="select-family"
                         class="esri-select filter-select"
-                      ></select> 
-                    </span> */}
+                      ></select>
+                    </span>
                   </div>
                 </div>
               </div>
