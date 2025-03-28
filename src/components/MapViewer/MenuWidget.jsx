@@ -931,7 +931,7 @@ class MenuWidget extends React.Component {
     this.loadVisibility();
     this.handleRasterVectorLegend();
     this.map.when(() => {
-      this.map.layers.on('change', (e) => {
+      this.map.layers.on('change', () => {
         if (!this.props.bookmarkData?.active) return;
 
         this.map.layers.removeAll();
@@ -2042,6 +2042,8 @@ class MenuWidget extends React.Component {
         // Create and add the new layer
         this.layers[LayerId] = new WMSLayer(layerObj);
 
+        this.saveCheckedLayer(layerId);
+
         // Update state to include the new layer, which will trigger componentDidUpdate
         this.setState((prevState) => {
           const updatedLayers = [
@@ -2053,13 +2055,6 @@ class MenuWidget extends React.Component {
         });
 
         this.props.onServiceChange();
-
-        // Add the layer to the map
-        const node = document.getElementById(LayerId);
-        if (node) {
-          node.checked = true;
-          this.toggleLayer(node);
-        }
       } catch (error) {
         // Set a popup error message in here
         this.props.uploadFileErrorHandler();
@@ -2198,7 +2193,6 @@ class MenuWidget extends React.Component {
 
     this.props.onServiceChange();
 
-    // Update state to trigger componentDidUpdate
     this.setState((prevState) => {
       const layerExists = prevState.wmsUserServiceLayers.some(
         (layer) => layer.LayerId === elemId,
@@ -4187,6 +4181,21 @@ class MenuWidget extends React.Component {
 
     if (prevState.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {
       this.createUserServices(this.state.wmsUserServiceLayers);
+      setTimeout(() => {
+        const checkedLayers =
+          JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+
+        // For each valid layer that was previously checked, make it visible
+        this.state.wmsUserServiceLayers.forEach((layer) => {
+          if (checkedLayers.includes(layer.LayerId)) {
+            const node = document.getElementById(layer.LayerId);
+            if (node) {
+              node.checked = true;
+              this.toggleLayer(node);
+            }
+          }
+        });
+      }, 0);
     }
     if (
       this.state.wmsUserServiceLayers.length > 0 &&
