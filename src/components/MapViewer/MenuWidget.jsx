@@ -1958,10 +1958,18 @@ class MenuWidget extends React.Component {
   }
 
   async handleNewMapServiceLayer(viewService) {
-    // Check if the URL is already in state to prevent duplicates
+    // First, properly normalize the URL for comparison
+    const normalizedViewService = viewService.trim();
+
     if (
-      this.state.wmsUserServiceLayers.some((layer) => layer.url === viewService)
+      this.state.wmsUserServiceLayers.some(
+        (layer) =>
+          layer.url === normalizedViewService ||
+          layer.ViewService === normalizedViewService,
+      )
     ) {
+      // Call the uploadFileErrorHandler to show the error popup
+      this.props.uploadFileErrorHandler();
       return;
     }
 
@@ -2039,7 +2047,7 @@ class MenuWidget extends React.Component {
           };
         });
 
-        this.props.onServiceAdded();
+        this.props.onServiceChange();
 
         // Add the layer to the map
         const node = document.getElementById(LayerId);
@@ -2182,6 +2190,8 @@ class MenuWidget extends React.Component {
       this.props.map.remove(removeLayer);
       removeLayer = null;
     }
+
+    this.props.onServiceChange();
 
     // Update state to trigger componentDidUpdate
     this.setState((prevState) => {

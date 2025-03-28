@@ -61,6 +61,7 @@ class MapViewer extends React.Component {
       layers: {},
       uploadedFile: true,
       wmsServiceUrl: '',
+      uploadError: false,
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -169,16 +170,10 @@ class MapViewer extends React.Component {
     this.setState({ uploadedFile: message });
   }
 
-  uploadFileErrorHandler = (error) => {
-    this.setState({
-      showInfoPopup: true,
-      infoPopupType: 'uploadError',
-    });
+  uploadFileErrorHandler = () => {
+    this.setState({ uploadError: true });
     setTimeout(() => {
-      this.setState({
-        showInfoPopup: false,
-        infoPopupType: '',
-      });
+      this.setState({ uploadError: false });
     }, 3000);
   };
 
@@ -191,7 +186,7 @@ class MapViewer extends React.Component {
     }
   };
 
-  serviceAddedHandler = () => {
+  serviceChangeHandler = () => {
     // Reset wmsServiceUrl without causing a new update of the children
     this.setState({ wmsServiceUrl: '' });
   };
@@ -508,7 +503,7 @@ class MapViewer extends React.Component {
           uploadFileHandler={this.uploadFileHandler}
           uploadUrlServiceHandler={this.uploadUrlServiceHandler}
           wmsServiceUrl={this.state.wmsServiceUrl}
-          onServiceAdded={this.serviceAddedHandler}
+          onServiceChange={this.serviceChangeHandler}
           uploadFileErrorHandler={this.uploadFileErrorHandler}
           //getTaxonomy={this.getTaxonomy}
         />
@@ -538,8 +533,9 @@ class MapViewer extends React.Component {
           map={this.map}
           mapViewer={this}
           wmsServiceUrl={this.state.wmsServiceUrl}
+          showErrorPopup={this.state.uploadError}
           uploadUrlServiceHandler={this.uploadUrlServiceHandler}
-          uploadfileErrorHandler={this.uploadFileErrorHandler}
+          uploadFileErrorHandler={this.uploadFileErrorHandler}
         />
       );
   }

@@ -27,6 +27,8 @@ class UploadWidget extends React.Component {
     this.mapviewer_config = this.props.mapviewer_config;
     this.fileInput = createRef();
     this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
+    this.uploadFileErrorHandler = this.props.uploadFileErrorHandler;
+    this.errorPopup = this.errorPopup.bind(this);
   }
 
   loader() {
@@ -139,17 +141,21 @@ class UploadWidget extends React.Component {
         wmsServiceUrl: '',
       });
     } else {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'uploadError',
-      });
-      setTimeout(() => {
-        this.setState({
-          showInfoPopup: false,
-          infoPopupType: '',
-        });
-      }, 3000);
+      this.errorPopup();
     }
+  };
+
+  errorPopup = () => {
+    this.setState({
+      showInfoPopup: true,
+      infoPopupType: 'uploadError',
+    });
+    setTimeout(() => {
+      this.setState({
+        showInfoPopup: false,
+        infoPopupType: '',
+      });
+    }, 3000);
   };
 
   /**
@@ -169,6 +175,12 @@ class UploadWidget extends React.Component {
         wmsLayer: wmsLayer,
       });
     });
+  }
+
+  componentDidUpdate(prevProps) {
+    if (!prevProps.showErrorPopup && this.props.showErrorPopup) {
+      this.errorPopup();
+    }
   }
 
   /**
