@@ -7,6 +7,9 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
+
+export const USER_SERVICES_KEY = 'user_services_session';
+
 var WMSLayer,
   WMTSLayer,
   FeatureLayer,
@@ -404,6 +407,7 @@ class MenuWidget extends React.Component {
     this.compCfg = this.props.conf;
     this.map = this.props.map;
     this.view = this.props.view;
+    this.userID = this.props.userID;
     this.state = {
       showMapMenu: false,
       noServiceModal: false,
@@ -1000,6 +1004,7 @@ class MenuWidget extends React.Component {
     const myServicesContainer = document.createElement('div');
     ReactDOM.render(myServicesComponent, myServicesContainer);
     this.container.current.appendChild(myServicesContainer.firstChild);
+    this.loadUserServicesFromStorage();
   }
 
   setSliderTag(val) {
@@ -2039,12 +2044,12 @@ class MenuWidget extends React.Component {
 
         // Update state to include the new layer, which will trigger componentDidUpdate
         this.setState((prevState) => {
-          return {
-            wmsUserServiceLayers: [
-              ...prevState.wmsUserServiceLayers,
-              this.layers[LayerId],
-            ],
-          };
+          const updatedLayers = [
+            ...prevState.wmsUserServiceLayers,
+            this.layers[LayerId],
+          ];
+          this.saveUserServicesToStorage(updatedLayers);
+          return { wmsUserServiceLayers: updatedLayers };
         });
 
         this.props.onServiceChange();
@@ -2203,14 +2208,93 @@ class MenuWidget extends React.Component {
         const newWmsUserServiceLayers = prevState.wmsUserServiceLayers.filter(
           (layer) => layer.LayerId !== elemId,
         );
-        return {
-          wmsUserServiceLayers: newWmsUserServiceLayers,
-        };
+        this.saveUserServicesToStorage(newWmsUserServiceLayers);
+        return { wmsUserServiceLayers: newWmsUserServiceLayers };
       }
-
-      // If layer doesn't exist, return unchanged state to avoid issues
       return null;
     });
+  }
+
+  saveUserServicesToStorage(layers) {
+    if (this.userID == null) return;
+
+    try {
+      const layersToSave = layers.map((layer) => {
+        // Create a simplified object for storage
+        return {
+          url: layer.url,
+          featureInfoFormat: layer.featureInfoFormat,
+          featureInfoUrl: layer.featureInfoUrl,
+          title: layer.title,
+          legendEnabled: layer.legendEnabled,
+          sublayers: layer.sublayers?.items?.map((sublayer) => ({
+            index: sublayer.index,
+            name: sublayer.name,
+            title: sublayer.title,
+            popupEnabled: sublayer.popupEnabled,
+            queryable: sublayer.queryable,
+            visible: sublayer.visible,
+            legendEnabled: sublayer.legendEnabled,
+            legendUrl: sublayer.legendUrl,
+            featureInfoUrl: sublayer.featureInfoUrl,
+          })),
+          ViewService: layer.ViewService,
+          LayerId: layer.LayerId,
+        };
+      });
+
+      localStorage.setItem(
+        USER_SERVICES_KEY + '_' + this.userID,
+        JSON.stringify(layersToSave),
+      );
+    } catch (error) {}
+  }
+
+  async loadUserServicesFromStorage() {
+    if (this.userID != null) {
+      try {
+        const savedServices = JSON.parse(
+          localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+        );
+
+        if (savedServices && Array.isArray(savedServices)) {
+          // Process saved services to recreate actual layer objects
+          const recreatedLayers = await Promise.all(
+            savedServices.map(async (serviceData) => {
+              try {
+                // Create a new WMSLayer with the saved properties
+                const newLayer = new WMSLayer(serviceData);
+                // Add to this.layers
+                this.layers[serviceData.LayerId] = newLayer;
+                return newLayer;
+              } catch (error) {
+                return null;
+              }
+            }),
+          );
+
+          // Filter out any null values from failed recreations
+          const validLayers = recreatedLayers.filter((layer) => layer !== null);
+
+          // Update state with recreated layers
+          this.setState({ wmsUserServiceLayers: validLayers });
+          // Get checked layers from session storage
+          const checkedLayers =
+            JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+
+          // For each valid layer that was previously checked, make it visible
+          validLayers.forEach((layer) => {
+            if (checkedLayers.includes(layer.LayerId)) {
+              const node = document.getElementById(layer.LayerId);
+              if (node) {
+                node.checked = true;
+                this.toggleLayer(node);
+              }
+            }
+          });
+        }
+      } catch (error) {}
+    }
   }
 
   /**
@@ -4133,12 +4217,22 @@ class MenuWidget extends React.Component {
     }
     const latestLayer = JSON.parse(sessionStorage.getItem('TMSLayerObj'));
 
-    if (latestLayer) {
+    if (latestLayer && BaseTileLayer) {
       this.view.when(() => {
         if (this.view.stationary) {
           const { layer, checkboxId, dataset } = latestLayer;
           this.processTMSLayer(checkboxId, layer, dataset);
         }
+      });
+    } else if (latestLayer) {
+      // If we have a layer but BaseTileLayer isn't loaded yet, wait for it
+      this.loader().then(() => {
+        this.view.when(() => {
+          if (this.view.stationary) {
+            const { layer, checkboxId, dataset } = latestLayer;
+            this.processTMSLayer(checkboxId, layer, dataset);
+          }
+        });
       });
     }
     this.setLegendOpacity();
