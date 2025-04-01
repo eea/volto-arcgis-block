@@ -855,6 +855,9 @@ class AreaWidget extends React.Component {
   rectanglehandler(event) {
     this.clearWidget();
     window.document.querySelector('.pan-container').style.display = 'flex';
+    window.document.querySelector('.pan-container').style.position = 'absolute';
+    window.document.querySelector('.pan-container').style.paddingRight =
+      '21rem';
     var fillSymbol = {
       type: 'simple-fill',
       color: [255, 255, 255, 0.5],
