@@ -61,6 +61,7 @@ class MapViewer extends React.Component {
       layers: {},
       uploadedFile: true,
       wmsServiceUrl: '',
+      uploadError: false,
     };
     this.activeLayersHandler = this.activeLayersHandler.bind(this);
     this.activeLayersArray = {};
@@ -169,16 +170,10 @@ class MapViewer extends React.Component {
     this.setState({ uploadedFile: message });
   }
 
-  uploadFileErrorHandler = (error) => {
-    this.setState({
-      showInfoPopup: true,
-      infoPopupType: 'uploadError',
-    });
+  uploadFileErrorHandler = () => {
+    this.setState({ uploadError: true });
     setTimeout(() => {
-      this.setState({
-        showInfoPopup: false,
-        infoPopupType: '',
-      });
+      this.setState({ uploadError: false });
     }, 3000);
   };
 
@@ -191,7 +186,7 @@ class MapViewer extends React.Component {
     }
   };
 
-  serviceAddedHandler = () => {
+  serviceChangeHandler = () => {
     // Reset wmsServiceUrl without causing a new update of the children
     this.setState({ wmsServiceUrl: '' });
   };
@@ -481,43 +476,43 @@ class MapViewer extends React.Component {
       );
   }
 
-  renderMenu() {
-    if (this.view)
-      return (
-        <MenuWidget
-          location={this.location}
-          view={this.view}
-          conf={this.props.mapviewer_config.Components}
-          download={this.props.mapviewer_config.Download}
-          map={this.map}
-          mapViewer={this}
-          updateArea={this.updateArea}
-          area={this.state.area}
-          layers={this.state.layers}
-          activeLayersHandler={this.activeLayersHandler}
-          urls={this.cfgUrls}
-          loadingHandler={this.loadingHandler}
-          hotspotDataHandler={this.hotspotDataHandler}
-          hotspotData={this.state.hotspotData}
-          mapLayersHandler={this.mapLayersHandler}
-          bookmarkData={this.state.bookmarkData}
-          bookmarkHandler={this.bookmarkHandler}
-          prepackageChecked={this.state.prepackageChecked}
-          prepackageHandler={this.prepackageHandler}
-          uploadedFile={this.state.uploadedFile}
-          uploadFileHandler={this.uploadFileHandler}
-          uploadUrlServiceHandler={this.uploadUrlServiceHandler}
-          wmsServiceUrl={this.state.wmsServiceUrl}
-          onServiceAdded={this.serviceAddedHandler}
-          uploadFileErrorHandler={this.uploadFileErrorHandler}
-          //getTaxonomy={this.getTaxonomy}
-        />
-      ); //call conf
-  }
+  // renderMenu() {
+  //   if (this.view)
+  //     return (
+  //       <MenuWidget
+  //         location={this.location}
+  //         view={this.view}
+  //         conf={this.props.mapviewer_config.Components}
+  //         download={this.props.mapviewer_config.Download}
+  //         map={this.map}
+  //         mapViewer={this}
+  //         updateArea={this.updateArea}
+  //         area={this.state.area}
+  //         layers={this.state.layers}
+  //         activeLayersHandler={this.activeLayersHandler}
+  //         urls={this.cfgUrls}
+  //         loadingHandler={this.loadingHandler}
+  //         hotspotDataHandler={this.hotspotDataHandler}
+  //         hotspotData={this.state.hotspotData}
+  //         mapLayersHandler={this.mapLayersHandler}
+  //         bookmarkData={this.state.bookmarkData}
+  //         bookmarkHandler={this.bookmarkHandler}
+  //         prepackageChecked={this.state.prepackageChecked}
+  //         prepackageHandler={this.prepackageHandler}
+  //         uploadedFile={this.state.uploadedFile}
+  //         uploadFileHandler={this.uploadFileHandler}
+  //         uploadUrlServiceHandler={this.uploadUrlServiceHandler}
+  //         wmsServiceUrl={this.state.wmsServiceUrl}
+  //         onServiceChange={this.serviceChangeHandler}
+  //         uploadFileErrorHandler={this.uploadFileErrorHandler}
+  //         //getTaxonomy={this.getTaxonomy}
+  //       />
+  //     ); //call conf
+  // }
 
-  renderBookmark() {
-    if (this.view) return <CheckUserID reference={this} />;
-  }
+  // renderBookmark() {
+  //   if (this.view) return <CheckUserID reference={this} />;
+  // }
 
   appLanguage() {
     return intl && <CheckLanguage />;
@@ -538,8 +533,9 @@ class MapViewer extends React.Component {
           map={this.map}
           mapViewer={this}
           wmsServiceUrl={this.state.wmsServiceUrl}
+          showErrorPopup={this.state.uploadError}
           uploadUrlServiceHandler={this.uploadUrlServiceHandler}
-          uploadfileErrorHandler={this.uploadFileErrorHandler}
+          uploadFileErrorHandler={this.uploadFileErrorHandler}
         />
       );
   }
@@ -572,8 +568,9 @@ class MapViewer extends React.Component {
             {this.renderScale()}
             {this.renderInfo()}
             {this.renderHotspot()}
-            {this.renderMenu()}
-            {this.renderBookmark()}
+            {/*this.renderMenu()*/}
+            {/*this.renderBookmark()*/}
+            <CheckUserID reference={this} />
             {this.renderLoadingSpinner()}
             {this.renderUploadService()}
           </div>
@@ -607,20 +604,54 @@ export const CheckLogin = ({ reference }) => {
 };
 export const CheckUserID = ({ reference }) => {
   let { user_id } = useCartState();
+
   return (
     <>
-      {
-        <BookmarkWidget
-          view={reference.view}
-          map={reference.map}
-          layers={reference.state.layers}
-          mapViewer={reference}
-          userID={user_id}
-          hotspotData={reference.state.hotspotData}
-          bookmarkHandler={reference.bookmarkHandler}
-          bookmarkData={reference.state.bookmarkData}
-        />
-      }
+      {reference.view && (
+        <>
+          {/* BookmarkWidget with user_id */}
+          <BookmarkWidget
+            view={reference.view}
+            map={reference.map}
+            layers={reference.state.layers}
+            mapViewer={reference}
+            userID={user_id}
+            hotspotData={reference.state.hotspotData}
+            bookmarkHandler={reference.bookmarkHandler}
+            bookmarkData={reference.state.bookmarkData}
+          />
+
+          {/* MenuWidget with user_id */}
+          <MenuWidget
+            location={reference.location}
+            view={reference.view}
+            conf={reference.props.mapviewer_config.Components}
+            download={reference.props.mapviewer_config.Download}
+            map={reference.map}
+            mapViewer={reference}
+            updateArea={reference.updateArea}
+            area={reference.state.area}
+            layers={reference.state.layers}
+            activeLayersHandler={reference.activeLayersHandler}
+            urls={reference.cfgUrls}
+            loadingHandler={reference.loadingHandler}
+            hotspotDataHandler={reference.hotspotDataHandler}
+            hotspotData={reference.state.hotspotData}
+            mapLayersHandler={reference.mapLayersHandler}
+            bookmarkData={reference.state.bookmarkData}
+            bookmarkHandler={reference.bookmarkHandler}
+            prepackageChecked={reference.state.prepackageChecked}
+            prepackageHandler={reference.prepackageHandler}
+            uploadedFile={reference.state.uploadedFile}
+            uploadFileHandler={reference.uploadFileHandler}
+            uploadUrlServiceHandler={reference.uploadUrlServiceHandler}
+            wmsServiceUrl={reference.state.wmsServiceUrl}
+            onServiceChange={reference.serviceChangeHandler}
+            uploadFileErrorHandler={reference.uploadFileErrorHandler}
+            userID={user_id}
+          />
+        </>
+      )}
     </>
   );
 };
