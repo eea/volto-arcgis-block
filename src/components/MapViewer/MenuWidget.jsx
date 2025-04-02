@@ -501,7 +501,7 @@ class MenuWidget extends React.Component {
     });
 
     this.activeLayersHandler = this.props.activeLayersHandler;
-    //this.getTaxonomy = this.props.getTaxonomy;
+    this.getTaxonomy = this.props.getTaxonomy;
   }
 
   loader() {
@@ -4729,39 +4729,39 @@ class MenuWidget extends React.Component {
     }
   }
   async loadFamilyFilters() {
-    // var selectedFamily = document.getElementById('select-family');
-    // var selectedProduct = document.getElementById('select-product');
-    // this.removeOptions(selectedFamily);
-    //let tax = await this.getTaxonomy('collective.taxonomy.family');
-    //let hasFamily = false;
-    // selectedFamily.options.add(
-    //   new Option('Select a family', 'default', false, false),
-    // );
-    //let text = selectedProduct.selectedOptions[0].text
-    // tax.tree.forEach((element) => {
-    //   if (element.title === selectedProduct.selectedOptions[0].text) {
-    //     //hasFamily = true;
-    //     element.children.forEach((child) => {
-    //       selectedFamily.options.add(
-    //         new Option(child.title, child.key, child.key),
-    //       );
-    //     });
-    //   }
-    // });
-    // let familyFilter = document.querySelector('.menu-family-filter');
-    // if (familyFilter) {
-    //   if (!hasFamily) {
-    //     familyFilter.setAttribute('style','display: none;');
-    //   }else{
-    //     familyFilter.setAttribute('style','display: flex;');
-    //   }
-    // }
+    var selectedFamily = document.getElementById('select-family');
+    var selectedProduct = document.getElementById('select-product');
+    this.removeOptions(selectedFamily);
+    let tax = await this.getTaxonomy('collective.taxonomy.family');
+    let hasFamily = false;
+    selectedFamily.options.add(
+      new Option('Select a sub-group', 'default', false, false),
+    );
+    selectedFamily.options[0].disabled = true;
+    tax.tree.forEach((element) => {
+      if (element.title === selectedProduct.selectedOptions[0].text) {
+        hasFamily = true;
+        element.children.forEach((child) => {
+          selectedFamily.options.add(
+            new Option(child.title, child.title, child.title),
+          );
+        });
+      }
+    });
+    let familyFilter = document.querySelector('.menu-family-filter');
+    if (familyFilter) {
+      if (!hasFamily) {
+        familyFilter.setAttribute('style', 'display: none;');
+      } else {
+        familyFilter.setAttribute('style', 'display: flex;');
+      }
+    }
   }
   async menuSearch() {
     let searchText;
     let componentFilter;
     let productFilter;
-    //let familyFilter;
+    let familyFilter;
     let result = false;
     if (document.querySelector('#menu-searchtext')) {
       searchText = document
@@ -4774,9 +4774,15 @@ class MenuWidget extends React.Component {
     if (document.getElementById('select-product')) {
       productFilter = document.getElementById('select-product').value;
     }
-    // if (document.getElementById('select-family')) {
-    //   familyFilter = document.getElementById('select-family').text;
-    // }
+    if (document.getElementById('select-family')) {
+      familyFilter = document.getElementById('select-family').value;
+    }
+    if (
+      document.querySelector('.menu-family-filter').getAttribute('style') ===
+      'display: none;'
+    ) {
+      familyFilter = 'default';
+    }
     for (let index = 0; index < this.compCfg.length; index++) {
       let componentFound = false;
       let componentChecked = false;
@@ -4809,7 +4815,8 @@ class MenuWidget extends React.Component {
           if (
             searchText === '' &&
             componentFilter === 'default' &&
-            productFilter === 'default'
+            productFilter === 'default' &&
+            familyFilter === 'default'
           ) {
             this.filtersApplied = false;
             componentFound = true;
@@ -4837,7 +4844,9 @@ class MenuWidget extends React.Component {
                 productFilter === 'default') &&
               (this.compCfg[index].ComponentPosition.toString() ===
                 componentFilter ||
-                componentFilter === 'default'))
+                componentFilter === 'default') &&
+              (dataset?.FamilyTitle === familyFilter ||
+                familyFilter === 'default'))
           ) {
             this.filtersApplied = true;
             componentFound = true;
@@ -5166,10 +5175,14 @@ class MenuWidget extends React.Component {
                       ></select>
                     </span>
                     <span className="menu-filter menu-family-filter">
-                      Family
+                      Product sub-group
                       <select
                         id="select-family"
                         class="esri-select filter-select"
+                        onBlur={() => {}}
+                        onChange={() => {
+                          this.menuSearch();
+                        }}
                       ></select>
                     </span>
                   </div>

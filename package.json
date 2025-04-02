@@ -1,6 +1,6 @@
 {
   "name": "@eeacms/volto-arcgis-block",
-  "version": "0.1.346",
+  "version": "0.1.347",
   "description": "volto-arcgis-block: Volto add-on",
   "main": "src/index.js",
   "author": "European Environment Agency: CodeSyntax",
@@ -16,7 +16,8 @@
     "url": "git@github.com:eea/volto-arcgis-block.git"
   },
   "addons": [
-    "@eeacms/volto-clms-utils"
+    "@eeacms/volto-clms-utils",
+    "@eeacms/volto-taxonomy"
   ],
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json}": [
@@ -65,7 +66,8 @@
     "esri-loader": "3.4.0",
     "highcharts": "^9.3.2",
     "highcharts-react-official": "^3.1.0",
-    "react-datepicker": "4.15.0"
+    "react-datepicker": "4.15.0",
+    "@eeacms/volto-taxonomy": "5.1.0"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.5",
