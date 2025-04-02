@@ -16,7 +16,8 @@
     "url": "git@github.com:eea/volto-arcgis-block.git"
   },
   "addons": [
-    "@eeacms/volto-clms-utils"
+    "@eeacms/volto-clms-utils",
+    "@eeacms/volto-taxonomy"
   ],
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json}": [
