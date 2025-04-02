@@ -23,7 +23,7 @@ import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
 import UploadWidget from './UploadWidget';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
-//import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
+import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
@@ -76,7 +76,7 @@ class MapViewer extends React.Component {
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
     this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
     this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
-    //this.getTaxonomy = this.props.getTaxonomy.bind(this);
+    this.getTaxonomy = this.props.getTaxonomy.bind(this);
   }
 
   mapLayersHandler(newLayers) {
@@ -649,17 +649,18 @@ export const CheckUserID = ({ reference }) => {
             onServiceChange={reference.serviceChangeHandler}
             uploadFileErrorHandler={reference.uploadFileErrorHandler}
             userID={user_id}
+            getTaxonomy={reference.getTaxonomy}
           />
         </>
       )}
     </>
   );
 };
-// const mapDispatchToProps = (dispatch) => {
-//   return {
-//     getTaxonomy: (name) => dispatch(getTaxonomy(name)),
-//   };
-// };
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getTaxonomy: (name) => dispatch(getTaxonomy(name)),
+  };
+};
 
 export default compose(
   connect(
@@ -668,6 +669,6 @@ export default compose(
     }),
     { MapViewerConfig },
   ),
-  //connect(null, mapDispatchToProps),
+  connect(null, mapDispatchToProps),
   injectLazyLibs('highcharts'),
 )(MapViewer, MenuWidget);
