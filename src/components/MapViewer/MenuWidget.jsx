@@ -4743,7 +4743,7 @@ class MenuWidget extends React.Component {
         hasFamily = true;
         element.children.forEach((child) => {
           selectedFamily.options.add(
-            new Option(child.title, child.title, child.title),
+            new Option(child.title, child.key, child.key),
           );
         });
       }
