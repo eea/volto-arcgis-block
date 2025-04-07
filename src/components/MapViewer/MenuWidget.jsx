@@ -4816,7 +4816,7 @@ class MenuWidget extends React.Component {
             searchText === '' &&
             componentFilter === 'default' &&
             productFilter === 'default' &&
-            familyFilter === 'default'
+            (familyFilter === 'default' || familyFilter === '')
           ) {
             this.filtersApplied = false;
             componentFound = true;
@@ -4846,7 +4846,8 @@ class MenuWidget extends React.Component {
                 componentFilter ||
                 componentFilter === 'default') &&
               (dataset?.FamilyTitle === familyFilter ||
-                familyFilter === 'default'))
+                familyFilter === 'default' ||
+                familyFilter === ''))
           ) {
             this.filtersApplied = true;
             componentFound = true;
