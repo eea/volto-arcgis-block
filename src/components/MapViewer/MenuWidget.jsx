@@ -926,9 +926,15 @@ class MenuWidget extends React.Component {
     this.openMenu();
     this.loadComponentFilters();
     this.expandDropdowns();
+    // Add "My Services" component to the UI
+    const myServicesComponent = this.createMyServicesComponent();
+    const myServicesContainer = document.createElement('div');
+    ReactDOM.render(myServicesComponent, myServicesContainer);
+    this.container.current.appendChild(myServicesContainer.firstChild);
+    this.loadUserServicesFromStorage();
     this.loadLayers();
-    this.loadOpacity();
-    this.loadVisibility();
+    // this.loadOpacity();
+    // this.loadVisibility();
     this.handleRasterVectorLegend();
     this.map.when(() => {
       this.map.layers.on('change', () => {
@@ -998,13 +1004,6 @@ class MenuWidget extends React.Component {
         this.props.bookmarkHandler(bookmarkData);
       });
     });
-
-    // Add "My Services" component to the UI
-    const myServicesComponent = this.createMyServicesComponent();
-    const myServicesContainer = document.createElement('div');
-    ReactDOM.render(myServicesComponent, myServicesContainer);
-    this.container.current.appendChild(myServicesContainer.firstChild);
-    this.loadUserServicesFromStorage();
   }
 
   setSliderTag(val) {
@@ -1962,10 +1961,46 @@ class MenuWidget extends React.Component {
     }
   }
 
+  createMyServicesComponent() {
+    let dropdowns = document.querySelectorAll('.map-menu-dropdown');
+    let i = dropdowns.length === 0 ? 0 : dropdowns.length - 1;
+    let componentId = `component_${i}`;
+    let dropdownId = `dropdown_${i}`;
+
+    // Create "My Services" component from the start and set its display to none
+    let myServicesStyle =
+      this.state.wmsUserServiceLayers.length > 0 ? {} : { display: 'none' };
+    return (
+      <div
+        className="map-menu-dropdown"
+        id={componentId}
+        key="a5"
+        style={myServicesStyle}
+      >
+        <div
+          id={dropdownId}
+          className="ccl-expandable__button"
+          aria-expanded="false"
+          onClick={this.toggleDropdownContent.bind(this)}
+          onKeyDown={this.toggleDropdownContent.bind(this)}
+          tabIndex="0"
+          role="button"
+        >
+          <div className="dropdown-icon">
+            <FontAwesomeIcon icon={['fas', 'caret-right']} />
+          </div>
+          {<span>{'My Service'}</span>}
+        </div>
+        <div className="map-menu-components-container" id="map-menu-services" />
+      </div>
+    );
+  }
+
   async handleNewMapServiceLayer(viewService) {
     // First, properly normalize the URL for comparison
     const normalizedViewService = viewService.trim();
 
+    // Check if the layer already exists in this.layers before adding
     if (
       this.state.wmsUserServiceLayers.some(
         (layer) =>
@@ -2061,41 +2096,6 @@ class MenuWidget extends React.Component {
         return;
       }
     }
-  }
-
-  createMyServicesComponent() {
-    let dropdowns = document.querySelectorAll('.map-menu-dropdown');
-    let i = dropdowns.length === 0 ? 0 : dropdowns.length - 1;
-    let componentId = `component_${i}`;
-    let dropdownId = `dropdown_${i}`;
-
-    // Create "My Services" component from the start and set its display to none
-    let myServicesStyle =
-      this.state.wmsUserServiceLayers.length > 0 ? {} : { display: 'none' };
-    return (
-      <div
-        className="map-menu-dropdown"
-        id={componentId}
-        key="a5"
-        style={myServicesStyle}
-      >
-        <div
-          id={dropdownId}
-          className="ccl-expandable__button"
-          aria-expanded="false"
-          onClick={this.toggleDropdownContent.bind(this)}
-          onKeyDown={this.toggleDropdownContent.bind(this)}
-          tabIndex="0"
-          role="button"
-        >
-          <div className="dropdown-icon">
-            <FontAwesomeIcon icon={['fas', 'caret-right']} />
-          </div>
-          {<span>{'My Service'}</span>}
-        </div>
-        <div className="map-menu-components-container" id="map-menu-services" />
-      </div>
-    );
   }
 
   createUserServices(serviceLayers) {
@@ -2273,17 +2273,18 @@ class MenuWidget extends React.Component {
           // Update state with recreated layers
           this.setState({ wmsUserServiceLayers: validLayers });
           // Get checked layers from session storage
-          const checkedLayers =
-            JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+          // const checkedLayers =
+          // JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
 
           // For each valid layer that was previously checked, make it visible
           validLayers.forEach((layer) => {
-            if (checkedLayers.includes(layer.LayerId)) {
-              const node = document.getElementById(layer.LayerId);
-              if (node) {
-                node.checked = true;
-                this.toggleLayer(node);
-              }
+            // if (checkedLayers.includes(layer.LayerId)) {
+            const node = document.getElementById(layer.LayerId);
+            if (node) {
+              layer.visible === true
+                ? (node.checked = true)
+                : (node.checked = false);
+              this.toggleLayer(node);
             }
           });
         }
@@ -4039,6 +4040,22 @@ class MenuWidget extends React.Component {
       layerOpacities[layer] = value;
       sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
     }
+    let savedServices = JSON.parse(
+      localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+    );
+    if (savedServices === null) {
+      return;
+    } else {
+      for (const service of Object.values(savedServices)) {
+        if (service.LayerId === layer) {
+          service.opacity = value;
+        }
+        localStorage.setItem(
+          USER_SERVICES_KEY + '_' + this.userID,
+          JSON.stringify(savedServices),
+        );
+      }
+    }
   }
 
   /**
@@ -4047,7 +4064,32 @@ class MenuWidget extends React.Component {
    * @param {*} value The opacity value retrieved from the input
    */
   loadOpacity() {
-    let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
+    let layerOpacities =
+      JSON.parse(sessionStorage.getItem('layerOpacities')) || {};
+    const savedUserServices = JSON.parse(
+      localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+    );
+    if (savedUserServices) {
+      Object.values(savedUserServices).forEach((service) => {
+        let layer = service.LayerId;
+        let value = service.opacity;
+        // Check if the layer is already in layerOpacities
+        if (layerOpacities[layer] === undefined) {
+          //add to layerOpacties
+          layerOpacities[layer] = value;
+          // if (this.layers[service]) {
+          //   // set map
+          //   this.layers[service].opacity = value;
+          //   // set slider
+          //   let nodeValue = `.active-layer[layer-id="${layer}"] .active-layer-opacity`;
+          //   let node = document.querySelector(nodeValue);
+          //   if (node) {
+          //     node.dataset.opacity = value * 100;
+          //   }
+          // }
+        }
+      });
+    }
     if (layerOpacities) {
       for (const layer in layerOpacities) {
         if (this.layers[layer]) {
@@ -4245,6 +4287,8 @@ class MenuWidget extends React.Component {
       });
     }
     this.setLegendOpacity();
+    this.loadOpacity();
+    this.loadVisibility();
   }
 
   /**
@@ -4260,11 +4304,38 @@ class MenuWidget extends React.Component {
    */
   loadVisibility() {
     if (this.props.download) return;
+
+    // Load visibility settings from sessionStorage
     let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
     if (vl) {
       this.visibleLayers = vl;
+    } else {
+      this.visibleLayers = {};
+    }
 
-      for (const key in this.visibleLayers) {
+    // Load visibility settings from saved user services in localStorage
+    const savedUserServices = JSON.parse(
+      localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+    );
+
+    if (savedUserServices) {
+      Object.values(savedUserServices).forEach((service) => {
+        let layerId = service.LayerId;
+        let visibility = service.visibility;
+        // Only add visibility from localStorage if not already in sessionStorage
+        if (this.visibleLayers[layerId] === undefined) {
+          if (visibility) {
+            this.visibleLayers[layerId] = ['fas', 'eye'];
+          } else {
+            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
+          }
+        }
+      });
+    }
+
+    // Apply visibility settings to layers
+    for (const key in this.visibleLayers) {
+      if (this.layers[key]) {
         if (this.visibleLayers[key][1] === 'eye') {
           this.layers[key].visible = true;
         } else {
@@ -4272,10 +4343,10 @@ class MenuWidget extends React.Component {
         }
 
         let elem = document.getElementById(key);
-        if (this.activeLayersJSON[elem.id]) {
-          let order = this.activeLayersJSON[elem.id].props['layer-order'];
+        if (elem && this.activeLayersJSON[key]) {
+          let order = this.activeLayersJSON[key].props['layer-order'];
           // add active layer to DOM
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(elem, order);
+          this.activeLayersJSON[key] = this.addActiveLayer(elem, order);
           // reorder layers
           this.layersReorder();
           // show/hide info widget
