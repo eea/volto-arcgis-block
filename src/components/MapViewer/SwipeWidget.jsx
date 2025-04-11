@@ -73,6 +73,7 @@ class SwipeWidget extends React.Component {
       // and ensure that the component is rendered again
       this.loadOptions();
       this.map.layers.on('change', () => {
+        this.loadOptions();
         if (this.hasSwipe) {
           this.map.layers.removeAll();
           if (this.swipe.leadingLayers && this.swipe.leadingLayers.items[0]) {
@@ -82,7 +83,6 @@ class SwipeWidget extends React.Component {
             this.map.layers.add(this.swipe.trailingLayers.items[0]);
           }
         }
-        this.loadOptions();
       });
       this.setState({ showMapMenu: true });
     }
@@ -136,7 +136,31 @@ class SwipeWidget extends React.Component {
       selectTrailingLayer.options[0].disabled = true;
     }
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (cl) {
+    if (
+      (!cl || cl.length === 0) &&
+      this.map &&
+      this.map.layers &&
+      this.map.layers.items.length > 0
+    ) {
+      cl = [];
+      // Find the layer ID in this.layers that corresponds to each map.layers item
+      for (const mapLayer of this.map.layers.items) {
+        for (const [layerKey, layerObj] of Object.entries(this.layers)) {
+          if (layerObj.id === mapLayer.id) {
+            cl.push(layerKey);
+            break;
+          }
+        }
+      }
+
+      // Save the newly created checkedLayers to sessionStorage
+      if (cl.length > 0) {
+        sessionStorage.setItem('checkedLayers', JSON.stringify(cl));
+      }
+    }
+
+    // Process the layers
+    if (cl && cl.length > 0) {
       cl.forEach((layer) => {
         if (this.layers[layer]) {
           let layerId = this.layers[layer].id;
