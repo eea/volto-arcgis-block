@@ -2517,7 +2517,6 @@ class MenuWidget extends React.Component {
 
     let group = this.getGroup(elem);
     if (elem.checked) {
-      //this.props.loadingHandler(true);
       if (
         this.props.download ||
         this.location.search.includes('product=') ||
