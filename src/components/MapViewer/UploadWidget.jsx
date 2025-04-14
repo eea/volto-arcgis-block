@@ -128,20 +128,37 @@ class UploadWidget extends React.Component {
     this.setState({ wmsServiceUrl: event.target.value });
   };
 
-  handleUploadService = () => {
+  handleUploadService = async () => {
     const { wmsServiceUrl } = this.state;
+    try {
+      // Use a CORS proxy or add mode: 'no-cors' if you just need to check if service exists
+      let urlResult = await fetch(wmsServiceUrl, {
+        method: 'GET',
+        mode: 'cors', // You might need to change this to 'no-cors' if proxy isn't available
+      });
 
+      // Check if service is valid and properly responds
+      if (!urlResult || !urlResult.ok) {
+        this.errorPopup();
+        this.setState({ wmsServiceUrl: '' });
+        return;
+      }
+    } catch (error) {
+      this.errorPopup();
+      this.setState({ wmsServiceUrl: '' });
+      return;
+    }
+    // If service is valid and is a WMS service
     if (
       wmsServiceUrl &&
       wmsServiceUrl.trim() !== '' &&
       wmsServiceUrl.toLowerCase().includes('wms')
     ) {
       this.uploadUrlServiceHandler(wmsServiceUrl);
-      this.setState({
-        wmsServiceUrl: '',
-      });
+      this.setState({ wmsServiceUrl: '' });
     } else {
       this.errorPopup();
+      this.setState({ wmsServiceUrl: '' });
     }
   };
 

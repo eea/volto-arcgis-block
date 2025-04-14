@@ -2035,15 +2035,25 @@ class MenuWidget extends React.Component {
       layerId = title.toUpperCase().replace(/ /g, '_');
       const constructedSublayers = resourceLayer.sublayers?.items?.map(
         (sublayer) => {
-          const { index, name, title, legendUrl, featureInfoUrl } = sublayer;
+          const {
+            index,
+            name,
+            title,
+            legendUrl,
+            featureInfoUrl,
+            queryable,
+            popupEnabled,
+            visible,
+            legendEnabled,
+          } = sublayer;
           return {
             index,
             name,
             title,
-            popupEnabled: true,
-            queryable: true,
-            visible: true,
-            legendEnabled: true,
+            popupEnabled,
+            queryable,
+            visible,
+            legendEnabled,
             legendUrl: legendUrl
               ? legendUrl
               : viewService + legendRequest + name,
