@@ -2212,7 +2212,9 @@ class MenuWidget extends React.Component {
         const newWmsUserServiceLayers = prevState.wmsUserServiceLayers.filter(
           (layer) => layer.LayerId !== elemId,
         );
-        this.saveUserServicesToStorage(newWmsUserServiceLayers);
+        if (this.userID && this.userID !== null) {
+          this.saveUserServicesToStorage(newWmsUserServiceLayers);
+        }
         return { wmsUserServiceLayers: newWmsUserServiceLayers };
       }
       return null;
@@ -2224,6 +2226,11 @@ class MenuWidget extends React.Component {
 
     try {
       const layersToSave = layers.map((layer) => {
+        // First, see if this layer exists in previous saved services to retain checked state
+        const checkedLayers =
+          JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+        const isChecked = checkedLayers.includes(layer.LayerId);
+
         // Create a simplified object for storage
         return {
           url: layer.url,
@@ -2244,6 +2251,9 @@ class MenuWidget extends React.Component {
           })),
           ViewService: layer.ViewService,
           LayerId: layer.LayerId,
+          visibility: layer.visible !== false,
+          opacity: layer.opacity || 1,
+          checked: isChecked || layer.checked || false,
         };
       });
 
@@ -2256,6 +2266,7 @@ class MenuWidget extends React.Component {
 
   async loadUserServicesFromStorage() {
     if (this.userID != null) {
+      sessionStorage.clear();
       try {
         const savedServices = JSON.parse(
           localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
@@ -2268,6 +2279,20 @@ class MenuWidget extends React.Component {
               try {
                 // Create a new WMSLayer with the saved properties
                 const newLayer = new WMSLayer(serviceData);
+
+                // Set visibility property based on saved value
+                newLayer.visible = serviceData.visibility !== false;
+
+                // Remember the original checked state and visibility
+                newLayer.checked = serviceData.checked;
+
+                // Initialize visibleLayers for this layer
+                if (!this.visibleLayers) this.visibleLayers = {};
+                this.visibleLayers[serviceData.LayerId] =
+                  serviceData.visibility !== false
+                    ? ['fas', 'eye']
+                    : ['fas', 'eye-slash'];
+
                 // Add to this.layers
                 this.layers[serviceData.LayerId] = newLayer;
                 return newLayer;
@@ -2281,25 +2306,85 @@ class MenuWidget extends React.Component {
           const validLayers = recreatedLayers.filter((layer) => layer !== null);
 
           // Update state with recreated layers
-          this.setState({ wmsUserServiceLayers: validLayers });
-          // Get checked layers from session storage
-          // const checkedLayers =
-          // JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+          this.setState({ wmsUserServiceLayers: validLayers }, () => {
+            // For each layer, update the checkbox state based on localStorage
+            setTimeout(() => {
+              validLayers.forEach((layer) => {
+                const node = document.getElementById(layer.LayerId);
+                if (node) {
+                  // Check the checkbox if it was saved as checked
+                  if (layer.checked === true) {
+                    // First add to checkedLayers in sessionStorage if not already there
+                    const checkedLayers =
+                      JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
 
-          // For each valid layer that was previously checked, make it visible
-          validLayers.forEach((layer) => {
-            // if (checkedLayers.includes(layer.LayerId)) {
-            const node = document.getElementById(layer.LayerId);
-            if (node) {
-              layer.visible === true
-                ? (node.checked = true)
-                : (node.checked = false);
-              this.toggleLayer(node);
-            }
+                    if (!checkedLayers.includes(layer.LayerId)) {
+                      checkedLayers.unshift(layer.LayerId);
+                      sessionStorage.setItem(
+                        'checkedLayers',
+                        JSON.stringify(checkedLayers),
+                      );
+                      window.dispatchEvent(new Event('storage'));
+                    }
+
+                    // Then check the checkbox and call toggleLayer with a flag to preserve visibility
+                    node.checked = true;
+
+                    // Custom addition to toggleLayer to bypass visibility override
+                    this.toggleLayerWithoutVisibilityReset(node);
+                  }
+                }
+              });
+            }, 100);
           });
         }
       } catch (error) {}
     }
+  }
+
+  toggleLayerWithoutVisibilityReset(elem) {
+    // Copy most of toggleLayer behavior but don't set this.visibleLayers[elem.id]
+    if (this.layers[elem.id] === undefined) return;
+    if (!this.visibleLayers) this.visibleLayers = {};
+    if (!this.timeLayers) this.timeLayers = {};
+
+    // Add the layer to the map
+    this.layers[elem.id].visible = this.visibleLayers[elem.id][1] === 'eye';
+    this.map.add(this.layers[elem.id]);
+
+    // Continue with other toggleLayer operations
+    this.timeLayers[elem.id] = ['far', 'clock'];
+
+    // Add to active layers
+    this.activeLayersJSON[elem.id] = this.addActiveLayer(
+      elem,
+      Object.keys(this.activeLayersJSON).length,
+    );
+
+    this.saveCheckedLayer(elem.id);
+
+    // Reorder layers
+    let nuts = this.map.layers.items.find((layer) => layer.title === 'nuts');
+    if (nuts) {
+      this.map.reorder(nuts, this.map.layers.items.length + 1);
+    }
+
+    this.layersReorder();
+    this.checkInfoWidget();
+
+    // Toggle custom legend
+    if (
+      this.layers[elem.id].ViewService?.toLowerCase().includes('wmts') ||
+      this.layers[elem.id].ViewService?.toLowerCase().endsWith('file')
+    ) {
+      this.toggleCustomLegendItem(this.layers[elem.id]);
+    }
+
+    if (!this.props.download && this.props.hotspotData) {
+      this.activeLayersToHotspotData(elem.id);
+    }
+
+    this.renderHotspot();
   }
 
   /**
@@ -4043,22 +4128,28 @@ class MenuWidget extends React.Component {
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
       layerOpacities = {};
-      layerOpacities[layer] = value;
-      sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
-    } else {
-      layerOpacities[layer] = value;
-      sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
     }
-    let savedServices = JSON.parse(
+    layerOpacities[layer] = value;
+    sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
+
+    // Save to localStorage for user service layers
+    const savedServices = JSON.parse(
       localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
     );
-    if (savedServices === null) {
-      return;
-    } else {
-      for (const service of Object.values(savedServices)) {
+
+    if (savedServices && Array.isArray(savedServices)) {
+      let servicesUpdated = false;
+
+      // Update opacity for matching layer in user services
+      savedServices.forEach((service) => {
         if (service.LayerId === layer) {
           service.opacity = value;
+          servicesUpdated = true;
         }
+      });
+
+      // Only save if we made changes
+      if (servicesUpdated) {
         localStorage.setItem(
           USER_SERVICES_KEY + '_' + this.userID,
           JSON.stringify(savedServices),
@@ -4075,43 +4166,44 @@ class MenuWidget extends React.Component {
   loadOpacity() {
     let layerOpacities =
       JSON.parse(sessionStorage.getItem('layerOpacities')) || {};
+
+    // Load from localStorage for user service layers
     const savedUserServices = JSON.parse(
       localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
     );
-    if (savedUserServices) {
-      Object.values(savedUserServices).forEach((service) => {
-        let layer = service.LayerId;
-        let value = service.opacity;
-        // Check if the layer is already in layerOpacities
-        if (layerOpacities[layer] === undefined) {
-          //add to layerOpacties
-          layerOpacities[layer] = value;
-          // if (this.layers[service]) {
-          //   // set map
-          //   this.layers[service].opacity = value;
-          //   // set slider
-          //   let nodeValue = `.active-layer[layer-id="${layer}"] .active-layer-opacity`;
-          //   let node = document.querySelector(nodeValue);
-          //   if (node) {
-          //     node.dataset.opacity = value * 100;
-          //   }
-          // }
+
+    // Import opacity values from user services if not already in session storage
+    if (savedUserServices && Array.isArray(savedUserServices)) {
+      savedUserServices.forEach((service) => {
+        const layerId = service.LayerId;
+        const opacity = service.opacity;
+
+        // If this layer's opacity isn't in session storage yet, add it
+        if (
+          layerId &&
+          opacity !== undefined &&
+          layerOpacities[layerId] === undefined
+        ) {
+          layerOpacities[layerId] = opacity;
         }
       });
     }
-    if (layerOpacities) {
-      for (const layer in layerOpacities) {
-        if (this.layers[layer]) {
-          let value = layerOpacities[layer];
-          // set map
-          this.layers[layer].opacity = value;
-          // set slider
-          let node = document.querySelector(
-            '.active-layer[layer-id="' + layer + '"] .active-layer-opacity',
-          );
-          if (node) {
-            node.dataset.opacity = value * 100;
-          }
+    //save layerOpacities to sessionStorage
+    sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
+    // Apply opacity values to layers and UI
+    for (const layerId in layerOpacities) {
+      if (this.layers[layerId]) {
+        const value = layerOpacities[layerId];
+
+        // Set opacity on the map layer
+        this.layers[layerId].opacity = value;
+
+        // Update UI opacity slider
+        const node = document.querySelector(
+          `.active-layer[layer-id="${layerId}"] .active-layer-opacity`,
+        );
+        if (node) {
+          node.dataset.opacity = value * 100;
         }
       }
     }
@@ -4297,7 +4389,13 @@ class MenuWidget extends React.Component {
     }
     this.setLegendOpacity();
     this.loadOpacity();
-    this.loadVisibility();
+    if (
+      prevProps.hotspotData !== this.props.hotspotData ||
+      !this._visibilityInitialized
+    ) {
+      this.loadVisibility();
+      this._visibilityInitialized = true;
+    }
   }
 
   /**
@@ -4305,6 +4403,34 @@ class MenuWidget extends React.Component {
    */
   saveVisibility() {
     if (this.props.download) return;
+
+    // Get services from localStorage - it's an array of objects
+    const savedServices = JSON.parse(
+      localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+    );
+
+    if (savedServices && Array.isArray(savedServices)) {
+      let servicesUpdated = false;
+
+      // Update visibility state for each service in the array
+      savedServices.forEach((service) => {
+        const layerId = service.LayerId;
+        if (layerId && this.visibleLayers[layerId]) {
+          // Update visibility based on eye icon state
+          service.visibility =
+            this.visibleLayers[layerId][1] === 'eye' ? true : false;
+          servicesUpdated = true;
+        }
+      });
+
+      // Only save if we made changes
+      if (servicesUpdated) {
+        localStorage.setItem(
+          USER_SERVICES_KEY + '_' + this.userID,
+          JSON.stringify(savedServices),
+        );
+      }
+    }
     sessionStorage.setItem('visibleLayers', JSON.stringify(this.visibleLayers));
   }
 
@@ -4313,6 +4439,8 @@ class MenuWidget extends React.Component {
    */
   loadVisibility() {
     if (this.props.download) return;
+
+    let hasChanges = false;
 
     // Load visibility settings from sessionStorage
     let vl = JSON.parse(sessionStorage.getItem('visibleLayers'));
@@ -4327,43 +4455,51 @@ class MenuWidget extends React.Component {
       localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
     );
 
-    if (savedUserServices) {
-      Object.values(savedUserServices).forEach((service) => {
-        let layerId = service.LayerId;
-        let visibility = service.visibility;
-        // Only add visibility from localStorage if not already in sessionStorage
-        if (this.visibleLayers[layerId] === undefined) {
-          if (visibility) {
-            this.visibleLayers[layerId] = ['fas', 'eye'];
-          } else {
-            this.visibleLayers[layerId] = ['fas', 'eye-slash'];
-          }
+    if (savedUserServices && Array.isArray(savedUserServices)) {
+      savedUserServices.forEach((service) => {
+        const layerId = service.LayerId;
+        // Check if visibility is explicitly defined (could be true, false, or undefined)
+        if (
+          layerId &&
+          this.visibleLayers[layerId] === undefined &&
+          service.visibility !== undefined
+        ) {
+          // Set visible icon based on saved visibility boolean value
+          this.visibleLayers[layerId] =
+            service.visibility === true ? ['fas', 'eye'] : ['fas', 'eye-slash'];
+          hasChanges = true;
         }
       });
     }
-
-    // Apply visibility settings to layers
+    //add this.visibleLayers to session storage
+    sessionStorage.setItem('visibleLayers', JSON.stringify(this.visibleLayers));
     for (const key in this.visibleLayers) {
       if (this.layers[key]) {
-        if (this.visibleLayers[key][1] === 'eye') {
-          this.layers[key].visible = true;
-        } else {
-          this.layers[key].visible = false;
-        }
+        // Set layer visibility based on eye/eye-slash
+        const shouldBeVisible = this.visibleLayers[key][1] === 'eye';
+        this.layers[key].visible = shouldBeVisible;
 
+        // Update the active layer UI if it exists
         let elem = document.getElementById(key);
         if (elem && this.activeLayersJSON[key]) {
+          // Get the current order of the active layer
           let order = this.activeLayersJSON[key].props['layer-order'];
-          // add active layer to DOM
+
+          // Force recreate the active layer component with the correct visibility state
           this.activeLayersJSON[key] = this.addActiveLayer(elem, order);
-          // reorder layers
+
+          // Update related UI
           this.layersReorder();
-          // show/hide info widget
           this.checkInfoWidget();
-          // update
-          this.setState({});
+          this.toggleCustomLegendItem(this.layers[key]);
+          hasChanges = true;
         }
       }
+    }
+
+    // Only update state once if there were changes
+    if (hasChanges) {
+      this.setState({});
     }
   }
 
@@ -4403,6 +4539,8 @@ class MenuWidget extends React.Component {
    */
   saveCheckedLayer(layer) {
     if (this.props.download) return;
+
+    // Update sessionStorage as before
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (checkedLayers === null) {
       checkedLayers = [layer];
@@ -4414,6 +4552,31 @@ class MenuWidget extends React.Component {
       sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
     }
     window.dispatchEvent(new Event('storage'));
+
+    // Also update localStorage for user service layers
+    const savedServices = JSON.parse(
+      localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+    );
+
+    if (savedServices && Array.isArray(savedServices)) {
+      let servicesUpdated = false;
+
+      // Update checked state for matching layer in user services
+      savedServices.forEach((service) => {
+        if (service.LayerId === layer) {
+          service.checked = true;
+          servicesUpdated = true;
+        }
+      });
+
+      // Only save if we made changes
+      if (servicesUpdated) {
+        localStorage.setItem(
+          USER_SERVICES_KEY + '_' + this.userID,
+          JSON.stringify(savedServices),
+        );
+      }
+    }
   }
 
   /**
@@ -4450,6 +4613,31 @@ class MenuWidget extends React.Component {
       if (visibleLayers[layer]) {
         delete visibleLayers[layer];
         sessionStorage.setItem('visibleLayers', JSON.stringify(visibleLayers));
+      }
+    }
+
+    // Also update localStorage for user service layers
+    const savedServices = JSON.parse(
+      localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
+    );
+
+    if (savedServices && Array.isArray(savedServices)) {
+      let servicesUpdated = false;
+
+      // Update checked state for matching layer in user services
+      savedServices.forEach((service) => {
+        if (service.LayerId === layer) {
+          service.checked = false;
+          servicesUpdated = true;
+        }
+      });
+
+      // Only save if we made changes
+      if (servicesUpdated) {
+        localStorage.setItem(
+          USER_SERVICES_KEY + '_' + this.userID,
+          JSON.stringify(savedServices),
+        );
       }
     }
   }
