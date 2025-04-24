@@ -742,6 +742,14 @@ div.upload-container.esri-component
   margin-bottom: 0.5rem;
 }
 
+.map-menu-family-dataset-dropdown {
+  padding-left: 2rem;
+}
+
+.map-menu-family-dropdown {
+  padding-left: 2rem;
+}
+
 .map-menu-dataset > div:first-of-type {
   display: flex;
   width: 100%;

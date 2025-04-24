@@ -502,6 +502,7 @@ class MenuWidget extends React.Component {
 
     this.activeLayersHandler = this.props.activeLayersHandler;
     this.getTaxonomy = this.props.getTaxonomy;
+    this.tax = this.props.tax;
   }
 
   loader() {
@@ -1251,6 +1252,7 @@ class MenuWidget extends React.Component {
   metodProcessProduct(product, prodIndex, inheritedIndex) {
     var dataset_def = [];
     var datasets = [];
+    var families = [];
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
@@ -1260,33 +1262,62 @@ class MenuWidget extends React.Component {
         : product.ProductDescription;
 
     if (product.Datasets && Array.isArray(product.Datasets)) {
-      for (var i in product.Datasets) {
-        if (this.filtersApplied) {
-          dataset_def = document
-            .querySelector('#' + checkProduct)
-            ?.getAttribute('defcheck');
-        } else if (
-          product.Datasets[i] &&
-          product.Datasets[i].Default_active === true
-        ) {
-          var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
-          dataset_def.push(idDataset);
+      let familiesMap = new Map();
+      familiesMap['noFamily'] = [];
+      for (let index = 0; index < product.Datasets.length; index++) {
+        if (familiesMap[product.Datasets[index].FamilyTitle]) {
+          familiesMap[product.Datasets[index].FamilyTitle].push(
+            product.Datasets[index],
+          );
+        } else if (product.Datasets[index].FamilyTitle) {
+          familiesMap[product.Datasets[index].FamilyTitle] = [
+            product.Datasets[index],
+          ];
+        } else {
+          familiesMap['noFamily'].push(product.Datasets[index]);
         }
+      }
+      for (var j in familiesMap) {
+        if (j === 'noFamily') {
+          for (var i in familiesMap[j]) {
+            if (this.filtersApplied) {
+              dataset_def = document
+                .querySelector('#' + checkProduct)
+                ?.getAttribute('defcheck');
+            } else if (
+              product.Datasets[i] &&
+              product.Datasets[i].Default_active === true
+            ) {
+              var idDataset =
+                'map_dataset_' + inheritedIndexProduct + '_' + index;
+              dataset_def.push(idDataset);
+            }
 
-        // CLMS-1545
-        // if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
-        if (product.Datasets[i]) {
-          datasets.push(
-            this.metodProcessDataset(
-              product.Datasets[i],
-              index,
+            // CLMS-1545
+            // if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
+            if (product.Datasets[i]) {
+              datasets.push(
+                this.metodProcessDataset(
+                  product.Datasets[i],
+                  index,
+                  inheritedIndexProduct,
+                  checkProduct,
+                ),
+              );
+              index++;
+            }
+            // }
+          }
+        } else {
+          families.push(
+            this.metodProcessFamily(
+              familiesMap[j],
+              j,
               inheritedIndexProduct,
               checkProduct,
             ),
           );
-          index++;
         }
-        // }
       }
     }
 
@@ -1361,6 +1392,131 @@ class MenuWidget extends React.Component {
           <div
             className="ccl-form map-menu-products-container"
             id={'datasets_container_' + inheritedIndexProduct}
+          >
+            {families}
+            {datasets}
+          </div>
+        </fieldset>
+      </div>
+    );
+  }
+
+  metodProcessFamily(family, familyTitle, inheritedIndex, checkProduct) {
+    var dataset_def = [];
+    var datasets = [];
+    var index = 0;
+    var familyId = familyTitle.replace(/\s+/g, '');
+    var inheritedIndexProduct = inheritedIndex + '_' + familyId;
+    checkProduct = 'map_product_' + inheritedIndexProduct;
+    var familyTitleName = '';
+    this.tax.tree.forEach((element) => {
+      element.children.forEach((element) => {
+        if (element.key === familyTitle) {
+          familyTitleName = element.title;
+        }
+      });
+    });
+    if (family && Array.isArray(family)) {
+      for (var i in family) {
+        // if (this.filtersApplied) {
+        //   dataset_def = document
+        //     .querySelector('#' + checkProduct)
+        //     ?.getAttribute('defcheck');
+        // } else if (
+        //   product.Datasets[i] &&
+        //   product.Datasets[i].Default_active === true
+        // ) {
+        //   var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
+        //   dataset_def.push(idDataset);
+        // }
+
+        // CLMS-1545
+        // if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
+        if (family[i]) {
+          datasets.push(
+            this.metodProcessDataset(
+              family[i],
+              index,
+              inheritedIndexProduct,
+              checkProduct,
+            ),
+          );
+          index++;
+        }
+        // }
+      }
+    }
+
+    // Empty vector, add the first dataset
+    if (!dataset_def.length) {
+      var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
+      dataset_def.push(idDatasetB);
+    }
+    let style = this.props.download ? { display: 'none' } : {};
+
+    return (
+      <div
+        className="map-menu-family-dropdown"
+        id={'product_' + inheritedIndexProduct}
+        productid={familyId}
+        key={'a' + familyId}
+      >
+        <fieldset className="ccl-fieldset" key={'b' + familyId}>
+          <div
+            id={'dropdown_' + inheritedIndexProduct}
+            className="ccl-expandable__button"
+            aria-expanded="false"
+            key={'c' + familyId}
+            onClick={this.toggleDropdownContent.bind(this)}
+            onKeyDown={this.toggleDropdownContent.bind(this)}
+            tabIndex="0"
+            role="button"
+            style={style}
+          >
+            <div className="dropdown-icon">
+              <FontAwesomeIcon icon={['fas', 'caret-right']} />
+            </div>
+            <div className="ccl-form map-product-checkbox" key={'d' + familyId}>
+              <div className="ccl-form-group" key={'e' + familyId}>
+                <input
+                  type="checkbox"
+                  id={checkProduct}
+                  name=""
+                  value="name"
+                  className="ccl-checkbox ccl-required ccl-form-check-input"
+                  key={'h' + familyId}
+                  defcheck={dataset_def}
+                  onChange={(e) =>
+                    this.toggleProduct(e.target.checked, checkProduct, e)
+                  }
+                ></input>
+                <label
+                  className="ccl-form-check-label"
+                  htmlFor={checkProduct}
+                  key={'f' + familyId}
+                >
+                  <legend className="ccl-form-legend">
+                    {
+                      /* {description ? (
+                      <Popup
+                        trigger={<span>{familyTitle}</span>}
+                        content={description}
+                        basic
+                        className="custom"
+                        style={{ transform: 'translateX(-4rem)' }}
+                      />
+                    ) : (*/
+                      <span>{familyTitleName}</span>
+                      /*)} */
+                    }
+                  </legend>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div
+            className="ccl-form map-menu-family-container"
+            id={'family_container_' + inheritedIndexProduct}
           >
             {datasets}
           </div>
@@ -1532,7 +1688,11 @@ class MenuWidget extends React.Component {
 
     return (
       <div
-        className="map-menu-dataset-dropdown"
+        className={
+          dataset.FamilyTitle
+            ? 'map-menu-family-dataset-dropdown'
+            : 'map-menu-dataset-dropdown'
+        }
         id={'dataset_' + inheritedIndexDataset}
         datasetid={dataset.DatasetId}
         key={'a' + datIndex}
@@ -5070,74 +5230,80 @@ class MenuWidget extends React.Component {
           let datasetElem = document.querySelector(
             '[datasetid="' + dataset.DatasetId + '"]',
           );
-          for (let l = 0; l < Object.keys(this.activeLayersJSON).length; l++) {
-            if (
-              dataset.DatasetTitle ===
-              this.layers[Object.keys(this.activeLayersJSON)[l]].DatasetTitle
+          if (datasetElem) {
+            for (
+              let l = 0;
+              l < Object.keys(this.activeLayersJSON).length;
+              l++
             ) {
-              componentChecked = true;
-              productChecked = true;
-              datasetChecked = true;
+              if (
+                dataset.DatasetTitle ===
+                this.layers[Object.keys(this.activeLayersJSON)[l]].DatasetTitle
+              ) {
+                componentChecked = true;
+                productChecked = true;
+                datasetChecked = true;
+              }
             }
-          }
-          if (
-            searchText === '' &&
-            componentFilter === 'default' &&
-            productFilter === 'default' &&
-            (familyFilter === 'default' || familyFilter === '')
-          ) {
-            this.filtersApplied = false;
-            componentFound = true;
-            productFound = true;
-            result = true;
-            componentElem
-              .querySelector('.ccl-expandable__button')
-              .setAttribute('aria-expanded', 'false');
-            productElem
-              .querySelector('.ccl-expandable__button')
-              .setAttribute('aria-expanded', 'false');
-            datasetElem.removeAttribute('style');
-            productElem.removeAttribute('style');
-            componentElem.removeAttribute('style');
-            if (!defaultActive) {
-              defaultActive = 'map_' + datasetElem.id;
+            if (
+              searchText === '' &&
+              componentFilter === 'default' &&
+              productFilter === 'default' &&
+              (familyFilter === 'default' || familyFilter === '')
+            ) {
+              this.filtersApplied = false;
+              componentFound = true;
+              productFound = true;
+              result = true;
+              componentElem
+                .querySelector('.ccl-expandable__button')
+                .setAttribute('aria-expanded', 'false');
+              productElem
+                .querySelector('.ccl-expandable__button')
+                .setAttribute('aria-expanded', 'false');
+              datasetElem.removeAttribute('style');
+              productElem.removeAttribute('style');
+              componentElem.removeAttribute('style');
+              if (!defaultActive) {
+                defaultActive = 'map_' + datasetElem.id;
+              }
+              if (dataset.Default_active) {
+                defaultActive = 'map_' + datasetElem.id;
+              }
+            } else if (
+              datasetChecked ||
+              (dataset?.DatasetTitle?.toUpperCase().includes(searchText) &&
+                (product.ProductId === productFilter ||
+                  productFilter === 'default') &&
+                (this.compCfg[index].ComponentPosition.toString() ===
+                  componentFilter ||
+                  componentFilter === 'default') &&
+                (dataset?.FamilyTitle === familyFilter ||
+                  familyFilter === 'default' ||
+                  familyFilter === ''))
+            ) {
+              this.filtersApplied = true;
+              componentFound = true;
+              productFound = true;
+              result = true;
+              componentElem
+                .querySelector('.ccl-expandable__button')
+                .setAttribute('aria-expanded', 'true');
+              productElem
+                .querySelector('.ccl-expandable__button')
+                .setAttribute('aria-expanded', 'true');
+              datasetElem.removeAttribute('style');
+              productElem.removeAttribute('style');
+              componentElem.removeAttribute('style');
+              if (!defaultActive) {
+                defaultActive = 'map_' + datasetElem.id;
+              }
+              if (dataset.Default_active) {
+                defaultActive = 'map_' + datasetElem.id;
+              }
+            } else {
+              datasetElem.setAttribute('style', 'display: none;');
             }
-            if (dataset.Default_active) {
-              defaultActive = 'map_' + datasetElem.id;
-            }
-          } else if (
-            datasetChecked ||
-            (dataset?.DatasetTitle?.toUpperCase().includes(searchText) &&
-              (product.ProductId === productFilter ||
-                productFilter === 'default') &&
-              (this.compCfg[index].ComponentPosition.toString() ===
-                componentFilter ||
-                componentFilter === 'default') &&
-              (dataset?.FamilyTitle === familyFilter ||
-                familyFilter === 'default' ||
-                familyFilter === ''))
-          ) {
-            this.filtersApplied = true;
-            componentFound = true;
-            productFound = true;
-            result = true;
-            componentElem
-              .querySelector('.ccl-expandable__button')
-              .setAttribute('aria-expanded', 'true');
-            productElem
-              .querySelector('.ccl-expandable__button')
-              .setAttribute('aria-expanded', 'true');
-            datasetElem.removeAttribute('style');
-            productElem.removeAttribute('style');
-            componentElem.removeAttribute('style');
-            if (!defaultActive) {
-              defaultActive = 'map_' + datasetElem.id;
-            }
-            if (dataset.Default_active) {
-              defaultActive = 'map_' + datasetElem.id;
-            }
-          } else {
-            datasetElem.setAttribute('style', 'display: none;');
           }
         }
         productCheckbox.setAttribute('defcheck', defaultActive);

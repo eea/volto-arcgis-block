@@ -77,6 +77,7 @@ class MapViewer extends React.Component {
     this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
     this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
     this.getTaxonomy = this.props.getTaxonomy.bind(this);
+    this.tax = null;
   }
 
   mapLayersHandler(newLayers) {
@@ -232,6 +233,7 @@ class MapViewer extends React.Component {
   async componentDidMount() {
     loadCss();
     await this.loader();
+    this.tax = await this.getTaxonomy('collective.taxonomy.family');
     this.positronCompositeBasemap = new Basemap({
       title: 'Positron composite',
       thumbnailUrl: this.cfgUrls.positronCompositeThumbnail,
@@ -650,6 +652,7 @@ export const CheckUserID = ({ reference }) => {
             uploadFileErrorHandler={reference.uploadFileErrorHandler}
             userID={user_id}
             getTaxonomy={reference.getTaxonomy}
+            tax={reference.tax}
           />
         </>
       )}
