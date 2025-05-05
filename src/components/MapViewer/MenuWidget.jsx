@@ -5325,6 +5325,31 @@ class MenuWidget extends React.Component {
         componentElem.setAttribute('style', 'display: none;');
       }
     }
+    let myServiceResult = false;
+    this.state.wmsUserServiceLayers.forEach((element) => {
+      let node = document.getElementById('my-service-' + element.LayerId);
+      let checkbox = document.getElementById(element.LayerId);
+      if (
+        element?.LayerId?.toUpperCase().includes(searchText) ||
+        checkbox.checked
+      ) {
+        node.removeAttribute('style');
+        result = true;
+        myServiceResult = true;
+      } else {
+        node.setAttribute('style', 'display: none;');
+      }
+    });
+    let dropdowns = document.querySelectorAll('.map-menu-dropdown');
+    let i = dropdowns.length === 0 ? 0 : dropdowns.length - 1;
+    let componentId = `component_${i}`;
+    if (!myServiceResult) {
+      document
+        .getElementById(componentId)
+        .setAttribute('style', 'display: none;');
+    } else {
+      document.getElementById(componentId).removeAttribute('style');
+    }
     if (result) {
       document.querySelector('.no-filter-result-message').style.display =
         'none';
