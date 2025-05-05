@@ -2279,7 +2279,7 @@ class MenuWidget extends React.Component {
       const checkboxId = LayerId;
 
       return (
-        <div className="map-menu-dataset-dropdown">
+        <div className="map-menu-dataset-dropdown" id={'my-service-' + LayerId}>
           <fieldset className="ccl-fieldset">
             <div className="ccl-expandable__button" aria-expanded="false">
               <div className="dropdown-icon">
