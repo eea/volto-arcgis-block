@@ -1457,8 +1457,8 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="map-menu-family-dropdown"
-        id={'product_' + inheritedIndexProduct}
-        productid={familyId}
+        id={'family_' + inheritedIndexProduct}
+        familyid={familyId}
         key={'a' + familyId}
       >
         <fieldset className="ccl-fieldset" key={'b' + familyId}>
@@ -3213,7 +3213,7 @@ class MenuWidget extends React.Component {
     let datasetContainer = selectedDataset.closest(
       '.map-menu-dataset-dropdown',
     );
-    let datasetContainerId = datasetContainer.getAttribute('datasetid');
+    let datasetContainerId = datasetContainer?.getAttribute('datasetid');
     this.compCfg.forEach((component) => {
       component.Products.forEach((product) => {
         product.Datasets.forEach((dataset) => {
@@ -5191,6 +5191,7 @@ class MenuWidget extends React.Component {
     let productFilter;
     let familyFilter;
     let result = false;
+    let familiesResult = [];
     if (document.querySelector('#menu-searchtext')) {
       searchText = document
         .querySelector('#menu-searchtext')
@@ -5270,6 +5271,12 @@ class MenuWidget extends React.Component {
               if (dataset.Default_active) {
                 defaultActive = 'map_' + datasetElem.id;
               }
+              if (
+                dataset.FamilyTitle &&
+                !familiesResult.includes(dataset.FamilyTitle)
+              ) {
+                familiesResult.push(dataset.FamilyTitle);
+              }
             } else if (
               datasetChecked ||
               (dataset?.DatasetTitle?.toUpperCase().includes(searchText) &&
@@ -5301,6 +5308,12 @@ class MenuWidget extends React.Component {
               if (dataset.Default_active) {
                 defaultActive = 'map_' + datasetElem.id;
               }
+              if (
+                dataset.FamilyTitle &&
+                !familiesResult.includes(dataset.FamilyTitle)
+              ) {
+                familiesResult.push(dataset.FamilyTitle);
+              }
             } else {
               datasetElem.setAttribute('style', 'display: none;');
             }
@@ -5323,6 +5336,18 @@ class MenuWidget extends React.Component {
       }
       if (!componentFound && !componentChecked) {
         componentElem.setAttribute('style', 'display: none;');
+      }
+    }
+    let familiesElements = document.querySelectorAll(
+      '.map-menu-family-dropdown',
+    );
+    for (let index = 0; index < familiesElements.length; index++) {
+      if (
+        familiesResult.includes(familiesElements[index].attributes[2].value)
+      ) {
+        familiesElements[index].setAttribute('style', 'display: block;');
+      } else {
+        familiesElements[index].setAttribute('style', 'display: none;');
       }
     }
     let myServiceResult = false;
