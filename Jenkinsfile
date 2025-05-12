@@ -4,7 +4,7 @@ pipeline {
   environment {
         GIT_NAME = "volto-arcgis-block"
         NAMESPACE = "@eeacms"
-        SONARQUBE_TAGS = "volto.eea.europa.eu,clms.land.copernicus.eu,water.europa.eu-freshwater,clmsdemo.devel6cph.eea.europa.eu,land.copernicus.eu"
+        SONARQUBE_TAGS = "volto.eea.europa.eu,clms.land.copernicus.eu,water.europa.eu-freshwater,clmsdemo.devel6cph.eea.europa.eu,land.copernicus.eu,ask.copernicus.eu"
         DEPENDENCIES = ""
         BACKEND_PROFILES = "eea.kitkat:testing"
         BACKEND_ADDONS = "clms.addon,clms.types,clms.downloadtool,clms.statstool"
