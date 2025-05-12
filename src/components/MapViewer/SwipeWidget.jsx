@@ -25,8 +25,11 @@ class SwipeWidget extends React.Component {
     this.dpiMax = 1200;
     this.scaleMax = 600000000;
     this.map = this.props.map;
-    this.layers = this.props.layers;
+    // layers = this.props.layers;
     this.hasSwipe = false;
+    this.prevActiveLayers = this.props.mapViewer.activeLayers
+      ? this.props.mapViewer.activeLayers
+      : [];
   }
 
   loader() {
@@ -103,6 +106,22 @@ class SwipeWidget extends React.Component {
     });
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    const curr = this.props.mapViewer.activeLayers || [];
+    const prev = this.prevActiveLayers || [];
+    const changed =
+      curr.length !== prev.length || curr.some((layer, i) => layer !== prev[i]);
+    if (this.state.showMapMenu && changed) {
+      if (curr.length === 0) {
+        this.openMenu(this);
+      } else if (this.hasSwipe) {
+        this.loadOptions();
+        this.renderApplySwipeButton();
+      }
+    }
+    this.prevActiveLayers = curr;
+  }
+
   getLayerTitle(layer) {
     let title;
     if (layer.url && layer.url.toLowerCase().includes('wmts')) {
@@ -119,6 +138,7 @@ class SwipeWidget extends React.Component {
     return title;
   }
   loadOptions() {
+    const layers = this.props.layers;
     var selectLeadingLayer = document.getElementById('select-leading-layer');
     if (selectLeadingLayer) {
       this.removeOptions(selectLeadingLayer);
@@ -143,9 +163,9 @@ class SwipeWidget extends React.Component {
       this.map.layers.items.length > 0
     ) {
       cl = [];
-      // Find the layer ID in this.layers that corresponds to each map.layers item
+      // Find the layer ID in layers that corresponds to each map.layers item
       for (const mapLayer of this.map.layers.items) {
-        for (const [layerKey, layerObj] of Object.entries(this.layers)) {
+        for (const [layerKey, layerObj] of Object.entries(layers)) {
           if (layerObj.id === mapLayer.id) {
             cl.push(layerKey);
             break;
@@ -162,32 +182,32 @@ class SwipeWidget extends React.Component {
     // Process the layers
     if (cl && cl.length > 0) {
       cl.forEach((layer) => {
-        if (this.layers[layer]) {
-          let layerId = this.layers[layer].id;
-          if (this.layers['lcc_filter']) {
+        if (layers[layer]) {
+          let layerId = layers[layer].id;
+          if (layers['lcc_filter']) {
             if (
               layer === 'all_lcc_a_pol_1_4_1_0' ||
               layer === 'all_lcc_b_pol_1_4_1_1'
             ) {
-              layerId = this.layers['lcc_filter'].id;
+              layerId = layers['lcc_filter'].id;
             }
           }
-          if (this.layers['lc_filter']) {
+          if (layers['lc_filter']) {
             if (
               layer === 'all_present_lc_a_pol_1_4_0_0' ||
               layer === 'all_present_lc_b_pol_1_4_0_1'
             ) {
-              layerId = this.layers['lc_filter'].id;
+              layerId = layers['lc_filter'].id;
             }
           }
-          if (this.layers['klc_filter']) {
+          if (layers['klc_filter']) {
             if (layer === 'cop_klc_1_4_2_0') {
-              layerId = this.layers['klc_filter'].id;
+              layerId = layers['klc_filter'].id;
             }
           }
-          if (this.layers['pa_filter']) {
+          if (layers['pa_filter']) {
             if (layer === 'protected_areas_1_4_3_0') {
-              layerId = this.layers['pa_filter'].id;
+              layerId = layers['pa_filter'].id;
             }
           }
           if (selectLeadingLayer) {
@@ -198,7 +218,7 @@ class SwipeWidget extends React.Component {
             ) {
               selectLeadingLayer.options.add(
                 new Option(
-                  this.getLayerTitle(this.layers[layer]),
+                  this.getLayerTitle(layers[layer]),
                   layerId,
                   true,
                   true,
@@ -206,11 +226,7 @@ class SwipeWidget extends React.Component {
               );
             } else {
               selectLeadingLayer.options.add(
-                new Option(
-                  this.getLayerTitle(this.layers[layer]),
-                  layerId,
-                  false,
-                ),
+                new Option(this.getLayerTitle(layers[layer]), layerId, false),
               );
             }
           }
@@ -222,7 +238,7 @@ class SwipeWidget extends React.Component {
             ) {
               selectTrailingLayer.options.add(
                 new Option(
-                  this.getLayerTitle(this.layers[layer]),
+                  this.getLayerTitle(layers[layer]),
                   layerId,
                   true,
                   true,
@@ -230,11 +246,7 @@ class SwipeWidget extends React.Component {
               );
             } else {
               selectTrailingLayer.options.add(
-                new Option(
-                  this.getLayerTitle(this.layers[layer]),
-                  layerId,
-                  false,
-                ),
+                new Option(this.getLayerTitle(layers[layer]), layerId, false),
               );
             }
           }
@@ -252,6 +264,7 @@ class SwipeWidget extends React.Component {
     }
   }
   renderApplySwipeButton() {
+    const layers = this.props.layers;
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);
     this.hasSwipe = true;
@@ -268,44 +281,44 @@ class SwipeWidget extends React.Component {
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (cl) {
       cl.forEach((layer) => {
-        if (this.layers[layer].id === selectedLeadingLayer) {
-          this.swipe.leadingLayers.add(this.layers[layer]);
+        if (layers[layer].id === selectedLeadingLayer) {
+          this.swipe.leadingLayers.add(layers[layer]);
         }
-        if (this.layers[layer].id === selectedTrailingLayer) {
-          this.swipe.trailingLayers.add(this.layers[layer]);
+        if (layers[layer].id === selectedTrailingLayer) {
+          this.swipe.trailingLayers.add(layers[layer]);
         }
       });
     }
-    if (this.layers['lcc_filter']) {
-      if (this.layers['lcc_filter'].id === selectedLeadingLayer) {
-        this.swipe.leadingLayers.add(this.layers['lcc_filter']);
+    if (layers['lcc_filter']) {
+      if (layers['lcc_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(layers['lcc_filter']);
       }
-      if (this.layers['lcc_filter'].id === selectedTrailingLayer) {
-        this.swipe.trailingLayers.add(this.layers['lcc_filter']);
-      }
-    }
-    if (this.layers['lc_filter']) {
-      if (this.layers['lc_filter'].id === selectedLeadingLayer) {
-        this.swipe.leadingLayers.add(this.layers['lc_filter']);
-      }
-      if (this.layers['lc_filter'].id === selectedTrailingLayer) {
-        this.swipe.trailingLayers.add(this.layers['lc_filter']);
+      if (layers['lcc_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(layers['lcc_filter']);
       }
     }
-    if (this.layers['klc_filter']) {
-      if (this.layers['klc_filter'].id === selectedLeadingLayer) {
-        this.swipe.leadingLayers.add(this.layers['klc_filter']);
+    if (layers['lc_filter']) {
+      if (layers['lc_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(layers['lc_filter']);
       }
-      if (this.layers['klc_filter'].id === selectedTrailingLayer) {
-        this.swipe.trailingLayers.add(this.layers['klc_filter']);
+      if (layers['lc_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(layers['lc_filter']);
       }
     }
-    if (this.layers['pa_filter']) {
-      if (this.layers['pa_filter'].id === selectedLeadingLayer) {
-        this.swipe.leadingLayers.add(this.layers['pa_filter']);
+    if (layers['klc_filter']) {
+      if (layers['klc_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(layers['klc_filter']);
       }
-      if (this.layers['pa_filter'].id === selectedTrailingLayer) {
-        this.swipe.trailingLayers.add(this.layers['pa_filter']);
+      if (layers['klc_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(layers['klc_filter']);
+      }
+    }
+    if (layers['pa_filter']) {
+      if (layers['pa_filter'].id === selectedLeadingLayer) {
+        this.swipe.leadingLayers.add(layers['pa_filter']);
+      }
+      if (layers['pa_filter'].id === selectedTrailingLayer) {
+        this.swipe.trailingLayers.add(layers['pa_filter']);
       }
     }
     this.map.layers.removeAll();
@@ -318,23 +331,24 @@ class SwipeWidget extends React.Component {
   }
 
   loadVisibleLayers() {
+    const layers = this.props.layers;
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (cl) {
       cl.forEach((layer) => {
-        this.map.layers.add(this.layers[layer]);
+        this.map.layers.add(layers[layer]);
       });
     }
-    if (this.layers['lcc_filter']) {
-      this.map.layers.add(this.layers['lcc_filter']);
+    if (layers['lcc_filter']) {
+      this.map.layers.add(layers['lcc_filter']);
     }
-    if (this.layers['lc_filter']) {
-      this.map.layers.add(this.layers['lc_filter']);
+    if (layers['lc_filter']) {
+      this.map.layers.add(layers['lc_filter']);
     }
-    if (this.layers['klc_filter']) {
-      this.map.layers.add(this.layers['klc_filter']);
+    if (layers['klc_filter']) {
+      this.map.layers.add(layers['klc_filter']);
     }
-    if (this.layers['pa_filter']) {
-      this.map.layers.add(this.layers['pa_filter']);
+    if (layers['pa_filter']) {
+      this.map.layers.add(layers['pa_filter']);
     }
   }
   /**
