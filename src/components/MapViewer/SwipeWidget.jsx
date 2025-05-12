@@ -113,7 +113,12 @@ class SwipeWidget extends React.Component {
       curr.length !== prev.length || curr.some((layer, i) => layer !== prev[i]);
     if (this.state.showMapMenu && changed) {
       if (curr.length === 0) {
-        this.openMenu(this);
+        sessionStorage.setItem('checkedLayers', JSON.stringify([]));
+        this.map.layers.removeAll();
+        this.props.view.ui.remove(this.swipe);
+        this.hasSwipe = false;
+        this.resetSwipeWidgetToDefault();
+        // this.openMenu(this);
       } else if (this.hasSwipe) {
         this.loadOptions();
         this.renderApplySwipeButton();
@@ -252,6 +257,33 @@ class SwipeWidget extends React.Component {
           }
         }
       });
+    }
+  }
+  resetSwipeWidgetToDefault() {
+    // Remove all swipe layers
+    if (this.swipe) {
+      this.swipe.leadingLayers.removeAll();
+      this.swipe.trailingLayers.removeAll();
+      this.hasSwipe = false;
+    }
+    // Reset dropdowns to default
+    const selectLeadingLayer = document.getElementById('select-leading-layer');
+    if (selectLeadingLayer) {
+      this.removeOptions(selectLeadingLayer);
+      selectLeadingLayer.options.add(
+        new Option('Select a leading layer', 'default', false, false),
+      );
+      selectLeadingLayer.options[0].disabled = true;
+    }
+    const selectTrailingLayer = document.getElementById(
+      'select-trailing-layer',
+    );
+    if (selectTrailingLayer) {
+      this.removeOptions(selectTrailingLayer);
+      selectTrailingLayer.options.add(
+        new Option('Select a trailing layer', 'default', false, false),
+      );
+      selectTrailingLayer.options[0].disabled = true;
     }
   }
   removeOptions(selectElement) {
