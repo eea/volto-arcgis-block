@@ -23,6 +23,8 @@ class LegendWidget extends React.Component {
     this.menuClass =
       'esri-icon-legend esri-widget--button esri-widget esri-interactive';
     this.urls = this.props.urls;
+    this.arcgisEventHandles = [];
+    this._isMounted = false;
   }
 
   hideNutsLegend() {
@@ -219,6 +221,7 @@ class LegendWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    this._isMounted = true;
     await this.loader();
     if (!this.container.current) return;
     this.props.view.when(() => {
@@ -232,12 +235,25 @@ class LegendWidget extends React.Component {
       container: document.querySelector('.legend-panel'),
     });
     this.LegendWidget.when(() => {
-      this.LegendWidget.activeLayerInfos.on('after-changes', (event) => {
-        this.setState({ loading: true });
-        //this.scanImages();
-        //this.brokenLegendImagePatch();
-      });
+      const handle = this.LegendWidget.activeLayerInfos.on(
+        'after-changes',
+        (event) => {
+          if (!this._isMounted) return;
+          this.setState({ loading: true });
+        },
+      );
+      this.arcgisEventHandles.push(handle);
     });
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+    if (this.arcgisEventHandles) {
+      this.arcgisEventHandles.forEach(
+        (handle) => handle && handle.remove && handle.remove(),
+      );
+      this.arcgisEventHandles = [];
+    }
   }
 
   /**
@@ -293,6 +309,7 @@ class LegendWidget extends React.Component {
     if (prevState.loading !== this.state.loading) {
       if (this.state.loading === true) {
         setTimeout(() => {
+          if (!this._isMounted) return;
           if (this.props.download) {
             this.hideNutsLegend();
           }
