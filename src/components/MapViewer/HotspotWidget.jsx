@@ -53,6 +53,8 @@ class HotspotWidget extends React.Component {
     this.lccYear = null;
     this.urls = this.props.urls;
     this.layers = this.props.selectedLayers;
+    this.arcgisEventHandles = [];
+    this._isMounted = false;
   }
 
   loader() {
@@ -946,6 +948,7 @@ class HotspotWidget extends React.Component {
    */
 
   async componentDidMount() {
+    this._isMounted = true;
     await this.getLayerParameters();
     await this.loader();
     if (!this.container.current) return;
@@ -954,8 +957,9 @@ class HotspotWidget extends React.Component {
     });
     this.layerModelInit();
     this.getBBoxData();
+    this.arcgisEventHandles = [];
     this.props.view.when(() => {
-      this.props.view.map.layers.on('change', () => {
+      const handle = this.props.view.map.layers.on('change', () => {
         let bookmarkHotspotFilter = null;
         if (localStorage.getItem('bookmarkHotspotFilter')) {
           bookmarkHotspotFilter = JSON.parse(
@@ -964,12 +968,13 @@ class HotspotWidget extends React.Component {
         } else {
           return;
         }
+        let shouldUpdate = false;
         if (
           bookmarkHotspotFilter !== null &&
           Object.keys(bookmarkHotspotFilter?.filteredLayers).length !== 0 &&
+          this.props.bookmarkData &&
           this.props.bookmarkData.active === true
         ) {
-          // setTimeout(() => {
           let activeLayers = [];
           let filteredLayers = [];
           Object.keys(bookmarkHotspotFilter.activeLayers).forEach((key) => {
@@ -978,30 +983,49 @@ class HotspotWidget extends React.Component {
           Object.keys(bookmarkHotspotFilter.filteredLayers).forEach((key) => {
             filteredLayers[key] = null;
           });
-          this.props.hotspotData['activeLayers'] = activeLayers;
-          this.props.hotspotData['filteredLayers'] = filteredLayers;
+          if (this.props.hotspotData) {
+            this.props.hotspotData['activeLayers'] = activeLayers;
+            this.props.hotspotData['filteredLayers'] = filteredLayers;
+          }
           this.renderApplyFilterButton();
           localStorage.setItem('bookmarkHotspotFilter', null);
-          // }, 2000);
+          shouldUpdate = true;
         } else if (
           bookmarkHotspotFilter !== null &&
           Object.keys(bookmarkHotspotFilter?.filteredLayers).length === 0 &&
+          this.props.bookmarkData &&
           this.props.bookmarkData.active === true
         ) {
           this.lcYear = null;
           this.lccYear = null;
           this.selectedArea = null;
-          this.setState({ lcYear: null, lccYear: null, selectedArea: null });
+          if (this._isMounted) {
+            this.setState({ lcYear: null, lccYear: null, selectedArea: null });
+          }
+          shouldUpdate = true;
         }
-        this.setState({
-          activeLayersArray: Array.from(
-            document.querySelectorAll('.active-layer'),
-          ),
-        });
-        const newHotspotData = this.props.hotspotData;
-        this.props.hotspotDataHandler(newHotspotData);
+        if (shouldUpdate && this._isMounted) {
+          this.setState({
+            activeLayersArray: Array.from(
+              document.querySelectorAll('.active-layer'),
+            ),
+          });
+          const newHotspotData = this.props.hotspotData;
+          this.props.hotspotDataHandler(newHotspotData);
+        }
       });
+      this.arcgisEventHandles.push(handle);
     });
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+    if (this.arcgisEventHandles) {
+      this.arcgisEventHandles.forEach(
+        (handle) => handle && handle.remove && handle.remove(),
+      );
+      this.arcgisEventHandles = [];
+    }
   }
 
   componentDidUpdate(prevState, prevProps) {
