@@ -12,36 +12,36 @@ class LoadingSpinner extends React.Component {
     };
     this.showLoading = this.showLoading.bind(this);
     this.listenForLayerChanges = this.listenForLayerChanges.bind(this);
+    this.arcgisEventHandles = [];
+    this._isMounted = false;
   }
 
   listenForLayerChanges() {
-    this.props.view.map.layers.on('change', (event) => {
-      if (event.added.length > 0)
-        if (this.state.loading === false) {
-          this.setState({ loading: true });
-          this.showLoading();
-        }
+    const handle1 = this.props.view.map.layers.on('change', (event) => {
+      if (!this._isMounted) return;
+      if (event.added.length > 0 && this.state.loading === false) {
+        this.setState({ loading: true }, this.showLoading);
+      }
     });
-    this.props.view.on('layerview-create', (event) => {
+    const handle2 = this.props.view.on('layerview-create', (event) => {
+      if (!this._isMounted) return;
       if (event.layer.loadStatus === 'loaded') {
-        this.props.view.watch('updating', (isUpdating) => {
-          if (!isUpdating) {
-            if (this.state.loading === true) {
-              this.setState({ loading: false });
-              this.showLoading();
-            }
+        const watchHandle = this.props.view.watch('updating', (isUpdating) => {
+          if (!this._isMounted) return;
+          if (!isUpdating && this.state.loading === true) {
+            this.setState({ loading: false }, this.showLoading);
           }
         });
+        this.arcgisEventHandles.push(watchHandle);
       }
     });
-    this.props.view.on('layerview-create-error', (event) => {
-      if (event.layer.loadError !== null) {
-        if (this.state.loading === true) {
-          this.setState({ loading: false });
-          this.showLoading();
-        }
+    const handle3 = this.props.view.on('layerview-create-error', (event) => {
+      if (!this._isMounted) return;
+      if (event.layer.loadError !== null && this.state.loading === true) {
+        this.setState({ loading: false }, this.showLoading);
       }
     });
+    this.arcgisEventHandles.push(handle1, handle2, handle3);
   }
 
   showLoading() {
@@ -51,23 +51,26 @@ class LoadingSpinner extends React.Component {
     } else {
       this.container.current.style.display = 'block';
     }
-    this.setState({});
   }
 
-  // waitForContainer(mapdiv) {
-  //   while (mapdiv === null) {
-  //     new Promise((resolve) => setTimeout(resolve, 100)); // wait for 100ms
-  //   }
-  //   return mapdiv;
-  // }
-
   async componentDidMount() {
+    this._isMounted = true;
     //this.waitForContainer(this.props.view);
     if (!this.container.current) return;
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'manual');
       this.listenForLayerChanges();
     });
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+    if (this.arcgisEventHandles) {
+      this.arcgisEventHandles.forEach(
+        (handle) => handle && handle.remove && handle.remove(),
+      );
+      this.arcgisEventHandles = [];
+    }
   }
 
   render() {
