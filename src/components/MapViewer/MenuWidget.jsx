@@ -4500,9 +4500,13 @@ class MenuWidget extends React.Component {
         });
       }, 0);
     }
+    let url = new URL(window.location.href);
+    let product = url.searchParams.get('product');
+    let dataset = url.searchParams.get('dataset');
     if (
       this.state.wmsUserServiceLayers.length > 0 &&
-      prevState.wmsUserServiceLayers.length === 0
+      prevState.wmsUserServiceLayers.length === 0 &&
+      !(product || dataset)
     ) {
       // Close other tabs and open "My Services" tab
       let dropdownsMapMenu = document.querySelectorAll('.map-menu-dropdown');
