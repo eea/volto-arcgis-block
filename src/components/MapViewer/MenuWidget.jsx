@@ -4505,8 +4505,7 @@ class MenuWidget extends React.Component {
     let dataset = url.searchParams.get('dataset');
     if (
       this.state.wmsUserServiceLayers.length > 0 &&
-      prevState.wmsUserServiceLayers.length === 0 &&
-      !(product || dataset)
+      prevState.wmsUserServiceLayers.length === 0
     ) {
       // Close other tabs and open "My Services" tab
       let dropdownsMapMenu = document.querySelectorAll('.map-menu-dropdown');
@@ -4515,13 +4514,16 @@ class MenuWidget extends React.Component {
       let dropdownId = 'dropdown_' + i;
       // let myServicesId = 'component_' + i;
       // let mapMenuServiceDropdownId = 'product_' + i + '_' + j;
-      dropdownsMapMenu.forEach((dropdown) => {
-        if (dropdown.id !== dropdownId) {
-          dropdown
-            .querySelector('.ccl-expandable__button')
-            .setAttribute('aria-expanded', 'false');
-        }
-      });
+      if (!(product || dataset)) {
+        dropdownsMapMenu.forEach((dropdown) => {
+          if (dropdown.id !== dropdownId) {
+            dropdown
+              .querySelector('.ccl-expandable__button')
+              .setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
       document.getElementById(dropdownId).setAttribute('aria-expanded', 'true');
     }
 
