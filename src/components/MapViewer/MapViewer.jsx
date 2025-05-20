@@ -336,7 +336,9 @@ class MapViewer extends React.Component {
           this.location.search.includes('dataset=')))
     ) {
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
-      sessionStorage.clear();
+      if (!sessionStorage.getItem('TMSLayerObj')) {
+        sessionStorage.clear();
+      }
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
     }
     // if (
