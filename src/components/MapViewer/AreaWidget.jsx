@@ -252,27 +252,70 @@ class AreaWidget extends React.Component {
   //   this.loadCountriesService(e.target.value);
   // }
 
+  getNutsUrlChunks(nutsUrl) {
+    const [base, query] = nutsUrl.split('query?');
+    return {
+      baseUrl: base || '',
+      queryString: query || '',
+    };
+  }
+
+  getNutsParams(queryString) {
+    if (!queryString) return {};
+    return queryString.split('&').reduce((acc, pair) => {
+      const [key, value] = pair.split('=');
+      if (key && value) {
+        acc[key] = decodeURIComponent(value);
+      }
+      return acc;
+    }, {});
+  }
+
+  createDefinitionExpressionObject(params) {
+    if (!params || Object.keys(params).length === 0) return null;
+    return Object.entries(params)
+      .map(([k, v]) => {
+        if (typeof v === 'string' && v.includes(',')) {
+          const values = v.split(',').map((val) => `'${val.trim()}'`);
+          if (values.length > 2) {
+            return `${k} in (${values.join(', ')})`;
+          } else {
+            return values.map((val) => `${k}=${val}`).join(' OR ');
+          }
+        } else {
+          return `${k}='${v}'`;
+        }
+      })
+      .join(' AND ');
+  }
+
+  createFeatureLayer(id, baseUrl, level, definitionExpression) {
+    return new FeatureLayer({
+      id: id,
+      url: baseUrl,
+      layerId: level,
+      outFields: ['*'],
+      popupEnabled: false,
+      definitionExpression: definitionExpression,
+    });
+  }
+
   loadNutsService(id, levels) {
     this.clearWidget();
     document.querySelector('.esri-attribution__powered-by').style.display =
       'flex';
+    const { baseUrl, queryString } = this.getNutsUrlChunks(this.nutsUrl);
+    const params = this.getNutsParams(queryString);
+    const definitionExpression = this.createDefinitionExpressionObject(params);
     levels.forEach((level) => {
-      var layer = new FeatureLayer({
-        id: id,
-        //url: this.props.urls.nutsHandler,
-        url: this.nutsUrl,
-        layerId: level,
-        outFields: ['*'],
-        popupEnabled: false,
-        //definitionExpression: 'LEVL_CODE=' + level,
-      });
-
-      //this.removeFileUploadedLayer();
-
+      const layer = this.createFeatureLayer(
+        id,
+        baseUrl,
+        level,
+        definitionExpression,
+      );
       this.nutsGroupLayer.add(layer);
-
       let index = this.getHighestIndex();
-
       this.props.map.reorder(this.nutsGroupLayer, index + 1);
     });
   }
@@ -282,9 +325,9 @@ class AreaWidget extends React.Component {
       'flex';
     var layer = new FeatureLayer({
       id: id,
-      //url: this.props.urls.outsideEu,
-      url:
-        'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
+      url: this.props.urls.outsideEu,
+      // url:
+      // 'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
       layerId: 0,
       outFields: ['*'],
       popupEnabled: false,
@@ -320,7 +363,7 @@ class AreaWidget extends React.Component {
 
     //Get the file from the form
 
-    const file = document.getElementById('uploadForm');
+    //  const file = document.getElementById('uploadForm');
 
     //Get the file blob
 
@@ -373,34 +416,28 @@ class AreaWidget extends React.Component {
       return;
     }
 
-    switch (fileExtension) {
-      case 'zip':
-        this.generateFeatureCollection(fileName, file, 'shapefile');
-        break;
-      case 'geojson':
-        this.generateFeatureCollection(fileName, file, 'geojson');
-        break;
-      case 'csv':
-        //this.generateFeatureCollection(
-        //  fileName,
-        //  file,
-        //  'csv',
-        //);
-        reader.readAsText(fileBlob);
-        reader.onload = () => {
-          this.handleCsv(reader.result);
-        };
-        break;
-      default:
-        break;
+    if (fileExtension === 'zip' || fileExtension === 'geojson') {
+      const formData = new FormData();
+      formData.append('file', fileBlob, fileName);
+      this.generateFeatureCollection(
+        fileName,
+        formData,
+        fileExtension === 'zip' ? 'shapefile' : 'geojson',
+      );
+    } else if (fileExtension === 'csv') {
+      reader.readAsText(fileBlob);
+      reader.onload = () => {
+        this.handleCsv(reader.result);
+      };
     }
+
     // setTimeout(() => {
     e.target.value = null;
     // }, 2000);
     this.props.uploadFileHandler(this.state.infoPopupType);
   };
 
-  generateFeatureCollection(fileName, file, inputFormat) {
+  generateFeatureCollection(fileName, formData, inputFormat) {
     let name = fileName.split('.');
 
     // Chrome adds c:\fakepath to the value - we need to remove it
@@ -414,12 +451,12 @@ class AreaWidget extends React.Component {
       maxRecordCount: 1000,
       enforceInputFileSizeLimit: true,
       enforceOutputJsonSizeLimit: true,
+      // generalize features to 10 meters for better performance
+      generalize: true,
+      maxAllowableOffset: 10,
+      reducePrecision: true,
+      numberOfDigitsAfterDecimal: 0,
     };
-    // generalize features to 10 meters for better performance
-    params.generalize = true;
-    params.maxAllowableOffset = 10;
-    params.reducePrecision = true;
-    params.numberOfDigitsAfterDecimal = 0;
 
     const myContent = {
       filetype: inputFormat,
@@ -429,7 +466,7 @@ class AreaWidget extends React.Component {
     // use the REST generate operation to generate a feature collection from the zipped shapefile
     request(this.uploadPortal + '/sharing/rest/content/features/generate', {
       query: myContent,
-      body: file,
+      body: formData,
       responseType: 'json',
     })
       .then((response) => {
