@@ -3060,15 +3060,15 @@ class MenuWidget extends React.Component {
 
     // Create node
     let template = `
-    <div class="esri-legend__layer">
-      <div class="esri-legend__layer-table esri-legend__layer-table--size-ramp" >
-        <div class="esri-legend__layer-caption">
+    <div className="esri-legend__layer">
+      <div className="esri-legend__layer-table esri-legend__layer-table--size-ramp" >
+        <div className="esri-legend__layer-caption">
           ${title}
         </div>
-        <div class="esri-legend__layer-body">
-          <div class="esri-legend__layer-row">
-            <div class="esri-legend__layer-cell esri-legend__layer-cell--symbols" >
-              <div class="esri-legend__symbol">
+        <div className="esri-legend__layer-body">
+          <div className="esri-legend__layer-row">
+            <div className="esri-legend__layer-cell esri-legend__layer-cell--symbols" >
+              <div className="esri-legend__symbol">
                 <img crossorigin="anonymous"
                   alt=""
                   src="${imageURL}"
@@ -3077,7 +3077,7 @@ class MenuWidget extends React.Component {
               </div>
             </div>
             <div
-              class="esri-legend__layer-cell esri-legend__layer-cell--info"
+              className="esri-legend__layer-cell esri-legend__layer-cell--info"
             ></div>
           </div>
         </div>
@@ -5518,11 +5518,11 @@ class MenuWidget extends React.Component {
             >
               <div className="search-panel">
                 <div className="menu-searchpanel">
-                  <div class="search-input menu-search-input">
+                  <div className="search-input menu-search-input">
                     <input
                       type="text"
                       id="menu-searchtext"
-                      maxlength="200"
+                      maxLength="200"
                       placeholder="Search products and datasets"
                       onChange={() => this.openClearButton()}
                       onKeyDown={(e) => {
@@ -5531,9 +5531,9 @@ class MenuWidget extends React.Component {
                         }
                       }}
                     />
-                    <div class="search-input-actions">
+                    <div className="search-input-actions">
                       <button
-                        class="ui basic icon button search-input-clear-icon-button clearsearch"
+                        className="ui basic icon button search-input-clear-icon-button clearsearch"
                         onClick={() => this.clearMenuText()}
                         onKeyDown={(e) => {
                           if (
@@ -5551,10 +5551,10 @@ class MenuWidget extends React.Component {
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 26 26"
-                          class="icon"
+                          className="icon"
                         >
                           <path
-                            fill-rule="evenodd"
+                            fillRule="evenodd"
                             d="M27.899 9.515L26.485 8.101 18 16.586 9.514 8.101 8.1 9.515 16.586 18 8.1 26.486 9.514 27.9 18 19.414 26.485 27.9 27.899 26.486 19.414 18z"
                           ></path>
                         </svg>
@@ -5562,7 +5562,7 @@ class MenuWidget extends React.Component {
                     </div>
                     <button
                       aria-label="Search"
-                      class="button menu-search-button"
+                      className="button menu-search-button"
                       onClick={() => this.menuSearch()}
                       onKeyDown={(e) => {
                         if (
@@ -5577,22 +5577,22 @@ class MenuWidget extends React.Component {
                         }
                       }}
                     >
-                      <span class="ccl-icon-zoom search-menu-icon"></span>
+                      <span className="ccl-icon-zoom search-menu-icon"></span>
                     </button>
                   </div>
-                  <div class="filters-element filter-logo filters-header">
-                    <div class="filters-title">
+                  <div className="filters-element filter-logo filters-header">
+                    <div className="filters-title">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 36 36"
-                        class="icon ui"
+                        className="icon ui"
                       >
                         <path
-                          fill-rule="evenodd"
+                          fillRule="evenodd"
                           d="M5.0916,5.0002 L14.9996,19.3132 L14.9996,34.0002 L20.9996,29.5002 L20.9996,19.3132 L30.9086,5.0002 L5.0916,5.0002 Z M17.0006,18.6872 L8.9086,7.0002 L27.0916,7.0002 L19.0006,18.6872 L19.0006,28.5002 L17.0006,30.0002 L17.0006,18.6872 Z"
                         ></path>
                       </svg>
-                      <span class="filters-title-bold">Filters</span>
+                      <span className="filters-title-bold">Filters</span>
                       <div
                         className="clear-filters"
                         tabIndex="0"
@@ -5645,7 +5645,7 @@ class MenuWidget extends React.Component {
                       Component
                       <select
                         id="select-component"
-                        class="esri-select filter-select"
+                        className="esri-select filter-select"
                         onBlur={() => {}}
                         onChange={() => {
                           this.loadProductFilters();
@@ -5657,7 +5657,7 @@ class MenuWidget extends React.Component {
                       Product groups
                       <select
                         id="select-product"
-                        class="esri-select filter-select"
+                        className="esri-select filter-select"
                         onBlur={() => {}}
                         onChange={() => {
                           this.loadFamilyFilters();
@@ -5669,7 +5669,7 @@ class MenuWidget extends React.Component {
                       Product sub-group
                       <select
                         id="select-family"
-                        class="esri-select filter-select"
+                        className="esri-select filter-select"
                         onBlur={() => {}}
                         onChange={() => {
                           this.menuSearch();

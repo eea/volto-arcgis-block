@@ -248,9 +248,6 @@ class AreaWidget extends React.Component {
     this.loadNutsService(e.target.value, [6, 7, 8]);
     this.nutsRadioButton(e.target.value);
   }
-  // countriesHandler(e) {
-  //   this.loadCountriesService(e.target.value);
-  // }
 
   getNutsUrlChunks(nutsUrl) {
     const [base, query] = nutsUrl.split('query?');
@@ -326,14 +323,10 @@ class AreaWidget extends React.Component {
     var layer = new FeatureLayer({
       id: id,
       url: this.props.urls.outsideEu,
-      // url:
-      // 'https://land.discomap.eea.europa.eu/arcgis/rest/services/CLMS_Portal/World_countries_except_EU37/MapServer',
       layerId: 0,
       outFields: ['*'],
       popupEnabled: false,
     });
-
-    //this.removeFileUploadedLayer();
 
     this.nutsGroupLayer.add(layer);
 
@@ -360,10 +353,6 @@ class AreaWidget extends React.Component {
     //Get the file size
 
     const fileSize = e.target.files[0].size;
-
-    //Get the file from the form
-
-    //  const file = document.getElementById('uploadForm');
 
     //Get the file blob
 
@@ -431,9 +420,7 @@ class AreaWidget extends React.Component {
       };
     }
 
-    // setTimeout(() => {
     e.target.value = null;
-    // }, 2000);
     this.props.uploadFileHandler(this.state.infoPopupType);
   };
 
@@ -496,8 +483,6 @@ class AreaWidget extends React.Component {
 
           //Create a feature layer from the feature collection
           this.addFeatureCollectionToMap(featureCollection);
-        } else {
-          //console.error('Unexpected response structure:', response);
         }
       })
       .catch((error) => {
@@ -542,10 +527,9 @@ class AreaWidget extends React.Component {
     const layers = featureCollection.layers.map((layer) => {
       const graphics = layer.featureSet.features.map((feature) => {
         const polygonSymbol = {
-          type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+          type: 'simple-fill',
           color: [234, 168, 72, 0.8],
           outline: {
-            // autocasts as new SimpleLineSymbol()
             color: '#000000',
             width: 0.1,
           },
@@ -594,9 +578,7 @@ class AreaWidget extends React.Component {
       //Add uploaded layer to the map and zoom to the extent
 
       this.props.view.graphics.addMany(sourceGraphics);
-      this.props.view.goTo(sourceGraphics).catch((error) => {
-        //console.error('From addFeatureCollectionToMap function', error);
-      });
+      this.props.view.goTo(sourceGraphics).catch((error) => {});
 
       //Create a spatial reference object for the extent
 
@@ -670,13 +652,12 @@ class AreaWidget extends React.Component {
     // Set a simple renderer on the layer
 
     csvLayer.renderer = {
-      type: 'simple', // autocasts as new SimpleRenderer()
+      type: 'simple',
       symbol: {
-        type: 'simple-marker', // autocasts as new SimpleMarkerSymbol()
+        type: 'simple-marker',
         size: 6,
         color: 'black',
         outline: {
-          // autocasts as new SimpleLineSymbol()
           width: 0.5,
           color: 'white',
         },
@@ -763,10 +744,9 @@ class AreaWidget extends React.Component {
         //Draw a graphic using the polyId polygon data as the geometry
 
         const polygonSymbol = {
-          type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+          type: 'simple-fill',
           color: [234, 168, 72, 0.8],
           outline: {
-            // autocasts as new SimpleLineSymbol()
             color: '#000000',
             width: 0.1,
           },
@@ -788,13 +768,10 @@ class AreaWidget extends React.Component {
         //Add the polygon graphic to the map
 
         this.props.view.graphics.add(polygonGraphic);
-        //this.props.map.add(this.fileUploadLayer);
 
         //Refresh the map view
 
-        this.props.view.goTo(polygonGraphic).catch((error) => {
-          //console.error('From handleCsv function', error);
-        });
+        this.props.view.goTo(polygonGraphic).catch((error) => {});
 
         //Send the area to the parent component
 
@@ -829,7 +806,6 @@ class AreaWidget extends React.Component {
         infoPopupType: 'fileFormat',
       });
       this.props.uploadFileHandler(false);
-      //console.error('Error: ', error);
     }
   }
 
@@ -932,9 +908,9 @@ class AreaWidget extends React.Component {
             );
             popupToUpdate.style.display = 'block';
             popupToUpdate.innerHTML =
-              '<div class="drawRectanglePopup-content">' +
-              '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
-              '<div class="drawRectanglePopup-text">' +
+              '<div className="drawRectanglePopup-content">' +
+              '<span className="drawRectanglePopup-icon"><span className="esri-icon-cursor-marquee"></span></span>' +
+              '<div className="drawRectanglePopup-text">' +
               '<a style="color: black; cursor: pointer" href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m" target="_blank" rel="noreferrer">To download the full dataset consult the "How to download M2M" How to guide.</a>' +
               '</div>' +
               '</div>';
@@ -978,9 +954,9 @@ class AreaWidget extends React.Component {
             );
             popupToUpdate.style.display = 'block';
             popupToUpdate.innerHTML =
-              '<div class="drawRectanglePopup-content">' +
-              '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
-              '<div class="drawRectanglePopup-text">' +
+              '<div className="drawRectanglePopup-content">' +
+              '<span className="drawRectanglePopup-icon"><span className="esri-icon-cursor-marquee"></span></span>' +
+              '<div className="drawRectanglePopup-text">' +
               '<a style="color: black; cursor: pointer" href="https://land.copernicus.eu/en/how-to-guides/how-to-download-spatial-data/how-to-download-m2m" target="_blank" rel="noreferrer">To download the full dataset consult the "How to download M2M" How to guide.</a>' +
               '</div>' +
               '</div>';
@@ -1024,9 +1000,9 @@ class AreaWidget extends React.Component {
     if (this.props.download) {
       let popup = document.querySelector('.drawRectanglePopup-block');
       popup.innerHTML =
-        '<div class="drawRectanglePopup-content">' +
-        '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
-        '<div class="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
+        '<div className="drawRectanglePopup-content">' +
+        '<span className="drawRectanglePopup-icon"><span className="esri-icon-cursor-marquee"></span></span>' +
+        '<div className="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
         '</div>';
       popup.style.display = 'block';
     }
@@ -1180,9 +1156,9 @@ class AreaWidget extends React.Component {
       var popup = document.createElement('div');
       popup.className = 'drawRectanglePopup-block';
       popup.innerHTML =
-        '<div class="drawRectanglePopup-content">' +
-        '<span class="drawRectanglePopup-icon"><span class="esri-icon-cursor-marquee"></span></span>' +
-        '<div class="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
+        '<div className="drawRectanglePopup-content">' +
+        '<span className="drawRectanglePopup-icon"><span className="esri-icon-cursor-marquee"></span></span>' +
+        '<div className="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
         '</div>';
       this.props.download && this.props.view.ui.add(popup, 'top-right');
     });
@@ -1410,7 +1386,7 @@ class AreaWidget extends React.Component {
                   />
                   <button
                     aria-label="Search"
-                    class="esri-button area-searchbutton"
+                    className="esri-button area-searchbutton"
                     onClick={this.areaSearch.bind(this)}
                     onKeyDown={(e) => {
                       if (
@@ -1425,7 +1401,7 @@ class AreaWidget extends React.Component {
                       }
                     }}
                   >
-                    <span class="ccl-icon-zoom"></span>
+                    <span className="ccl-icon-zoom"></span>
                   </button>
                   <div className="no-result-message">No result found</div>
                 </div>
@@ -1472,7 +1448,7 @@ class AreaWidget extends React.Component {
                 </div>
                 <div className="ccl-form">
                   <form
-                    enctype="multipart/form-data"
+                    encType="multipart/form-data"
                     method="post"
                     id="uploadForm"
                   >
