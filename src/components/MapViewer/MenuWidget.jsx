@@ -3813,6 +3813,7 @@ class MenuWidget extends React.Component {
             <Popup
               trigger={<FontAwesomeIcon icon={this.visibleLayers[elem.id]} />}
               content={
+                this.visibleLayers[elem.id] &&
                 this.visibleLayers[elem.id][1] === 'eye'
                   ? 'Hide layer'
                   : 'Show layer'
@@ -3998,7 +3999,10 @@ class MenuWidget extends React.Component {
         }
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'stop'];
-          if (this.visibleLayers[elem.id][1] === 'eye-slash') {
+          if (
+            this.visibleLayers[elem.id] &&
+            this.visibleLayers[elem.id][1] === 'eye-slash'
+          ) {
             this.layers[elem.id].visible = true;
             this.visibleLayers[elem.id] = ['fas', 'eye'];
           }
