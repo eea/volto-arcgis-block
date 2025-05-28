@@ -60,14 +60,14 @@
   },
   "dependencies": {
     "@eeacms/volto-clms-utils": "^0.1.13",
+    "@eeacms/volto-taxonomy": "5.1.0",
     "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
     "@fortawesome/react-fontawesome": "0.1.14",
     "esri-loader": "3.4.0",
     "highcharts": "^9.3.2",
     "highcharts-react-official": "^3.1.0",
-    "react-datepicker": "4.15.0",
-    "@eeacms/volto-taxonomy": "5.1.0"
+    "react-datepicker": "4.15.0"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.5",
