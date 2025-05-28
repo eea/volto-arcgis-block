@@ -268,32 +268,44 @@ class AreaWidget extends React.Component {
     }, {});
   }
 
-  createDefinitionExpressionObject(params) {
-    if (!params || Object.keys(params).length === 0) return null;
-    return Object.entries(params)
-      .map(([k, v]) => {
-        if (typeof v === 'string' && v.includes(',')) {
-          const values = v.split(',').map((val) => `'${val.trim()}'`);
-          if (values.length > 2) {
-            return `${k} in (${values.join(', ')})`;
-          } else {
-            return values.map((val) => `${k}=${val}`).join(' OR ');
-          }
-        } else {
-          return `${k}='${v}'`;
-        }
-      })
-      .join(' AND ');
-  }
+  // createDefinitionExpressionObject(params) {
+  //   if (!params || Object.keys(params).length === 0) return null;
+  //   return Object.entries(params)
+  //     .map(([k, v]) => {
+  //       if (typeof v === 'string' && v.includes(',')) {
+  //         const values = v.split(',').map((val) => `'${val.trim()}'`);
+  //         if (values.length > 2) {
+  //           return `${k} in (${values.join(', ')})`;
+  //         } else {
+  //           return values.map((val) => `${k}=${val}`).join(' OR ');
+  //         }
+  //       } else {
+  //         return `${k}='${v}'`;
+  //       }
+  //     })
+  //     .join(' AND ');
+  // }
 
-  createFeatureLayer(id, baseUrl, level, definitionExpression) {
+  createFeatureLayer(id, baseUrl, level, customParameters) {
+    // Extract relevant properties from customParameters (queryParams)
+    const {
+      outFields,
+      returnGeometry,
+      returnTrueCurves,
+      sqlFormat,
+      featureEncoding,
+    } = customParameters;
+
     return new FeatureLayer({
       id: id,
       url: baseUrl,
       layerId: level,
-      outFields: ['*'],
+      outFields: outFields || ['*'],
       popupEnabled: false,
-      definitionExpression: definitionExpression,
+      returnGeometry: returnGeometry || false,
+      returnTrueCurves: returnTrueCurves || false,
+      sqlFormat: sqlFormat || 'none',
+      featureEncoding: featureEncoding || 'esriDefault',
     });
   }
 
@@ -303,14 +315,9 @@ class AreaWidget extends React.Component {
       'flex';
     const { baseUrl, queryString } = this.getNutsUrlChunks(this.nutsUrl);
     const params = this.getNutsParams(queryString);
-    const definitionExpression = this.createDefinitionExpressionObject(params);
+    // const definitionExpression = this.createDefinitionExpressionObject(params);
     levels.forEach((level) => {
-      const layer = this.createFeatureLayer(
-        id,
-        baseUrl,
-        level,
-        definitionExpression,
-      );
+      const layer = this.createFeatureLayer(id, baseUrl, level, params);
       this.nutsGroupLayer.add(layer);
       let index = this.getHighestIndex();
       this.props.map.reorder(this.nutsGroupLayer, index + 1);
