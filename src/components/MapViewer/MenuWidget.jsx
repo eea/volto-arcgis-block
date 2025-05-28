@@ -4000,7 +4000,7 @@ class MenuWidget extends React.Component {
         if (elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'stop'];
           if (
-            this.visibleLayers[elem.id] &&
+            !this.visibleLayers[elem.id] ||
             this.visibleLayers[elem.id][1] === 'eye-slash'
           ) {
             this.layers[elem.id].visible = true;
@@ -4398,7 +4398,7 @@ class MenuWidget extends React.Component {
       this.findCheckedDataset(elem);
     }
     if (
-      this.visibleLayers[elem.id] &&
+      !this.visibleLayers[elem.id] ||
       this.visibleLayers[elem.id][1] === 'eye'
     ) {
       this.layers[elem.id].visible = false;
