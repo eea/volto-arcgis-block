@@ -1697,10 +1697,10 @@ div.map-container.popup-block {
 }
 
 .clearsearch.search-input-clear-icon-button.button {
-  position: absolute;
-  top: 4.3rem;
-  left: 22.5rem;
   display: none;
+  margin-top: 0.2rem;
+  /* position: absolute; */
+  margin-left: -1.7rem;
 }
 
 .close-filters-icon {
