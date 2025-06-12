@@ -1483,8 +1483,6 @@ class MenuWidget extends React.Component {
                   key={'h' + familyId}
                   defcheck={dataset_def}
                   onChange={(e) =>
-                    //this.toggleFamily(e.target.checked, checkProduct, e)
-
                     this.toggleProduct(e.target.checked, checkProduct, e)
                   }
                 ></input>
