@@ -9,6 +9,7 @@ pipeline {
         BACKEND_PROFILES = "eea.kitkat:testing"
         BACKEND_ADDONS = "clms.addon,clms.types,clms.downloadtool,clms.statstool"
         VOLTO = "16.31.1"
+        NODEJS_VERSION = "22"
     }
 
   stages {
@@ -24,7 +25,7 @@ pipeline {
         node(label: 'docker') {
           withCredentials([string(credentialsId: 'eea-jenkins-token', variable: 'GITHUB_TOKEN'),string(credentialsId: 'eea-jenkins-npm-token', variable: 'NPM_TOKEN')]) {
             sh '''docker pull eeacms/gitflow'''
-            sh '''docker run -i --rm --name="$BUILD_TAG-gitflow-master" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_NAME="$GIT_NAME" -e GIT_TOKEN="$GITHUB_TOKEN" -e NPM_TOKEN="$NPM_TOKEN" -e LANGUAGE=javascript eeacms/gitflow'''
+            sh '''docker run -i --rm --name="$BUILD_TAG-gitflow-master" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_NAME="$GIT_NAME" -e GIT_TOKEN="$GITHUB_TOKEN" -e NPM_TOKEN="$NPM_TOKEN" -e NODEJS_VERSION="$NODEJS_VERSION" -e LANGUAGE=javascript eeacms/gitflow'''
           }
         }
       }
@@ -44,21 +45,21 @@ pipeline {
           "ES lint": {
             node(label: 'docker') {
               sh '''docker pull plone/volto-addon-ci:15.x'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-eslint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci:15.x eslint'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-eslint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:15.x eslint'''
             }
           },
 
           "Style lint": {
             node(label: 'docker') {
               sh '''docker pull plone/volto-addon-ci:15.x'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-stylelint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci stylelint'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-stylelint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci stylelint'''
             }
           },
 
           "Prettier": {
             node(label: 'docker') {
               sh '''docker pull plone/volto-addon-ci:15.x'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-prettier" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci prettier'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-prettier" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci prettier'''
             }
           }
         )
@@ -89,7 +90,7 @@ pipeline {
               script {
                 try {
                   sh '''docker pull plone/volto-addon-ci:15.x'''
-                  sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e VOLTO=$VOLTO -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci:15.x'''
+                  sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e VOLTO=$VOLTO -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:15.x'''
                   sh '''rm -rf xunit-reports'''
                   sh '''mkdir -p xunit-reports'''
                   sh '''docker cp $BUILD_TAG-volto:/opt/frontend/my-volto-project/coverage xunit-reports/'''
@@ -265,7 +266,7 @@ pipeline {
             }
            withCredentials([string(credentialsId: 'eea-jenkins-token', variable: 'GITHUB_TOKEN')]) {
             sh '''docker pull eeacms/gitflow'''
-            sh '''docker run -i --rm --name="$BUILD_TAG-gitflow-pr" -e GIT_CHANGE_TARGET="$CHANGE_TARGET" -e GIT_CHANGE_BRANCH="$CHANGE_BRANCH" -e GIT_CHANGE_AUTHOR="$CHANGE_AUTHOR" -e GIT_CHANGE_TITLE="$CHANGE_TITLE" -e GIT_TOKEN="$GITHUB_TOKEN" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e GIT_ORG="$GIT_ORG" -e GIT_NAME="$GIT_NAME" -e LANGUAGE=javascript eeacms/gitflow'''
+            sh '''docker run -i --rm --name="$BUILD_TAG-gitflow-pr" -e GIT_CHANGE_TARGET="$CHANGE_TARGET" -e GIT_CHANGE_BRANCH="$CHANGE_BRANCH" -e GIT_CHANGE_AUTHOR="$CHANGE_AUTHOR" -e GIT_CHANGE_TITLE="$CHANGE_TITLE" -e GIT_TOKEN="$GITHUB_TOKEN" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e GIT_ORG="$GIT_ORG" -e GIT_NAME="$GIT_NAME" -e NODEJS_VERSION="$NODEJS_VERSION" -e LANGUAGE=javascript eeacms/gitflow'''
            }
           }
         }
