@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  tools {
+    jdk 'Java17'
+  }
+  agent {
+    node { label 'docker-host' }
+  }
 
   environment {
         GIT_NAME = "volto-arcgis-block"
@@ -9,6 +14,8 @@ pipeline {
         BACKEND_PROFILES = "eea.kitkat:testing"
         BACKEND_ADDONS = "clms.addon,clms.types,clms.downloadtool,clms.statstool"
         VOLTO = "16.31.1"
+        IMAGE_NAME = BUILD_TAG.toLowerCase()
+        NODEJS_VERSION = "16"
     }
 
   stages {
@@ -23,9 +30,140 @@ pipeline {
       steps {
         node(label: 'docker') {
           withCredentials([string(credentialsId: 'eea-jenkins-token', variable: 'GITHUB_TOKEN'),string(credentialsId: 'eea-jenkins-npm-token', variable: 'NPM_TOKEN')]) {
-            sh '''docker pull eeacms/gitflow'''
-            sh '''docker run -i --rm --name="$BUILD_TAG-gitflow-master" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_NAME="$GIT_NAME" -e GIT_TOKEN="$GITHUB_TOKEN" -e NPM_TOKEN="$NPM_TOKEN" -e LANGUAGE=javascript eeacms/gitflow'''
+            sh '''docker run -i --rm --pull always --name="$IMAGE_NAME-gitflow-master" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_NAME="$GIT_NAME" -e GIT_TOKEN="$GITHUB_TOKEN" -e NPM_TOKEN="$NPM_TOKEN" -e NODEJS_VERSION="$NODEJS_VERSION" -e LANGUAGE=javascript eeacms/gitflow'''
           }
+        }
+      }
+    }
+
+    stage('Check if testing needed') {
+      when {
+        allOf {
+          not { branch 'master' }
+          not { branch 'develop' }
+          environment name: 'CHANGE_ID', value: ''
+        }
+      }
+      steps {
+        script {
+            withCredentials([string(credentialsId: 'eea-jenkins-token', variable: 'GITHUB_TOKEN')]) {
+              check_result = sh script: '''docker run --pull always -i --rm --name="$IMAGE_NAME-gitflow-check" -e GIT_TOKEN="$GITHUB_TOKEN" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_ORG="$GIT_ORG" -e GIT_NAME="$GIT_NAME" eeacms/gitflow /check_if_testing_needed.sh''', returnStatus: true
+
+              if (check_result == 0) {
+                env.SKIP_TESTS = 'yes'
+              }
+            }
+        }
+      }
+    }
+
+    stage('Testing') {
+      when {
+        anyOf {
+          allOf {
+            not { environment name: 'CHANGE_ID', value: '' }
+            environment name: 'CHANGE_TARGET', value: 'develop'
+            environment name: 'SKIP_TESTS', value: ''
+          }
+          allOf {
+            environment name: 'CHANGE_ID', value: ''
+            anyOf {
+              not { changelog '.*^Automated release [0-9\\.]+$' }
+              branch 'master'
+            }
+            environment name: 'SKIP_TESTS', value: ''
+          }
+        }
+      }
+      stages {
+        stage('Build test image') {
+          steps {
+            checkout scm
+            sh '''docker build --pull --build-arg="VOLTO_VERSION=$VOLTO" --build-arg="ADDON_NAME=$NAMESPACE/$GIT_NAME"  --build-arg="ADDON_PATH=$GIT_NAME" . -t $IMAGE_NAME-frontend'''
+          }
+        }
+
+        stage('Fix code') {
+          when {
+              environment name: 'CHANGE_ID', value: ''
+              not { branch 'master' }
+          }
+          steps {
+            script {
+              fix_result = sh(script: '''docker run --name="$IMAGE_NAME-fix" --entrypoint=make --workdir=/app/src/addons/$GIT_NAME  $IMAGE_NAME-frontend ci-fix''', returnStatus: true)
+              sh '''docker cp $IMAGE_NAME-fix:/app/src/addons/$GIT_NAME/src .'''
+              sh '''docker rm -v $IMAGE_NAME-fix'''
+              FOUND_FIX = sh(script: '''git diff | wc -l''', returnStdout: true).trim()
+
+              if (FOUND_FIX != '0') {
+                withCredentials([string(credentialsId: 'eea-jenkins-token', variable: 'GITHUB_TOKEN')]) {
+                  sh '''sed -i "s|url = .*|url = https://eea-jenkins:$GITHUB_TOKEN@github.com/eea/$GIT_NAME.git|" .git/config'''
+                }
+                sh '''git fetch origin $GIT_BRANCH:$GIT_BRANCH'''
+                sh '''git checkout $GIT_BRANCH'''
+                sh '''git add src/'''
+                sh '''git commit -m "style: Automated code fix" '''
+                sh '''git push --set-upstream origin $GIT_BRANCH'''
+                sh '''exit 1'''
+              }
+            }
+          }
+        }
+
+        stage('ES lint') {
+          steps {
+            sh '''docker run --rm --name="$IMAGE_NAME-eslint" --entrypoint=make --workdir=/app/src/addons/$GIT_NAME $IMAGE_NAME-frontend lint'''
+          }
+        }
+
+        stage('Style lint') {
+          steps {
+            sh '''docker run --rm --name="$IMAGE_NAME-stylelint" --entrypoint=make --workdir=/app/src/addons/$GIT_NAME  $IMAGE_NAME-frontend stylelint'''
+          }
+        }
+
+        stage('Prettier') {
+          steps {
+            sh '''docker run --rm --name="$IMAGE_NAME-prettier" --entrypoint=make --workdir=/app/src/addons/$GIT_NAME  $IMAGE_NAME-frontend prettier'''
+          }
+        }
+
+        stage('Coverage Tests') {
+          parallel {
+
+            stage('Unit tests') {
+              steps {
+                script {
+                  try {
+                    sh '''docker run --name="$IMAGE_NAME-volto" --entrypoint=make --workdir=/app/src/addons/$GIT_NAME $IMAGE_NAME-frontend test-ci'''
+                    sh '''rm -rf xunit-reports'''
+                    sh '''mkdir -p xunit-reports'''
+                    sh '''docker cp $IMAGE_NAME-volto:/app/coverage xunit-reports/'''
+                    sh '''docker cp $IMAGE_NAME-volto:/app/junit.xml xunit-reports/'''
+                    publishHTML(target : [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'xunit-reports/coverage/lcov-report',
+                    reportFiles: 'index.html',
+                    reportName: 'UTCoverage',
+                    reportTitles: 'Unit Tests Code Coverage'
+                  ])
+                } finally {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+                        junit testResults: 'xunit-reports/junit.xml', allowEmptyResults: true
+                    }
+                    sh script: '''docker rm -v $IMAGE_NAME-volto''', returnStatus: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      post {
+        always {
+            sh script: "docker rmi $IMAGE_NAME-frontend", returnStatus: true
         }
       }
     }
@@ -36,6 +174,7 @@ pipeline {
           environment name: 'CHANGE_ID', value: ''
           not { changelog '.*^Automated release [0-9\\.]+$' }
           not { branch 'master' }
+          environment name: 'SKIP_TESTS', value: ''
         }
       }
       steps {
@@ -43,22 +182,22 @@ pipeline {
 
           "ES lint": {
             node(label: 'docker') {
-              sh '''docker pull plone/volto-addon-ci:15.x'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-eslint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci:15.x eslint'''
+              sh '''docker pull plone/volto-addon-ci:latest'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-eslint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest eslint'''
             }
           },
 
           "Style lint": {
             node(label: 'docker') {
-              sh '''docker pull plone/volto-addon-ci:15.x'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-stylelint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci stylelint'''
+              sh '''docker pull plone/volto-addon-ci:latest'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-stylelint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest stylelint'''
             }
           },
 
           "Prettier": {
             node(label: 'docker') {
-              sh '''docker pull plone/volto-addon-ci:15.x'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-prettier" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci prettier'''
+              sh '''docker pull plone/volto-addon-ci:latest'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-prettier" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest prettier'''
             }
           }
         )
@@ -71,6 +210,7 @@ pipeline {
           allOf {
             not { environment name: 'CHANGE_ID', value: '' }
             environment name: 'CHANGE_TARGET', value: 'develop'
+            environment name: 'SKIP_TESTS', value: ''
           }
           allOf {
             environment name: 'CHANGE_ID', value: ''
@@ -78,6 +218,7 @@ pipeline {
               not { changelog '.*^Automated release [0-9\\.]+$' }
               branch 'master'
             }
+            environment name: 'SKIP_TESTS', value: ''
           }
         }
       }
@@ -88,8 +229,8 @@ pipeline {
             node(label: 'docker') {
               script {
                 try {
-                  sh '''docker pull plone/volto-addon-ci:15.x'''
-                  sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e VOLTO=$VOLTO -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e VOLTO=$VOLTO plone/volto-addon-ci:15.x'''
+                  sh '''docker pull plone/volto-addon-ci:latest'''
+                  sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e VOLTO=$VOLTO -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest'''
                   sh '''rm -rf xunit-reports'''
                   sh '''mkdir -p xunit-reports'''
                   sh '''docker cp $BUILD_TAG-volto:/opt/frontend/my-volto-project/coverage xunit-reports/'''
@@ -264,8 +405,7 @@ pipeline {
                 error "Pipeline aborted due to PR not made from develop branch"
             }
            withCredentials([string(credentialsId: 'eea-jenkins-token', variable: 'GITHUB_TOKEN')]) {
-            sh '''docker pull eeacms/gitflow'''
-            sh '''docker run -i --rm --name="$BUILD_TAG-gitflow-pr" -e GIT_CHANGE_TARGET="$CHANGE_TARGET" -e GIT_CHANGE_BRANCH="$CHANGE_BRANCH" -e GIT_CHANGE_AUTHOR="$CHANGE_AUTHOR" -e GIT_CHANGE_TITLE="$CHANGE_TITLE" -e GIT_TOKEN="$GITHUB_TOKEN" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e GIT_ORG="$GIT_ORG" -e GIT_NAME="$GIT_NAME" -e LANGUAGE=javascript eeacms/gitflow'''
+            sh '''docker run --pull always -i --rm --name="$IMAGE_NAME-gitflow-pr" -e GIT_CHANGE_TARGET="$CHANGE_TARGET" -e GIT_CHANGE_BRANCH="$CHANGE_BRANCH" -e GIT_CHANGE_AUTHOR="$CHANGE_AUTHOR" -e GIT_CHANGE_TITLE="$CHANGE_TITLE" -e GIT_TOKEN="$GITHUB_TOKEN" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e GIT_ORG="$GIT_ORG" -e GIT_NAME="$GIT_NAME" -e LANGUAGE=javascript eeacms/gitflow'''
            }
           }
         }
