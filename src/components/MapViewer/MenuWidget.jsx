@@ -1082,6 +1082,7 @@ class MenuWidget extends React.Component {
             button.setAttribute('aria-expanded', 'true');
           }
         }
+        //a comment to test develop branch
         let productDropdown = node.closest('.map-menu-product-dropdown');
         if (productDropdown) {
           let scrollPosition = productDropdown.offsetTop;
