@@ -75,14 +75,15 @@ pipeline {
           }
         }
       }
-      stage('Build test image') {
-        steps {
-          checkout scm
-          sh '''
-            docker build --pull --build-arg="VOLTO_VERSION=$VOLTO" --build-arg="ADDON_NAME=$NAMESPACE/$GIT_NAME" --build-arg="ADDON_PATH=$GIT_NAME" --build-arg="NODEJS_VERSION=$NODEJS_VERSION" . -t $IMAGE_NAME-frontend
-          '''
+      stages {
+        stage('Build test image') {
+          steps {
+            checkout scm
+            sh '''
+              docker build --pull --build-arg="VOLTO_VERSION=$VOLTO" --build-arg="ADDON_NAME=$NAMESPACE/$GIT_NAME" --build-arg="ADDON_PATH=$GIT_NAME" --build-arg="NODEJS_VERSION=$NODEJS_VERSION" . -t $IMAGE_NAME-frontend
+            '''
+          }
         }
-      }
 
         stage('Fix code') {
           when {
