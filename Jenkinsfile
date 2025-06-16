@@ -14,8 +14,8 @@ pipeline {
         BACKEND_PROFILES = "eea.kitkat:testing"
         BACKEND_ADDONS = "clms.addon,clms.types,clms.downloadtool,clms.statstool"
         VOLTO = "16.31.1"
-        IMAGE_NAME = BUILD_TAG.toLowerCase()
-        NODEJS_VERSION = "16"
+        IMAGE_NAME = BUILD_TAG.toLowerCase().replaceAll()
+        NODEJS_VERSION = "22"
     }
 
   stages {
@@ -75,13 +75,14 @@ pipeline {
           }
         }
       }
-      stages {
-        stage('Build test image') {
-          steps {
-            checkout scm
-            sh '''docker build --pull --build-arg="VOLTO_VERSION=$VOLTO" --build-arg="ADDON_NAME=$NAMESPACE/$GIT_NAME"  --build-arg="ADDON_PATH=$GIT_NAME" . -t $IMAGE_NAME-frontend'''
-          }
+      stage('Build test image') {
+        steps {
+          checkout scm
+          sh '''
+            docker build --pull --build-arg="VOLTO_VERSION=$VOLTO" --build-arg="ADDON_NAME=$NAMESPACE/$GIT_NAME" --build-arg="ADDON_PATH=$GIT_NAME" --build-arg="NODEJS_VERSION=$NODEJS_VERSION" . -t $IMAGE_NAME-frontend
+          '''
         }
+      }
 
         stage('Fix code') {
           when {
@@ -182,22 +183,22 @@ pipeline {
 
           "ES lint": {
             node(label: 'docker') {
-              sh '''docker pull plone/volto-addon-ci:latest'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-eslint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest eslint'''
+              sh '''docker pull plone/volto-addon-ci:16.x'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-eslint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:16.x eslint'''
             }
           },
 
           "Style lint": {
             node(label: 'docker') {
-              sh '''docker pull plone/volto-addon-ci:latest'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-stylelint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest stylelint'''
+              sh '''docker pull plone/volto-addon-ci:16.x'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-stylelint" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:16.x stylelint'''
             }
           },
 
           "Prettier": {
             node(label: 'docker') {
-              sh '''docker pull plone/volto-addon-ci:latest'''
-              sh '''docker run -i --rm --name="$BUILD_TAG-prettier" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest prettier'''
+              sh '''docker pull plone/volto-addon-ci:16.x'''
+              sh '''docker run -i --rm --name="$BUILD_TAG-prettier" -e VOLTO="$VOLTO" -e NAMESPACE="$NAMESPACE" -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:16.x prettier'''
             }
           }
         )
@@ -229,8 +230,8 @@ pipeline {
             node(label: 'docker') {
               script {
                 try {
-                  sh '''docker pull plone/volto-addon-ci:latest'''
-                  sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e VOLTO=$VOLTO -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:latest'''
+                  sh '''docker pull plone/volto-addon-ci:16.x'''
+                  sh '''docker run -i --name="$BUILD_TAG-volto" -e NAMESPACE="$NAMESPACE" -e VOLTO=$VOLTO -e GIT_NAME=$GIT_NAME -e GIT_BRANCH="$BRANCH_NAME" -e GIT_CHANGE_ID="$CHANGE_ID" -e NODEJS_VERSION="$NODEJS_VERSION" -e VOLTO=$VOLTO plone/volto-addon-ci:16.x'''
                   sh '''rm -rf xunit-reports'''
                   sh '''mkdir -p xunit-reports'''
                   sh '''docker cp $BUILD_TAG-volto:/opt/frontend/my-volto-project/coverage xunit-reports/'''
