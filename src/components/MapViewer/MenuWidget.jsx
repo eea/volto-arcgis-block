@@ -1087,6 +1087,15 @@ class MenuWidget extends React.Component {
         if (productDropdown) {
           let scrollPosition = productDropdown.offsetTop;
           if (dataset) {
+            let familyDropdown = node.closest('.map-menu-family-dropdown');
+            if (familyDropdown) {
+              let button = familyDropdown.querySelector(
+                '.ccl-expandable__button',
+              );
+              if (button) {
+                button.setAttribute('aria-expanded', 'true');
+              }
+            }
             let datasetDropdown = node.closest('.map-menu-product-dropdown');
             if (datasetDropdown) {
               let button = datasetDropdown.querySelector(
@@ -1402,13 +1411,14 @@ class MenuWidget extends React.Component {
     );
   }
 
-  metodProcessFamily(family, familyTitle, inheritedIndex, checkProduct) {
+  metodProcessFamily(family, familyTitle, inheritedIndex, checkFamily) {
     var dataset_def = [];
     var datasets = [];
     var index = 0;
     var familyId = familyTitle.replace(/\s+/g, '');
-    var inheritedIndexProduct = inheritedIndex + '_' + familyId;
-    checkProduct = 'map_product_' + inheritedIndexProduct;
+    var inheritedIndexFamily = inheritedIndex + '_' + familyId;
+    checkFamily = 'map_family_' + inheritedIndexFamily;
+    var checkProduct = 'map_product_' + inheritedIndex;
     var familyTitleName = '';
     this.tax.tree.forEach((element) => {
       element.children.forEach((element) => {
@@ -1419,38 +1429,23 @@ class MenuWidget extends React.Component {
     });
     if (family && Array.isArray(family)) {
       for (var i in family) {
-        // if (this.filtersApplied) {
-        //   dataset_def = document
-        //     .querySelector('#' + checkProduct)
-        //     ?.getAttribute('defcheck');
-        // } else if (
-        //   product.Datasets[i] &&
-        //   product.Datasets[i].Default_active === true
-        // ) {
-        //   var idDataset = 'map_dataset_' + inheritedIndexProduct + '_' + index;
-        //   dataset_def.push(idDataset);
-        // }
-
-        // CLMS-1545
-        // if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
         if (family[i]) {
           datasets.push(
             this.metodProcessDataset(
               family[i],
               index,
-              inheritedIndexProduct,
-              checkProduct,
+              inheritedIndex,
+              checkFamily,
             ),
           );
           index++;
         }
-        // }
       }
     }
 
     // Empty vector, add the first dataset
     if (!dataset_def.length) {
-      var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
+      var idDatasetB = 'map_dataset_' + inheritedIndexFamily + '_0';
       dataset_def.push(idDatasetB);
     }
     let style = this.props.download ? { display: 'none' } : {};
@@ -1458,13 +1453,13 @@ class MenuWidget extends React.Component {
     return (
       <div
         className="map-menu-family-dropdown"
-        id={'family_' + inheritedIndexProduct}
+        id={'family_' + inheritedIndexFamily}
         familyid={familyId}
         key={'a' + familyId}
       >
         <fieldset className="ccl-fieldset" key={'b' + familyId}>
           <div
-            id={'dropdown_' + inheritedIndexProduct}
+            id={'dropdown_' + inheritedIndexFamily}
             className="ccl-expandable__button"
             aria-expanded="false"
             key={'c' + familyId}
@@ -1481,7 +1476,8 @@ class MenuWidget extends React.Component {
               <div className="ccl-form-group" key={'e' + familyId}>
                 <input
                   type="checkbox"
-                  id={checkProduct}
+                  id={checkFamily}
+                  parentid={checkProduct}
                   name=""
                   value="name"
                   className="ccl-checkbox ccl-required ccl-form-check-input"
@@ -1493,7 +1489,7 @@ class MenuWidget extends React.Component {
                 ></input>
                 <label
                   className="ccl-form-check-label"
-                  htmlFor={checkProduct}
+                  htmlFor={checkFamily}
                   key={'f' + familyId}
                 >
                   <legend className="ccl-form-legend">
@@ -1517,7 +1513,7 @@ class MenuWidget extends React.Component {
           </div>
           <div
             className="ccl-form map-menu-family-container"
-            id={'family_container_' + inheritedIndexProduct}
+            id={'family_container_' + inheritedIndexFamily}
           >
             {datasets}
           </div>
@@ -1875,6 +1871,27 @@ class MenuWidget extends React.Component {
     datasetCheck.checked = trueChecks > 0;
 
     let parentId = datasetCheck.getAttribute('parentid');
+    if (parentId) {
+      if (parentId.includes('map_family')) {
+        this.updateCheckFamily(parentId);
+      } else {
+        this.updateCheckProduct(parentId);
+      }
+    }
+  }
+
+  updateCheckFamily(id) {
+    let familyCheck = document.querySelector('#' + id);
+    if (!familyCheck) return;
+
+    let layerChecks = Array.from(
+      document.querySelectorAll('[parentid="' + id + '"]'),
+    );
+
+    let trueChecks = layerChecks.filter((elem) => elem.checked).length;
+    familyCheck.checked = trueChecks > 0;
+
+    let parentId = familyCheck.getAttribute('parentid');
     if (parentId) {
       this.updateCheckProduct(parentId);
     }
