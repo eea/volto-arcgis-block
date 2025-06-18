@@ -27,7 +27,6 @@ class BookmarkWidget extends React.Component {
     this.menuClass =
       'esri-icon-bookmark esri-widget--button esri-widget esri-interactive';
     this.sessionBookmarks = [];
-    this.sessionBookmarkIndexLinkUid = [];
     this.sessionBookmarkLayers = [];
     this.sessionBookmarkOpacity = [];
     this.sessionBookmarkVisible = [];
@@ -91,6 +90,72 @@ class BookmarkWidget extends React.Component {
         '.esri-bookmarks__authoring-label .esri-input',
       ).maxLength = 150;
     }
+  }
+
+  processReorder(newOrder) {
+    const oldBookmarks = this.sessionBookmarks;
+    const reorderedBookmarks = newOrder.map((uid) => {
+      const index = oldBookmarks.findIndex(
+        (bookmark) => bookmark && bookmark.uid === uid,
+      );
+      return index !== -1 ? oldBookmarks[index] : null;
+    });
+
+    const hasEqualLength =
+      oldBookmarks.length === newOrder.length &&
+      newOrder.length === reorderedBookmarks.length;
+    const hasNullValues = reorderedBookmarks.some((item) => item === null);
+
+    if (hasEqualLength && !hasNullValues) {
+      return reorderedBookmarks;
+    }
+
+    let missingBookmark = null;
+    let missingIndex = -1;
+
+    for (let i = 0; i < oldBookmarks.length; i++) {
+      const oldBookmark = oldBookmarks[i];
+      const newUid = i < newOrder.length ? newOrder[i] : null;
+
+      if (
+        oldBookmark &&
+        newUid &&
+        oldBookmark.uid === newUid &&
+        !reorderedBookmarks.includes(oldBookmark)
+      ) {
+        missingBookmark = oldBookmark;
+        missingIndex = i;
+        break;
+      }
+    }
+
+    if (missingBookmark && missingIndex !== -1) {
+      if (reorderedBookmarks.length !== oldBookmarks.length) {
+        const finalBookmarks = [];
+        let reorderIndex = 0;
+
+        for (let i = 0; i < oldBookmarks.length; i++) {
+          if (i === missingIndex) {
+            finalBookmarks[i] = missingBookmark;
+          } else {
+            finalBookmarks[i] =
+              reorderIndex < reorderedBookmarks.length
+                ? reorderedBookmarks[reorderIndex]
+                : null;
+            reorderIndex++;
+          }
+        }
+        return finalBookmarks;
+      } else if (hasNullValues) {
+        const nullIndex = reorderedBookmarks.findIndex((item) => item === null);
+        if (nullIndex === missingIndex) {
+          reorderedBookmarks[nullIndex] = missingBookmark;
+        }
+        return reorderedBookmarks;
+      }
+    }
+
+    return reorderedBookmarks;
   }
 
   async componentDidMount() {
@@ -201,7 +266,6 @@ class BookmarkWidget extends React.Component {
               }
             });
             this.sessionBookmarks.push(e.added[0]);
-            this.sessionBookmarkIndexLinkUid.push(e.added[0].uid);
             this.sessionBookmarkLayers.push(check);
             this.sessionBookmarkOpacity.push(opacity);
             this.sessionBookmarkVisible.push(visible);
@@ -250,35 +314,37 @@ class BookmarkWidget extends React.Component {
               }
             }
           } else if (e.moved) {
-            let newSessionBookmarks = [];
-            let newSessionBookmarkIndexLinkUid = [];
-            let newSessionBookmarkLayers = [];
-            let newSessionBookmarkOpacity = [];
-            let newSessionBookmarkVisible = [];
-            let newSessionBookmarkHotspot = [];
-            e.moved.forEach((bookmark) => {
-              let index = this.sessionBookmarkIndexLinkUid.indexOf(
-                bookmark.uid,
+            const newOrder = e.target?.items.map((bookmark) => bookmark.uid);
+            const reorderedBookmarks = this.processReorder(newOrder);
+
+            const reorderedLayers = [];
+            const reorderedOpacity = [];
+            const reorderedVisible = [];
+            const reorderedHotspot = [];
+
+            reorderedBookmarks.forEach((bookmark) => {
+              const originalIndex = this.sessionBookmarks.findIndex(
+                (original) => original && original.uid === bookmark.uid,
               );
-              newSessionBookmarks.push(bookmark);
-              newSessionBookmarkIndexLinkUid.push(bookmark.uid);
-              newSessionBookmarkLayers.push(this.sessionBookmarkLayers[index]);
-              newSessionBookmarkOpacity.push(
-                this.sessionBookmarkOpacity[index],
-              );
-              newSessionBookmarkVisible.push(
-                this.sessionBookmarkVisible[index],
-              );
-              newSessionBookmarkHotspot.push(
-                this.sessionBookmarkHotspot[index],
-              );
+              if (originalIndex !== -1) {
+                reorderedLayers.push(this.sessionBookmarkLayers[originalIndex]);
+                reorderedOpacity.push(
+                  this.sessionBookmarkOpacity[originalIndex],
+                );
+                reorderedVisible.push(
+                  this.sessionBookmarkVisible[originalIndex],
+                );
+                reorderedHotspot.push(
+                  this.sessionBookmarkHotspot[originalIndex],
+                );
+              }
             });
-            this.sessionBookmarks = newSessionBookmarks;
-            this.sessionBookmarkIndexLinkUid = newSessionBookmarkIndexLinkUid;
-            this.sessionBookmarkLayers = newSessionBookmarkLayers;
-            this.sessionBookmarkOpacity = newSessionBookmarkOpacity;
-            this.sessionBookmarkVisible = newSessionBookmarkVisible;
-            this.sessionBookmarkHotspot = newSessionBookmarkHotspot;
+
+            this.sessionBookmarks = reorderedBookmarks;
+            this.sessionBookmarkLayers = reorderedLayers;
+            this.sessionBookmarkOpacity = reorderedOpacity;
+            this.sessionBookmarkVisible = reorderedVisible;
+            this.sessionBookmarkHotspot = reorderedHotspot;
             shouldUpdate = true;
           }
           // } else {
