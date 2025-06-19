@@ -2862,11 +2862,17 @@ class MenuWidget extends React.Component {
       }
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
+      let layer = this.layers[elem.id];
+      let isMapServer = layer?.url.toLowerCase().endsWith('mapserver')
+        ? true
+        : false;
       if (group) {
-        elem.title = this.getLayerTitle(this.layers[elem.id]);
+        elem.title = isMapServer
+          ? this.layers[elem.id].DatasetTitle
+          : this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
-          elem.hide = true;
+          elem.hide = isMapServer;
         }
         this.activeLayersJSON[elem.id] = this.addActiveLayer(
           elem,
@@ -3757,7 +3763,7 @@ class MenuWidget extends React.Component {
         layer-id={elem.id}
         layer-order={order}
         draggable="true"
-        // {...(elem.hide && { style: { display: 'none' } })}
+        {...(elem.hide && { style: { display: 'none' } })}
         onDrop={(e) => this.onDrop(e)}
         onDragOver={(e) => this.onDragOver(e)}
         onDragStart={(e) => this.onDragStart(e)}
