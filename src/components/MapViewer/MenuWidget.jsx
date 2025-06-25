@@ -434,6 +434,7 @@ class MenuWidget extends React.Component {
     this.activeLayersToHotspotData = this.activeLayersToHotspotData.bind(this);
     this.getLimitScale = this.getLimitScale.bind(this);
     this.handleOpenPopup = this.handleOpenPopup.bind(this);
+    this.datasetFamilies = {};
     this.filtersApplied = false;
     this.filtersApplied = false;
     // add zoomend listener to map to show/hide zoom in message
@@ -1263,6 +1264,7 @@ class MenuWidget extends React.Component {
     var dataset_def = [];
     var datasets = [];
     var families = [];
+    this.DatasetFamilies = {};
     var index = 0;
     var inheritedIndexProduct = inheritedIndex + '_' + prodIndex;
     var checkProduct = 'map_product_' + inheritedIndexProduct;
@@ -1272,69 +1274,117 @@ class MenuWidget extends React.Component {
         : product.ProductDescription;
 
     if (product.Datasets && Array.isArray(product.Datasets)) {
-      let familiesMap = new Map();
-      familiesMap['noFamily'] = [];
-      for (let index = 0; index < product.Datasets.length; index++) {
-        if (familiesMap[product.Datasets[index].FamilyTitle]) {
-          familiesMap[product.Datasets[index].FamilyTitle].push(
-            product.Datasets[index],
-          );
-        } else if (product.Datasets[index].FamilyTitle) {
-          familiesMap[product.Datasets[index].FamilyTitle] = [
-            product.Datasets[index],
-          ];
+      var familyIndex = 0;
+      var firstChildAdded = false;
+      for (
+        let datasetIndex = 0;
+        datasetIndex < product.Datasets.length;
+        datasetIndex++
+      ) {
+        const dataset = product.Datasets[datasetIndex];
+
+        if (dataset.FamilyTitle) {
+          if (!this.DatasetFamilies[dataset.FamilyTitle]) {
+            this.DatasetFamilies[dataset.FamilyTitle] = [];
+          }
+          this.DatasetFamilies[dataset.FamilyTitle].push(dataset);
         } else {
-          familiesMap['noFamily'].push(product.Datasets[index]);
+          if (this.filtersApplied) {
+            dataset_def = document
+              .querySelector('#' + checkProduct)
+              ?.getAttribute('defcheck');
+          } else if (
+            dataset &&
+            dataset.Default_active === true &&
+            !firstChildAdded
+          ) {
+            var idDataset =
+              'map_dataset_' + inheritedIndexProduct + '_' + index;
+            dataset_def.push(idDataset);
+            firstChildAdded = true;
+          }
+
+          if (dataset) {
+            datasets.push(
+              this.metodProcessDataset(
+                dataset,
+                index,
+                inheritedIndexProduct,
+                checkProduct,
+              ),
+            );
+            index++;
+          }
         }
       }
-      for (var j in familiesMap) {
-        if (j === 'noFamily') {
-          for (var i in familiesMap[j]) {
-            if (this.filtersApplied) {
-              dataset_def = document
-                .querySelector('#' + checkProduct)
-                ?.getAttribute('defcheck');
-            } else if (
-              product.Datasets[i] &&
-              product.Datasets[i].Default_active === true
-            ) {
-              var idDataset =
-                'map_dataset_' + inheritedIndexProduct + '_' + index;
-              dataset_def.push(idDataset);
-            }
 
-            // CLMS-1545
-            // if (!product.Datasets[i].MarkAsDownloadableNoServiceToVisualize) {
-            if (product.Datasets[i]) {
-              datasets.push(
-                this.metodProcessDataset(
-                  product.Datasets[i],
-                  index,
-                  inheritedIndexProduct,
-                  checkProduct,
-                ),
-              );
-              index++;
-            }
-            // }
+      Object.keys(this.DatasetFamilies).forEach((familyTitle) => {
+        var inheritedIndexFamily = inheritedIndexProduct + '_' + familyIndex;
+        var checkFamily = 'map_family_' + inheritedIndexFamily;
+        var familyDatasets = [];
+        var familyDatasetDef = [];
+
+        this.DatasetFamilies[familyTitle].forEach((dataset) => {
+          if (this.filtersApplied) {
+            familyDatasetDef = document
+              .querySelector('#' + checkFamily)
+              ?.getAttribute('defcheck');
+          } else if (dataset && dataset.Default_active === true) {
+            var idDataset = 'map_dataset_' + inheritedIndexFamily + '_' + index;
+            familyDatasetDef.push(idDataset);
           }
-        } else {
-          families.push(
-            this.metodProcessFamily(
-              familiesMap[j],
-              j,
-              inheritedIndexProduct,
-              checkProduct,
+          familyDatasets.push(
+            this.metodProcessDataset(
+              dataset,
+              index,
+              inheritedIndexFamily,
+              checkFamily,
             ),
           );
+          index++;
+        });
+
+        if (familyDatasets.length > 0) {
+          var firstFamilyDatasetId =
+            'map_dataset_' +
+            inheritedIndexFamily +
+            '_' +
+            (index - familyDatasets.length);
+
+          if (!familyDatasetDef.length) {
+            familyDatasetDef.push(firstFamilyDatasetId);
+          }
+
+          if (!firstChildAdded) {
+            dataset_def.push(checkFamily);
+            firstChildAdded = true;
+          }
         }
-      }
+
+        families.push(
+          this.metodProcessFamily(
+            familyTitle,
+            familyDatasets,
+            inheritedIndexFamily,
+            checkFamily,
+            checkProduct,
+            familyDatasetDef,
+          ),
+        );
+
+        familyIndex++;
+      });
     }
 
     // Empty vector, add the first dataset
     if (!dataset_def.length) {
-      var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
-      dataset_def.push(idDatasetB);
+      if (families.length > 0) {
+        var firstFamilyId = 'map_family_' + inheritedIndexProduct + '_0';
+        dataset_def.push(firstFamilyId);
+      } else {
+        var idDatasetB = 'map_dataset_' + inheritedIndexProduct + '_0';
+        dataset_def.push(idDatasetB);
+      }
     }
     let style = this.props.download ? { display: 'none' } : {};
 
@@ -1411,15 +1461,18 @@ class MenuWidget extends React.Component {
     );
   }
 
-  metodProcessFamily(family, familyTitle, inheritedIndex, checkFamily) {
-    var dataset_def = [];
+  metodProcessFamily(
+    familyTitle,
+    familyDatasets,
+    inheritedIndexFamily,
+    checkFamily,
+    checkProduct,
+    familyDatasetDef,
+  ) {
     var datasets = [];
-    var index = 0;
     var familyId = familyTitle.replace(/\s+/g, '');
-    var inheritedIndexFamily = inheritedIndex + '_' + familyId;
-    checkFamily = 'map_family_' + inheritedIndexFamily;
-    var checkProduct = 'map_product_' + inheritedIndex;
     var familyTitleName = '';
+
     this.tax.tree.forEach((element) => {
       element.children.forEach((element) => {
         if (element.key === familyTitle) {
@@ -1427,27 +1480,16 @@ class MenuWidget extends React.Component {
         }
       });
     });
-    if (family && Array.isArray(family)) {
-      for (var i in family) {
-        if (family[i]) {
-          datasets.push(
-            this.metodProcessDataset(
-              family[i],
-              index,
-              inheritedIndex,
-              checkFamily,
-            ),
-          );
-          index++;
-        }
-      }
+
+    familyDatasets.forEach((dataset) => {
+      datasets.push(dataset);
+    });
+
+    if (!familyDatasetDef.length && familyDatasets.length > 0) {
+      var idDatasetB = 'map_dataset_' + inheritedIndexFamily + '_0';
+      familyDatasetDef.push(idDatasetB);
     }
 
-    // Empty vector, add the first dataset
-    if (!dataset_def.length) {
-      var idDatasetB = 'map_dataset_' + inheritedIndexFamily + '_0';
-      dataset_def.push(idDatasetB);
-    }
     let style = this.props.download ? { display: 'none' } : {};
 
     return (
@@ -1482,9 +1524,9 @@ class MenuWidget extends React.Component {
                   value="name"
                   className="ccl-checkbox ccl-required ccl-form-check-input"
                   key={'h' + familyId}
-                  defcheck={dataset_def}
+                  defcheck={familyDatasetDef}
                   onChange={(e) =>
-                    this.toggleProduct(e.target.checked, checkProduct, e)
+                    this.toggleFamily(e.target.checked, checkFamily, e)
                   }
                 ></input>
                 <label
@@ -1493,19 +1535,7 @@ class MenuWidget extends React.Component {
                   key={'f' + familyId}
                 >
                   <legend className="ccl-form-legend">
-                    {
-                      /* {description ? (
-                      <Popup
-                        trigger={<span>{familyTitle}</span>}
-                        content={description}
-                        basic
-                        className="custom"
-                        style={{ transform: 'translateX(-4rem)' }}
-                      />
-                    ) : (*/
-                      <span>{familyTitleName}</span>
-                      /*)} */
-                    }
+                    {<span>{familyTitleName}</span>}
                   </legend>
                 </label>
               </div>
@@ -2267,7 +2297,6 @@ class MenuWidget extends React.Component {
 
         this.saveCheckedLayer(layerId);
 
-        // Update state to include the new layer, which will trigger componentDidUpdate
         this.setState((prevState) => {
           const updatedLayers = [
             ...prevState.wmsUserServiceLayers,
@@ -2867,9 +2896,10 @@ class MenuWidget extends React.Component {
         ? true
         : false;
       if (group) {
-        elem.title = isMapServer
-          ? this.layers[elem.id].DatasetTitle
-          : this.getLayerTitle(this.layers[elem.id]);
+        elem.title =
+          this.layers[elem.id].type === 'map-image'
+            ? this.layers[elem.id].DatasetTitle
+            : this.getLayerTitle(this.layers[elem.id]);
         let groupLayers = this.getGroupLayers(group);
         if (groupLayers.length > 0 && groupLayers[0] in this.activeLayersJSON) {
           elem.hide = isMapServer;
@@ -3146,7 +3176,18 @@ class MenuWidget extends React.Component {
     if (value) {
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
-        layerChecks.push(selector);
+        if (selector) {
+          const layer = this.layers[splitdefCheck[i]];
+          if (
+            layer?.url?.toLowerCase().includes('/rest/') &&
+            layer?.type === 'map-image'
+          ) {
+            layerChecks.push(selector);
+            break;
+          } else {
+            layerChecks.push(selector);
+          }
+        }
       }
     } else {
       layerChecks = document.querySelectorAll(`[parentid=${id}]`);
@@ -3189,6 +3230,29 @@ class MenuWidget extends React.Component {
     });
   }
 
+  toggleFamily(value, id, element) {
+    let familyDefCheck = element.target.getAttribute('defcheck');
+    let splitdefCheck = familyDefCheck.split(',');
+
+    let datasetChecks = [];
+    let selector = [];
+
+    if (value) {
+      for (let i = 0; i < splitdefCheck.length; i++) {
+        selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
+        datasetChecks.push(selector);
+      }
+    } else {
+      datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
+    }
+
+    datasetChecks.forEach((element) => {
+      if (element) {
+        element.checked = value;
+        this.toggleDataset(value, element.id, element);
+      }
+    });
+  }
   /**
    * Method to toggle dropdown content (datasets and layers)
    * @param {*} e
