@@ -1290,9 +1290,14 @@ class MenuWidget extends React.Component {
           this.DatasetFamilies[dataset.FamilyTitle].push(dataset);
         } else {
           if (this.filtersApplied) {
-            dataset_def = document
+            const defcheckValue = document
               .querySelector('#' + checkProduct)
               ?.getAttribute('defcheck');
+            if (defcheckValue) {
+              dataset_def = defcheckValue
+                .split(',')
+                .filter((id) => id.trim() !== '');
+            }
           } else if (
             dataset &&
             dataset.Default_active === true &&
