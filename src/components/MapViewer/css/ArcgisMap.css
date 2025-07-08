@@ -468,6 +468,75 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   color: red;
   font-size: 15px;
 }
+
+.coordinateWindow {
+  position: absolute;
+  right: 23rem;
+  bottom: 2rem;
+  display: none;
+  width: 23rem;
+  height: 13rem;
+  background-color: white;
+}
+
+.coordinateHeader {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #a0b128;
+  color: white;
+}
+
+.closeCoordinates {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0.2rem;
+  margin-right: 0.2rem;
+}
+
+.closeCoordinates:hover {
+  background-color: #7c8921;
+}
+
+.coordinateContainer {
+  display: block;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  margin-top: 1rem;
+}
+
+.coordinateSubContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 2rem;
+  margin-right: 0.5rem;
+  margin-left: 0.3rem;
+}
+
+.coordinateSubContainerTitle {
+  width: 1rem;
+}
+
+.menu-search-button-coordinatess {
+  padding: 0.2rem;
+  padding-right: 0.7rem;
+  padding-left: 0.7rem;
+  border: none;
+  margin-top: 1.5rem;
+  margin-left: 8.5rem;
+  background-color: #a0b128;
+  color: white;
+}
+
+.coordinateInput {
+  width: 6rem;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #a0b128 !important;
+  margin-left: 0.5rem;
+}
+
 /* WMS Upload */
 div.upload-container.esri-component
   > div.right-panel
