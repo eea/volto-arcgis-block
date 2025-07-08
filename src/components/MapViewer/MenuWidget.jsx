@@ -49,7 +49,7 @@ export const AddCartItem = ({
     let check = document.querySelector('.area-panel input:checked')?.value;
     let fileUpload = sessionStorage.getItem('fileUploadLayer') ? true : false;
     let area = {};
-    if (check === 'area' || fileUpload) {
+    if (check === 'area' || fileUpload || check === 'coordinates') {
       let graphics = mapViewer.view.graphics;
       if (graphics.length === 0) {
         area = '';
@@ -100,7 +100,7 @@ export const AddCartItem = ({
     let isMapServer = dataset?.ViewService?.toLowerCase().endsWith('/mapserver')
       ? true
       : false;
-    if (check === 'area' || fileUpload) {
+    if (check === 'area' || fileUpload || check === 'coordinates') {
       areaExtent = new Extent({
         xmin: Math.min(areaData?.end?.x, areaData?.origin?.x),
         xmax: Math.max(areaData?.end?.x, areaData?.origin?.x),

@@ -230,6 +230,11 @@ class AreaWidget extends React.Component {
       });
       this.props.uploadFileHandler(true);
     }
+    if (id === 'coordinates') {
+      document.querySelector('.coordinateWindow').style.display = 'block';
+    } else {
+      document.querySelector('.coordinateWindow').style.display = 'none';
+    }
   }
   nuts0handler(e) {
     this.loadNutsService(e.target.value, [0]);
@@ -986,6 +991,91 @@ class AreaWidget extends React.Component {
     });
     this.nutsRadioButton(event.target.value);
   }
+  addCoordinates() {
+    this.clearWidget();
+    let pointNorth = !isNaN(document.getElementById('menu-north').value)
+      ? Number(document.getElementById('menu-north').value)
+      : 0;
+    let pointSouth = !isNaN(document.getElementById('menu-south').value)
+      ? Number(document.getElementById('menu-south').value)
+      : 0;
+    let pointEast = !isNaN(document.getElementById('menu-east').value)
+      ? Number(document.getElementById('menu-east').value)
+      : 0;
+    let pointWest = !isNaN(document.getElementById('menu-west').value)
+      ? Number(document.getElementById('menu-west').value)
+      : 0;
+    let pointNE = [pointNorth, pointEast];
+    let pointSW = [pointSouth, pointWest];
+    var fillSymbol = {
+      type: 'simple-fill',
+      color: [255, 255, 255, 0.5],
+      outline: {
+        color: [0, 0, 0],
+        width: 1,
+      },
+    };
+    let extentGraphic = new Graphic({
+      geometry: new Extent({
+        xmin: Math.min(pointNE[1], pointSW[1]),
+        xmax: Math.max(pointNE[1], pointSW[1]),
+        ymin: Math.min(pointNE[0], pointSW[0]),
+        ymax: Math.max(pointNE[0], pointSW[0]),
+        spatialReference: { wkid: 4326 },
+      }),
+      symbol: fillSymbol,
+    });
+    let outSpatialReference = new SpatialReference({
+      wkid: 102100,
+    });
+    let graphicProjection = projection.project(
+      extentGraphic.geometry,
+      outSpatialReference,
+    );
+
+    if (extentGraphic && this.checkExtent(graphicProjection)) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fullDataset',
+      });
+      this.props.uploadFileHandler(true);
+    } else {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'download',
+      });
+      this.props.uploadFileHandler(true);
+    }
+    this.props.updateArea({
+      origin: {
+        x: extentGraphic.geometry.xmin,
+        y: extentGraphic.geometry.ymin,
+      },
+      end: { x: extentGraphic.geometry.xmax, y: extentGraphic.geometry.ymax },
+    });
+    this.props.view.graphics.add(extentGraphic);
+  }
+  openCoordinates(event) {
+    this.clearWidget();
+    this.nutsRadioButton(event.target.value);
+  }
+  closeCoordinates() {
+    if (
+      document.querySelector('.coordinateContainer').style.display === 'none'
+    ) {
+      document.querySelector('.coordinateContainer').style.display = 'block';
+      document.querySelector('.coordinateWindow').style.height = '13rem';
+      document
+        .querySelector('.closeCoordinates')
+        .classList.replace('esri-icon-up-arrow', 'esri-icon-close');
+    } else {
+      document.querySelector('.coordinateContainer').style.display = 'none';
+      document.querySelector('.coordinateWindow').style.height = '2rem';
+      document
+        .querySelector('.closeCoordinates')
+        .classList.replace('esri-icon-close', 'esri-icon-up-arrow');
+    }
+  }
   clearWidget() {
     window.document.querySelector('.pan-container').style.display = 'none';
     this.props.mapViewer.view.popup.close();
@@ -1272,7 +1362,7 @@ class AreaWidget extends React.Component {
                   </fieldset>
                 </div>
                 <div className="area-header">
-                  Area selection options for custom download:
+                  Area selection for custom download:
                 </div>
                 <div className="area-header2">
                   <div className="area-dot">·</div>
@@ -1436,6 +1526,27 @@ class AreaWidget extends React.Component {
                         </label>
                       </div>
                     </div>
+                    <div className="ccl-form-group">
+                      <div className="rectangle-block">
+                        <div className="area-dot">·</div>
+                        <input
+                          type="radio"
+                          id="download_area_select_coordinates"
+                          name="downloadAreaSelect"
+                          value="coordinates"
+                          className="ccl-radio ccl-required ccl-form-check-input area-radio"
+                          onClick={this.openCoordinates.bind(this)}
+                        ></input>
+                        <label
+                          className="ccl-form-radio-label"
+                          htmlFor="download_area_select_coordinates"
+                        >
+                          <span className="coordinates-header">
+                            Add coordinates
+                          </span>
+                        </label>
+                      </div>
+                    </div>
                   </fieldset>
                 </div>
                 <div className="area-header2">
@@ -1461,9 +1572,7 @@ class AreaWidget extends React.Component {
                   >
                     <div className="field">
                       <label className="file-upload">
-                        <span>
-                          File formats supported: shp(zip), geojson, CSV
-                        </span>
+                        <span>Valid formats: shp, geojson, CSV</span>
                         <input
                           type="file"
                           name="file"
@@ -1628,6 +1737,85 @@ class AreaWidget extends React.Component {
               </div>
             </div>
           )}
+        </div>
+        <div className="coordinateWindow">
+          <div className="coordinateHeader">
+            Add new coordinates
+            <div
+              className="esri-icon-close esri-interactive closeCoordinates"
+              onClick={this.closeCoordinates.bind(this)}
+              onKeyDown={this.closeCoordinates.bind(this)}
+              tabIndex="0"
+              role="button"
+            ></div>
+          </div>
+          <div className="coordinateContainer">
+            <div className="coordinateSubContainer">
+              <div className="coordinateSubContainerTitle">NE</div>
+              <div>
+                Lat:
+                <input
+                  type="text"
+                  id="menu-north"
+                  maxLength="9"
+                  placeholder="00.000000"
+                  className="coordinateInput"
+                />
+              </div>
+              <div>
+                Lon:
+                <input
+                  type="text"
+                  id="menu-east"
+                  maxLength="9"
+                  placeholder="00.000000"
+                  className="coordinateInput"
+                />
+              </div>
+            </div>
+            <div className="coordinateSubContainer">
+              <div className="coordinateSubContainerTitle">SW</div>
+              <div>
+                Lat:
+                <input
+                  type="text"
+                  id="menu-south"
+                  maxLength="9"
+                  placeholder="00.000000"
+                  className="coordinateInput"
+                />
+              </div>
+              <div>
+                Lon:
+                <input
+                  type="text"
+                  id="menu-west"
+                  maxLength="9"
+                  placeholder="00.000000"
+                  className="coordinateInput"
+                />
+              </div>
+            </div>
+            <button
+              aria-label="Search"
+              className="button menu-search-button-coordinatess"
+              onClick={() => this.addCoordinates()}
+              onKeyDown={(e) => {
+                if (
+                  !e.altKey &&
+                  e.code !== 'Tab' &&
+                  !e.ctrlKey &&
+                  e.code !== 'Delete' &&
+                  !e.shiftKey &&
+                  !e.code.startsWith('F')
+                ) {
+                  this.addCoordinates();
+                }
+              }}
+            >
+              Add this area to the map
+            </button>
+          </div>
         </div>
       </>
     );
