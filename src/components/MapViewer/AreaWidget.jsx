@@ -1032,7 +1032,6 @@ class AreaWidget extends React.Component {
       extentGraphic.geometry,
       outSpatialReference,
     );
-
     if (extentGraphic && this.checkExtent(graphicProjection)) {
       this.setState({
         showInfoPopup: true,
