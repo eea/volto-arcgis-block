@@ -870,7 +870,10 @@ class AreaWidget extends React.Component {
   checkExtent(extent) {
     const areaLimit = this.mapviewer_config.Components[0].Products[0]
       .Datasets[0].DownloadLimitAreaExtent;
-    if (extent.width * extent.height > areaLimit) {
+    if (
+      extent.width * extent.height > areaLimit ||
+      extent.width * extent.height === 0
+    ) {
       return true;
     } else {
       return false;
@@ -993,20 +996,32 @@ class AreaWidget extends React.Component {
   }
   addCoordinates() {
     this.clearWidget();
-    let pointNorth = !isNaN(document.getElementById('menu-north').value)
-      ? Number(document.getElementById('menu-north').value)
-      : 0;
-    let pointSouth = !isNaN(document.getElementById('menu-south').value)
-      ? Number(document.getElementById('menu-south').value)
-      : 0;
-    let pointEast = !isNaN(document.getElementById('menu-east').value)
-      ? Number(document.getElementById('menu-east').value)
-      : 0;
-    let pointWest = !isNaN(document.getElementById('menu-west').value)
-      ? Number(document.getElementById('menu-west').value)
-      : 0;
-    let pointNE = [pointNorth, pointEast];
-    let pointSW = [pointSouth, pointWest];
+    let pointNorth = document.getElementById('menu-north');
+    if (pointNorth.value > 90) {
+      pointNorth.value = 90;
+    } else if (pointNorth.value < -90) {
+      pointNorth.value = -90;
+    }
+    let pointSouth = document.getElementById('menu-south');
+    if (pointSouth.value > 90) {
+      pointSouth.value = 90;
+    } else if (pointSouth.value < -90) {
+      pointSouth.value = -90;
+    }
+    let pointEast = document.getElementById('menu-east');
+    if (pointEast.value > 180) {
+      pointEast.value = 180;
+    } else if (pointEast.value < -180) {
+      pointEast.value = -180;
+    }
+    let pointWest = document.getElementById('menu-west');
+    if (pointWest.value > 180) {
+      pointWest.value = 180;
+    } else if (pointWest.value < -180) {
+      pointWest.value = -180;
+    }
+    let pointNW = [pointNorth.value, pointWest.value];
+    let pointSE = [pointSouth.value, pointEast.value];
     var fillSymbol = {
       type: 'simple-fill',
       color: [255, 255, 255, 0.5],
@@ -1017,10 +1032,10 @@ class AreaWidget extends React.Component {
     };
     let extentGraphic = new Graphic({
       geometry: new Extent({
-        xmin: Math.min(pointNE[1], pointSW[1]),
-        xmax: Math.max(pointNE[1], pointSW[1]),
-        ymin: Math.min(pointNE[0], pointSW[0]),
-        ymax: Math.max(pointNE[0], pointSW[0]),
+        xmin: Math.min(pointNW[1], pointSE[1]),
+        xmax: Math.max(pointNW[1], pointSE[1]),
+        ymin: Math.min(pointNW[0], pointSE[0]),
+        ymax: Math.max(pointNW[0], pointSE[0]),
         spatialReference: { wkid: 4326 },
       }),
       symbol: fillSymbol,
@@ -1048,9 +1063,9 @@ class AreaWidget extends React.Component {
     this.props.updateArea({
       origin: {
         x: extentGraphic.geometry.xmin,
-        y: extentGraphic.geometry.ymin,
+        y: extentGraphic.geometry.ymax,
       },
-      end: { x: extentGraphic.geometry.xmax, y: extentGraphic.geometry.ymax },
+      end: { x: extentGraphic.geometry.xmax, y: extentGraphic.geometry.ymin },
     });
     this.props.view.graphics.add(extentGraphic);
   }
@@ -1750,13 +1765,14 @@ class AreaWidget extends React.Component {
           </div>
           <div className="coordinateContainer">
             <div className="coordinateSubContainer">
-              <div className="coordinateSubContainerTitle">NE</div>
+              <div className="coordinateSubContainerTitle">NW</div>
               <div>
                 Lat:
                 <input
-                  type="text"
+                  type="number"
                   id="menu-north"
-                  maxLength="9"
+                  min="-90"
+                  max="90"
                   placeholder="00.000000"
                   className="coordinateInput"
                 />
@@ -1764,22 +1780,24 @@ class AreaWidget extends React.Component {
               <div>
                 Lon:
                 <input
-                  type="text"
-                  id="menu-east"
-                  maxLength="9"
+                  type="number"
+                  id="menu-west"
+                  min="-180"
+                  max="180"
                   placeholder="00.000000"
                   className="coordinateInput"
                 />
               </div>
             </div>
             <div className="coordinateSubContainer">
-              <div className="coordinateSubContainerTitle">SW</div>
+              <div className="coordinateSubContainerTitle">SE</div>
               <div>
                 Lat:
                 <input
-                  type="text"
+                  type="number"
                   id="menu-south"
-                  maxLength="9"
+                  min="-90"
+                  max="90"
                   placeholder="00.000000"
                   className="coordinateInput"
                 />
@@ -1787,9 +1805,10 @@ class AreaWidget extends React.Component {
               <div>
                 Lon:
                 <input
-                  type="text"
-                  id="menu-west"
-                  maxLength="9"
+                  type="number"
+                  id="menu-east"
+                  min="-180"
+                  max="180"
                   placeholder="00.000000"
                   className="coordinateInput"
                 />

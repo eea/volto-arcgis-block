@@ -535,6 +535,7 @@ label.ccl-form-radio-label span.nuts-menu-icon {
   border-style: solid;
   border-color: #a0b128 !important;
   margin-left: 0.5rem;
+  outline: none;
 }
 
 /* WMS Upload */
