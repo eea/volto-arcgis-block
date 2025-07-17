@@ -155,6 +155,7 @@ class AreaWidget extends React.Component {
       });
       this.props.uploadFileHandler(true);
       this.clearWidget();
+      document.querySelector('.coordinateWindow').style.display = 'none';
       this.removeFileUploadedLayer();
       this.container.current.querySelector(
         '#download_area_select_nuts0',
@@ -234,6 +235,18 @@ class AreaWidget extends React.Component {
       document.querySelector('.coordinateWindow').style.display = 'block';
     } else {
       document.querySelector('.coordinateWindow').style.display = 'none';
+      if (document.getElementById('menu-north')) {
+        document.getElementById('menu-north').value = null;
+      }
+      if (document.getElementById('menu-south')) {
+        document.getElementById('menu-south').value = null;
+      }
+      if (document.getElementById('menu-east')) {
+        document.getElementById('menu-east').value = null;
+      }
+      if (document.getElementById('menu-west')) {
+        document.getElementById('menu-west').value = null;
+      }
     }
   }
   nuts0handler(e) {
@@ -1059,6 +1072,7 @@ class AreaWidget extends React.Component {
         infoPopupType: 'download',
       });
       this.props.uploadFileHandler(true);
+      this.closeCoordinates();
     }
     this.props.updateArea({
       origin: {
