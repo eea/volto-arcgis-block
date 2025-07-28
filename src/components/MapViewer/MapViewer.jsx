@@ -37,7 +37,9 @@ const CheckLanguage = () => {
 const UserStorageManager = ({ children, onStorageManaged }) => {
   const { user_id, isLoggedIn } = useCartState();
   const [storageManaged, setStorageManaged] = React.useState(false);
-  const [previousLoginState, setPreviousLoginState] = React.useState(isLoggedIn);
+  const [previousLoginState, setPreviousLoginState] = React.useState(
+    isLoggedIn,
+  );
 
   const getSessionStorageContents = () => {
     const sessionData = {};
