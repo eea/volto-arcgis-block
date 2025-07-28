@@ -34,6 +34,75 @@ const CheckLanguage = () => {
   return null;
 };
 
+const UserStorageManager = ({ children, onStorageManaged }) => {
+  const { user_id, isLoggedIn } = useCartState();
+  const [storageManaged, setStorageManaged] = React.useState(false);
+  const [previousLoginState, setPreviousLoginState] = React.useState(isLoggedIn);
+
+  const getSessionStorageContents = () => {
+    const sessionData = {};
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      const value = sessionStorage.getItem(key);
+      try {
+        sessionData[key] = JSON.parse(value);
+      } catch (e) {
+        sessionData[key] = value;
+      }
+    }
+    return sessionData;
+  };
+
+  React.useEffect(() => {
+    if (!storageManaged) {
+      if (isLoggedIn && user_id) {
+        const userStorageKey = `user_${user_id}`;
+        const userLocalData = localStorage.getItem(userStorageKey);
+
+        if (userLocalData) {
+          sessionStorage.clear();
+          const parsedUserData = JSON.parse(userLocalData);
+          Object.keys(parsedUserData).forEach((key) => {
+            sessionStorage.setItem(
+              key,
+              typeof parsedUserData[key] === 'object'
+                ? JSON.stringify(parsedUserData[key])
+                : parsedUserData[key],
+            );
+          });
+          console.log('user local storage data set in session storage');
+          console.log('Session storage contents:', getSessionStorageContents());
+        } else {
+          const currentSessionData = getSessionStorageContents();
+          localStorage.setItem(
+            userStorageKey,
+            JSON.stringify(currentSessionData),
+          );
+        }
+      } else if (
+        !isLoggedIn &&
+        (user_id === undefined || user_id === null || user_id === '')
+      ) {
+        sessionStorage.clear();
+      }
+
+      setStorageManaged(true);
+      setPreviousLoginState(isLoggedIn);
+      if (onStorageManaged) onStorageManaged();
+    }
+  }, [isLoggedIn, user_id, storageManaged, onStorageManaged]);
+
+  React.useEffect(() => {
+    if (storageManaged && previousLoginState && !isLoggedIn) {
+      sessionStorage.clear();
+      console.log('User logged out, session storage cleared');
+    }
+    setPreviousLoginState(isLoggedIn);
+  }, [isLoggedIn, storageManaged, previousLoginState]);
+
+  return storageManaged ? children : null;
+};
+
 class MapViewer extends React.Component {
   /**
    * This method does the creation of the main component
@@ -561,22 +630,24 @@ class MapViewer extends React.Component {
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
-            {this.appLanguage()}
-            {this.renderBasemap()}
-            {this.renderLegend()}
-            {this.renderMeasurement()}
-            {this.renderPrint()}
-            {this.renderSwipe()}
-            {this.renderArea()}
-            {this.renderPan()}
-            {this.renderScale()}
-            {this.renderInfo()}
-            {this.renderHotspot()}
-            {/*this.renderMenu()*/}
-            {/*this.renderBookmark()*/}
-            <CheckUserID reference={this} />
-            {this.renderLoadingSpinner()}
-            {this.renderUploadService()}
+            <UserStorageManager>
+              {this.appLanguage()}
+              {this.renderBasemap()}
+              {this.renderLegend()}
+              {this.renderMeasurement()}
+              {this.renderPrint()}
+              {this.renderSwipe()}
+              {this.renderArea()}
+              {this.renderPan()}
+              {this.renderScale()}
+              {this.renderInfo()}
+              {this.renderHotspot()}
+              {/*this.renderMenu()*/}
+              {/*this.renderBookmark()*/}
+              <CheckUserID reference={this} />
+              {this.renderLoadingSpinner()}
+              {this.renderUploadService()}
+            </UserStorageManager>
           </div>
         </div>
       );
@@ -607,7 +678,7 @@ export const CheckLogin = ({ reference }) => {
   );
 };
 export const CheckUserID = ({ reference }) => {
-  let { user_id } = useCartState();
+  let { user_id, isLoggedIn } = useCartState();
 
   return (
     <>
@@ -653,6 +724,7 @@ export const CheckUserID = ({ reference }) => {
             onServiceChange={reference.serviceChangeHandler}
             uploadFileErrorHandler={reference.uploadFileErrorHandler}
             userID={user_id}
+            isLoggedIn={isLoggedIn}
             getTaxonomy={reference.getTaxonomy}
             tax={reference.tax}
           />
