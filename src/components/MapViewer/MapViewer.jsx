@@ -423,6 +423,7 @@ class MapViewer extends React.Component {
 
   componentWillUnmount() {
     // clean up
+    console.log('MapViewer unmounting...');
     if (this.view) {
       this.view.container = null;
       this.view.destroy();
