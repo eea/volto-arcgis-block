@@ -156,6 +156,11 @@ class AreaWidget extends React.Component {
       this.props.uploadFileHandler(true);
       this.clearWidget();
       document.querySelector('.coordinateWindow').style.display = 'none';
+      document.querySelector('.coordinateContainer').style.display = 'block';
+      document.querySelector('.coordinateWindow').style.height = '13rem';
+      document
+        .querySelector('.closeCoordinates')
+        .classList.replace('esri-icon-up-arrow', 'esri-icon-close');
       this.removeFileUploadedLayer();
       this.container.current.querySelector(
         '#download_area_select_nuts0',
@@ -235,6 +240,11 @@ class AreaWidget extends React.Component {
       document.querySelector('.coordinateWindow').style.display = 'block';
     } else {
       document.querySelector('.coordinateWindow').style.display = 'none';
+      document.querySelector('.coordinateContainer').style.display = 'block';
+      document.querySelector('.coordinateWindow').style.height = '13rem';
+      document
+        .querySelector('.closeCoordinates')
+        .classList.replace('esri-icon-up-arrow', 'esri-icon-close');
       if (document.getElementById('menu-north')) {
         document.getElementById('menu-north').value = null;
       }
@@ -1009,79 +1019,93 @@ class AreaWidget extends React.Component {
   }
   addCoordinates() {
     this.clearWidget();
+    let valid = true;
     let pointNorth = document.getElementById('menu-north');
-    if (pointNorth.value > 90) {
-      pointNorth.value = 90;
-    } else if (pointNorth.value < -90) {
-      pointNorth.value = -90;
+    if (
+      pointNorth.value > 90 ||
+      pointNorth.value < -90 ||
+      pointNorth.value == null
+    ) {
+      valid = false;
     }
     let pointSouth = document.getElementById('menu-south');
-    if (pointSouth.value > 90) {
-      pointSouth.value = 90;
-    } else if (pointSouth.value < -90) {
-      pointSouth.value = -90;
+    if (
+      pointSouth.value > 90 ||
+      pointSouth.value < -90 ||
+      pointSouth.value == null
+    ) {
+      valid = false;
     }
     let pointEast = document.getElementById('menu-east');
-    if (pointEast.value > 180) {
-      pointEast.value = 180;
-    } else if (pointEast.value < -180) {
-      pointEast.value = -180;
+    if (
+      pointEast.value > 180 ||
+      pointEast.value < -180 ||
+      pointEast.value == null
+    ) {
+      valid = false;
     }
     let pointWest = document.getElementById('menu-west');
-    if (pointWest.value > 180) {
-      pointWest.value = 180;
-    } else if (pointWest.value < -180) {
-      pointWest.value = -180;
+    if (
+      pointWest.value > 180 ||
+      pointWest.value < -180 ||
+      pointWest.value == null
+    ) {
+      valid = false;
     }
-    let pointNW = [pointNorth.value, pointWest.value];
-    let pointSE = [pointSouth.value, pointEast.value];
-    var fillSymbol = {
-      type: 'simple-fill',
-      color: [255, 255, 255, 0.5],
-      outline: {
-        color: [0, 0, 0],
-        width: 1,
-      },
-    };
-    let extentGraphic = new Graphic({
-      geometry: new Extent({
-        xmin: Math.min(pointNW[1], pointSE[1]),
-        xmax: Math.max(pointNW[1], pointSE[1]),
-        ymin: Math.min(pointNW[0], pointSE[0]),
-        ymax: Math.max(pointNW[0], pointSE[0]),
-        spatialReference: { wkid: 4326 },
-      }),
-      symbol: fillSymbol,
-    });
-    let outSpatialReference = new SpatialReference({
-      wkid: 102100,
-    });
-    let graphicProjection = projection.project(
-      extentGraphic.geometry,
-      outSpatialReference,
-    );
-    if (extentGraphic && this.checkExtent(graphicProjection)) {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'fullDataset',
+    if (valid) {
+      let pointNW = [pointNorth.value, pointWest.value];
+      let pointSE = [pointSouth.value, pointEast.value];
+      var fillSymbol = {
+        type: 'simple-fill',
+        color: [255, 255, 255, 0.5],
+        outline: {
+          color: [0, 0, 0],
+          width: 1,
+        },
+      };
+      let extentGraphic = new Graphic({
+        geometry: new Extent({
+          xmin: Math.min(pointNW[1], pointSE[1]),
+          xmax: Math.max(pointNW[1], pointSE[1]),
+          ymin: Math.min(pointNW[0], pointSE[0]),
+          ymax: Math.max(pointNW[0], pointSE[0]),
+          spatialReference: { wkid: 4326 },
+        }),
+        symbol: fillSymbol,
       });
-      this.props.uploadFileHandler(true);
+      let outSpatialReference = new SpatialReference({
+        wkid: 102100,
+      });
+      let graphicProjection = projection.project(
+        extentGraphic.geometry,
+        outSpatialReference,
+      );
+      if (this.checkExtent(graphicProjection)) {
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'fullDataset',
+        });
+      } else {
+        this.setState({
+          showInfoPopup: true,
+          infoPopupType: 'download',
+        });
+        this.closeCoordinates();
+      }
+      this.props.updateArea({
+        origin: {
+          x: extentGraphic.geometry.xmin,
+          y: extentGraphic.geometry.ymax,
+        },
+        end: { x: extentGraphic.geometry.xmax, y: extentGraphic.geometry.ymin },
+      });
+      this.props.view.graphics.add(extentGraphic);
     } else {
       this.setState({
         showInfoPopup: true,
-        infoPopupType: 'download',
+        infoPopupType: 'invalidCoordinates',
       });
-      this.props.uploadFileHandler(true);
-      this.closeCoordinates();
     }
-    this.props.updateArea({
-      origin: {
-        x: extentGraphic.geometry.xmin,
-        y: extentGraphic.geometry.ymax,
-      },
-      end: { x: extentGraphic.geometry.xmax, y: extentGraphic.geometry.ymin },
-    });
-    this.props.view.graphics.add(extentGraphic);
   }
   openCoordinates(event) {
     this.clearWidget();
@@ -1758,6 +1782,16 @@ class AreaWidget extends React.Component {
                       </span>
                       <div className="drawRectanglePopup-text">
                         The file content is not correctly formatted.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'invalidCoordinates' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Invalid coordinates.
                       </div>
                     </>
                   )}
