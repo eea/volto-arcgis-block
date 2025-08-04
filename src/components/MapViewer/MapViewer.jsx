@@ -1,4 +1,10 @@
-import React, { createRef } from 'react';
+import React, {
+  createRef,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from 'react';
 import './css/ArcgisMap.css';
 import classNames from 'classnames';
 import { loadModules, loadCss } from 'esri-loader';
@@ -28,20 +34,76 @@ import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
+
 const CheckLanguage = () => {
   const { locale } = useIntl();
   intl.setLocale(locale);
   return null;
 };
 
+// UserContext and Provider for user_id and isLoggedIn
+const UserContext = createContext({ user_id: null, isLoggedIn: false });
+const useUserContext = () => useContext(UserContext);
+
+const UserProvider = ({ children }) => {
+  const [userState, setUserState] = useState({
+    user_id: null,
+    isLoggedIn: false,
+  });
+
+  useEffect(() => {
+    const updateUserState = () => {
+      const {
+        user_id,
+        isLoggedIn,
+      } = window.eeacms_volto_clms_utils_cart_useCartState
+        ? window.eeacms_volto_clms_utils_cart_useCartState()
+        : { user_id: null, isLoggedIn: false };
+
+      setUserState((prevState) => {
+        if (
+          prevState.user_id !== user_id ||
+          prevState.isLoggedIn !== isLoggedIn
+        ) {
+          return { user_id, isLoggedIn };
+        }
+        return prevState;
+      });
+    };
+
+    updateUserState();
+
+    const interval = setInterval(updateUserState, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (userState.user_id === undefined || userState.isLoggedIn === undefined) {
+    return (
+      <div className="loading-container">
+        <div className="loading-text">Loading...</div>
+      </div>
+    );
+  }
+  return (
+    <UserContext.Provider value={userState}>{children}</UserContext.Provider>
+  );
+};
+
 const UserStorageManager = ({ children, onStorageManaged }) => {
-  const { user_id, isLoggedIn } = useCartState();
-  const [storageManaged, setStorageManaged] = React.useState(false);
-  const [previousLoginState, setPreviousLoginState] = React.useState(
+  console.log('UserStorageManager: Component rendering');
+  const { user_id, isLoggedIn } = useUserContext();
+  console.log(
+    'UserStorageManager: user_id:',
+    user_id,
+    'isLoggedIn:',
     isLoggedIn,
   );
+  const [storageManaged, setStorageManaged] = useState(false);
+  console.log('UserStorageManager: storageManaged:', storageManaged);
 
   const getSessionStorageContents = () => {
+    console.log('UserStorageManager: Getting session storage contents');
     const sessionData = {};
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
@@ -52,60 +114,106 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
         sessionData[key] = value;
       }
     }
+    console.log('UserStorageManager: Session storage contents:', sessionData);
     return sessionData;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
+    console.log(
+      'UserStorageManager: useEffect triggered with storageManaged:',
+      storageManaged,
+    );
     if (!storageManaged) {
+      console.log(
+        'UserStorageManager: Storage not managed, checking user state',
+      );
       if (isLoggedIn && user_id) {
-        const userStorageKey = `user_${user_id}`;
-        const userLocalData = localStorage.getItem(userStorageKey);
-
-        if (userLocalData) {
+        console.log('UserStorageManager: User is logged in with ID:', user_id);
+        const key = `user_${user_id}`;
+        const data = localStorage.getItem(key);
+        console.log(
+          'UserStorageManager: Found localStorage data for key:',
+          key,
+          data ? 'exists' : 'not found',
+        );
+        if (data) {
+          console.log('UserStorageManager: Restoring data from localStorage');
           sessionStorage.clear();
-          const parsedUserData = JSON.parse(userLocalData);
-          Object.keys(parsedUserData).forEach((key) => {
+          const parsed = JSON.parse(data);
+          Object.keys(parsed).forEach((k) =>
             sessionStorage.setItem(
-              key,
-              typeof parsedUserData[key] === 'object'
-                ? JSON.stringify(parsedUserData[key])
-                : parsedUserData[key],
-            );
-          });
-          console.log('user local storage data set in session storage');
-          console.log('Session storage contents:', getSessionStorageContents());
+              k,
+              typeof parsed[k] === 'object'
+                ? JSON.stringify(parsed[k])
+                : parsed[k],
+            ),
+          );
+          console.log(
+            'UserStorageManager: Restored session storage from localStorage',
+          );
         } else {
-          const currentSessionData = getSessionStorageContents();
+          console.log(
+            'UserStorageManager: No localStorage data found, saving current session storage',
+          );
           localStorage.setItem(
-            userStorageKey,
-            JSON.stringify(currentSessionData),
+            key,
+            JSON.stringify(getSessionStorageContents()),
+          );
+          console.log(
+            'UserStorageManager: Saved session storage to localStorage',
           );
         }
       } else if (
         !isLoggedIn &&
         (user_id === undefined || user_id === null || user_id === '')
       ) {
-        sessionStorage.clear();
+        console.log(
+          'UserStorageManager: User is not logged in, checking anonymous data',
+        );
+        const anon = localStorage.getItem('user_anonymous');
+        console.log(
+          'UserStorageManager: Anonymous data:',
+          anon ? 'exists' : 'not found',
+        );
+        if (anon) {
+          console.log('UserStorageManager: Restoring anonymous data');
+          sessionStorage.clear();
+          const parsed = JSON.parse(anon);
+          Object.keys(parsed).forEach((k) =>
+            sessionStorage.setItem(
+              k,
+              typeof parsed[k] === 'object'
+                ? JSON.stringify(parsed[k])
+                : parsed[k],
+            ),
+          );
+          localStorage.removeItem('user_anonymous');
+          console.log(
+            'UserStorageManager: Restored and removed anonymous data',
+          );
+        }
       }
-
+      console.log('UserStorageManager: Setting storage as managed');
       setStorageManaged(true);
-      setPreviousLoginState(isLoggedIn);
-      if (onStorageManaged) onStorageManaged();
+      if (onStorageManaged) {
+        console.log('UserStorageManager: Calling onStorageManaged callback');
+        onStorageManaged();
+      }
     }
   }, [isLoggedIn, user_id, storageManaged, onStorageManaged]);
 
-  React.useEffect(() => {
-    if (storageManaged && previousLoginState && !isLoggedIn) {
-      sessionStorage.clear();
-      console.log('User logged out, session storage cleared');
-    }
-    setPreviousLoginState(isLoggedIn);
-  }, [isLoggedIn, storageManaged, previousLoginState]);
-
-  return storageManaged ? children : null;
+  return storageManaged && user_id !== undefined && isLoggedIn !== undefined ? (
+    children
+  ) : (
+    <div className="loading-container">
+      <div className="loading-text">Loading...</div>
+    </div>
+  );
 };
 
 class MapViewer extends React.Component {
+  static contextType = UserContext;
+
   /**
    * This method does the creation of the main component
    * @param {*} props
@@ -147,6 +255,15 @@ class MapViewer extends React.Component {
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
     this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
     this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
+    this.loadingHandler = this.loadingHandler.bind(this);
+    this.hotspotDataHandler = this.hotspotDataHandler.bind(this);
+    this.mapLayersHandler = this.mapLayersHandler.bind(this);
+    this.bookmarkHandler = this.bookmarkHandler.bind(this);
+    this.prepackageHandler = this.prepackageHandler.bind(this);
+    this.uploadFileHandler = this.uploadFileHandler.bind(this);
+    this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
+    this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
+    this.cfgUrls = this.props.cfg.Urls;
     this.getTaxonomy = this.props.getTaxonomy.bind(this);
     this.tax = null;
   }
@@ -400,18 +517,33 @@ class MapViewer extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    console.log('MapViewer: componentDidUpdate called');
+    console.log('MapViewer: prevProps:', prevProps);
+    console.log('MapViewer: current props:', this.props);
+    console.log('MapViewer: prevState:', prevState);
+    console.log('MapViewer: current state:', this.state);
+
     if (
       this.props.Download ||
       (this.location &&
         (this.location.search.includes('product=') ||
           this.location.search.includes('dataset=')))
     ) {
+      console.log('MapViewer: Download or product/dataset condition met');
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
+      console.log('MapViewer: Retrieved toc_panel_scrolls:', toc_panel_scrolls);
       if (!sessionStorage.getItem('TMSLayerObj')) {
+        console.log(
+          'MapViewer: TMSLayerObj not found, clearing sessionStorage',
+        );
         sessionStorage.clear();
       }
+      console.log(
+        'MapViewer: Setting toc_panel_scrolls back to sessionStorage',
+      );
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
     }
+    console.log('MapViewer: componentDidUpdate completed');
     // if (
     //   prevState.wmsServiceUrl !== this.state.wmsServiceUrl &&
     //   this.state.wmsServiceUrl === ''
@@ -423,12 +555,61 @@ class MapViewer extends React.Component {
 
   componentWillUnmount() {
     // clean up
-    console.log('MapViewer unmounting...');
+    console.log('MapViewer: componentWillUnmount called');
+    console.log('MapViewer: Starting cleanup process');
+    const { user_id, isLoggedIn } = this.context;
+    console.log('MapViewer: Retrieved user_id:', user_id);
+    console.log('MapViewer: Retrieved isLoggedIn:', isLoggedIn);
+    console.log('MapViewer: Saving user data to localStorage');
+
+    if (sessionStorage.length === 0) {
+      console.log(
+        'MapViewer: SessionStorage is empty, skipping save to localStorage',
+      );
+    } else {
+      const saveToLocal = (key) => {
+        const data = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const k = sessionStorage.key(i);
+          data[k] = sessionStorage.getItem(k);
+        }
+        console.log('MapViewer: Current session storage contents:', data);
+        localStorage.setItem(key, JSON.stringify(data));
+        const check = JSON.parse(localStorage.getItem(key));
+        console.log(
+          'MapViewer: Saved session storage to localStorage content: ',
+          check,
+        );
+      };
+
+      if (
+        isLoggedIn &&
+        user_id !== undefined &&
+        user_id !== null &&
+        user_id !== ''
+      ) {
+        saveToLocal(`user_${user_id}`);
+        console.log(`MapViewer: User is logged in, saving to user_${user_id}`);
+      } else if (
+        !isLoggedIn &&
+        (user_id === undefined || user_id === null || user_id === '')
+      ) {
+        saveToLocal('user_anonymous');
+        console.log('MapViewer: User is anonymous, saving to user_anonymous');
+      }
+    }
+
+    sessionStorage.clear();
+    console.log('MapViewer: View exists:', !!this.view);
     if (this.view) {
+      console.log('MapViewer: Destroying view container');
       this.view.container = null;
+      console.log('MapViewer: Calling view.destroy()');
       this.view.destroy();
+      console.log('MapViewer: Deleting view reference');
       delete this.view;
     }
+    console.log('MapViewer: componentWillUnmount completed');
   }
 
   setWidgetState() {}
@@ -626,16 +807,16 @@ class MapViewer extends React.Component {
     if ('loading' in this.props.mapviewer_config) {
       return (
         <div className={this.mapClass}>
-          <div ref={this.mapdiv} className="map"></div>
+          <div ref={this.mapdiv} className="map" />
         </div>
       );
     } else {
       return (
         <div className={this.mapClass}>
           <div ref={this.mapdiv} className="map">
+            {this.appLanguage()}
+            {this.renderBasemap()}
             <UserStorageManager>
-              {this.appLanguage()}
-              {this.renderBasemap()}
               {this.renderLegend()}
               {this.renderMeasurement()}
               {this.renderPrint()}
@@ -645,10 +826,8 @@ class MapViewer extends React.Component {
               {this.renderScale()}
               {this.renderInfo()}
               {this.renderHotspot()}
-              {/*this.renderMenu()*/}
-              {/*this.renderBookmark()*/}
-              <CheckUserID reference={this} />
               {this.renderLoadingSpinner()}
+              <CheckUserID reference={this} />
               {this.renderUploadService()}
             </UserStorageManager>
           </div>
@@ -658,8 +837,10 @@ class MapViewer extends React.Component {
   }
 }
 
+// CheckLogin, CheckUserID now use useUserContext instead of useCartState
+
 export const CheckLogin = ({ reference }) => {
-  let { isLoggedIn } = useCartState();
+  const { isLoggedIn } = useUserContext();
   return (
     <>
       {isLoggedIn && (
@@ -680,9 +861,9 @@ export const CheckLogin = ({ reference }) => {
     </>
   );
 };
-export const CheckUserID = ({ reference }) => {
-  let { user_id, isLoggedIn } = useCartState();
 
+export const CheckUserID = ({ reference }) => {
+  const { user_id, isLoggedIn } = useUserContext();
   return (
     <>
       {reference.view && (
@@ -736,11 +917,16 @@ export const CheckUserID = ({ reference }) => {
     </>
   );
 };
-const mapDispatchToProps = (dispatch) => {
-  return {
-    getTaxonomy: (name) => dispatch(getTaxonomy(name)),
-  };
-};
+
+const mapDispatchToProps = (dispatch) => ({
+  getTaxonomy: (name) => dispatch(getTaxonomy(name)),
+});
+
+const MapViewerWithProvider = (props) => (
+  <UserProvider>
+    <MapViewer {...props} />
+  </UserProvider>
+);
 
 export default compose(
   connect(
@@ -751,4 +937,4 @@ export default compose(
   ),
   connect(null, mapDispatchToProps),
   injectLazyLibs('highcharts'),
-)(MapViewer, MenuWidget);
+)(MapViewerWithProvider, MenuWidget);
