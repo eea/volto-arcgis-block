@@ -148,36 +148,47 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
         },
       );
       /* eslint-enable no-console */
-      sessionStorage.clear();
       const parsed = JSON.parse(userData);
-      Object.keys(parsed).forEach((k) =>
-        sessionStorage.setItem(
-          k,
-          typeof parsed[k] === 'object' ? JSON.stringify(parsed[k]) : parsed[k],
-        ),
-      );
-      /* eslint-disable no-console */
-      console.log(
-        `[UserStorageManager:${instanceId.current}] Session storage populated with`,
-        Object.keys(parsed).length,
-        'items:',
-        Object.keys(parsed),
-      );
-      console.log(
-        `[UserStorageManager:${instanceId.current}] Session storage contents:`,
-        {
-          keys: Object.keys(parsed),
-          preview: Object.fromEntries(
-            Object.entries(parsed).map(([key, value]) => [
-              key,
-              typeof value === 'string' && value.length > 100
-                ? `${value.substring(0, 100)}...`
-                : value,
-            ]),
-          ),
-        },
-      );
-      /* eslint-enable no-console */
+      const userIdFromKey = (key) => key.replace(/^user_/, '');
+      const hydratedFor = sessionStorage.getItem('mv_hydrated_for');
+      const alreadyHasLayers = (() => {
+        try {
+          const cl = JSON.parse(
+            sessionStorage.getItem('checkedLayers') || '[]',
+          );
+          return Array.isArray(cl) && cl.length > 0;
+        } catch {
+          return false;
+        }
+      })();
+      if (hydratedFor === userIdFromKey(userKey) || alreadyHasLayers) {
+        return true;
+      }
+      Object.entries(parsed).forEach(([k, v]) => {
+        const existing = sessionStorage.getItem(k);
+        if (existing == null) {
+          sessionStorage.setItem(
+            k,
+            typeof v === 'object' ? JSON.stringify(v) : v,
+          );
+          return;
+        }
+        if (k === 'checkedLayers') {
+          try {
+            const a = JSON.parse(existing || '[]');
+            const b = typeof v === 'string' ? JSON.parse(v) : v;
+            const union = [...new Set([...(b || []), ...(a || [])])];
+            sessionStorage.setItem('checkedLayers', JSON.stringify(union));
+          } catch {}
+        } else if (k === 'visibleLayers' || k === 'layerOpacities') {
+          try {
+            const a = JSON.parse(existing || '{}');
+            const b = typeof v === 'string' ? JSON.parse(v) : v || {};
+            sessionStorage.setItem(k, JSON.stringify({ ...b, ...a }));
+          } catch {}
+        }
+      });
+      sessionStorage.setItem('mv_hydrated_for', userIdFromKey(userKey));
 
       // Mark that this instance has successfully restored data
       hasRestoredData.current = true;

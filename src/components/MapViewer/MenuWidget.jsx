@@ -2529,8 +2529,7 @@ class MenuWidget extends React.Component {
   }
 
   async loadUserServicesFromStorage() {
-    if (this.userID != null) {
-      sessionStorage.clear();
+    if (this.userID !== null) {
       try {
         const savedServices = JSON.parse(
           localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
