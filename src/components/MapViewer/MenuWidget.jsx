@@ -2318,6 +2318,7 @@ class MenuWidget extends React.Component {
         this.props.uploadFileErrorHandler();
         return;
       }
+    } else {
     }
   }
 
@@ -2435,7 +2436,7 @@ class MenuWidget extends React.Component {
   }
 
   saveUserServicesToStorage(layers) {
-    if (this.userID == null) return;
+    if (this.userID === null) return;
 
     try {
       const layersToSave = layers.map((layer) => {
@@ -2478,8 +2479,7 @@ class MenuWidget extends React.Component {
   }
 
   async loadUserServicesFromStorage() {
-    if (this.userID != null) {
-      sessionStorage.clear();
+    if (this.userID !== null) {
       try {
         const savedServices = JSON.parse(
           localStorage.getItem(USER_SERVICES_KEY + '_' + this.userID),
@@ -3362,33 +3362,24 @@ class MenuWidget extends React.Component {
       try {
         const response = await fetch(`${subLayer.url}?f=pjson`);
         if (!response.ok) {
-          //console.log('no response from server');
-          continue; // Skip this iteration on error
+          continue;
         }
-        const subLayerData = await response.json(); // Await JSON parsing
+        const subLayerData = await response.json();
         if (subLayerData === null) {
-          //console.log('no data retrieved:', subLayerData);
           continue;
         } else {
-          // Convert bounding box data to correct extent values for map view
-
           let extent = this.convertBBOXValues(subLayerData.extent);
-
-          // Store sublayer extent
-
           BBoxes[subLayerData.name] = {
             id: subLayerData.id,
             extent: extent,
           };
         }
-      } catch (error) {
-        //console.error('Error fetching sublayer:', error);
-      }
+      } catch (error) {}
     }
 
     BBoxes['dataset'] = this.convertBBOXValues(layer?.fullExtent?.extent);
 
-    return BBoxes; // Return BBoxes after all fetches are completed
+    return BBoxes;
   }
 
   parseBBOXWMS(xml) {
