@@ -2211,14 +2211,8 @@ class MenuWidget extends React.Component {
   }
 
   async handleNewMapServiceLayer(viewService) {
-    console.log(
-      'MenuWidget: handleNewMapServiceLayer called with viewService:',
-      viewService,
-    );
-
     // First, properly normalize the URL for comparison
     const normalizedViewService = viewService.trim();
-    console.log('MenuWidget: normalizedViewService:', normalizedViewService);
 
     // Check if the layer already exists in this.layers before adding
     if (
@@ -2228,7 +2222,6 @@ class MenuWidget extends React.Component {
           layer.ViewService === normalizedViewService,
       )
     ) {
-      console.log('MenuWidget: Layer already exists, showing error popup');
       // Call the uploadFileErrorHandler to show the error popup
       this.props.uploadFileErrorHandler();
       return;
@@ -2236,17 +2229,11 @@ class MenuWidget extends React.Component {
 
     // CREATE A TEMPORARY LAYER OBJECT TO EXTRACT DATA
     let resourceLayer;
-    console.log(
-      'MenuWidget: Creating temporary WMSLayer for URL:',
-      viewService,
-    );
     try {
       resourceLayer = new WMSLayer({
         url: viewService,
       });
-      console.log('MenuWidget: Temporary WMSLayer created successfully');
     } catch (error) {
-      console.log('MenuWidget: Error creating WMSLayer:', error);
       // Set a popup error message in here
       this.props.uploadFileErrorHandler();
       return;
@@ -2256,19 +2243,10 @@ class MenuWidget extends React.Component {
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
     let layerId, layerObj;
 
-    console.log('MenuWidget: Loading resourceLayer to extract data');
     await resourceLayer.load().then(() => {
-      console.log('MenuWidget: ResourceLayer loaded successfully');
       // EXTRACT DATA FOR NEW LAYER REQUEST
       let { featureInfoUrl, title } = resourceLayer;
-      console.log(
-        'MenuWidget: Extracted title:',
-        title,
-        'featureInfoUrl:',
-        featureInfoUrl,
-      );
       layerId = title.toUpperCase().replace(/ /g, '_');
-      console.log('MenuWidget: Generated layerId:', layerId);
       const constructedSublayers = resourceLayer.sublayers?.items?.map(
         (sublayer) => {
           const {
@@ -2282,12 +2260,6 @@ class MenuWidget extends React.Component {
             visible,
             legendEnabled,
           } = sublayer;
-          console.log(
-            'MenuWidget: Processing sublayer:',
-            name,
-            'title:',
-            title,
-          );
           return {
             index,
             name,
@@ -2303,11 +2275,6 @@ class MenuWidget extends React.Component {
           };
         },
       );
-      console.log(
-        'MenuWidget: Constructed sublayers:',
-        constructedSublayers?.length || 0,
-        'sublayers',
-      );
 
       layerObj = {
         url: viewService,
@@ -2319,56 +2286,39 @@ class MenuWidget extends React.Component {
         ViewService: viewService,
         LayerId: layerId,
       };
-      console.log('MenuWidget: Created layerObj:', layerObj);
       return layerObj;
     });
 
     // DESTROY THE TEMPORARY LAYER OBJECT
-    console.log('MenuWidget: Destroying temporary resourceLayer');
     resourceLayer.destroy();
     resourceLayer = null; // Important: clear the reference to the old layer
 
     const { LayerId } = layerObj;
-    console.log('MenuWidget: Final LayerId:', LayerId);
 
     // Check if the layer already exists in this.layers before adding
     if (!this.layers[LayerId]) {
-      console.log('MenuWidget: Layer does not exist, creating new layer');
       try {
         // Create and add the new layer
         this.layers[LayerId] = new WMSLayer(layerObj);
-        console.log(
-          'MenuWidget: New WMSLayer created and added to this.layers',
-        );
 
         this.saveCheckedLayer(layerId);
-        console.log('MenuWidget: Layer saved to checked layers');
 
         this.setState((prevState) => {
           const updatedLayers = [
             ...prevState.wmsUserServiceLayers,
             this.layers[LayerId],
           ];
-          console.log(
-            'MenuWidget: Updating state with new layer, total layers:',
-            updatedLayers.length,
-          );
           this.saveUserServicesToStorage(updatedLayers);
           return { wmsUserServiceLayers: updatedLayers };
         });
 
-        console.log('MenuWidget: Calling onServiceChange');
         this.props.onServiceChange();
       } catch (error) {
-        console.log('MenuWidget: Error creating final WMSLayer:', error);
         // Set a popup error message in here
         this.props.uploadFileErrorHandler();
         return;
       }
     } else {
-      console.log(
-        'MenuWidget: Layer already exists in this.layers, skipping creation',
-      );
     }
   }
 
@@ -3412,33 +3362,24 @@ class MenuWidget extends React.Component {
       try {
         const response = await fetch(`${subLayer.url}?f=pjson`);
         if (!response.ok) {
-          //console.log('no response from server');
-          continue; // Skip this iteration on error
+          continue;
         }
-        const subLayerData = await response.json(); // Await JSON parsing
+        const subLayerData = await response.json();
         if (subLayerData === null) {
-          //console.log('no data retrieved:', subLayerData);
           continue;
         } else {
-          // Convert bounding box data to correct extent values for map view
-
           let extent = this.convertBBOXValues(subLayerData.extent);
-
-          // Store sublayer extent
-
           BBoxes[subLayerData.name] = {
             id: subLayerData.id,
             extent: extent,
           };
         }
-      } catch (error) {
-        //console.error('Error fetching sublayer:', error);
-      }
+      } catch (error) {}
     }
 
     BBoxes['dataset'] = this.convertBBOXValues(layer?.fullExtent?.extent);
 
-    return BBoxes; // Return BBoxes after all fetches are completed
+    return BBoxes;
   }
 
   parseBBOXWMS(xml) {
