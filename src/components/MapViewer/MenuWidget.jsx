@@ -1093,6 +1093,7 @@ class MenuWidget extends React.Component {
               let button = familyDropdown.querySelector(
                 '.ccl-expandable__button',
               );
+              scrollPosition = familyDropdown.offsetTop;
               if (button) {
                 button.setAttribute('aria-expanded', 'true');
               }
