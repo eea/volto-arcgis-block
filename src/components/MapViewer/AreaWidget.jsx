@@ -34,6 +34,12 @@ class AreaWidget extends React.Component {
       showMapMenu: false,
       showInfoPopup: this.props.download ? true : false,
       infoPopupType: 'area',
+      coordinates: {
+        north: '',
+        south: '',
+        east: '',
+        west: '',
+      },
     };
     this.menuClass =
       'esri-icon-cursor-marquee esri-widget--button esri-widget esri-interactive';
@@ -245,18 +251,14 @@ class AreaWidget extends React.Component {
       document
         .querySelector('.closeCoordinates')
         .classList.replace('esri-icon-up-arrow', 'esri-icon-close');
-      if (document.getElementById('menu-north')) {
-        document.getElementById('menu-north').value = null;
-      }
-      if (document.getElementById('menu-south')) {
-        document.getElementById('menu-south').value = null;
-      }
-      if (document.getElementById('menu-east')) {
-        document.getElementById('menu-east').value = null;
-      }
-      if (document.getElementById('menu-west')) {
-        document.getElementById('menu-west').value = null;
-      }
+      this.setState({
+        coordinates: {
+          north: '',
+          south: '',
+          east: '',
+          west: '',
+        },
+      });
     }
   }
   nuts0handler(e) {
@@ -1020,41 +1022,45 @@ class AreaWidget extends React.Component {
   addCoordinates() {
     this.clearWidget();
     let valid = true;
-    let pointNorth = document.getElementById('menu-north');
+    let pointNorth = this.state.coordinates.north;
     if (
-      pointNorth.value > 90 ||
-      pointNorth.value < -90 ||
-      pointNorth.value == null
+      pointNorth > 90 ||
+      pointNorth < -90 ||
+      pointNorth === null ||
+      pointNorth === ''
     ) {
       valid = false;
     }
-    let pointSouth = document.getElementById('menu-south');
+    let pointSouth = this.state.coordinates.south;
     if (
-      pointSouth.value > 90 ||
-      pointSouth.value < -90 ||
-      pointSouth.value == null
+      pointSouth > 90 ||
+      pointSouth < -90 ||
+      pointSouth === null ||
+      pointSouth === ''
     ) {
       valid = false;
     }
-    let pointEast = document.getElementById('menu-east');
+    let pointEast = this.state.coordinates.east;
     if (
-      pointEast.value > 180 ||
-      pointEast.value < -180 ||
-      pointEast.value == null
+      pointEast > 180 ||
+      pointEast < -180 ||
+      pointEast === null ||
+      pointEast === ''
     ) {
       valid = false;
     }
-    let pointWest = document.getElementById('menu-west');
+    let pointWest = this.state.coordinates.west;
     if (
-      pointWest.value > 180 ||
-      pointWest.value < -180 ||
-      pointWest.value == null
+      pointWest > 180 ||
+      pointWest < -180 ||
+      pointWest === null ||
+      pointWest === ''
     ) {
       valid = false;
     }
     if (valid) {
-      let pointNW = [pointNorth.value, pointWest.value];
-      let pointSE = [pointSouth.value, pointEast.value];
+      let pointNW = [pointNorth, pointWest];
+      let pointSE = [pointSouth, pointEast];
       var fillSymbol = {
         type: 'simple-fill',
         color: [255, 255, 255, 0.5],
@@ -1107,6 +1113,17 @@ class AreaWidget extends React.Component {
       });
     }
   }
+  handleCoordinateChange = (e) => {
+    const { id, value } = e.target;
+    // id will be "menu-north", "menu-south", "menu-east", or "menu-west"
+    const key = id.replace('menu-', ''); // gives you 'north', 'south', etc.
+    this.setState((prevState) => ({
+      coordinates: {
+        ...prevState.coordinates,
+        [key]: value,
+      },
+    }));
+  };
   openCoordinates(event) {
     this.clearWidget();
     this.nutsRadioButton(event.target.value);
@@ -1823,6 +1840,8 @@ class AreaWidget extends React.Component {
                   max="90"
                   placeholder="00.000000"
                   className="coordinateInput"
+                  value={this.state.coordinates.north}
+                  onChange={this.handleCoordinateChange}
                 />
               </div>
               <div>
@@ -1834,6 +1853,8 @@ class AreaWidget extends React.Component {
                   max="180"
                   placeholder="00.000000"
                   className="coordinateInput"
+                  value={this.state.coordinates.west}
+                  onChange={this.handleCoordinateChange}
                 />
               </div>
             </div>
@@ -1848,6 +1869,8 @@ class AreaWidget extends React.Component {
                   max="90"
                   placeholder="00.000000"
                   className="coordinateInput"
+                  value={this.state.coordinates.south}
+                  onChange={this.handleCoordinateChange}
                 />
               </div>
               <div>
@@ -1859,6 +1882,8 @@ class AreaWidget extends React.Component {
                   max="180"
                   placeholder="00.000000"
                   className="coordinateInput"
+                  value={this.state.coordinates.east}
+                  onChange={this.handleCoordinateChange}
                 />
               </div>
             </div>
