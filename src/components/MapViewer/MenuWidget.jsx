@@ -2486,7 +2486,7 @@ class MenuWidget extends React.Component {
   }
 
   saveUserServicesToStorage(layers) {
-    if (this.userID == null) return;
+    if (this.userID === null) return;
 
     try {
       const layersToSave = layers.map((layer) => {

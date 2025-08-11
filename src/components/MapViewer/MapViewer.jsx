@@ -526,9 +526,13 @@ class MapViewer extends React.Component {
 
     /* eslint-disable no-console */
     console.log(`[MapViewer:${instanceId}] Saving session data:`, {
-      hasUserContext: user_id !== undefined,
+      hasUserContext:
+        user_id !== undefined && user_id !== null && user_id !== '',
       isLoggedIn,
-      userId: user_id || 'N/A',
+      userId:
+        user_id !== undefined && user_id !== null && user_id !== ''
+          ? user_id
+          : 'anonymous',
       sessionStorageLength: sessionStorage.length,
     });
     /* eslint-enable no-console */
@@ -566,20 +570,25 @@ class MapViewer extends React.Component {
       }
     };
 
-    // Save session data to appropriate localStorage key based on user state
+    // Save session data to appropriate localStorage key based on user state (always overwrite user key)
     if (
       isLoggedIn &&
       user_id !== undefined &&
       user_id !== null &&
       user_id !== ''
     ) {
+      if (localStorage.getItem(`user_${user_id}`)) {
+        /* eslint-disable no-console */
+        console.log(
+          `[MapViewer:${instanceId}] User session data already exists in localStorage`,
+        );
+        /* eslint-enable no-console */
+      }
       saveToLocal(`user_${user_id}`);
-    } else if (
-      !isLoggedIn &&
-      (user_id === undefined || user_id === null || user_id === '')
-    ) {
+    } else if (!isLoggedIn) {
       saveToLocal('user_anonymous');
     }
+    sessionStorage.clear();
   };
 
   // Handle page unload events (navigation, refresh, close)
@@ -694,6 +703,27 @@ class MapViewer extends React.Component {
     }
 
     if (Object.keys(sessionContents).length > 0) {
+      // Persist snapshot under previous user key first (if available)
+      if (prevUserId) {
+        try {
+          localStorage.setItem(
+            `user_${prevUserId}`,
+            JSON.stringify(sessionContents),
+          );
+          /* eslint-disable no-console */
+          console.log(
+            '[MapViewer] Saved session to previous user key before logout',
+          );
+          /* eslint-enable no-console */
+        } catch (error) {
+          /* eslint-disable no-console */
+          console.error(
+            '[MapViewer] Error saving previous user session on logout:',
+            error,
+          );
+          /* eslint-enable no-console */
+        }
+      }
       try {
         localStorage.setItem('user_anonymous', JSON.stringify(sessionContents));
         /* eslint-disable no-console */
@@ -1114,7 +1144,6 @@ class MapViewer extends React.Component {
     );
     /* eslint-enable no-console */
 
-    sessionStorage.clear();
     if (this.view) {
       this.view.container = null;
       this.view.destroy();
