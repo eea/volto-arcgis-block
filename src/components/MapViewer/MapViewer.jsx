@@ -97,15 +97,6 @@ const MapViewerStateMonitor = ({ children, onUserStateChange }) => {
           prevCartStateRef.current.isLoggedIn !== currentUserState.isLoggedIn;
 
         if (hasUserIdChanged || hasLoggedInChanged) {
-          /* eslint-disable no-console */
-          console.log('[MapViewerStateMonitor] User state change detected:', {
-            previous: prevCartStateRef.current,
-            current: currentUserState,
-            userIdChanged: hasUserIdChanged,
-            loggedInChanged: hasLoggedInChanged,
-          });
-          /* eslint-enable no-console */
-
           // Notify parent component of state change
           if (onUserStateChange) {
             onUserStateChange(currentUserState, prevCartStateRef.current);
@@ -137,17 +128,6 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
   const populateSessionFromUserData = (userKey) => {
     const userData = localStorage.getItem(userKey);
     if (userData) {
-      /* eslint-disable no-console */
-      console.log(
-        `[UserStorageManager:${instanceId.current}] Restoring from localStorage:`,
-        {
-          key: userKey,
-          dataPreview:
-            userData.substring(0, 100) + (userData.length > 100 ? '...' : ''),
-          dataLength: userData.length,
-        },
-      );
-      /* eslint-enable no-console */
       const parsed = JSON.parse(userData);
       const userIdFromKey = (key) => key.replace(/^user_/, '');
       const hydratedFor = sessionStorage.getItem('mv_hydrated_for');
@@ -195,12 +175,6 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
 
       return true; // Indicate successful restoration
     } else {
-      /* eslint-disable no-console */
-      console.log(
-        `[UserStorageManager:${instanceId.current}] No data found for key:`,
-        userKey,
-      );
-      /* eslint-enable no-console */
       return false;
     }
   };
@@ -225,15 +199,6 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
   // Initialization effect - handles user state readiness
   useEffect(() => {
     if (userID !== undefined && isLoggedIn !== undefined) {
-      /* eslint-disable no-console */
-      console.log(
-        `[UserStorageManager:${instanceId.current}] User state initialized:`,
-        {
-          userID,
-          isLoggedIn,
-        },
-      );
-      /* eslint-enable no-console */
       setIsInitialized(true);
     }
   }, [userID, isLoggedIn]);
@@ -246,35 +211,12 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
 
     const lockKey = `storage_lock_${userID || 'anonymous'}`;
 
-    /* eslint-disable no-console */
-    console.log(
-      `[UserStorageManager:${instanceId.current}] Component mounting with state:`,
-      {
-        isLoggedIn,
-        userID,
-        storageManaged,
-        isInitialized,
-      },
-    );
-    /* eslint-enable no-console */
-
     // Acquire lock to prevent concurrent operations
     if (!acquireStorageLock(lockKey)) {
-      /* eslint-disable no-console */
-      console.log(
-        `[UserStorageManager:${instanceId.current}] Another instance is managing storage for this user`,
-      );
-      /* eslint-enable no-console */
       return;
     }
     try {
       if (isLoggedIn === true) {
-        /* eslint-disable no-console */
-        console.log(
-          `[UserStorageManager:${instanceId.current}] Detected signed-in user, processing storage...`,
-        );
-        /* eslint-enable no-console */
-
         if (
           userID &&
           userID !== null &&
@@ -285,26 +227,8 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
           const userData = localStorage.getItem(userKey);
           const anonymousData = localStorage.getItem('user_anonymous');
 
-          /* eslint-disable no-console */
-          console.log(
-            `[UserStorageManager:${instanceId.current}] Storage analysis:`,
-            {
-              userKey,
-              hasUserData: !!userData,
-              hasAnonymousData: !!anonymousData,
-              sessionEmpty: sessionStorage.length === 0,
-              sessionLength: sessionStorage.length,
-            },
-          );
-          /* eslint-enable no-console */
-
           // Migration and restoration logic for signed-in users
           if (!userData && anonymousData) {
-            /* eslint-disable no-console */
-            console.log(
-              `[UserStorageManager:${instanceId.current}] Migrating anonymous data to signed-in user`,
-            );
-            /* eslint-enable no-console */
             // Move anonymous data to the signed-in user's localStorage key
             localStorage.setItem(userKey, anonymousData);
             // Delete the anonymous key from localStorage
@@ -312,49 +236,18 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
             // Populate sessionStorage with the migrated data from localStorage
             populateSessionFromUserData(userKey);
           } else if (userData) {
-            /* eslint-disable no-console */
-            console.log(
-              `[UserStorageManager:${instanceId.current}] Found existing user data - restoring to session storage`,
-            );
-            /* eslint-enable no-console */
             // User has existing saved data - restore it to sessionStorage
             populateSessionFromUserData(userKey);
           } else {
-            /* eslint-disable no-console */
-            console.log(
-              `[UserStorageManager:${instanceId.current}] No saved user data found - preserving current session state`,
-            );
-            /* eslint-enable no-console */
           }
           setStorageManaged(true);
         } else {
-          /* eslint-disable no-console */
-          console.log(
-            `[UserStorageManager:${instanceId.current}] valid userID unavailable: userID is ${userID}`,
-          );
-          /* eslint-enable no-console */
         }
       } else if (isLoggedIn === false) {
-        /* eslint-disable no-console */
-        console.log(
-          `[UserStorageManager:${instanceId.current}] Detected anonymous user, processing storage...`,
-        );
-        /* eslint-enable no-console */
         // Handle anonymous user session - restore anonymous data if it exists
         const anonymousKey = 'user_anonymous';
         const anonymousData = localStorage.getItem(anonymousKey);
         if (anonymousData) {
-          /* eslint-disable no-console */
-          console.log(
-            `[UserStorageManager:${instanceId.current}] Restoring anonymous data to session storage:`,
-            {
-              dataPreview:
-                anonymousData.substring(0, 100) +
-                (anonymousData.length > 100 ? '...' : ''),
-              dataLength: anonymousData.length,
-            },
-          );
-          /* eslint-enable no-console */
           sessionStorage.clear();
           const parsed = JSON.parse(anonymousData);
           Object.keys(parsed).forEach((k) =>
@@ -366,25 +259,10 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
             ),
           );
           hasRestoredData.current = true;
-          /* eslint-disable no-console */
-          console.log(
-            `[UserStorageManager:${instanceId.current}] Anonymous data restored to sessionStorage`,
-          );
-          /* eslint-enable no-console */
         } else {
-          /* eslint-disable no-console */
-          console.log(
-            `[UserStorageManager:${instanceId.current}] No anonymous data found to restore`,
-          );
-          /* eslint-enable no-console */
         }
         setStorageManaged(true);
       } else {
-        /* eslint-disable no-console */
-        console.log(
-          `[UserStorageManager:${instanceId.current}] User state does not match any processing condition - skipping storage logic`,
-        );
-        /* eslint-enable no-console */
       }
 
       if (onStorageManaged) {
@@ -403,31 +281,13 @@ const UserStorageManager = ({ children, onStorageManaged }) => {
 
   // Data-reactive effect - ensures sessionStorage mirrors localStorage whenever userData changes
   // useEffect(() => {
-  //   /* eslint-disable no-console */
-  //   console.log(
-  //     `[UserStorageManager:${instanceId.current}] Data-reactive effect triggered:`,
-  //     {
-  //       storageManaged,
-  //       userKey: userKey,
-  //       hasUserData: !!userData,
-  //       userDataLength: userData ? userData.length : 0,
-  //     },
-  //   );
-  //   /* eslint-enable no-console */
+  //
 
   //   if (storageManaged && userKey && userData) {
-  //     /* eslint-disable no-console */
-  //     console.log(
-  //       `[UserStorageManager:${instanceId.current}] Re-syncing session storage with localStorage changes`,
-  //     );
-  //     /* eslint-enable no-console */
+  //
   //     populateSessionFromUserData(userKey);
   //   } else {
-  //     /* eslint-disable no-console */
-  //     console.log(
-  //       `[UserStorageManager:${instanceId.current}] Skipping data sync - conditions not met`,
-  //     );
-  //     /* eslint-enable no-console */
+  //
   //   }
   // }, [userData, userKey, storageManaged]);
 
@@ -504,14 +364,6 @@ class MapViewer extends React.Component {
 
   // Method to handle user state changes from the monitoring wrapper
   handleUserStateChange(newUserState, previousUserState) {
-    /* eslint-disable no-console */
-    console.log('[MapViewer] Handling user state change:', {
-      newUserState,
-      previousUserState,
-      currentState: this.state.currentUserState,
-    });
-    /* eslint-enable no-console */
-
     // Update current user state in component state
     this.setState({ currentUserState: newUserState });
 
@@ -522,27 +374,9 @@ class MapViewer extends React.Component {
   // Enhanced method to save session data to localStorage with instance tracking
   saveSessionToLocalStorage = () => {
     const { user_id, isLoggedIn } = this.context;
-    const instanceId = this.instanceId || 'unknown';
-
-    /* eslint-disable no-console */
-    console.log(`[MapViewer:${instanceId}] Saving session data:`, {
-      hasUserContext:
-        user_id !== undefined && user_id !== null && user_id !== '',
-      isLoggedIn,
-      userId:
-        user_id !== undefined && user_id !== null && user_id !== ''
-          ? user_id
-          : 'anonymous',
-      sessionStorageLength: sessionStorage.length,
-    });
-    /* eslint-enable no-console */
+    //const instanceId = this.instanceId || 'unknown';
 
     if (sessionStorage.length === 0) {
-      /* eslint-disable no-console */
-      console.log(
-        `[MapViewer:${instanceId}] Skipping data save - session storage is empty`,
-      );
-      /* eslint-enable no-console */
       return;
     }
 
@@ -555,19 +389,7 @@ class MapViewer extends React.Component {
 
       try {
         localStorage.setItem(key, JSON.stringify(data));
-        /* eslint-disable no-console */
-        console.log(
-          `[MapViewer:${instanceId}] Successfully saved data to localStorage key: ${key}`,
-        );
-        /* eslint-enable no-console */
-      } catch (error) {
-        /* eslint-disable no-console */
-        console.error(
-          `[MapViewer:${instanceId}] Error saving to localStorage key ${key}:`,
-          error,
-        );
-        /* eslint-enable no-console */
-      }
+      } catch (error) {}
     };
 
     // Save session data to appropriate localStorage key based on user state (always overwrite user key)
@@ -577,13 +399,6 @@ class MapViewer extends React.Component {
       user_id !== null &&
       user_id !== ''
     ) {
-      if (localStorage.getItem(`user_${user_id}`)) {
-        /* eslint-disable no-console */
-        console.log(
-          `[MapViewer:${instanceId}] User session data already exists in localStorage`,
-        );
-        /* eslint-enable no-console */
-      }
       saveToLocal(`user_${user_id}`);
     } else if (!isLoggedIn) {
       saveToLocal('user_anonymous');
@@ -593,24 +408,12 @@ class MapViewer extends React.Component {
 
   // Handle page unload events (navigation, refresh, close)
   handlePageUnload = (event) => {
-    /* eslint-disable no-console */
-    console.log(
-      `[MapViewer:${this.instanceId}] Page unload detected, saving session data`,
-    );
-    /* eslint-enable no-console */
-
     this.saveSessionToLocalStorage();
   };
 
   // Handle visibility changes (tab switches, window minimizing)
   handleVisibilityChange = () => {
     if (document.visibilityState === 'hidden') {
-      /* eslint-disable no-console */
-      console.log(
-        `[MapViewer:${this.instanceId}] Page hidden, saving session data`,
-      );
-      /* eslint-enable no-console */
-
       this.saveSessionToLocalStorage();
     }
   };
@@ -622,15 +425,6 @@ class MapViewer extends React.Component {
       user_id: prevUserId,
       isLoggedIn: prevIsLoggedIn,
     } = previousUserState;
-
-    /* eslint-disable no-console */
-    console.log('[MapViewer] Processing session state update:', {
-      userIdChanged: prevUserId !== newUserId,
-      loginStateChanged: prevIsLoggedIn !== newIsLoggedIn,
-      loginTransition: `${prevIsLoggedIn} -> ${newIsLoggedIn}`,
-      userIdTransition: `${prevUserId} -> ${newUserId}`,
-    });
-    /* eslint-enable no-console */
 
     // Handle login/logout transitions
     if (prevIsLoggedIn !== newIsLoggedIn) {
@@ -651,18 +445,11 @@ class MapViewer extends React.Component {
 
   // Handle user login - restore saved session or preserve current session
   handleUserLogin(userId) {
-    /* eslint-disable no-console */
-    console.log('[MapViewer] User logged in:', userId);
-    /* eslint-enable no-console */
-
     // Check if user has saved data
     const userKey = `user_${userId}`;
     const userData = localStorage.getItem(userKey);
 
     if (userData) {
-      /* eslint-disable no-console */
-      console.log('[MapViewer] Restoring saved user session data');
-      /* eslint-enable no-console */
       // Restore user's saved session
       try {
         const parsed = JSON.parse(userData);
@@ -674,27 +461,14 @@ class MapViewer extends React.Component {
               : parsed[k],
           ),
         );
-      } catch (error) {
-        /* eslint-disable no-console */
-        console.error('[MapViewer] Error restoring user session:', error);
-        /* eslint-enable no-console */
-      }
+      } catch (error) {}
     } else {
-      /* eslint-disable no-console */
-      console.log(
-        '[MapViewer] No saved session found - preserving current session',
-      );
-      /* eslint-enable no-console */
       // No saved data - preserve current session state
     }
   }
 
   // Handle user logout - save current session to anonymous storage
   handleUserLogout(prevUserId) {
-    /* eslint-disable no-console */
-    console.log('[MapViewer] User logged out:', prevUserId);
-    /* eslint-enable no-console */
-
     // Save current session to anonymous storage
     const sessionContents = {};
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -710,42 +484,16 @@ class MapViewer extends React.Component {
             `user_${prevUserId}`,
             JSON.stringify(sessionContents),
           );
-          /* eslint-disable no-console */
-          console.log(
-            '[MapViewer] Saved session to previous user key before logout',
-          );
-          /* eslint-enable no-console */
-        } catch (error) {
-          /* eslint-disable no-console */
-          console.error(
-            '[MapViewer] Error saving previous user session on logout:',
-            error,
-          );
-          /* eslint-enable no-console */
-        }
+        } catch (error) {}
       }
       try {
         localStorage.setItem('user_anonymous', JSON.stringify(sessionContents));
-        /* eslint-disable no-console */
-        console.log('[MapViewer] Saved session to anonymous storage');
-        /* eslint-enable no-console */
-      } catch (error) {
-        /* eslint-disable no-console */
-        console.error('[MapViewer] Error saving anonymous session:', error);
-        /* eslint-enable no-console */
-      }
+      } catch (error) {}
     }
   }
 
   // Handle user account switching
   handleUserSwitch(prevUserId, newUserId) {
-    /* eslint-disable no-console */
-    console.log('[MapViewer] User switched accounts:', {
-      prevUserId,
-      newUserId,
-    });
-    /* eslint-enable no-console */
-
     // Save current session to previous user's storage
     if (prevUserId) {
       const sessionContents = {};
@@ -760,20 +508,7 @@ class MapViewer extends React.Component {
             `user_${prevUserId}`,
             JSON.stringify(sessionContents),
           );
-          /* eslint-disable no-console */
-          console.log(
-            '[MapViewer] Saved session for previous user:',
-            prevUserId,
-          );
-          /* eslint-enable no-console */
-        } catch (error) {
-          /* eslint-disable no-console */
-          console.error(
-            '[MapViewer] Error saving previous user session:',
-            error,
-          );
-          /* eslint-enable no-console */
-        }
+        } catch (error) {}
       }
     }
 
@@ -950,25 +685,7 @@ class MapViewer extends React.Component {
       logo: false,
     });
 
-    /* eslint-disable no-console */
-    console.log(
-      `[MapViewer:${this.instanceId}] Attempting to recover map state from sessionStorage`,
-    );
-    /* eslint-enable no-console */
-
     mapStatus = this.recoverState();
-
-    /* eslint-disable no-console */
-    console.log(`[MapViewer:${this.instanceId}] Recovered mapStatus:`, {
-      isNull: mapStatus === null,
-      isUndefined: mapStatus === undefined,
-      type: typeof mapStatus,
-      hasZoom: mapStatus && mapStatus.zoom !== undefined,
-      hasCenter: mapStatus && mapStatus.center !== undefined,
-      entryCount: mapStatus ? Object.entries(mapStatus).length : 0,
-      mapStatus: mapStatus,
-    });
-    /* eslint-enable no-console */
 
     // Improved condition check to prevent false positives that overwrite restored data
     if (
@@ -979,12 +696,6 @@ class MapViewer extends React.Component {
         mapStatus.center === undefined) ||
       (typeof mapStatus === 'object' && Object.entries(mapStatus).length === 0)
     ) {
-      /* eslint-disable no-console */
-      console.log(
-        `[MapViewer:${this.instanceId}] No valid map state found - initializing with default configuration`,
-      );
-      /* eslint-enable no-console */
-
       mapStatus = {};
       mapStatus.zoom = this.mapCfg.zoom;
       mapStatus.center = this.mapCfg.center;
@@ -993,11 +704,6 @@ class MapViewer extends React.Component {
       this.setZoomState(this.mapCfg.zoom);
       this.activeLayersHandler(this.mapCfg.activeLayers);
     } else {
-      /* eslint-disable no-console */
-      console.log(
-        `[MapViewer:${this.instanceId}] Using restored map state from sessionStorage`,
-      );
-      /* eslint-enable no-console */
     }
 
     this.view = new MapView({
@@ -1057,11 +763,6 @@ class MapViewer extends React.Component {
     this.props.MapViewerConfig(flattenToAppURL(this.props.url));
 
     // Add event listeners for page unload events to ensure data is saved
-    /* eslint-disable no-console */
-    console.log(
-      `[MapViewer:${this.instanceId}] Adding page unload event listeners`,
-    );
-    /* eslint-enable no-console */
 
     // beforeunload - most reliable for catching navigation away from page
     window.addEventListener('beforeunload', this.handlePageUnload);
@@ -1100,16 +801,6 @@ class MapViewer extends React.Component {
       prevUserState.user_id !== currentUserId ||
       prevUserState.isLoggedIn !== currentIsLoggedIn
     ) {
-      /* eslint-disable no-console */
-      console.log(
-        '[MapViewer] User state change detected in componentDidUpdate:',
-        {
-          previous: prevUserState,
-          current: { user_id: currentUserId, isLoggedIn: currentIsLoggedIn },
-        },
-      );
-      /* eslint-enable no-console */
-
       // Update component state to reflect new user state
       const newUserState = {
         user_id: currentUserId,
@@ -1123,11 +814,6 @@ class MapViewer extends React.Component {
   }
 
   componentWillUnmount() {
-    // Remove event listeners to prevent memory leaks
-    /* eslint-disable no-console */
-    console.log(`[MapViewer:${this.instanceId}] Removing event listeners`);
-    /* eslint-enable no-console */
-
     window.removeEventListener('beforeunload', this.handlePageUnload);
     window.removeEventListener('pagehide', this.handlePageUnload);
     document.removeEventListener(
@@ -1137,12 +823,6 @@ class MapViewer extends React.Component {
 
     // Save data using the extracted method
     this.saveSessionToLocalStorage();
-
-    /* eslint-disable no-console */
-    console.log(
-      `[MapViewer:${this.instanceId}] Clearing session storage and cleaning up view`,
-    );
-    /* eslint-enable no-console */
 
     if (this.view) {
       this.view.container = null;
