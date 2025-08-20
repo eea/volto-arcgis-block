@@ -3448,33 +3448,25 @@ class MenuWidget extends React.Component {
       const name =
         nameEl && nameEl.textContent ? nameEl.textContent.trim() : '';
       if (!name) continue;
-      let ex = findDesc(leaf, 'ex_geographicboundingbox');
-      if (!ex) {
+      let bb = findDesc(leaf, 'boundingbox');
+      if (!bb) {
         let p = leaf.parentElement;
         while (p) {
           if (isLayer(p)) {
-            const cand = findDesc(p, 'ex_geographicboundingbox');
+            const cand = findDesc(p, 'boundingbox');
             if (cand) {
-              ex = cand;
+              bb = cand;
               break;
             }
           }
           p = p.parentElement;
         }
       }
-      if (!ex) continue;
-      const w = parseFloat(
-        (findDesc(ex, 'westboundlongitude') || {}).textContent || '',
-      );
-      const s = parseFloat(
-        (findDesc(ex, 'southboundlatitude') || {}).textContent || '',
-      );
-      const e = parseFloat(
-        (findDesc(ex, 'eastboundlongitude') || {}).textContent || '',
-      );
-      const n = parseFloat(
-        (findDesc(ex, 'northboundlatitude') || {}).textContent || '',
-      );
+      if (!bb) continue;
+      const w = parseFloat(bb.getAttribute('minx') || '');
+      const s = parseFloat(bb.getAttribute('miny') || '');
+      const e = parseFloat(bb.getAttribute('maxx') || '');
+      const n = parseFloat(bb.getAttribute('maxy') || '');
       if (!isFinite(w) || !isFinite(s) || !isFinite(e) || !isFinite(n))
         continue;
       boxes[name] = { xmin: w, ymin: s, xmax: e, ymax: n };
