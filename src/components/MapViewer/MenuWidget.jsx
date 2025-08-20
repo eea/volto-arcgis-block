@@ -2948,7 +2948,7 @@ class MenuWidget extends React.Component {
           }
           if (url) {
             await this.getCapabilities(url, 'wms');
-            const BBoxes = this.parseBBOXCDSEWMS(this.xml);
+            const BBoxes = this.parseBBOXCDSE(this.xml);
             if (BBoxes && BBoxes['dataset']) {
               const myExtent = new Extent({
                 xmin: BBoxes['dataset'].xmin,
@@ -3416,7 +3416,7 @@ class MenuWidget extends React.Component {
     return BBoxes;
   }
 
-  parseBBOXCDSEWMS(xml) {
+  parseBBOXCDSE(xml) {
     if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
     const all = Array.from(xml.getElementsByTagName('*'));
     const isLayer = (n) => n && (n.localName || '').toLowerCase() === 'layer';
@@ -3701,22 +3701,20 @@ class MenuWidget extends React.Component {
     const serviceLayer = this.state.wmsUserServiceLayers.find(
       (layer) => layer.LayerId === elem.id,
     );
-
     if (!serviceLayer) {
       this.findCheckedDataset(elem);
     } else {
       this.url = serviceLayer.ViewService;
     }
+    let isCDSE = this.url?.toLowerCase().includes('/ogc/') ? true : false;
     let BBoxes = {};
     if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
-      if (this.url?.toLowerCase().includes('/ogc/')) {
-        BBoxes = this.parseBBOXCDSEWMS(this.xml);
-      } else {
-        BBoxes = this.parseBBOXWMS(this.xml);
-      }
+      BBoxes = isCDSE
+        ? this.parseBBOXCDSE(this.xml)
+        : this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
@@ -3738,6 +3736,32 @@ class MenuWidget extends React.Component {
         ymax: BBoxes['dataset'].ymax,
         // spatialReference: 4326 // by default wkid 4326
       });
+    }
+    if (isCDSE) {
+      const maxMppAllowed = 23628.54;
+      const vw = this.view && this.view.width ? this.view.width : 0;
+      const vh = this.view && this.view.height ? this.view.height : 0;
+      let extentWM = myExtent;
+      try {
+        if (
+          !(
+            myExtent.spatialReference && myExtent.spatialReference.wkid === 3857
+          )
+        ) {
+          extentWM = WebMercatorUtils.geographicToWebMercator(myExtent);
+        }
+      } catch (e) {}
+      if (vw > 0 && vh > 0) {
+        const mppX = (extentWM.xmax - extentWM.xmin) / vw;
+        const mppY = (extentWM.ymax - extentWM.ymin) / vh;
+        const mpp = Math.max(mppX, mppY);
+        if (mpp > maxMppAllowed) {
+          const cx = (myExtent.xmin + myExtent.xmax) / 2;
+          const cy = (myExtent.ymin + myExtent.ymax) / 2;
+          this.view.goTo({ center: [cx, cy], zoom: 3 });
+          return;
+        }
+      }
     }
     this.view.goTo(myExtent); //
   }
