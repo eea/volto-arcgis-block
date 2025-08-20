@@ -1093,7 +1093,6 @@ class MenuWidget extends React.Component {
               let button = familyDropdown.querySelector(
                 '.ccl-expandable__button',
               );
-              scrollPosition = familyDropdown.offsetTop;
               if (button) {
                 button.setAttribute('aria-expanded', 'true');
               }
@@ -1106,6 +1105,9 @@ class MenuWidget extends React.Component {
               if (button) {
                 button.setAttribute('aria-expanded', 'true');
               }
+            }
+            if (familyDropdown) {
+              scrollPosition = familyDropdown.offsetTop;
             }
             let mapMenu = node.closest('.map-menu-dataset-dropdown');
             if (mapMenu) {
