@@ -2027,6 +2027,9 @@ class MenuWidget extends React.Component {
           ViewService: viewService,
           StaticImageLegend: layer.StaticImageLegend,
           LayerTitle: layer.Title,
+          customLayerParameters: {
+            SHOWLOGO: false,
+          },
         });
       } else {
         this.layers[
@@ -2804,6 +2807,8 @@ class MenuWidget extends React.Component {
   }
 
   async toggleLayer(elem) {
+    if (!elem) return;
+    this.url = this.layers[elem.id]?.ViewService || this.layers[elem.id]?.url;
     const userService =
       this.state.wmsUserServiceLayers.find(
         (layer) => layer.LayerId === elem.id,
@@ -2929,41 +2934,50 @@ class MenuWidget extends React.Component {
       if (!userService) this.checkForHotspots(elem, productContainerId);
       // Auto-fit extent once for OGC WMS layers on manual toggle
       try {
-        const layer = this.layers[elem.id];
-        const viewService = layer?.ViewService || '';
-        if (
-          viewService &&
-          viewService.toLowerCase().includes('wms') &&
-          viewService.toLowerCase().includes('/ogc/') &&
-          !layer._ogcExtentApplied &&
-          !this.extentInitiated
-        ) {
-          let url;
-          const serviceLayer = this.state.wmsUserServiceLayers.find(
-            (l) => l.LayerId === elem.id,
-          );
-          if (!serviceLayer) {
-            this.findCheckedDataset(elem);
-            url = this.url;
-          } else {
-            url = serviceLayer.ViewService;
-          }
-          if (url) {
-            await this.getCapabilities(url, 'wms');
-            const BBoxes = this.parseBBOXCDSE(this.xml);
-            if (BBoxes && BBoxes['dataset']) {
-              const myExtent = new Extent({
-                xmin: BBoxes['dataset'].xmin,
-                ymin: BBoxes['dataset'].ymin,
-                xmax: BBoxes['dataset'].xmax,
-                ymax: BBoxes['dataset'].ymax,
-              });
-              this.view.goTo(myExtent);
-              layer._ogcExtentApplied = true;
-            }
-          }
+        const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+        if (isCDSE) {
+          const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+          const extent = await this.createExtentFromCoordinates(cdseGeometry);
+          this.view.goTo(extent);
+          // layer._ogcExtentApplied = true;
         }
       } catch (e) {}
+      // try {
+      //   const layer = this.layers[elem.id];
+      //   const viewService = layer?.ViewService || '';
+      //   if (
+      //     viewService &&
+      //     viewService.toLowerCase().includes('wms') &&
+      //     viewService.toLowerCase().includes('/ogc/') &&
+      //     !layer._ogcExtentApplied &&
+      //     !this.extentInitiated
+      //   ) {
+      //     let url;
+      //     const serviceLayer = this.state.wmsUserServiceLayers.find(
+      //       (l) => l.LayerId === elem.id,
+      //     );
+      //     if (!serviceLayer) {
+      //       this.findCheckedDataset(elem);
+      //       url = this.url;
+      //     } else {
+      //       url = serviceLayer.ViewService;
+      //     }
+      //     if (url) {
+      //       await this.getCapabilities(url, 'wms');
+      //       const BBoxes = this.parseBBOXCDSE(this.xml);
+      //       if (BBoxes && BBoxes['dataset']) {
+      //         const myExtent = new Extent({
+      //           xmin: BBoxes['dataset'].xmin,
+      //           ymin: BBoxes['dataset'].ymin,
+      //           xmax: BBoxes['dataset'].xmax,
+      //           ymax: BBoxes['dataset'].ymax,
+      //         });
+      //         this.view.goTo(myExtent);
+      //         layer._ogcExtentApplied = true;
+      //       }
+      //     }
+      //   }
+      // } catch (e) {}
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
@@ -2995,6 +3009,7 @@ class MenuWidget extends React.Component {
       this.activeLayersToHotspotData(elem.id);
     }
     this.renderHotspot();
+    this.url = null;
   }
 
   getHotspotLayerIds() {
@@ -3418,6 +3433,85 @@ class MenuWidget extends React.Component {
     return BBoxes;
   }
 
+  async createExtentFromCoordinates(coordinates) {
+    if (!coordinates) return null;
+    let pts;
+    if (
+      Array.isArray(coordinates) &&
+      coordinates[0] &&
+      Array.isArray(coordinates[0]) &&
+      Array.isArray(coordinates[0][0])
+    ) {
+      pts = coordinates[0];
+    } else if (
+      Array.isArray(coordinates) &&
+      coordinates[0] &&
+      typeof coordinates[0] === 'object' &&
+      'latitude' in coordinates[0] &&
+      'longitude' in coordinates[0]
+    ) {
+      pts = coordinates.map((c) => [c.longitude, c.latitude]);
+    } else if (
+      Array.isArray(coordinates) &&
+      coordinates[0] &&
+      Array.isArray(coordinates[0]) &&
+      typeof coordinates[0][0] === 'number'
+    ) {
+      pts = coordinates;
+    } else {
+      return null;
+    }
+    let xmin = Infinity,
+      ymin = Infinity,
+      xmax = -Infinity,
+      ymax = -Infinity;
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      if (!Array.isArray(p) || p.length < 2) continue;
+      const x = p[0];
+      const y = p[1];
+      if (x < xmin) xmin = x;
+      if (x > xmax) xmax = x;
+      if (y < ymin) ymin = y;
+      if (y > ymax) ymax = y;
+    }
+    if (
+      !isFinite(xmin) ||
+      !isFinite(ymin) ||
+      !isFinite(xmax) ||
+      !isFinite(ymax)
+    )
+      return null;
+    return new Extent({
+      xmin: xmin,
+      ymin: ymin,
+      xmax: xmax,
+      ymax: ymax,
+      spatialReference: { wkid: 3857 },
+    });
+  }
+
+  async getCDSEWFSGeoCoordinates(url) {
+    if (!url) return {};
+    const match = /\/ogc\/(?:wmts|wms)\/([^/?]+)/i.exec(url);
+    if (!match) return {};
+    const fetchUrl = `https://sh.dataspace.copernicus.eu/ogc/wfs/${match[1]}?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=byoc-4bd995a1-dc49-4176-a285-b1d0084ba51a&COUNT=100&BBOX=-21039383,-22375217,21039383,22375217&OUTPUTFORMAT=application/json`;
+    try {
+      const res = await fetch(fetchUrl);
+      const data = await res.json();
+      if (
+        data &&
+        data.features &&
+        data.features[0] &&
+        data.features[0].geometry &&
+        data.features[0].geometry.coordinates
+      )
+        return data.features[0].geometry.coordinates;
+    } catch (e) {
+      return {};
+    }
+  }
+
   parseBBOXCDSE(xml) {
     if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
     const all = Array.from(xml.getElementsByTagName('*'));
@@ -3710,13 +3804,16 @@ class MenuWidget extends React.Component {
     }
     let isCDSE = this.url?.toLowerCase().includes('/ogc/') ? true : false;
     let BBoxes = {};
-    if (this.url?.toLowerCase().endsWith('mapserver')) {
+    if (isCDSE) {
+      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+      const extent = await this.createExtentFromCoordinates(cdseGeometry);
+      this.view.goTo(extent);
+      return;
+    } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
-      BBoxes = isCDSE
-        ? this.parseBBOXCDSE(this.xml)
-        : this.parseBBOXWMS(this.xml);
+      this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
