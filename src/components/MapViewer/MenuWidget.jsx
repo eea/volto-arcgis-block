@@ -526,6 +526,7 @@ class MenuWidget extends React.Component {
         _BaseTileLayer,
         _esriRequest,
         _Extent,
+        _Geometry,
         _MapImageLayer,
         _projection,
         _SpatialReference,
@@ -2933,7 +2934,8 @@ class MenuWidget extends React.Component {
       try {
         const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
         if (isCDSE) {
-          const extent = await this.getCDSEWFSExtent(this.url);
+          const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+          const extent = await this.createExtentFromCoordinates(cdseGeometry);
           this.view.goTo(extent);
           layer._ogcExtentApplied = true;
         }
@@ -3429,7 +3431,65 @@ class MenuWidget extends React.Component {
     return BBoxes;
   }
 
-  async getCDSEWFSExtent(url) {
+  async createExtentFromCoordinates(coordinates) {
+    if (!coordinates) return null;
+    let pts;
+    if (
+      Array.isArray(coordinates) &&
+      coordinates[0] &&
+      Array.isArray(coordinates[0]) &&
+      Array.isArray(coordinates[0][0])
+    ) {
+      pts = coordinates[0];
+    } else if (
+      Array.isArray(coordinates) &&
+      coordinates[0] &&
+      typeof coordinates[0] === 'object' &&
+      'latitude' in coordinates[0] &&
+      'longitude' in coordinates[0]
+    ) {
+      pts = coordinates.map((c) => [c.longitude, c.latitude]);
+    } else if (
+      Array.isArray(coordinates) &&
+      coordinates[0] &&
+      Array.isArray(coordinates[0]) &&
+      typeof coordinates[0][0] === 'number'
+    ) {
+      pts = coordinates;
+    } else {
+      return null;
+    }
+    let xmin = Infinity,
+      ymin = Infinity,
+      xmax = -Infinity,
+      ymax = -Infinity;
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      if (!Array.isArray(p) || p.length < 2) continue;
+      const x = p[0];
+      const y = p[1];
+      if (x < xmin) xmin = x;
+      if (x > xmax) xmax = x;
+      if (y < ymin) ymin = y;
+      if (y > ymax) ymax = y;
+    }
+    if (
+      !isFinite(xmin) ||
+      !isFinite(ymin) ||
+      !isFinite(xmax) ||
+      !isFinite(ymax)
+    )
+      return null;
+    return new Extent({
+      xmin: xmin,
+      ymin: ymin,
+      xmax: xmax,
+      ymax: ymax,
+      spatialReference: { wkid: 3857 },
+    });
+  }
+
+  async getCDSEWFSGeoCoordinates(url) {
     if (!url) return {};
     const match = /\/ogc\/(?:wmts|wms)\/([^/?]+)/i.exec(url);
     if (!match) return {};
@@ -3441,9 +3501,10 @@ class MenuWidget extends React.Component {
         data &&
         data.features &&
         data.features[0] &&
-        data.features[0].geometry
+        data.features[0].geometry &&
+        data.features[0].geometry.coordinates
       )
-        return data.features[0].geometry;
+        return data.features[0].geometry.coordinates;
     } catch (e) {
       return {};
     }
@@ -3742,7 +3803,7 @@ class MenuWidget extends React.Component {
     let isCDSE = this.url?.toLowerCase().includes('/ogc/') ? true : false;
     let BBoxes = {};
     if (isCDSE) {
-      BBoxes = await this.getCDSEWFSExtent(this.url);
+      BBoxes = await this.getCDSEWFSGeoCoordinates(this.url);
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
