@@ -526,7 +526,6 @@ class MenuWidget extends React.Component {
         _BaseTileLayer,
         _esriRequest,
         _Extent,
-        _Geometry,
         _MapImageLayer,
         _projection,
         _SpatialReference,
@@ -2028,6 +2027,9 @@ class MenuWidget extends React.Component {
           ViewService: viewService,
           StaticImageLegend: layer.StaticImageLegend,
           LayerTitle: layer.Title,
+          customLayerParameters: {
+            SHOWLOGO: false,
+          },
         });
       } else {
         this.layers[
@@ -2937,7 +2939,7 @@ class MenuWidget extends React.Component {
           const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
           const extent = await this.createExtentFromCoordinates(cdseGeometry);
           this.view.goTo(extent);
-          layer._ogcExtentApplied = true;
+          // layer._ogcExtentApplied = true;
         }
       } catch (e) {}
       // try {
@@ -3803,7 +3805,10 @@ class MenuWidget extends React.Component {
     let isCDSE = this.url?.toLowerCase().includes('/ogc/') ? true : false;
     let BBoxes = {};
     if (isCDSE) {
-      BBoxes = await this.getCDSEWFSGeoCoordinates(this.url);
+      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+      const extent = await this.createExtentFromCoordinates(cdseGeometry);
+      this.view.goTo(extent);
+      return;
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
