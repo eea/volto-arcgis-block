@@ -3866,6 +3866,8 @@ class MenuWidget extends React.Component {
   }
 
   async fullExtent(elem) {
+    this.url = this.layers[elem.id]?.url;
+    const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
     const serviceLayer = this.state.wmsUserServiceLayers.find(
       (layer) => layer.LayerId === elem.id,
     );
@@ -3880,7 +3882,12 @@ class MenuWidget extends React.Component {
     let firstLayer;
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
     let productIds = [];
-    if (landCoverAndLandUseMapping) {
+    if (isCDSE) {
+      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+      const extent = await this.createExtentFromCoordinates(cdseGeometry);
+      this.view.goTo(extent);
+      return;
+    } else if (landCoverAndLandUseMapping) {
       const productElements = landCoverAndLandUseMapping.querySelectorAll(
         '.map-menu-product-dropdown',
       );
@@ -3890,9 +3897,7 @@ class MenuWidget extends React.Component {
           productIds.push(productId);
         }
       });
-    }
-
-    if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
+    } else if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
       //global dynamic landCover
       this.findDatasetBoundingBox(elem);
 
@@ -3920,10 +3925,7 @@ class MenuWidget extends React.Component {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
-      if (this.url?.toLowerCase().includes('/ogc/')) {
-      } else {
-        BBoxes = this.parseBBOXWMS(this.xml);
-      }
+      BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
@@ -4041,6 +4043,7 @@ class MenuWidget extends React.Component {
       });
       this.view.goTo(myExtent); //
     }
+    this.url = null;
   }
   /**
    * Method to show Active Layers of the map
