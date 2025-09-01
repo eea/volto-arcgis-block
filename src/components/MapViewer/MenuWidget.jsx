@@ -1697,6 +1697,7 @@ class MenuWidget extends React.Component {
             dataset.DatasetId,
             dataset.DatasetTitle,
             dataset.ProductId,
+            dataset.dataset_download_information,
           ),
         );
         index++;
@@ -1952,6 +1953,7 @@ class MenuWidget extends React.Component {
     DatasetId,
     DatasetTitle,
     ProductId,
+    dataset_download_information,
   ) {
     //For Legend request
     const legendRequest =
@@ -2027,6 +2029,7 @@ class MenuWidget extends React.Component {
           ViewService: viewService,
           StaticImageLegend: layer.StaticImageLegend,
           LayerTitle: layer.Title,
+          DatasetDownloadInformation: dataset_download_information || {},
           customLayerParameters: {
             SHOWLOGO: false,
           },
@@ -2052,7 +2055,17 @@ class MenuWidget extends React.Component {
         });
       }
     }
-
+    // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+    // if (isCDSE) {
+    //   this.layers[
+    //     layer.LayerId + '_' + inheritedIndexLayer
+    //   ].datasetDownloadInformation = dataset_download_information || {};
+    //   this.layers[
+    //     layer.LayerId + '_' + inheritedIndexLayer
+    //   ].customLayerParameters = {
+    //     SHOWLOGO: false,
+    //   };
+    // }
     return (
       <div
         className="ccl-form-group map-menu-layer"
@@ -2936,10 +2949,15 @@ class MenuWidget extends React.Component {
       try {
         const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
         if (isCDSE) {
-          const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+          const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
+            this.url,
+            this.layers[elem.id],
+          );
           const extent = await this.createExtentFromCoordinates(cdseGeometry);
-          this.view.goTo(extent);
-          // layer._ogcExtentApplied = true;
+          this.view.goTo({
+            target: extent,
+            zoom: 4,
+          });
         }
       } catch (e) {}
       // try {
@@ -3491,11 +3509,19 @@ class MenuWidget extends React.Component {
     });
   }
 
-  async getCDSEWFSGeoCoordinates(url) {
+  async getCDSEWFSGeoCoordinates(url, layer) {
     if (!url) return {};
     const match = /\/ogc\/(?:wmts|wms)\/([^/?]+)/i.exec(url);
+    const datasetDownloadInformation =
+      layer?.DatasetDownloadInformation ||
+      layer?.DatasetDownloadInformation ||
+      {};
+    if (!datasetDownloadInformation) return {};
+    const byocCollectionId =
+      datasetDownloadInformation?.items[0].byoc_collection || null;
+    if (!byocCollectionId) return {};
     if (!match) return {};
-    const fetchUrl = `https://sh.dataspace.copernicus.eu/ogc/wfs/${match[1]}?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=byoc-4bd995a1-dc49-4176-a285-b1d0084ba51a&COUNT=100&BBOX=-21039383,-22375217,21039383,22375217&OUTPUTFORMAT=application/json`;
+    const fetchUrl = `https://sh.dataspace.copernicus.eu/ogc/wfs/${match[1]}?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=byoc-${byocCollectionId}&COUNT=100&BBOX=-21039383,-22375217,21039383,22375217&OUTPUTFORMAT=application/json`;
     try {
       const res = await fetch(fetchUrl);
       const data = await res.json();
@@ -3805,9 +3831,15 @@ class MenuWidget extends React.Component {
     let isCDSE = this.url?.toLowerCase().includes('/ogc/') ? true : false;
     let BBoxes = {};
     if (isCDSE) {
-      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
+        this.url,
+        this.layers[elem.id],
+      );
       const extent = await this.createExtentFromCoordinates(cdseGeometry);
-      this.view.goTo(extent);
+      this.view.goTo({
+        target: extent,
+        zoom: 4,
+      });
       return;
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
@@ -3883,9 +3915,15 @@ class MenuWidget extends React.Component {
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
     let productIds = [];
     if (isCDSE) {
-      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(this.url);
+      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
+        this.url,
+        this.layers[elem.id],
+      );
       const extent = await this.createExtentFromCoordinates(cdseGeometry);
-      this.view.goTo(extent);
+      this.view.goTo({
+        target: extent,
+        zoom: 4,
+      });
       return;
     } else if (landCoverAndLandUseMapping) {
       const productElements = landCoverAndLandUseMapping.querySelectorAll(
