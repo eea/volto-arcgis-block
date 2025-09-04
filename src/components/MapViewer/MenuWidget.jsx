@@ -2947,7 +2947,10 @@ class MenuWidget extends React.Component {
       if (!userService) this.checkForHotspots(elem, productContainerId);
       // Auto-fit extent once for OGC WMS layers on manual toggle
       try {
-        const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+        // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+        const isCDSE =
+          !!this.url &&
+          ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
         if (isCDSE) {
           const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
             this.url,
@@ -3828,7 +3831,10 @@ class MenuWidget extends React.Component {
     } else {
       this.url = serviceLayer.ViewService;
     }
-    let isCDSE = this.url?.toLowerCase().includes('/ogc/') ? true : false;
+    // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+    const isCDSE =
+      !!this.url &&
+      ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
     let BBoxes = {};
     if (isCDSE) {
       const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
@@ -3899,7 +3905,10 @@ class MenuWidget extends React.Component {
 
   async fullExtent(elem) {
     this.url = this.layers[elem.id]?.url;
-    const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+    // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
+    const isCDSE =
+      !!this.url &&
+      ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
     const serviceLayer = this.state.wmsUserServiceLayers.find(
       (layer) => layer.LayerId === elem.id,
     );
