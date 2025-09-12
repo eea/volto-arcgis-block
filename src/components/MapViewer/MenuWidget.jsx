@@ -149,16 +149,7 @@ export const AddCartItem = ({
                 props.layers[id].fullExtents[0].spatialReference ||
                 mapViewer?.view?.spatialReference,
             });
-            if (
-              isCDSE &&
-              layerExtent &&
-              layerExtent.spatialReference &&
-              mapViewer?.view?.spatialReference &&
-              layerExtent.spatialReference.wkid !==
-                mapViewer.view.spatialReference.wkid &&
-              projection &&
-              projection.isSupported()
-            ) {
+            if (isCDSE) {
               try {
                 const projected = projection.project(
                   layerExtent,
