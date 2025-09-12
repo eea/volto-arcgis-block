@@ -3924,7 +3924,6 @@ class MenuWidget extends React.Component {
 
   async fullExtent(elem) {
     this.url = this.layers[elem.id]?.url;
-    // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
     const isCDSE =
       !!this.url &&
       ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
@@ -4777,6 +4776,10 @@ class MenuWidget extends React.Component {
     const isUserServiceLayer = this.state.wmsUserServiceLayers.some(
       (layer) => layer.LayerId === elem.id,
     );
+    this.url = this.layers[elem.id]?.url;
+    const isCDSE =
+      !!this.url &&
+      ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
 
     // Only call findCheckedDataset for non-service layers (this method looks for parent datasets)
     if (!isUserServiceLayer) {
@@ -4828,6 +4831,7 @@ class MenuWidget extends React.Component {
     }
 
     if (
+      !isCDSE &&
       !isUserServiceLayer &&
       this.productId &&
       this.productId.includes('333e4100b79045daa0ff16466ac83b7f')
