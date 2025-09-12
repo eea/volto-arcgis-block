@@ -100,6 +100,11 @@ export const AddCartItem = ({
     let isMapServer = dataset?.ViewService?.toLowerCase().endsWith('/mapserver')
       ? true
       : false;
+    const isCDSE =
+      !!dataset?.ViewService &&
+      ['/ogc/', '/cdse/'].some((s) =>
+        dataset.ViewService.toLowerCase().includes(s),
+      );
     if (check === 'area' || fileUpload || check === 'coordinates') {
       areaExtent = new Extent({
         xmin: Math.min(areaData?.end?.x, areaData?.origin?.x),
@@ -140,7 +145,21 @@ export const AddCartItem = ({
               ymin: props.layers[id].fullExtents[0].ymin,
               xmax: props.layers[id].fullExtents[0].xmax,
               ymax: props.layers[id].fullExtents[0].ymax,
+              spatialReference:
+                props.layers[id].fullExtents[0].spatialReference ||
+                mapViewer?.view?.spatialReference,
             });
+            if (isCDSE) {
+              try {
+                const projected = projection.project(
+                  layerExtent,
+                  mapViewer.view.spatialReference,
+                );
+                if (projected) {
+                  layerExtent = projected;
+                }
+              } catch (e) {}
+            }
           } else {
             layerExtent = new Extent({
               xmin: -20037508.342789,
