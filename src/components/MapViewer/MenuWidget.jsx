@@ -3850,7 +3850,6 @@ class MenuWidget extends React.Component {
     } else {
       this.url = serviceLayer.ViewService;
     }
-    // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
     const isCDSE =
       !!this.url &&
       ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
