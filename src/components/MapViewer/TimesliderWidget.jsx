@@ -384,7 +384,9 @@ class TimesliderWidget extends React.Component {
                 };
 
                 if (this.layer.type === 'wmts') {
-                  this.layer.customLayerParameters = {};
+                  this.layer.customLayerParameters = {
+                    SHOWLOGO: false,
+                  };
                   const time = times[this.layerName].array.map(
                     (d) => new Date(d),
                   );
@@ -426,7 +428,9 @@ class TimesliderWidget extends React.Component {
                     this.TimesliderWidget.stop();
                   }
                   if (this.layer.type === 'wmts') {
-                    this.layer.customLayerParameters = {};
+                    this.layer.customLayerParameters = {
+                      SHOWLOGO: false,
+                    };
                     this.layer.customLayerParameters['TIME'] =
                       timeDict[this.TimesliderWidget.timeExtent.end];
                   } else {
