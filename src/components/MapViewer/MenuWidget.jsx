@@ -92,7 +92,8 @@ export const AddCartItem = ({
       }
     });
   };
-  const checkExtent = (e) => {
+  const checkExtent = async (e) => {
+    let target = e?.currentTarget;
     let intersection = false;
     let areaExtent = null;
     let check = document.querySelector('.area-panel input:checked')?.value;
@@ -123,7 +124,7 @@ export const AddCartItem = ({
       areaExtent = areaData?.geometry;
     }
     if (dataset?.DatasetTitle) {
-      Object.keys(props.layers).forEach((id) => {
+      for (const id of Object.keys(props.layers)) {
         if (
           props.layers[id]?.DatasetTitle &&
           dataset.DatasetTitle === props.layers[id].DatasetTitle
@@ -140,25 +141,38 @@ export const AddCartItem = ({
             props.layers[id].fullExtents &&
             props.layers[id].fullExtents[0]
           ) {
-            layerExtent = new Extent({
-              xmin: props.layers[id].fullExtents[0].xmin,
-              ymin: props.layers[id].fullExtents[0].ymin,
-              xmax: props.layers[id].fullExtents[0].xmax,
-              ymax: props.layers[id].fullExtents[0].ymax,
-              spatialReference:
-                props.layers[id].fullExtents[0].spatialReference ||
-                mapViewer?.view?.spatialReference,
-            });
             if (isCDSE) {
-              try {
-                const projected = projection.project(
-                  layerExtent,
-                  mapViewer.view.spatialReference,
-                );
-                if (projected) {
-                  layerExtent = projected;
-                }
-              } catch (e) {}
+              let e0 = props.layers[id].fullExtents[0];
+              let xmin = e0.xmin;
+              let ymin = e0.ymin;
+              let xmax = e0.xmax;
+              let ymax = e0.ymax;
+              for (let i = 1; i < props.layers[id].fullExtents.length; i++) {
+                let ex = props.layers[id].fullExtents[i];
+                if (!ex) continue;
+                if (ex.xmin < xmin) xmin = ex.xmin;
+                if (ex.ymin < ymin) ymin = ex.ymin;
+                if (ex.xmax > xmax) xmax = ex.xmax;
+                if (ex.ymax > ymax) ymax = ex.ymax;
+              }
+              layerExtent = new Extent({
+                xmin: xmin,
+                ymin: ymin,
+                xmax: xmax,
+                ymax: ymax,
+                spatialReference:
+                  e0.spatialReference || mapViewer?.view?.spatialReference,
+              });
+            } else {
+              layerExtent = new Extent({
+                xmin: props.layers[id].fullExtents[0].xmin,
+                ymin: props.layers[id].fullExtents[0].ymin,
+                xmax: props.layers[id].fullExtents[0].xmax,
+                ymax: props.layers[id].fullExtents[0].ymax,
+                spatialReference:
+                  props.layers[id].fullExtents[0].spatialReference ||
+                  mapViewer?.view?.spatialReference,
+              });
             }
           } else {
             layerExtent = new Extent({
@@ -179,13 +193,15 @@ export const AddCartItem = ({
             intersection = true;
           }
         }
-      });
+      }
       if (intersection) {
-        checkArea();
+        try {
+          checkArea();
+        } catch (error) {}
       } else {
         const popupContainer = document.querySelector('.popup-container');
         if (popupContainer) {
-          e.currentTarget.appendChild(popupContainer);
+          target.appendChild(popupContainer);
           handleOpenPopup();
         }
       }
