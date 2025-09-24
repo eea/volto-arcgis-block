@@ -86,7 +86,6 @@ class TimesliderWidget extends React.Component {
 
   async getCDSEWFSTemporalData(url, layer) {
     if (!url) return {};
-    const match = /\/ogc\/(?:wmts|wms)\/([^/?]+)/i.exec(url);
     const datasetDownloadInformation =
       layer?.DatasetDownloadInformation ||
       layer?.DatasetDownloadInformation ||
@@ -95,8 +94,47 @@ class TimesliderWidget extends React.Component {
     const byocCollectionId =
       datasetDownloadInformation?.items[0].byoc_collection || null;
     if (!byocCollectionId) return {};
-    if (!match) return {};
-    const fetchUrl = `https://sh.dataspace.copernicus.eu/ogc/wfs/${match[1]}?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=byoc-${byocCollectionId}&COUNT=100&BBOX=-21039383,-22375217,21039383,22375217&OUTPUTFORMAT=application/json`;
+    let revProxyUrl = '';
+    let cdseDatasetId = '';
+    if (typeof url === 'string') {
+      try {
+        const u = new URL(
+          url,
+          window.location && window.location.href
+            ? window.location.href
+            : undefined,
+        );
+        const parts = u.pathname.split('/').filter(Boolean);
+        const idx = parts.indexOf('cdse');
+        if (idx !== -1) {
+          revProxyUrl = u.origin + '/' + parts[idx] + '/';
+          cdseDatasetId = parts[idx + 1] || '';
+        } else {
+          const base = url.split('?')[0];
+          const b = new URL(
+            base,
+            window.location && window.location.href
+              ? window.location.href
+              : undefined,
+          );
+          const bparts = b.pathname.split('/').filter(Boolean);
+          cdseDatasetId = bparts[bparts.length - 1] || '';
+          revProxyUrl = b.origin + '/';
+        }
+      } catch (_e) {
+        const base = url.split('?')[0];
+        const path = base.split('/');
+        cdseDatasetId = path[path.length - 1] || '';
+        const idx = path.findIndex((p) => p === 'cdse');
+        if (idx > 0) {
+          revProxyUrl = path.slice(0, idx + 1).join('/') + '/';
+        } else {
+          revProxyUrl = base.replace(cdseDatasetId, '');
+        }
+      }
+    }
+    if (!revProxyUrl || !cdseDatasetId) return {};
+    const fetchUrl = `${revProxyUrl}wfs/${cdseDatasetId}?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=byoc-${byocCollectionId}&COUNT=100&BBOX=-21039383,-22375217,21039383,22375217&OUTPUTFORMAT=application/json`;
     try {
       const res = await fetch(fetchUrl);
       const data = await res.json();
