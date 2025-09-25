@@ -1758,7 +1758,7 @@ class MenuWidget extends React.Component {
       <div
         className={
           dataset.FamilyTitle
-            ? 'map-menu-family-dataset-dropdown'
+            ? 'map-menu-dataset-dropdown map-menu-family-dataset-dropdown'
             : 'map-menu-dataset-dropdown'
         }
         id={'dataset_' + inheritedIndexDataset}
