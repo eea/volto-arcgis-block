@@ -3956,6 +3956,17 @@ class MenuWidget extends React.Component {
     let firstLayer;
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
     let productIds = [];
+    if (landCoverAndLandUseMapping) {
+      const productElements = landCoverAndLandUseMapping.querySelectorAll(
+        '.map-menu-product-dropdown',
+      );
+      productElements.forEach((productElement) => {
+        const productId = productElement.getAttribute('productid');
+        if (productId) {
+          productIds.push(productId);
+        }
+      });
+    }
     if (isCDSE) {
       const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
         this.url,
@@ -3967,16 +3978,6 @@ class MenuWidget extends React.Component {
         zoom: 4,
       });
       return;
-    } else if (landCoverAndLandUseMapping) {
-      const productElements = landCoverAndLandUseMapping.querySelectorAll(
-        '.map-menu-product-dropdown',
-      );
-      productElements.forEach((productElement) => {
-        const productId = productElement.getAttribute('productid');
-        if (productId) {
-          productIds.push(productId);
-        }
-      });
     } else if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
       //global dynamic landCover
       this.findDatasetBoundingBox(elem);
