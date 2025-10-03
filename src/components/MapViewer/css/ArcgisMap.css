@@ -471,8 +471,8 @@ label.ccl-form-radio-label span.nuts-menu-icon {
 
 .coordinateWindow {
   position: absolute;
-  right: 23rem;
-  bottom: 2rem;
+  top: 23rem;
+  left: 47rem;
   display: none;
   width: 23rem;
   height: 13rem;
