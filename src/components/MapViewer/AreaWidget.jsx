@@ -1328,6 +1328,7 @@ class AreaWidget extends React.Component {
         '</div>';
       this.props.download && this.props.view.ui.add(popup, 'top-right');
     });
+    this.dragElement(document.querySelector('.coordinateWindow'));
   }
 
   async initFMI() {
@@ -1347,6 +1348,38 @@ class AreaWidget extends React.Component {
       }
     } catch (error) {
       //console.error('There was a problem with the fetch operation:', error);
+    }
+  }
+  dragElement(elmnt) {
+    var pos1 = 0,
+      pos2 = 0,
+      pos3 = 0,
+      pos4 = 0;
+    let header = document.querySelector('.coordinateHeader');
+    const dragMouseDown = (e) => {
+      e.preventDefault();
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+    };
+    const elementDrag = (e) => {
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      elmnt.style.top = elmnt.offsetTop - pos2 + 'px';
+      elmnt.style.left = elmnt.offsetLeft - pos1 + 'px';
+    };
+    const closeDragElement = () => {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    };
+    if (header) {
+      header.addEventListener('mousedown', dragMouseDown);
+    } else {
+      elmnt.addEventListener('mousedown', dragMouseDown);
     }
   }
   /**
