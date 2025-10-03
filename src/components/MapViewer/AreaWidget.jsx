@@ -57,10 +57,6 @@ class AreaWidget extends React.Component {
     this.addFeatureCollectionToMap = this.addFeatureCollectionToMap.bind(this);
     this.checkFeatureCount = this.checkFeatureCount.bind(this);
     this.prepackage = false;
-    this.dragStartX = null;
-    this.dragStartY = null;
-    this.dragNewX = null;
-    this.dragNewY = null;
   }
 
   loader() {
@@ -1360,21 +1356,14 @@ class AreaWidget extends React.Component {
       pos3 = 0,
       pos4 = 0;
     let header = document.querySelector('.coordinateHeader');
-    if (header) {
-      header.onmousedown = dragMouseDown;
-    } else {
-      elmnt.onmousedown = dragMouseDown;
-    }
-    function dragMouseDown(e) {
-      e = e || window.event;
+    const dragMouseDown = (e) => {
       e.preventDefault();
       pos3 = e.clientX;
       pos4 = e.clientY;
       document.onmouseup = closeDragElement;
       document.onmousemove = elementDrag;
-    }
-    function elementDrag(e) {
-      e = e || window.event;
+    };
+    const elementDrag = (e) => {
       e.preventDefault();
       pos1 = pos3 - e.clientX;
       pos2 = pos4 - e.clientY;
@@ -1382,10 +1371,15 @@ class AreaWidget extends React.Component {
       pos4 = e.clientY;
       elmnt.style.top = elmnt.offsetTop - pos2 + 'px';
       elmnt.style.left = elmnt.offsetLeft - pos1 + 'px';
-    }
-    function closeDragElement() {
+    };
+    const closeDragElement = () => {
       document.onmouseup = null;
       document.onmousemove = null;
+    };
+    if (header) {
+      header.addEventListener('mousedown', dragMouseDown);
+    } else {
+      elmnt.addEventListener('mousedown', dragMouseDown);
     }
   }
   /**
