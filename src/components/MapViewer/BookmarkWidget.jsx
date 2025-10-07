@@ -395,28 +395,11 @@ class BookmarkWidget extends React.Component {
           // shouldUpdate = true;
           // }
           if (shouldUpdate && this.userID != null) {
-            // localStorage.setItem(
-            //   BOOKMARK_SESSION_KEY + '_' + this.userID,
-            //   JSON.stringify(this.Bookmarks.bookmarks.items),
-            // );
-            // localStorage.setItem(
-            //   BOOKMARK_SESSION_KEY + '_' + this.userID + '_layers',
-            //   JSON.stringify(this.sessionBookmarkLayers),
-            // );
-            // localStorage.setItem(
-            //   BOOKMARK_SESSION_KEY + '_' + this.userID + '_opacity',
-            //   JSON.stringify(this.sessionBookmarkOpacity),
-            // );
-            // localStorage.setItem(
-            //   BOOKMARK_SESSION_KEY + '_' + this.userID + '_visible',
-            //   JSON.stringify(this.sessionBookmarkVisible),
-            // );
-            // localStorage.setItem(
-            //   BOOKMARK_SESSION_KEY + '_' + this.userID + '_hotspot',
-            //   JSON.stringify(this.sessionBookmarkHotspot),
-            // );
             if (this._skipNextChangePersist) {
               this._skipNextChangePersist = false;
+              if (e.added && e.added[0]) {
+                this.saveBookmarksToUserObject();
+              }
             } else {
               this.saveBookmarksToUserObject();
             }
@@ -835,9 +818,48 @@ class BookmarkWidget extends React.Component {
     } catch (e) {
       userObj = {};
     }
-    const items = this.Bookmarks?.bookmarks?.items
+    const rawItems = this.Bookmarks?.bookmarks?.items
       ? this.Bookmarks.bookmarks.items
       : this.sessionBookmarks;
+    const items = Array.isArray(rawItems)
+      ? rawItems.map((b) => {
+          const out = {};
+          let name;
+          if (b && (b.name || b.label || b.title)) {
+            name = b.name || b.label || b.title;
+          }
+          if (name !== undefined) out.name = name;
+          let g = null;
+          if (b && b.viewpoint && b.viewpoint.targetGeometry) {
+            g = b.viewpoint.targetGeometry;
+          } else if (b && b.extent) {
+            g = b.extent;
+          }
+          if (
+            g &&
+            (g.type === 'extent' ||
+              (g.xmin != null &&
+                g.ymin != null &&
+                g.xmax != null &&
+                g.ymax != null))
+          ) {
+            out.extent = {
+              xmin: g.xmin,
+              ymin: g.ymin,
+              xmax: g.xmax,
+              ymax: g.ymax,
+              spatialReference: g.spatialReference
+                ? {
+                    wkid: g.spatialReference.wkid,
+                    latestWkid: g.spatialReference.latestWkid,
+                    wkt: g.spatialReference.wkt,
+                  }
+                : undefined,
+            };
+          }
+          return out;
+        })
+      : [];
     const layers = this.sessionBookmarkLayers;
     const opacity = this.sessionBookmarkOpacity;
     const visible = this.sessionBookmarkVisible;
