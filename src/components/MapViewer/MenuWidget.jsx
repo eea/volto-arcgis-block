@@ -2982,20 +2982,49 @@ class MenuWidget extends React.Component {
       if (!userService) this.checkForHotspots(elem, productContainerId);
       // Auto-fit extent once for OGC WMS layers on manual toggle
       try {
-        // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
         const isCDSE =
           !!this.url &&
           ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
         if (isCDSE) {
-          const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
-            this.url,
-            this.layers[elem.id],
-          );
-          const extent = await this.createExtentFromCoordinates(cdseGeometry);
-          this.view.goTo({
-            target: extent,
-            zoom: 4,
-          });
+          const d =
+            this.layers[elem.id]?.DatasetDownloadInformation ||
+            this.layers[elem.id]?.datasetDownloadInformation ||
+            {};
+          const byoc =
+            d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+          if (byoc && this.props.fetchCatalogApiDates) {
+            let payload =
+              this.props.catalogapi &&
+              this.props.catalogapi.byoc &&
+              this.props.catalogapi.byoc[byoc]
+                ? this.props.catalogapi.byoc[byoc].data
+                : null;
+            if (!payload) {
+              payload = await this.props.fetchCatalogApiDates(byoc, false);
+            }
+            if (payload) {
+              let myExtent = null;
+              if (
+                Array.isArray(payload.extent) &&
+                payload.extent.length === 4
+              ) {
+                myExtent = new Extent({
+                  xmin: payload.extent[0],
+                  ymin: payload.extent[1],
+                  xmax: payload.extent[2],
+                  ymax: payload.extent[3],
+                  spatialReference: { wkid: 3857 },
+                });
+              } else if (payload.geometry && payload.geometry.coordinates) {
+                myExtent = await this.createExtentFromCoordinates(
+                  payload.geometry.coordinates,
+                );
+              }
+              if (myExtent) {
+                this.view.goTo(myExtent);
+              }
+            }
+          }
         }
       } catch (e) {}
       // try {
@@ -3857,6 +3886,25 @@ class MenuWidget extends React.Component {
     return newBBox;
   }
 
+  async datasetFullExtentFromPayload(payload) {
+    if (!payload) return null;
+    if (Array.isArray(payload.extent) && payload.extent.length === 4) {
+      return new Extent({
+        xmin: payload.extent[0],
+        ymin: payload.extent[1],
+        xmax: payload.extent[2],
+        ymax: payload.extent[3],
+        spatialReference: { wkid: 3857 },
+      });
+    }
+    if (payload.geometry && payload.geometry.coordinates) {
+      return await this.createExtentFromCoordinates(
+        payload.geometry.coordinates,
+      );
+    }
+    return null;
+  }
+
   async FullExtentDataset(elem) {
     const serviceLayer = this.state.wmsUserServiceLayers.find(
       (layer) => layer.LayerId === elem.id,
@@ -3871,15 +3919,28 @@ class MenuWidget extends React.Component {
       ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
     let BBoxes = {};
     if (isCDSE) {
-      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
-        this.url,
-        this.layers[elem.id],
-      );
-      const extent = await this.createExtentFromCoordinates(cdseGeometry);
-      this.view.goTo({
-        target: extent,
-        zoom: 4,
-      });
+      const d =
+        this.layers[elem.id]?.DatasetDownloadInformation ||
+        this.layers[elem.id]?.datasetDownloadInformation ||
+        {};
+      const byoc =
+        d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+      if (byoc && this.props.fetchCatalogApiDates) {
+        let payload =
+          this.props.catalogapi &&
+          this.props.catalogapi.byoc &&
+          this.props.catalogapi.byoc[byoc]
+            ? this.props.catalogapi.byoc[byoc].data
+            : null;
+        if (!payload) {
+          payload = await this.props.fetchCatalogApiDates(byoc, false);
+        }
+        const myExtent = await this.datasetFullExtentFromPayload(payload);
+        if (myExtent) {
+          this.view.goTo(myExtent);
+          return;
+        }
+      }
       return;
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
@@ -3968,15 +4029,28 @@ class MenuWidget extends React.Component {
       });
     }
     if (isCDSE) {
-      const cdseGeometry = await this.getCDSEWFSGeoCoordinates(
-        this.url,
-        this.layers[elem.id],
-      );
-      const extent = await this.createExtentFromCoordinates(cdseGeometry);
-      this.view.goTo({
-        target: extent,
-        zoom: 4,
-      });
+      const d =
+        this.layers[elem.id]?.DatasetDownloadInformation ||
+        this.layers[elem.id]?.datasetDownloadInformation ||
+        {};
+      const byoc =
+        d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+      if (byoc && this.props.fetchCatalogApiDates) {
+        let payload =
+          this.props.catalogapi &&
+          this.props.catalogapi.byoc &&
+          this.props.catalogapi.byoc[byoc]
+            ? this.props.catalogapi.byoc[byoc].data
+            : null;
+        if (!payload) {
+          payload = await this.props.fetchCatalogApiDates(byoc, false);
+        }
+        const myExtent = await this.datasetFullExtentFromPayload(payload);
+        if (myExtent) {
+          this.view.goTo(myExtent);
+          return;
+        }
+      }
       return;
     } else if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
       //global dynamic landCover
@@ -5472,6 +5546,14 @@ class MenuWidget extends React.Component {
         time.end = parseInt(activeLayer.getAttribute('time-end'));
       }
       let isLoggedIn = document.querySelector('.map-menu-icon-login.logged');
+      let byoc = null;
+      try {
+        const d =
+          layer?.DatasetDownloadInformation ||
+          layer?.datasetDownloadInformation ||
+          {};
+        byoc = d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+      } catch (e) {}
       ReactDOM.render(
         <TimesliderWidget
           view={this.props.view}
@@ -5484,6 +5566,8 @@ class MenuWidget extends React.Component {
           fromDownload={fromDownload}
           area={this.props.area}
           hideCalendar={hideCalendar}
+          catalogapi={this.props.catalogapi}
+          catalogApiByoc={byoc}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
@@ -5507,6 +5591,19 @@ class MenuWidget extends React.Component {
     if (!checkbox.checked) {
       checkbox.click();
     }
+    try {
+      const info =
+        dataset?.dataset_download_information ||
+        dataset?.DatasetDownloadInformation ||
+        {};
+      const byoc =
+        info && info.items && info.items[0]
+          ? info.items[0].byoc_collection
+          : null;
+      if (byoc && this.props.fetchCatalogApiDates) {
+        this.props.fetchCatalogApiDates(byoc, false);
+      }
+    } catch (e) {}
     document.getElementById('active_label').click();
     if (!document.querySelector('.timeslider-container')) {
       setTimeout(() => {

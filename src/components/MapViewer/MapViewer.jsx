@@ -32,6 +32,7 @@ import LoadingSpinner from './LoadingSpinner';
 import UploadWidget from './UploadWidget';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
+import { fetchCatalogApiDates } from '../../actions';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
@@ -1128,6 +1129,8 @@ export const CheckUserID = ({ reference }) => {
             isLoggedIn={isLoggedIn}
             getTaxonomy={reference.getTaxonomy}
             tax={reference.tax}
+            catalogapi={reference.props.catalogapi}
+            fetchCatalogApiDates={reference.props.fetchCatalogApiDates}
           />
         </>
       )}
@@ -1137,6 +1140,8 @@ export const CheckUserID = ({ reference }) => {
 
 const mapDispatchToProps = (dispatch) => ({
   getTaxonomy: (name) => dispatch(getTaxonomy(name)),
+  fetchCatalogApiDates: (byoc, force_refresh) =>
+    dispatch(fetchCatalogApiDates(byoc, force_refresh)),
 });
 
 const MapViewerWithProvider = (props) => {
@@ -1181,6 +1186,7 @@ export default compose(
   connect(
     (state) => ({
       mapviewer_config: state.mapviewer_config.mapviewer_config,
+      catalogapi: state.catalogapi,
     }),
     { MapViewerConfig },
   ),
