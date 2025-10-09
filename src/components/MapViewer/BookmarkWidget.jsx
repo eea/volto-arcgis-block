@@ -785,7 +785,14 @@ class BookmarkWidget extends React.Component {
       bookmarks.selectedHotspotFilter != null
         ? bookmarks.selectedHotspotFilter
         : null;
-    this.sessionBookmarks = items;
+    this.sessionBookmarks = items.map((b) => {
+      if (b && b.thumbnail) {
+        if (b.thumbnail.url)
+          return { ...b, thumbnail: { url: b.thumbnail.url } };
+        return { ...b };
+      }
+      return b;
+    });
     this.sessionBookmarkLayers = layers;
     while (this.sessionBookmarkLayers.length < this.sessionBookmarks.length) {
       this.sessionBookmarkLayers.push([]);
@@ -856,6 +863,13 @@ class BookmarkWidget extends React.Component {
                   }
                 : undefined,
             };
+          }
+          if (b && b.thumbnail) {
+            if (b.thumbnail.url) {
+              out.thumbnail = { url: b.thumbnail.url };
+            } else {
+              out.thumbnail = b.thumbnail;
+            }
           }
           return out;
         })
