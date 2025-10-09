@@ -5582,7 +5582,7 @@ class MenuWidget extends React.Component {
       }
     }
   }
-  checkTimeLayer(dataset, checkedLayers) {
+  async checkTimeLayer(dataset, checkedLayers) {
     let id = dataset.DatasetId;
     let container = document.querySelector('[datasetid="' + id + '"]');
     if (!container) return;
@@ -5601,7 +5601,7 @@ class MenuWidget extends React.Component {
           ? info.items[0].byoc_collection
           : null;
       if (byoc && this.props.fetchCatalogApiDates) {
-        this.props.fetchCatalogApiDates(byoc, false);
+        await this.props.fetchCatalogApiDates(byoc, false);
       }
     } catch (e) {}
     document.getElementById('active_label').click();
