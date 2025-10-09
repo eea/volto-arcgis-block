@@ -709,6 +709,12 @@ class BookmarkWidget extends React.Component {
     userObj.bookmarks.hotspot = legacyHotspot;
     userObj.bookmarks.selectedHotspotFilter = selectedHotspotFilter;
     localStorage.setItem(storageKey, JSON.stringify(userObj));
+    try {
+      localStorage.setItem(
+        storageKey + '_bookmarks_backup',
+        JSON.stringify(userObj.bookmarks),
+      );
+    } catch (e) {}
   }
   componentDidUpdate() {
     if (this.userID !== this.props.userID) {
@@ -794,6 +800,22 @@ class BookmarkWidget extends React.Component {
       userObj && userObj.bookmarks && typeof userObj.bookmarks === 'object'
         ? userObj.bookmarks
         : null;
+    if (!bookmarks) {
+      let backup = null;
+      try {
+        backup = JSON.parse(
+          localStorage.getItem(storageKey + '_bookmarks_backup'),
+        );
+      } catch (e) {
+        backup = null;
+      }
+      if (backup && typeof backup === 'object') {
+        userObj.bookmarks = backup;
+        localStorage.setItem(storageKey, JSON.stringify(userObj));
+        bookmarks = backup;
+      }
+    }
+
     if (!bookmarks) return;
     const items = Array.isArray(bookmarks.items) ? bookmarks.items : [];
     const layers = Array.isArray(bookmarks.layers) ? bookmarks.layers : [];
@@ -922,6 +944,12 @@ class BookmarkWidget extends React.Component {
     userObj.bookmarks.hotspot = hotspot;
     userObj.bookmarks.selectedHotspotFilter = selectedHotspotFilter;
     localStorage.setItem(storageKey, JSON.stringify(userObj));
+    try {
+      localStorage.setItem(
+        storageKey + '_bookmarks_backup',
+        JSON.stringify(userObj.bookmarks),
+      );
+    } catch (e) {}
   }
   /**
    * This method renders the component

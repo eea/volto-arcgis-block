@@ -5,6 +5,7 @@
 
 // import defaultReducers from '@plone/volto/reducers';
 import { mapViewerConfigReducer } from './mapviewer/mapviewer_reducer';
+import { catalogapiReducer } from './catalogapi/catalogapi_reducer';
 /**
  * Root reducer.
  * @function
@@ -16,6 +17,7 @@ const reducers = {
   // ...defaultReducers,
   // Add your reducers here
   mapviewer_config: mapViewerConfigReducer,
+  catalogapi: catalogapiReducer,
 };
 
 export default reducers;
