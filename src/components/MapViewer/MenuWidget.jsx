@@ -4381,6 +4381,13 @@ class MenuWidget extends React.Component {
    */
 
   showTimeSlider(elem, fromDownload, hideCalendar) {
+    if (!elem) return;
+    if (!this.timeLayers) this.timeLayers = {};
+    if (!this.visibleLayers) this.visibleLayers = {};
+    if (!this.timeLayers[elem.id]) this.timeLayers[elem.id] = ['far', 'clock'];
+    if (!this.visibleLayers[elem.id]) {
+      this.visibleLayers[elem.id] = ['fas', 'eye'];
+    }
     if (
       sessionStorage.key('timeSliderTag') &&
       sessionStorage.getItem('timeSliderTag') === 'true'
@@ -4393,17 +4400,17 @@ class MenuWidget extends React.Component {
     if (this.timeLayers[elem.id][1] === 'clock') {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
-        let order = this.activeLayersJSON[elem.id].props['layer-order'];
-        if (groupLayers.includes(layerId)) {
+        let order = this.activeLayersJSON[elem.id]?.props?.['layer-order'] || 0;
+        if (groupLayers && groupLayers.includes(layerId)) {
           elem = document.getElementById(layerId);
         }
-        if (elem.id === layerId) {
+        if (elem && elem.id === layerId) {
           this.timeLayers[elem.id] = ['fas', 'stop'];
           if (
             !this.visibleLayers[elem.id] ||
             this.visibleLayers[elem.id][1] === 'eye-slash'
           ) {
-            this.layers[elem.id].visible = true;
+            if (this.layers[elem.id]) this.layers[elem.id].visible = true;
             this.visibleLayers[elem.id] = ['fas', 'eye'];
           }
           document
@@ -4415,9 +4422,13 @@ class MenuWidget extends React.Component {
             .forEach((item) => {
               item.classList.add('locked');
             });
-          document.querySelector('#products_label').classList.add('locked');
-          document.querySelector('#map_remove_layers').classList.add('locked');
-          if (this.props.download)
+          if (document.querySelector('#products_label'))
+            document.querySelector('#products_label').classList.add('locked');
+          if (document.querySelector('#map_remove_layers')) {
+            const mapRemoveBtn = document.querySelector('#map_remove_layers');
+            if (mapRemoveBtn) mapRemoveBtn.classList.add('locked');
+          }
+          if (this.props.download && document.querySelector('#download_label'))
             document.querySelector('#download_label').classList.add('locked');
           this.activeLayersJSON[elem.id] = this.addActiveLayer(
             elem,
@@ -4426,17 +4437,24 @@ class MenuWidget extends React.Component {
             hideCalendar,
           );
         } else {
+          const node = document.getElementById(layerId);
           if (
-            document.getElementById(layerId).parentElement.dataset
-              .timeseries === 'true'
+            node &&
+            node.parentElement &&
+            node.parentElement.dataset &&
+            node.parentElement.dataset.timeseries === 'true'
           ) {
+            if (!this.visibleLayers[layerId]) {
+              this.visibleLayers[layerId] = ['fas', 'eye'];
+            }
             if (this.visibleLayers[layerId][1] === 'eye') {
-              this.layers[layerId].visible = false;
+              if (this.layers[layerId]) this.layers[layerId].visible = false;
               this.visibleLayers[layerId] = ['fas', 'eye-slash'];
             }
-            document
-              .querySelector('.active-layer[layer-id="' + layerId + '"]')
-              .classList.add('locked');
+            const activeNode = document.querySelector(
+              '.active-layer[layer-id="' + layerId + '"]',
+            );
+            if (activeNode) activeNode.classList.add('locked');
           }
           this.activeLayersJSON[layerId] = this.addActiveLayer(
             document.getElementById(layerId),
@@ -4445,17 +4463,18 @@ class MenuWidget extends React.Component {
           );
         }
       });
-      if (document.querySelector('.opacity-panel').style.display === 'block') {
+      const op = document.querySelector('.opacity-panel');
+      if (op && op.style.display === 'block') {
         this.closeOpacity();
       }
     } else {
       activeLayers.forEach((layer) => {
         let layerId = layer.getAttribute('layer-id');
-        let order = this.activeLayersJSON[elem.id].props['layer-order'];
-        if (groupLayers.includes(layerId)) {
+        let order = this.activeLayersJSON[elem.id]?.props?.['layer-order'] || 0;
+        if (groupLayers && groupLayers.includes(layerId)) {
           elem = document.getElementById(layerId);
         }
-        if (elem.id === layerId) {
+        if (elem && elem.id === layerId) {
           this.timeLayers[elem.id] = ['far', 'clock'];
           this.activeLayersJSON[elem.id] = this.addActiveLayer(
             elem,
@@ -4471,46 +4490,46 @@ class MenuWidget extends React.Component {
             .forEach((item) => {
               item.classList.remove('locked');
             });
-          document.querySelector('#products_label').classList.remove('locked');
-          document
-            .querySelector('#map_remove_layers')
-            .classList.remove('locked');
+          const productsLabel = document.querySelector('#products_label');
+          if (productsLabel) productsLabel.classList.remove('locked');
+          const removeBtn = document.querySelector('#map_remove_layers');
+          if (removeBtn) removeBtn.classList.remove('locked');
           if (this.props.download) {
-            document
-              .querySelector('#download_label')
-              .classList.remove('locked');
-            if (
-              document.querySelector(
-                '.active-layer[layer-id="' +
-                  elem.id +
-                  '"] .map-menu-icon.active-layer-time',
-              ).dataset.download === 'true'
-            ) {
-              document.getElementById('download_label').click();
+            const dl = document.querySelector('#download_label');
+            if (dl) dl.classList.remove('locked');
+            const timeIcon = document.querySelector(
+              '.active-layer[layer-id="' +
+                elem.id +
+                '"] .map-menu-icon.active-layer-time',
+            );
+            if (timeIcon && timeIcon.dataset.download === 'true') {
+              const dlBtn = document.getElementById('download_label');
+              if (dlBtn) dlBtn.click();
             }
           } else {
-            if (
-              document.querySelector(
-                '.active-layer[layer-id="' +
-                  elem.id +
-                  '"] .map-menu-icon.active-layer-time',
-              ).dataset.download === 'true'
-            ) {
-              document.getElementById('products_label').click();
+            const timeIcon = document.querySelector(
+              '.active-layer[layer-id="' +
+                elem.id +
+                '"] .map-menu-icon.active-layer-time',
+            );
+            if (timeIcon && timeIcon.dataset.download === 'true') {
+              const prBtn = document.getElementById('products_label');
+              if (prBtn) prBtn.click();
             }
           }
-          if (
-            document.contains(document.querySelector('.timeslider-container'))
-          )
+          const ts = document.querySelector('.timeslider-container');
+          if (ts && document.contains(ts))
             ReactDOM.unmountComponentAtNode(
               document.querySelector('.esri-ui-bottom-right'),
             );
-          if (document.querySelector('.drawRectanglePopup-block'))
-            document.querySelector('.drawRectanglePopup-block').style.display =
-              'block';
+          const warn = document.querySelector('.drawRectanglePopup-block');
+          if (warn) warn.style.display = 'block';
         } else {
+          if (!this.visibleLayers[layerId]) {
+            this.visibleLayers[layerId] = ['fas', 'eye'];
+          }
           if (this.visibleLayers[layerId][1] === 'eye-slash') {
-            this.layers[layerId].visible = true;
+            if (this.layers[layerId]) this.layers[layerId].visible = true;
             this.visibleLayers[layerId] = ['fas', 'eye'];
             this.activeLayersJSON[layerId] = this.addActiveLayer(
               document.getElementById(layerId),
@@ -4518,9 +4537,10 @@ class MenuWidget extends React.Component {
               fromDownload,
             );
           }
-          document
-            .querySelector('.active-layer[layer-id="' + layerId + '"]')
-            .classList.remove('locked');
+          const activeNode = document.querySelector(
+            '.active-layer[layer-id="' + layerId + '"]',
+          );
+          if (activeNode) activeNode.classList.remove('locked');
         }
       });
     }
@@ -5480,18 +5500,31 @@ class MenuWidget extends React.Component {
   }
   checkTimeLayer(dataset, checkedLayers) {
     let id = dataset.DatasetId;
-    let checkbox = document
-      .querySelector('[datasetid="' + id + '"]')
-      .querySelector('.map-dataset-checkbox input');
+    let container = document.querySelector('[datasetid="' + id + '"]');
+    if (!container) return;
+    let checkbox = container.querySelector('.map-dataset-checkbox input');
+    if (!checkbox) return;
     if (!checkbox.checked) {
       checkbox.click();
     }
     document.getElementById('active_label').click();
     if (!document.querySelector('.timeslider-container')) {
-      let layerId = this.findCheckedLayer(dataset, checkedLayers);
       setTimeout(() => {
-        // Display timeslider with no calendar.
-        this.showTimeSlider(document.getElementById(layerId), true, true);
+        let layerInputs = container.querySelectorAll(
+          '.map-menu-layers-container input[type="checkbox"]',
+        );
+        let target = null;
+        layerInputs.forEach((inp) => {
+          if (!target && inp.checked) target = inp;
+        });
+        if (!target && layerInputs[0]) {
+          layerInputs[0].checked = true;
+          this.toggleLayer(layerInputs[0]);
+          target = layerInputs[0];
+        }
+        if (target) {
+          this.showTimeSlider(target, true, true);
+        }
       }, 100);
     }
   }
