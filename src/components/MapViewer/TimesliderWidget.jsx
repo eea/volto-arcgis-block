@@ -54,6 +54,7 @@ class TimesliderWidget extends React.Component {
       document.querySelector('.drawRectanglePopup-block').style.display =
         'none';
     }
+    this._cdseApplied = false;
   }
 
   loader() {
@@ -268,6 +269,73 @@ class TimesliderWidget extends React.Component {
     };
   } // parserPeriod
 
+  applyCDSETemporalData(payload) {
+    try {
+      const arr = Array.isArray(payload?.dates) ? payload.dates : [];
+      if (!arr.length) {
+        this.TimesliderWidget.disabled = true;
+        return;
+      }
+      this.TimesliderWidget.fullTimeExtent = new TimeExtent({
+        start: new Date(arr[arr.length - 1]),
+        end: new Date(arr[0]),
+      });
+      this.TimesliderWidget.stops = {
+        dates: arr.map((e) => new Date(e)),
+      };
+      const time = arr.map((d) => new Date(d));
+      for (let i in time) {
+        timeDict[time[i]] = arr[i];
+      }
+      let periodicity = null;
+      if (arr.length > 1) {
+        periodicity = Math.floor(
+          (Date.parse(arr[1]) - Date.parse(arr[0])) / 86400000,
+        );
+        if (periodicity === 0) {
+          periodicity =
+            (new Date(arr[1]).getHours() - new Date(arr[0]).getHours()) / 24;
+        }
+      }
+      this.setState({ periodicity: periodicity });
+      if (this.TimesliderWidget.effectiveStops.length === 11) {
+        let period =
+          (this.TimesliderWidget.fullTimeExtent.end -
+            this.TimesliderWidget.fullTimeExtent.start) /
+          590000000;
+        if (
+          this.TimesliderWidget.stops &&
+          this.TimesliderWidget.stops.interval &&
+          period > this.TimesliderWidget.stops.interval.value
+        ) {
+          this.TimesliderWidget.stops = {
+            interval: {
+              value: period,
+              unit: 'minutes',
+            },
+          };
+        }
+      }
+      this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
+        if (!this.container.current ? true : false) {
+          this.TimesliderWidget.stop();
+        }
+        if (this.layer.type === 'wmts') {
+          this.layer.customLayerParameters = {
+            SHOWLOGO: false,
+          };
+          this.layer.customLayerParameters['TIME'] =
+            timeDict[this.TimesliderWidget.timeExtent.end];
+        } else {
+          this.layer.customLayerParameters = {};
+          this.layer.customLayerParameters['TIME'] =
+            timeDict[this.TimesliderWidget.timeExtent.end];
+        }
+        this.layer.refresh();
+      });
+    } catch (e) {}
+  }
+
   /**
    * This method is executed after the rener method is executed
    */
@@ -403,97 +471,18 @@ class TimesliderWidget extends React.Component {
             let times = {};
             let periodicity;
             if (isCDSE) {
-              times = await this.getCDSEWFSTemporalData(
-                this.layer.url,
-                this.layer,
-              );
-              if (times) {
-                // Dates array
-                this.TimesliderWidget.fullTimeExtent = new TimeExtent({
-                  start: new Date(
-                    times[this.layerName].array[
-                      times[this.layerName].array.length - 1
-                    ],
-                  ),
-                  end: new Date(times[this.layerName].array[0]),
-                });
-                this.TimesliderWidget.stops = {
-                  dates: times[this.layerName].array.map((e) => new Date(e)),
-                };
-
-                if (this.layer.type === 'wmts') {
-                  this.layer.customLayerParameters = {
-                    SHOWLOGO: false,
-                  };
-                  const time = times[this.layerName].array.map(
-                    (d) => new Date(d),
-                  );
-
-                  for (let i in time) {
-                    timeDict[time[i]] = times[this.layerName].array[i];
-                  }
-                }
-
-                periodicity = Math.floor(
-                  (Date.parse(times[this.layerName].array[1]) -
-                    Date.parse(times[this.layerName].array[0])) /
-                    86400000,
-                );
-                if (periodicity === 0) {
-                  periodicity =
-                    (new Date(times[this.layerName].array[1]).getHours() -
-                      new Date(times[this.layerName].array[0]).getHours()) /
-                    24;
-                }
-
-                this.setState({ periodicity: periodicity });
-                if (this.TimesliderWidget.effectiveStops.length === 11) {
-                  let period =
-                    (this.TimesliderWidget.fullTimeExtent.end -
-                      this.TimesliderWidget.fullTimeExtent.start) /
-                    590000000;
-                  if (period > this.TimesliderWidget.stops.interval.value) {
-                    this.TimesliderWidget.stops = {
-                      interval: {
-                        value: period,
-                        unit: 'minutes',
-                      },
-                    };
-                  }
-                }
-                this.TimesliderWidget.watch('timeExtent', (timeExtent) => {
-                  if (!this.container.current ? true : false) {
-                    this.TimesliderWidget.stop();
-                  }
-                  if (this.layer.type === 'wmts') {
-                    this.layer.customLayerParameters = {
-                      SHOWLOGO: false,
-                    };
-                    this.layer.customLayerParameters['TIME'] =
-                      timeDict[this.TimesliderWidget.timeExtent.end];
-                  } else {
-                    this.layer.customLayerParameters = {};
-                    if (times[this.layerName].hasOwnProperty('array')) {
-                      this.layer.customLayerParameters['TIME'] =
-                        timeDict[this.TimesliderWidget.timeExtent.end];
-                    } else {
-                      const newDateTimeObject = new Date(
-                        this.TimesliderWidget.timeExtent.start.toISOString(),
-                      );
-                      newDateTimeObject.setMinutes(
-                        this.TimesliderWidget.timeExtent.start.getMinutes() +
-                          this.TimesliderWidget.stops['interval'].value,
-                      );
-                      this.layer.customLayerParameters['TIME'] =
-                        this.TimesliderWidget.timeExtent.start.toISOString() +
-                        '/' +
-                        newDateTimeObject.toISOString(); //OK
-                    }
-                  }
-                  this.layer.refresh();
-                });
-              } // if there is dimension time
-              else {
+              const byoc = this.props.catalogApiByoc;
+              const payload =
+                this.props.catalogapi &&
+                this.props.catalogapi.byoc &&
+                byoc &&
+                this.props.catalogapi.byoc[byoc]
+                  ? this.props.catalogapi.byoc[byoc].data
+                  : null;
+              if (payload) {
+                this.applyCDSETemporalData(payload);
+                this._cdseApplied = true;
+              } else {
                 this.TimesliderWidget.disabled = true;
               }
             } else {
@@ -638,6 +627,37 @@ class TimesliderWidget extends React.Component {
         });
     });
   } //componentDidMount
+
+  componentDidUpdate(prevProps) {
+    if (!this.TimesliderWidget) return;
+    const url = this.layer?.url || '';
+    const urlNorm =
+      typeof url === 'string' ? url.replace(/%2F/gi, '/').toLowerCase() : '';
+    const isCDSE = urlNorm.includes('/ogc/') || urlNorm.includes('/cdse/');
+    if (!isCDSE) return;
+    const byoc = this.props.catalogApiByoc;
+    const prevData =
+      prevProps &&
+      prevProps.catalogapi &&
+      prevProps.catalogapi.byoc &&
+      byoc &&
+      prevProps.catalogapi.byoc[byoc]
+        ? prevProps.catalogapi.byoc[byoc].data
+        : null;
+    const currData =
+      this.props &&
+      this.props.catalogapi &&
+      this.props.catalogapi.byoc &&
+      byoc &&
+      this.props.catalogapi.byoc[byoc]
+        ? this.props.catalogapi.byoc[byoc].data
+        : null;
+    if (!this._cdseApplied && currData && currData !== prevData) {
+      this.TimesliderWidget.disabled = false;
+      this.applyCDSETemporalData(currData);
+      this._cdseApplied = true;
+    }
+  }
 
   getPeriodicity() {
     let period = this.state.periodicity;
@@ -848,7 +868,7 @@ class TimesliderWidget extends React.Component {
               onClick={() => this.openCalendar()}
               onKeyDown={() => this.openCalendar()}
             >
-              <Icon name={calendarSVG} size={25} />
+              <Icon name={calendarSVG} size="25px" />
             </button>
           </div>
           <div className="timeslider-panel"></div>
