@@ -3027,42 +3027,6 @@ class MenuWidget extends React.Component {
           }
         }
       } catch (e) {}
-      // try {
-      //   const layer = this.layers[elem.id];
-      //   const viewService = layer?.ViewService || '';
-      //   if (
-      //     viewService &&
-      //     viewService.toLowerCase().includes('wms') &&
-      //     viewService.toLowerCase().includes('/ogc/') &&
-      //     !layer._ogcExtentApplied &&
-      //     !this.extentInitiated
-      //   ) {
-      //     let url;
-      //     const serviceLayer = this.state.wmsUserServiceLayers.find(
-      //       (l) => l.LayerId === elem.id,
-      //     );
-      //     if (!serviceLayer) {
-      //       this.findCheckedDataset(elem);
-      //       url = this.url;
-      //     } else {
-      //       url = serviceLayer.ViewService;
-      //     }
-      //     if (url) {
-      //       await this.getCapabilities(url, 'wms');
-      //       const BBoxes = this.parseBBOXCDSE(this.xml);
-      //       if (BBoxes && BBoxes['dataset']) {
-      //         const myExtent = new Extent({
-      //           xmin: BBoxes['dataset'].xmin,
-      //           ymin: BBoxes['dataset'].ymin,
-      //           xmax: BBoxes['dataset'].xmax,
-      //           ymax: BBoxes['dataset'].ymax,
-      //         });
-      //         this.view.goTo(myExtent);
-      //         layer._ogcExtentApplied = true;
-      //       }
-      //     }
-      //   }
-      // } catch (e) {}
     } else {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
