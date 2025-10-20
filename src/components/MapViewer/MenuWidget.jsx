@@ -3572,146 +3572,128 @@ class MenuWidget extends React.Component {
   parseBBOXCDSE(xml) {
     if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
     const all = Array.from(xml.getElementsByTagName('*'));
-    const isLayer = (n) => n && (n.localName || '').toLowerCase() === 'layer';
+    const isLayer = (node) => node && (node.localName || '').toLowerCase() === 'layer';
     const layers = all.filter(isLayer);
     if (!layers.length) return {};
-    const hasChildLayer = (el) => {
-      const cs = el ? el.children : null;
-      if (!cs) return false;
-      for (let i = 0; i < cs.length; i++) if (isLayer(cs[i])) return true;
+    const hasChildLayer = (element) => {
+      const children = element ? element.children : null;
+      if (!children || !children.length) return false;
+      for (let i = 0; i < children.length; i++) if (isLayer(children[i])) return true;
       return false;
     };
-    const findDesc = (el, nameLower) => {
-      if (!el) return null;
-      const it = el.getElementsByTagName('*');
-      for (let i = 0; i < it.length; i++) {
-        const n = it[i];
-        if ((n.localName || '').toLowerCase() === nameLower) return n;
+    const findDesc = (element, nameLower) => {
+      if (!element || typeof element.getElementsByTagName !== 'function') return null;
+      const items = element.getElementsByTagName('*');
+      for (let i = 0; i < items.length; i++) {
+        const node = items[i];
+        if ((node.localName || '').toLowerCase() === nameLower) return node;
       }
       return null;
     };
-    const leaves = layers.filter((n) => !hasChildLayer(n));
+    const leaves = layers.filter((node) => !hasChildLayer(node));
     if (!leaves.length) return {};
     const boxes = {};
-    const xs = [];
-    const ys = [];
+    const xList = [];
+    const yList = [];
     for (let i = 0; i < leaves.length; i++) {
       const leaf = leaves[i];
-      const nameEl = findDesc(leaf, 'name');
+      if (!leaf) continue;
+      const nameElement = findDesc(leaf, 'name');
       const name =
-        nameEl && nameEl.textContent ? nameEl.textContent.trim() : '';
+        nameElement && nameElement.textContent ? nameElement.textContent.trim() : '';
       if (!name) continue;
-      let bb = findDesc(leaf, 'boundingbox');
-      if (!bb) {
-        let p = leaf.parentElement;
-        while (p) {
-          if (isLayer(p)) {
-            const cand = findDesc(p, 'boundingbox');
-            if (cand) {
-              bb = cand;
+      let bboxElement = findDesc(leaf, 'boundingbox');
+      if (!bboxElement) {
+        let parent = leaf.parentElement;
+        while (parent) {
+          if (isLayer(parent)) {
+            const candidate = findDesc(parent, 'boundingbox');
+            if (candidate) {
+              bboxElement = candidate;
               break;
             }
           }
-          p = p.parentElement;
+          parent = parent.parentElement;
         }
       }
-      if (!bb) continue;
-      const w = parseFloat(bb.getAttribute('minx') || '');
-      const s = parseFloat(bb.getAttribute('miny') || '');
-      const e = parseFloat(bb.getAttribute('maxx') || '');
-      const n = parseFloat(bb.getAttribute('maxy') || '');
-      if (!isFinite(w) || !isFinite(s) || !isFinite(e) || !isFinite(n))
+      if (!bboxElement) continue;
+      const west = parseFloat(bboxElement.getAttribute('minx') || '');
+      const south = parseFloat(bboxElement.getAttribute('miny') || '');
+      const east = parseFloat(bboxElement.getAttribute('maxx') || '');
+      const north = parseFloat(bboxElement.getAttribute('maxy') || '');
+      if (!isFinite(west) || !isFinite(south) || !isFinite(east) || !isFinite(north))
         continue;
-      boxes[name] = { xmin: w, ymin: s, xmax: e, ymax: n };
-      xs.push(w, e);
-      ys.push(s, n);
+      boxes[name] = { xmin: west, ymin: south, xmax: east, ymax: north };
+      xList.push(west, east);
+      yList.push(south, north);
     }
     if (!Object.keys(boxes).length) return {};
+    if (!xList.length || !yList.length) return boxes;
     boxes.dataset = {
-      xmin: Math.min.apply(Math, xs),
-      ymin: Math.min.apply(Math, ys),
-      xmax: Math.max.apply(Math, xs),
-      ymax: Math.max.apply(Math, ys),
+      xmin: Math.min.apply(Math, xList),
+      ymin: Math.min.apply(Math, yList),
+      xmax: Math.max.apply(Math, xList),
+      ymax: Math.max.apply(Math, yList),
     };
     return boxes;
   }
 
   parseBBOXWMS(xml) {
-    if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
+    if (!xml || typeof xml.querySelectorAll !== 'function' || typeof xml.getElementsByTagName !== 'function') return {};
     const layerParentNode = xml.querySelectorAll('Layer');
+    if (!layerParentNode || layerParentNode.length === 0) return {};
     let layersChildren = Array.from(layerParentNode).filter(
-      (v) => v.querySelectorAll('Layer').length === 0,
+      (v) => v && v.querySelectorAll && v.querySelectorAll('Layer').length === 0,
     );
     let layerParent = Array.from(layerParentNode).filter(
-      (v) => v.querySelectorAll('Layer').length !== 0,
+      (v) => v && v.querySelectorAll && v.querySelectorAll('Layer').length !== 0,
     );
+    if (!layersChildren.length && !layerParent.length) return {};
     let BBoxes = {};
-    let layerGeoGraphic = {};
+    let layerGeographicNode = {};
     let xList = [];
     let yList = [];
     for (let i in layersChildren) {
-      if (
-        layersChildren[i].querySelector('EX_GeographicBoundingBox') !== null
-      ) {
-        // If the layer has BBOX
-        layerGeoGraphic = layersChildren[i].querySelector(
-          'EX_GeographicBoundingBox',
-        );
+      const child = layersChildren[i];
+      if (!child || typeof child.querySelector !== 'function') continue;
+      const bboxNode = child.querySelector('EX_GeographicBoundingBox');
+      if (bboxNode !== null) {
+        layerGeographicNode = bboxNode;
       } else {
-        // If the layer has no BBOX, it was assigned dataset BBOX
-        layerGeoGraphic = layerParent[0].querySelector(
-          'EX_GeographicBoundingBox',
-        );
+        const parentNode = layerParent && layerParent.length ? layerParent[0] : null;
+        layerGeographicNode = parentNode && typeof parentNode.querySelector === 'function' ? parentNode.querySelector('EX_GeographicBoundingBox') : null;
       }
-      BBoxes[layersChildren[i].querySelector('Name').innerText] = {
-        xmin: Number(
-          layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-        ),
-        ymin: Number(
-          layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-        ),
-        xmax: Number(
-          layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-        ),
-        ymax: Number(
-          layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-        ),
+      const nameNode = child.querySelector('Name');
+      const key = nameNode && typeof nameNode.innerText === 'string' ? nameNode.innerText : '';
+      if (!layerGeographicNode || !key) continue;
+      const westNode = layerGeographicNode.querySelector('westBoundLongitude');
+      const southNode = layerGeographicNode.querySelector('southBoundLatitude');
+      const eastNode = layerGeographicNode.querySelector('eastBoundLongitude');
+      const northNode = layerGeographicNode.querySelector('northBoundLatitude');
+      if (!westNode || !southNode || !eastNode || !northNode) continue;
+      const xmin = Number(westNode.innerText);
+      const ymin = Number(southNode.innerText);
+      const xmax = Number(eastNode.innerText);
+      const ymax = Number(northNode.innerText);
+      if (!isFinite(xmin) || !isFinite(ymin) || !isFinite(xmax) || !isFinite(ymax)) continue;
+      BBoxes[key] = {
+        xmin: xmin,
+        ymin: ymin,
+        xmax: xmax,
+        ymax: ymax,
       };
-      xList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].xmin,
-      );
-      yList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].ymin,
-      );
-      xList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].xmax,
-      );
-      yList.push(
-        BBoxes[layersChildren[i].querySelector('Name').innerText].ymax,
-      );
+      xList.push(BBoxes[key].xmin);
+      yList.push(BBoxes[key].ymin);
+      xList.push(BBoxes[key].xmax);
+      yList.push(BBoxes[key].ymax);
     } // For loop
-    // Add dataset bbox
+    if (!xList.length || !yList.length) return {};
     BBoxes['dataset'] = {
       xmin: Math.min.apply(Math, xList),
       ymin: Math.min.apply(Math, yList),
       xmax: Math.max.apply(Math, xList),
       ymax: Math.max.apply(Math, yList),
     };
-    // layerGeoGraphic = layerParent[0].querySelector('EX_GeographicBoundingBox');
-    // BBoxes['dataset'] = {
-    //   xmin: Number(
-    //     layerGeoGraphic.querySelector('westBoundLongitude').innerText,
-    //   ),
-    //   ymin: Number(
-    //     layerGeoGraphic.querySelector('southBoundLatitude').innerText,
-    //   ),
-    //   xmax: Number(
-    //     layerGeoGraphic.querySelector('eastBoundLongitude').innerText,
-    //   ),
-    //   ymax: Number(
-    //     layerGeoGraphic.querySelector('northBoundLatitude').innerText,
-    //   ),
-    // };
     return BBoxes;
   } // function parseWMS
 
@@ -3721,56 +3703,66 @@ class MenuWidget extends React.Component {
 
   // Web Map Tiled Services WMTS
   parseBBOXWMTS(xml) {
-    if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
+    if (!xml || typeof xml.querySelectorAll !== 'function' || typeof xml.getElementsByTagName !== 'function') return {};
     let BBoxes = {};
     let layersChildren = null;
     let layerParent = null;
     const layerParentNode = xml.querySelectorAll('Layer');
+    if (!layerParentNode || layerParentNode.length === 0) return {};
     layersChildren = Array.from(layerParentNode).filter(
-      (v) => v.querySelectorAll('Layer').length === 0,
+      (v) => v && v.querySelectorAll && v.querySelectorAll('Layer').length === 0,
     );
     layerParent = Array.from(layerParentNode).filter(
-      (v) => v.querySelectorAll('Layer').length !== 0,
+      (v) => v && v.querySelectorAll && v.querySelectorAll('Layer').length !== 0,
     );
-    let LowerCorner,
-      UpperCorner = [];
+    if (!layersChildren.length && !layerParent.length) return {};
+    let lowerCornerValues,
+      upperCornerValues = [];
     let xList = [];
     let yList = [];
     let title = '';
     for (let i in layersChildren) {
+      const child = layersChildren[i];
+      if (!child) continue;
+      const lowerCornerNodes = this.parseCapabilities(child, 'ows:LowerCorner');
+      const upperCornerNodes = this.parseCapabilities(child, 'ows:UpperCorner');
       if (
-        this.parseCapabilities(layersChildren[i], 'ows:LowerCorner').length !==
-        0
+        lowerCornerNodes &&
+        lowerCornerNodes.length !== 0 &&
+        upperCornerNodes &&
+        upperCornerNodes.length !== 0
       ) {
-        // If the layer has BBOX
-        LowerCorner = this.parseCapabilities(
-          layersChildren[i],
-          'ows:LowerCorner',
-        )[0].innerText.split(' ');
-        UpperCorner = this.parseCapabilities(
-          layersChildren[i],
-          'ows:UpperCorner',
-        )[0].innerText.split(' ');
-      } else if (
-        this.parseCapabilities(layerParent, 'ows:LowerCorner').length !== 0
-      ) {
-        // If the layer has no BBOX, it was assigned dataset BBOX
-        LowerCorner = this.parseCapabilities(
-          layerParent,
-          'ows:LowerCorner',
-        )[0].innerText.split(' ');
-        UpperCorner = this.parseCapabilities(
-          layerParent,
-          'ows:UpperCorner',
-        )[0].innerText.split(' ');
+        lowerCornerValues = lowerCornerNodes[0].innerText.split(' ');
+        upperCornerValues = upperCornerNodes[0].innerText.split(' ');
+      } else {
+        const parentNode = layerParent && layerParent.length ? layerParent[0] : null;
+        const parentLower = parentNode ? this.parseCapabilities(parentNode, 'ows:LowerCorner') : null;
+        const parentUpper = parentNode ? this.parseCapabilities(parentNode, 'ows:UpperCorner') : null;
+        if (
+          parentLower &&
+          parentLower.length !== 0 &&
+          parentUpper &&
+          parentUpper.length !== 0
+        ) {
+          lowerCornerValues = parentLower[0].innerText.split(' ');
+          upperCornerValues = parentUpper[0].innerText.split(' ');
+        } else {
+          continue;
+        }
       }
-      title = this.parseCapabilities(layersChildren[i], 'ows:Title')[0]
-        .innerText;
+      const titleNodes = this.parseCapabilities(child, 'ows:Title');
+      if (!titleNodes || !titleNodes[0] || typeof titleNodes[0].innerText !== 'string') continue;
+      title = titleNodes[0].innerText;
+      const xmin = Number(lowerCornerValues[0]);
+      const ymin = Number(lowerCornerValues[1]);
+      const xmax = Number(upperCornerValues[0]);
+      const ymax = Number(upperCornerValues[1]);
+      if (!isFinite(xmin) || !isFinite(ymin) || !isFinite(xmax) || !isFinite(ymax)) continue;
       BBoxes[title] = {
-        xmin: Number(LowerCorner[0]),
-        ymin: Number(LowerCorner[1]),
-        xmax: Number(UpperCorner[0]),
-        ymax: Number(UpperCorner[1]),
+        xmin: Number(lowerCornerValues[0]),
+        ymin: Number(lowerCornerValues[1]),
+        xmax: Number(upperCornerValues[0]),
+        ymax: Number(upperCornerValues[1]),
       };
       xList.push(BBoxes[title].xmin);
       yList.push(BBoxes[title].ymin);
@@ -3778,34 +3770,13 @@ class MenuWidget extends React.Component {
       yList.push(BBoxes[title].ymax);
     } // For loop
 
+    if (!xList.length || !yList.length) return {};
     BBoxes['dataset'] = {
       xmin: Math.min.apply(Math, xList),
       ymin: Math.min.apply(Math, yList),
       xmax: Math.max.apply(Math, xList),
       ymax: Math.max.apply(Math, yList),
     };
-
-    // if (
-    //   typeof layerParent === 'object' &&
-    //   layerParent !== null &&
-    //   'getElementsByTagName' in layerParent
-    // ) {
-    //   LowerCorner = this.parseCapabilities(
-    //     layerParent,
-    //     'ows:LowerCorner',
-    //   )[0]?.innerText.split(' ');
-    //   UpperCorner = this.parseCapabilities(
-    //     layerParent,
-    //     'ows:UpperCorner',
-    //   )[0].innerText.split(' ');
-
-    //   BBoxes['dataset'] = {
-    //     xmin: Number(LowerCorner[0]),
-    //     ymin: Number(LowerCorner[1]),
-    //     xmax: Number(UpperCorner[0]),
-    //     ymax: Number(UpperCorner[1]),
-    //   };
-    // }
     return BBoxes;
   }
 
