@@ -3637,6 +3637,7 @@ class MenuWidget extends React.Component {
   }
 
   parseBBOXWMS(xml) {
+    if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
     const layerParentNode = xml.querySelectorAll('Layer');
     let layersChildren = Array.from(layerParentNode).filter(
       (v) => v.querySelectorAll('Layer').length === 0,
@@ -3720,6 +3721,7 @@ class MenuWidget extends React.Component {
 
   // Web Map Tiled Services WMTS
   parseBBOXWMTS(xml) {
+    if (!xml || typeof xml.getElementsByTagName !== 'function') return {};
     let BBoxes = {};
     let layersChildren = null;
     let layerParent = null;
