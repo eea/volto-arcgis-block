@@ -2888,7 +2888,7 @@ class MenuWidget extends React.Component {
         ) {
           this.extentInitiated = true;
           // setTimeout(() => {
-          this.FullExtentDataset(elem);
+          this.fullExtentDataset(elem);
           // }, 2000);
         }
       }
@@ -3896,7 +3896,7 @@ class MenuWidget extends React.Component {
     return null;
   }
 
-  async FullExtentDataset(elem) {
+  async fullExtentDataset(elem) {
     const serviceLayer = this.state.wmsUserServiceLayers.find(
       (layer) => layer.LayerId === elem.id,
     );
@@ -3910,12 +3910,47 @@ class MenuWidget extends React.Component {
       ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
     let BBoxes = {};
     if (isCDSE) {
-      const d =
+      let d =
         this.layers[elem.id]?.DatasetDownloadInformation ||
         this.layers[elem.id]?.datasetDownloadInformation ||
+        this.layers[elem.id]?.dataset_download_information ||
         {};
-      const byoc =
-        d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+      let byoc = d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+
+      if (!byoc) {
+        let parentId = elem.getAttribute('parentid');
+        let datasetInput = document.getElementById(parentId);
+        let datasetContainer = datasetInput
+          ? datasetInput.closest('.map-menu-dataset-dropdown')
+          : null;
+        let datasetId = datasetContainer
+          ? datasetContainer.getAttribute('datasetid')
+          : null;
+        if (datasetId && this.compCfg && Array.isArray(this.compCfg)) {
+          for (let i = 0; i < this.compCfg.length; i++) {
+            const comp = this.compCfg[i];
+            if (!comp || !comp.Products) continue;
+            for (let j = 0; j < comp.Products.length; j++) {
+              const prod = comp.Products[j];
+              if (!prod || !prod.Datasets) continue;
+              for (let k = 0; k < prod.Datasets.length; k++) {
+                const ds = prod.Datasets[k];
+                if (ds && ds.DatasetId === datasetId) {
+                  const info =
+                    ds.dataset_download_information ||
+                    ds.DatasetDownloadInformation ||
+                    {};
+                  if (info && info.items && info.items[0]) {
+                    byoc = info.items[0].byoc_collection || byoc;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
       if (byoc && this.props.fetchCatalogApiDates) {
         let payload =
           this.props.catalogapi &&
@@ -3937,7 +3972,7 @@ class MenuWidget extends React.Component {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
       await this.getCapabilities(this.url, 'wms');
-      this.parseBBOXWMS(this.xml);
+      BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
       await this.getCapabilities(this.url, 'wmts');
       BBoxes = this.parseBBOXWMTS(this.xml);
@@ -3949,7 +3984,7 @@ class MenuWidget extends React.Component {
         ymin: -20037508.342789,
         xmax: 20037508.342789,
         ymax: 20037508.342789,
-        spatialReference: 3857, // by default wkid 4326
+        spatialReference: 3857,
       });
     } else {
       myExtent = new Extent({
@@ -3957,36 +3992,9 @@ class MenuWidget extends React.Component {
         ymin: BBoxes['dataset'].ymin,
         xmax: BBoxes['dataset'].xmax,
         ymax: BBoxes['dataset'].ymax,
-        // spatialReference: 4326 // by default wkid 4326
       });
     }
-    if (isCDSE) {
-      const maxMppAllowed = 23628.54;
-      const vw = this.view && this.view.width ? this.view.width : 0;
-      const vh = this.view && this.view.height ? this.view.height : 0;
-      let extentWM = myExtent;
-      try {
-        if (
-          !(
-            myExtent.spatialReference && myExtent.spatialReference.wkid === 3857
-          )
-        ) {
-          extentWM = WebMercatorUtils.geographicToWebMercator(myExtent);
-        }
-      } catch (e) {}
-      if (vw > 0 && vh > 0) {
-        const mppX = (extentWM.xmax - extentWM.xmin) / vw;
-        const mppY = (extentWM.ymax - extentWM.ymin) / vh;
-        const mpp = Math.max(mppX, mppY);
-        if (mpp > maxMppAllowed) {
-          const cx = (myExtent.xmin + myExtent.xmax) / 2;
-          const cy = (myExtent.ymin + myExtent.ymax) / 2;
-          this.view.goTo({ center: [cx, cy], zoom: 3 });
-          return;
-        }
-      }
-    }
-    this.view.goTo(myExtent); //
+    this.view.goTo(myExtent);
   }
 
   async fullExtent(elem) {
@@ -4020,12 +4028,47 @@ class MenuWidget extends React.Component {
       });
     }
     if (isCDSE) {
-      const d =
+      let d =
         this.layers[elem.id]?.DatasetDownloadInformation ||
         this.layers[elem.id]?.datasetDownloadInformation ||
+        this.layers[elem.id]?.dataset_download_information ||
         {};
-      const byoc =
-        d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+      let byoc = d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+
+      if (!byoc) {
+        let parentId = elem.getAttribute('parentid');
+        let datasetInput = document.getElementById(parentId);
+        let datasetContainer = datasetInput
+          ? datasetInput.closest('.map-menu-dataset-dropdown')
+          : null;
+        let datasetId = datasetContainer
+          ? datasetContainer.getAttribute('datasetid')
+          : null;
+        if (datasetId && this.compCfg && Array.isArray(this.compCfg)) {
+          for (let i = 0; i < this.compCfg.length; i++) {
+            const comp = this.compCfg[i];
+            if (!comp || !comp.Products) continue;
+            for (let j = 0; j < comp.Products.length; j++) {
+              const prod = comp.Products[j];
+              if (!prod || !prod.Datasets) continue;
+              for (let k = 0; k < prod.Datasets.length; k++) {
+                const ds = prod.Datasets[k];
+                if (ds && ds.DatasetId === datasetId) {
+                  const info =
+                    ds.dataset_download_information ||
+                    ds.DatasetDownloadInformation ||
+                    {};
+                  if (info && info.items && info.items[0]) {
+                    byoc = info.items[0].byoc_collection || byoc;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
       if (byoc && this.props.fetchCatalogApiDates) {
         let payload =
           this.props.catalogapi &&
@@ -4044,13 +4087,12 @@ class MenuWidget extends React.Component {
       }
       return;
     } else if (this.productId?.includes('333e4100b79045daa0ff16466ac83b7f')) {
-      //global dynamic landCover
       this.findDatasetBoundingBox(elem);
 
       BBoxes = this.parseBBOXJSON(this.dataBBox);
     } else if (
-      this.productId?.includes('fe8209dffe13454891cea05998c8e456') || // Low Resolution Vegetation Parameters
-      this.productId?.includes('8914fde2241a4035818af8f0264fd55e') // Water Parameters
+      this.productId?.includes('fe8209dffe13454891cea05998c8e456') ||
+      this.productId?.includes('8914fde2241a4035818af8f0264fd55e')
     ) {
       if (
         this.layers[elem.id].fullExtents &&
@@ -4063,7 +4105,7 @@ class MenuWidget extends React.Component {
           ymin: -20037508.342789,
           xmax: 20037508.342789,
           ymax: 20037508.342789,
-          spatialReference: 3857, // by default wkid 4326
+          spatialReference: 3857,
         });
         this.view.goTo(myExtent);
       }
@@ -4090,7 +4132,6 @@ class MenuWidget extends React.Component {
         firstLayer = BBoxes.dataset;
       }
       if (productIds?.includes(this.productId)) {
-        // Your code here for when productIds includes this.productId
         let str = elem.parentNode.outerHTML;
         let match = str.match(/layerid="([a-zA-Z0-9_:-]+)"/);
         let layerid = match ? match[1] : null;
@@ -4099,8 +4140,6 @@ class MenuWidget extends React.Component {
           this.productId?.includes('130299ac96e54c30a12edd575eff80f7') &&
           layerid.length <= 2
         ) {
-          //let match = str.match(/layerid="(\d+)"/);
-          //let layerid = match ? match[1] : null;
           if (this.url?.toLowerCase().endsWith('mapserver')) {
             switch (layerid) {
               case '1':
@@ -4174,7 +4213,6 @@ class MenuWidget extends React.Component {
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else if (serviceLayer) {
-        // Full extent treatment for service layers
         firstLayer = BBoxes['dataset'];
       } else {
         firstLayer = BBoxes[elem.attributes.layerid.value];
@@ -4185,9 +4223,8 @@ class MenuWidget extends React.Component {
         ymin: firstLayer.ymin,
         xmax: firstLayer.xmax,
         ymax: firstLayer.ymax,
-        // spatialReference: 4326 // by default wkid 4326
       });
-      this.view.goTo(myExtent); //
+      this.view.goTo(myExtent);
     }
     this.url = null;
   }
