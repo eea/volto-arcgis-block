@@ -75,14 +75,37 @@ class HotspotWidget extends React.Component {
       this.props.urls.klc_bbox;
     return esriRequest(url, {
       responseType: 'json',
-    }).then((response) => {
-      const responseJSON = response.data;
-      this.dataBBox = responseJSON;
-    });
+    })
+      .then((response) => {
+        const responseJSON = response.data;
+        if (Array.isArray(responseJSON)) {
+          this.dataBBox = responseJSON;
+        } else {
+          this.dataBBox = [];
+        }
+      })
+      .catch(async () => {
+        try {
+          const res = await fetch(url, { credentials: 'same-origin' });
+          const text = await res.text();
+          const start = text.indexOf('[');
+          const end = text.lastIndexOf(']');
+          if (start !== -1 && end !== -1) {
+            const json = JSON.parse(text.substring(start, end + 1));
+            this.dataBBox = Array.isArray(json) ? json : [];
+          } else {
+            this.dataBBox = [];
+          }
+        } catch (_) {
+          this.dataBBox = [];
+        }
+      });
   };
 
   setBBoxCoordinates = (data) => {
+    if (!data || !Array.isArray(data)) return;
     let klc_array = data.find((e) => e.klc_code === this.dataKlc_code);
+    if (!klc_array || !klc_array.bbox) return;
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
@@ -92,10 +115,6 @@ class HotspotWidget extends React.Component {
       ymin: this.mapCfg.geometryZoomIn.ymin,
       xmax: this.mapCfg.geometryZoomIn.xmax,
       ymax: this.mapCfg.geometryZoomIn.ymax,
-      // xmin: -200,
-      // ymin: -85,
-      // xmax: 200,
-      // ymax: 85,
       spatialReference: 4326,
     });
     this.props.view.constraints.geometry = constraintExtent;
@@ -205,19 +224,15 @@ class HotspotWidget extends React.Component {
     typeLegend,
     selectBoxTime,
   ) {
-    //sweep the old filtered data
+    if (!bboxData || !Array.isArray(bboxData)) return;
     if (filteredLayersData[typeLegend] !== undefined) {
       delete filteredLayersData[typeLegend];
     }
-    //Find the bbox data for the chosen region
     let klc_array = bboxData.find((e) => e.klc_code === this.dataKlc_code);
-
-    //Parse the bbox data into finer detail
+    if (!klc_array || !klc_array.bbox) return;
     let klc_bbox_coordinates = klc_array.bbox.split(',');
     let xmin_ymin = klc_bbox_coordinates[0].split(' ');
     let xmax_ymax = klc_bbox_coordinates[1].split(' ');
-
-    //Add the filtered data to the filteredLayersData object
     filteredLayersData[typeLegend] = {
       klc_code: this.dataKlc_code,
       year: selectBoxTime,
@@ -242,7 +257,9 @@ class HotspotWidget extends React.Component {
       this.props.hotspotData && this.props.hotspotData['filteredLayers']
         ? Object.keys(this.props.hotspotData['filteredLayers'])
         : [];
-    let filteredLayersData = this.props.hotspotData['filteredLayerData'] || [];
+    let filteredLayersData =
+      (this.props.hotspotData && this.props.hotspotData['filteredLayerData']) ||
+      [];
     let layersToAdd = {};
     let bookmarkHotspotFilter = JSON.parse(
       localStorage.getItem('bookmarkHotspotFilter'),
@@ -441,9 +458,14 @@ class HotspotWidget extends React.Component {
   }
 
   filteredLayersToHotspotData(layerIds, layersData) {
-    let updatedFilteredLayers = this.props.hotspotData['filteredLayers'] || {};
-    let filteredLayersData = this.props.hotspotData['filteredLayersData'] || {};
-    let newHotspotData = this.props.hotspotData;
+    let updatedFilteredLayers =
+      (this.props.hotspotData && this.props.hotspotData['filteredLayers']) ||
+      {};
+    let filteredLayersData =
+      (this.props.hotspotData &&
+        this.props.hotspotData['filteredLayersData']) ||
+      {};
+    let newHotspotData = this.props.hotspotData || {};
     layerIds.forEach((layerId) => {
       let layer = Object.entries(this.layers).find(
         ([key, value]) => key === layerId,
@@ -536,7 +558,10 @@ class HotspotWidget extends React.Component {
 
   renderApplyFilterButton() {
     let typeFilter = [];
-    const activeLayers = Object.keys(this.props.hotspotData['activeLayers']);
+    const activeLayers =
+      this.props.hotspotData && this.props.hotspotData['activeLayers']
+        ? Object.keys(this.props.hotspotData['activeLayers'])
+        : [];
 
     if (
       this.container.current.querySelector('.presentLandCoverContainer').style
