@@ -289,6 +289,27 @@
   color: white !important;
 }
 
+.upload-bookmark-button {
+  width: 16rem !important;
+  justify-content: start !important;
+  border-color: #a0b128 !important;
+  margin-left: 0.65rem;
+  background-color: white !important;
+  color: #a0b128 !important;
+}
+
+.upload-bookmark-button:hover {
+  background-color: #a0b128 !important;
+  color: white !important;
+}
+
+.download-bookmark-button {
+  width: 25px !important;
+  height: 30px !important;
+  border-color: white !important;
+  font-size: 30px !important;
+}
+
 body.section-map-viewer
   #page-document.ui.container
   .esri-widget__content--empty

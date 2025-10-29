@@ -35,6 +35,7 @@ class BookmarkWidget extends React.Component {
     this.boundLimitMaxLenth = this.limitMaxLenth.bind(this);
     this._isMounted = false;
     this._skipNextChangePersist = true;
+    this.fileInput = createRef();
   }
 
   loader() {
@@ -246,6 +247,18 @@ class BookmarkWidget extends React.Component {
       this.sessionBookmarks.push(bookmark);
     });
     this.Bookmarks.when(() => {
+      document
+        .querySelectorAll('.esri-bookmarks__bookmark')
+        .forEach((bookmark) => {
+          let download_button = document.createElement('button');
+          download_button.className = 'esri-button download-bookmark-button';
+          download_button.innerText = '⭳';
+          download_button.bookmarkName = bookmark.innerText;
+          download_button.addEventListener('click', (e) => {
+            this.downloadBookmark(e.currentTarget.bookmarkName);
+          });
+          bookmark.insertBefore(download_button, bookmark.childNodes[2]);
+        });
       this.arcgisEventHandles.push(
         this.Bookmarks.bookmarks.on('change', (e) => {
           if (!this._isMounted) return;
@@ -311,6 +324,28 @@ class BookmarkWidget extends React.Component {
                   Array.isArray(this.sessionBookmarkHotspot)
                 ) {
                   this.sessionBookmarkHotspot.splice(index, 1);
+                }
+                if (this.sessionBookmarks.length === 0) {
+                  if (this.userID !== null) {
+                    const storageKey = 'user_' + this.userID;
+                    let userObj;
+                    try {
+                      userObj =
+                        JSON.parse(localStorage.getItem(storageKey)) || {};
+                    } catch (e) {
+                      userObj = {};
+                    }
+                    if (userObj.bookmarks) {
+                      userObj.bookmarks = {};
+                    }
+                    localStorage.setItem(storageKey, JSON.stringify(userObj));
+                    try {
+                      localStorage.setItem(
+                        storageKey + '_bookmarks_backup',
+                        {},
+                      );
+                    } catch (e) {}
+                  }
                 }
                 shouldUpdate = true;
                 break;
@@ -769,6 +804,20 @@ class BookmarkWidget extends React.Component {
         );
       });
     });
+    document
+      .querySelectorAll('.esri-bookmarks__bookmark')
+      .forEach((bookmark) => {
+        if (bookmark.childNodes.length < 4) {
+          let download_button = document.createElement('button');
+          download_button.className = 'esri-button download-bookmark-button';
+          download_button.innerText = '⭳';
+          download_button.bookmarkName = bookmark.innerText;
+          download_button.addEventListener('click', (e) => {
+            this.downloadBookmark(e.currentTarget.bookmarkName);
+          });
+          bookmark.insertBefore(download_button, bookmark.childNodes[2]);
+        }
+      });
   }
   componentWillUnmount() {
     this._isMounted = false;
@@ -951,6 +1000,122 @@ class BookmarkWidget extends React.Component {
       );
     } catch (e) {}
   }
+  downloadBookmark(name) {
+    if (this.userID == null) return;
+    const storageKey = 'user_' + this.userID;
+    let userObj;
+    try {
+      userObj = JSON.parse(localStorage.getItem(storageKey)) || {};
+    } catch (e) {
+      userObj = {};
+    }
+    let bookmarks =
+      userObj && userObj.bookmarks && typeof userObj.bookmarks === 'object'
+        ? userObj.bookmarks
+        : null;
+    if (!bookmarks) {
+      try {
+        bookmarks = JSON.parse(
+          localStorage.getItem(storageKey + '_bookmarks_backup'),
+        );
+      } catch (e) {
+        return;
+      }
+    }
+    if (!bookmarks) return;
+    let index = 0;
+    for (index; index < bookmarks.items.length; index++) {
+      if (bookmarks.items[index].name === name) {
+        break;
+      }
+    }
+    let selectedBookmark = {
+      items: Array.isArray(bookmarks.items) ? bookmarks.items[index] : [],
+      layers: Array.isArray(bookmarks.layers) ? bookmarks.layers[index] : [],
+      opacity: Array.isArray(bookmarks.opacity) ? bookmarks.opacity[index] : [],
+      visible: Array.isArray(bookmarks.visible) ? bookmarks.visible[index] : [],
+      hotspot: Array.isArray(bookmarks.hotspot) ? bookmarks.hotspot[index] : [],
+      selectedHotspotFilter:
+        bookmarks.selectedHotspotFilter != null
+          ? bookmarks.selectedHotspotFilter
+          : null,
+    };
+    let filename = 'bookmark_' + selectedBookmark.items.name;
+    //const JSONToFile = (userObj, filename) => {
+    const blob = new Blob([JSON.stringify(selectedBookmark)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  handleUploadClick(event) {
+    event.preventDefault();
+    this.fileInput.current.click();
+  }
+  handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (file) {
+      if (this.userID == null) return;
+      const storageKey = 'user_' + this.userID;
+      let userObj;
+      try {
+        userObj = JSON.parse(localStorage.getItem(storageKey)) || {};
+      } catch (e) {
+        userObj = {};
+      }
+      if (userObj.bookmarks == null) {
+        userObj.bookmarks = {
+          items: [],
+          layers: [],
+          opacity: [],
+          visible: [],
+          hotspot: [],
+          selectedHotspotFilter: null,
+        };
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          userObj.bookmarks.items.push(data.items);
+          userObj.bookmarks.layers.push(data.layers);
+          userObj.bookmarks.opacity.push(data.opacity);
+          userObj.bookmarks.visible.push(data.visible);
+          userObj.bookmarks.hotspot.push(data.hotspot);
+          userObj.bookmarks.selectedHotspotFilter = data.selectedHotspotFilter;
+        } catch (e) {}
+        localStorage.setItem(storageKey, JSON.stringify(userObj));
+        try {
+          localStorage.setItem(
+            storageKey + '_bookmarks_backup',
+            JSON.stringify(userObj.bookmarks),
+          );
+        } catch (e) {}
+        this.loadBookmarksToWidget();
+        this.Bookmarks.bookmarks = this.sessionBookmarks.map((bm) => {
+          if (bm.extent) {
+            const { extent, ...rest } = bm;
+            let geometry;
+            if (extent && typeof extent === 'object') {
+              geometry = extent.type ? extent : new Extent(extent);
+            }
+            return {
+              ...rest,
+              viewpoint: {
+                targetGeometry: geometry,
+              },
+            };
+          }
+          return bm;
+        });
+      };
+      reader.readAsText(file);
+    }
+  }
   /**
    * This method renders the component
    * @returns jsx
@@ -1005,6 +1170,25 @@ class BookmarkWidget extends React.Component {
             </div>
             <div className="right-panel-content">
               <div className="bookmark-panel"></div>
+              <input
+                type="file"
+                name="file"
+                id="inFile"
+                ref={this.fileInput}
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  this.handleFileUpload(e);
+                }}
+              />
+              <button
+                className="esri-button upload-bookmark-button"
+                onClick={(e) => {
+                  this.handleUploadClick(e);
+                }}
+                type="submit"
+              >
+                Upload file
+              </button>
             </div>
           </div>
         </div>
