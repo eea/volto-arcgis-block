@@ -3879,19 +3879,64 @@ class MenuWidget extends React.Component {
 
   async datasetFullExtentFromPayload(payload) {
     if (!payload) return null;
-    if (Array.isArray(payload.extent) && payload.extent.length === 4) {
+    if (
+      payload.metadata &&
+      Array.isArray(payload.metadata.bbox) &&
+      payload.metadata.bbox.length === 4
+    ) {
+      const srName = payload.metadata?.geometry?.crs?.properties?.name || '';
+      const isCRS84 =
+        typeof srName === 'string' && srName.toUpperCase().includes('CRS84');
       return new Extent({
-        xmin: payload.extent[0],
-        ymin: payload.extent[1],
-        xmax: payload.extent[2],
-        ymax: payload.extent[3],
-        spatialReference: { wkid: 3857 },
+        xmin: payload.metadata.bbox[0],
+        ymin: payload.metadata.bbox[1],
+        xmax: payload.metadata.bbox[2],
+        ymax: payload.metadata.bbox[3],
+        spatialReference: isCRS84 ? { wkid: 4326 } : { wkid: 3857 },
       });
-    }
-    if (payload.geometry && payload.geometry.coordinates) {
-      return await this.createExtentFromCoordinates(
-        payload.geometry.coordinates,
-      );
+    } else if (
+      payload.metadata &&
+      payload.metadata.geometry &&
+      payload.metadata.geometry.coordinates
+    ) {
+      const srName = payload.metadata?.geometry?.crs?.properties?.name || '';
+      const isCRS84 =
+        typeof srName === 'string' && srName.toUpperCase().includes('CRS84');
+      const coords = payload.metadata.geometry.coordinates;
+      let xmin = Infinity,
+        ymin = Infinity,
+        xmax = -Infinity,
+        ymax = -Infinity;
+      const walk = (arr) => {
+        if (!Array.isArray(arr)) return;
+        if (typeof arr[0] === 'number' && typeof arr[1] === 'number') {
+          const x = Number(arr[0]);
+          const y = Number(arr[1]);
+          if (isFinite(x) && isFinite(y)) {
+            if (x < xmin) xmin = x;
+            if (x > xmax) xmax = x;
+            if (y < ymin) ymin = y;
+            if (y > ymax) ymax = y;
+          }
+          return;
+        }
+        for (let i = 0; i < arr.length; i++) walk(arr[i]);
+      };
+      walk(coords);
+      if (
+        isFinite(xmin) &&
+        isFinite(ymin) &&
+        isFinite(xmax) &&
+        isFinite(ymax)
+      ) {
+        return new Extent({
+          xmin: xmin,
+          ymin: ymin,
+          xmax: xmax,
+          ymax: ymax,
+          spatialReference: isCRS84 ? { wkid: 4326 } : { wkid: 3857 },
+        });
+      }
     }
     return null;
   }
@@ -4016,7 +4061,10 @@ class MenuWidget extends React.Component {
     let firstLayer;
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
     let productIds = [];
-    if (landCoverAndLandUseMapping) {
+    if (
+      landCoverAndLandUseMapping &&
+      landCoverAndLandUseMapping.contains(document.activeElement)
+    ) {
       const productElements = landCoverAndLandUseMapping.querySelectorAll(
         '.map-menu-product-dropdown',
       );
