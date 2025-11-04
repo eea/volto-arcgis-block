@@ -142,7 +142,24 @@ class InfoWidget extends React.Component {
             title = this.getLayerTitle(layer);
           }
           if (layer?.isTimeSeries) {
-            if (layer.url.toLowerCase().includes('wms')) {
+            if (
+              !!layer.ViewService &&
+              ['/ogc/', '/cdse/'].some((s) =>
+                layer.ViewService.toLowerCase().includes(s),
+              )
+            ) {
+              layerTypes.push({
+                isTimeSeries: true,
+                type: 'wmts',
+                title: title,
+                fields: layer.fields,
+              });
+              promises.push(
+                this.cdseCapabilities(layer.ViewService, layer).then((xml) =>
+                  this.identifyCDSE(xml, layer),
+                ),
+              );
+            } else if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
                 isTimeSeries: true,
                 type: 'wms',
@@ -293,6 +310,15 @@ class InfoWidget extends React.Component {
                         };
                         break;
                       case 'wmts':
+                        if (
+                          layers[index]?.ViewService &&
+                          layers[index].ViewService.toLowerCase().includes(
+                            'cdse',
+                          )
+                        ) {
+                          properties = data;
+                        }
+                        properties = data;
                         this.infoData[index] = {
                           title: layer.title,
                           data: properties,
@@ -444,7 +470,9 @@ class InfoWidget extends React.Component {
 
   getLayerTitle(layer) {
     let title;
-    if (layer.url.toLowerCase().includes('wmts')) {
+    if (layer.ViewService && layer.ViewService.toLowerCase().includes('cdse')) {
+      title = layer.title;
+    } else if (layer.url.toLowerCase().includes('wmts')) {
       // CLMS-1105
       title = layer._wmtsTitle;
     } else if (layer.url.toLowerCase().toLowerCase().endsWith('mapserver')) {
@@ -560,6 +588,109 @@ class InfoWidget extends React.Component {
       let data = JSON.parse(response.data);
       return data;
     });
+  }
+
+  async cdseCapabilities(url, layer) {
+    if (!url) return {};
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      let parser = new DOMParser();
+      let xml = parser.parseFromString(text, 'text/html');
+      return xml;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  identifyCDSE(xml, layer) {
+    let values = { timeFields: {}, data: {}, variables: {}, tableData: {} };
+    if (!xml || !xml.querySelector) {
+      values.timeFields['start'] = 'time';
+      values.variables = { options: ['value'], selected: 'value' };
+      values.tableData['fields'] = ['time', 'value'];
+      values.timeFields['values'] = [];
+      values.data['outFields'] = 'value';
+      values.data['values'] = [];
+      values.tableData['values'] = [];
+      return values;
+    }
+    let layerId = this.getLayerName(layer);
+    let layers = Array.from(xml.querySelectorAll('Layer'));
+    let lyr =
+      layers.find((l) => {
+        let id =
+          l.querySelector('ows\\:Identifier') || l.querySelector('Identifier');
+        return id && id.textContent === layerId;
+      }) || layers[0];
+    let timeValues = [];
+    if (lyr) {
+      let dimNodes = Array.from(lyr.querySelectorAll('Dimension'));
+      let timeDim =
+        dimNodes.find((d) => {
+          let n = d.getAttribute('name') || d.getAttribute('identifier') || '';
+          return n.toLowerCase() === 'time';
+        }) ||
+        dimNodes.find((d) => {
+          let idn =
+            d.querySelector('ows\\:Identifier') ||
+            d.querySelector('Identifier');
+          return idn && idn.textContent.toLowerCase() === 'time';
+        });
+      if (timeDim) {
+        let valNodes = Array.from(timeDim.querySelectorAll('Value'));
+        if (valNodes.length) {
+          timeValues = valNodes
+            .map((v) => v.textContent.trim())
+            .filter((t) => t);
+        } else {
+          let txt = (timeDim.textContent || '').trim();
+          if (txt) {
+            if (txt.includes(',')) {
+              timeValues = txt.split(',').map((s) => s.trim());
+            } else if (txt.includes('/')) {
+              timeValues = this.expandTimeRange(txt);
+            }
+          }
+          let def = timeDim.getAttribute('default') || '';
+          if (!timeValues.length && def) timeValues = [def];
+        }
+      }
+    }
+    values.timeFields['start'] = 'time';
+    values.variables = { options: ['value'], selected: 'value' };
+    values.tableData['fields'] = ['time', 'value'];
+    values.timeFields['values'] = timeValues.map((t) => {
+      let obj = {};
+      obj['time'] = t;
+      return obj;
+    });
+    values.data['outFields'] = 'value';
+    values.data['values'] = [];
+    values.tableData['values'] = timeValues.map((t) => {
+      return [
+        ['time', t],
+        ['value', ''],
+      ];
+    });
+    return values;
+  }
+
+  expandTimeRange(range) {
+    let parts = range.split('/');
+    if (parts.length !== 3) return parts.filter((p) => p);
+    let start = new Date(parts[0]);
+    let end = new Date(parts[1]);
+    let step = parts[2];
+    let out = [];
+    if (step === 'P1D') {
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        out.push(new Date(d).toISOString().split('T')[0]);
+      }
+      return out;
+    } else {
+      return [parts[0], parts[1]];
+    }
   }
 
   parseCapabilities(xml, tag) {
