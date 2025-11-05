@@ -289,13 +289,16 @@
   color: white !important;
 }
 
-.upload-bookmark-button {
+button.upload-bookmark-button {
+  display: none;
   width: 16rem !important;
   justify-content: start !important;
+  padding-left: 3px;
   border-color: #a0b128 !important;
   margin-left: 0.65rem;
   background-color: white !important;
   color: #a0b128 !important;
+  font-size: 12px !important;
 }
 
 .upload-bookmark-button:hover {
