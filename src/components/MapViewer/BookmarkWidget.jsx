@@ -247,18 +247,22 @@ class BookmarkWidget extends React.Component {
       this.sessionBookmarks.push(bookmark);
     });
     this.Bookmarks.when(() => {
-      document
-        .querySelectorAll('.esri-bookmarks__bookmark')
-        .forEach((bookmark) => {
-          let download_button = document.createElement('button');
-          download_button.className = 'esri-button download-bookmark-button';
-          download_button.innerText = '⭳';
-          download_button.bookmarkName = bookmark.innerText;
-          download_button.addEventListener('click', (e) => {
-            this.downloadBookmark(e.currentTarget.bookmarkName);
+      if (this.userID !== null) {
+        document.querySelector('.upload-bookmark-button').style.display =
+          'flex';
+        document
+          .querySelectorAll('.esri-bookmarks__bookmark')
+          .forEach((bookmark) => {
+            let download_button = document.createElement('button');
+            download_button.className = 'esri-button download-bookmark-button';
+            download_button.innerText = '⭳';
+            download_button.bookmarkName = bookmark.innerText;
+            download_button.addEventListener('click', (e) => {
+              this.downloadBookmark(e.currentTarget.bookmarkName);
+            });
+            bookmark.insertBefore(download_button, bookmark.childNodes[2]);
           });
-          bookmark.insertBefore(download_button, bookmark.childNodes[2]);
-        });
+      }
       this.arcgisEventHandles.push(
         this.Bookmarks.bookmarks.on('change', (e) => {
           if (!this._isMounted) return;
@@ -804,20 +808,22 @@ class BookmarkWidget extends React.Component {
         );
       });
     });
-    document
-      .querySelectorAll('.esri-bookmarks__bookmark')
-      .forEach((bookmark) => {
-        if (bookmark.childNodes.length < 4) {
-          let download_button = document.createElement('button');
-          download_button.className = 'esri-button download-bookmark-button';
-          download_button.innerText = '⭳';
-          download_button.bookmarkName = bookmark.innerText;
-          download_button.addEventListener('click', (e) => {
-            this.downloadBookmark(e.currentTarget.bookmarkName);
-          });
-          bookmark.insertBefore(download_button, bookmark.childNodes[2]);
-        }
-      });
+    if (this.userID !== null) {
+      document
+        .querySelectorAll('.esri-bookmarks__bookmark')
+        .forEach((bookmark) => {
+          if (bookmark.childNodes.length < 4) {
+            let download_button = document.createElement('button');
+            download_button.className = 'esri-button download-bookmark-button';
+            download_button.innerText = '⭳';
+            download_button.bookmarkName = bookmark.innerText;
+            download_button.addEventListener('click', (e) => {
+              this.downloadBookmark(e.currentTarget.bookmarkName);
+            });
+            bookmark.insertBefore(download_button, bookmark.childNodes[2]);
+          }
+        });
+    }
   }
   componentWillUnmount() {
     this._isMounted = false;
@@ -1187,7 +1193,8 @@ class BookmarkWidget extends React.Component {
                 }}
                 type="submit"
               >
-                Upload file
+                <span class="esri-bookmarks__add-bookmark-icon esri-icon-plus"></span>
+                Upload a bookmark
               </button>
             </div>
           </div>
