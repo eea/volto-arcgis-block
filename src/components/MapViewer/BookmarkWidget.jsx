@@ -253,15 +253,53 @@ class BookmarkWidget extends React.Component {
         document
           .querySelectorAll('.esri-bookmarks__bookmark')
           .forEach((bookmark) => {
-            let download_button = document.createElement('button');
-            download_button.className = 'esri-button download-bookmark-button';
-            download_button.innerText = '⭳';
-            download_button.bookmarkName = bookmark.innerText;
-            download_button.addEventListener('click', (e) => {
-              this.downloadBookmark(e.currentTarget.bookmarkName);
-            });
-            bookmark.insertBefore(download_button, bookmark.childNodes[2]);
+            if (bookmark.childNodes.length < 4) {
+              let tooltip = document.createElement('div');
+              tooltip.setAttribute('tooltip', 'Download bookmark');
+              tooltip.setAttribute('direction', 'left');
+              tooltip.setAttribute('type', 'widget');
+              let download_button = document.createElement('div');
+              tooltip.appendChild(download_button);
+              download_button.className =
+                'esri-button download-bookmark-button';
+              download_button.innerText = '⭳';
+              download_button.bookmarkName = bookmark.innerText;
+              download_button.addEventListener('click', (e) => {
+                this.downloadBookmark(e.currentTarget.bookmarkName);
+              });
+              bookmark.insertBefore(tooltip, bookmark.childNodes[2]);
+            }
           });
+        let bookmarkList = document.querySelector('.esri-bookmarks__list');
+        const config = { childList: true };
+        const callback = function (mutationList, observer) {
+          for (const mutation of mutationList) {
+            if (mutation.type === 'childList') {
+              document
+                .querySelectorAll('.esri-bookmarks__bookmark')
+                .forEach((bookmark) => {
+                  if (bookmark.childNodes.length < 4) {
+                    let tooltip = document.createElement('div');
+                    tooltip.setAttribute('tooltip', 'Download bookmark');
+                    tooltip.setAttribute('direction', 'left');
+                    tooltip.setAttribute('type', 'widget');
+                    let download_button = document.createElement('div');
+                    tooltip.appendChild(download_button);
+                    download_button.className =
+                      'esri-button download-bookmark-button';
+                    download_button.innerText = '⭳';
+                    download_button.bookmarkName = bookmark.innerText;
+                    download_button.addEventListener('click', (e) => {
+                      this.downloadBookmark(e.currentTarget.bookmarkName);
+                    });
+                    bookmark.insertBefore(tooltip, bookmark.childNodes[2]);
+                  }
+                });
+            }
+          }
+        };
+        const observer = new MutationObserver(callback);
+        observer.observe(bookmarkList, config);
       }
       this.arcgisEventHandles.push(
         this.Bookmarks.bookmarks.on('change', (e) => {
@@ -808,22 +846,6 @@ class BookmarkWidget extends React.Component {
         );
       });
     });
-    if (this.userID !== null) {
-      document
-        .querySelectorAll('.esri-bookmarks__bookmark')
-        .forEach((bookmark) => {
-          if (bookmark.childNodes.length < 4) {
-            let download_button = document.createElement('button');
-            download_button.className = 'esri-button download-bookmark-button';
-            download_button.innerText = '⭳';
-            download_button.bookmarkName = bookmark.innerText;
-            download_button.addEventListener('click', (e) => {
-              this.downloadBookmark(e.currentTarget.bookmarkName);
-            });
-            bookmark.insertBefore(download_button, bookmark.childNodes[2]);
-          }
-        });
-    }
   }
   componentWillUnmount() {
     this._isMounted = false;
