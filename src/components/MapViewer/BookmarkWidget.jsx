@@ -290,7 +290,81 @@ class BookmarkWidget extends React.Component {
                     download_button.innerText = '⭳';
                     download_button.bookmarkName = bookmark.innerText;
                     download_button.addEventListener('click', (e) => {
-                      this.downloadBookmark(e.currentTarget.bookmarkName);
+                      const name = e.currentTarget.bookmarkName;
+                      let storageKey;
+                      if (document.querySelector('.fa-user')) {
+                        storageKey =
+                          'user_' +
+                          document.querySelector('.fa-user').nextSibling
+                            .textContent;
+                      } else {
+                        storageKey = 'user_anonymous';
+                      }
+                      let userObj;
+                      try {
+                        userObj =
+                          JSON.parse(localStorage.getItem(storageKey)) || {};
+                      } catch (e) {
+                        userObj = {};
+                      }
+                      let bookmarks =
+                        userObj &&
+                        userObj.bookmarks &&
+                        typeof userObj.bookmarks === 'object'
+                          ? userObj.bookmarks
+                          : null;
+                      if (!bookmarks) {
+                        try {
+                          bookmarks = JSON.parse(
+                            localStorage.getItem(
+                              storageKey + '_bookmarks_backup',
+                            ),
+                          );
+                        } catch (e) {
+                          return;
+                        }
+                      }
+                      if (!bookmarks) return;
+                      let index = 0;
+                      for (index; index < bookmarks.items.length; index++) {
+                        if (bookmarks.items[index].name === name) {
+                          break;
+                        }
+                      }
+                      let selectedBookmark = {
+                        items: Array.isArray(bookmarks.items)
+                          ? bookmarks.items[index]
+                          : [],
+                        layers: Array.isArray(bookmarks.layers)
+                          ? bookmarks.layers[index]
+                          : [],
+                        opacity: Array.isArray(bookmarks.opacity)
+                          ? bookmarks.opacity[index]
+                          : [],
+                        visible: Array.isArray(bookmarks.visible)
+                          ? bookmarks.visible[index]
+                          : [],
+                        hotspot: Array.isArray(bookmarks.hotspot)
+                          ? bookmarks.hotspot[index]
+                          : [],
+                        selectedHotspotFilter:
+                          bookmarks.selectedHotspotFilter != null
+                            ? bookmarks.selectedHotspotFilter
+                            : null,
+                      };
+                      let filename = 'bookmark_' + selectedBookmark.items.name;
+                      const blob = new Blob(
+                        [JSON.stringify(selectedBookmark)],
+                        {
+                          type: 'application/json',
+                        },
+                      );
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${filename}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
                     });
                     bookmark.insertBefore(tooltip, bookmark.childNodes[2]);
                   }
