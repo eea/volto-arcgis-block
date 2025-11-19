@@ -334,6 +334,13 @@ button.upload-bookmark-button {
   color: white !important;
 }
 
+.error-report-datasets-title {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
 body.section-map-viewer
   #page-document.ui.container
   .esri-widget__content--empty

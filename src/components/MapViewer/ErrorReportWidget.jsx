@@ -10,6 +10,7 @@ class ErrorReport extends React.Component {
       latlong: null,
       selecting: false,
       datasets: [],
+      instructionsText: 'First select a pixel in the data viewer',
     };
     this.menuClass =
       'esri-icon-notice-round esri-widget--button esri-widget esri-interactive';
@@ -55,10 +56,38 @@ class ErrorReport extends React.Component {
       function (evt) {
         let pt = this.props.view.toMap({ x: evt.x, y: evt.y });
         let ds = this.getCheckedDatasets();
+        let message =
+          'Selected coordinate: Lat ' +
+          pt.latitude.toFixed(4) +
+          ' Lon ' +
+          pt.longitude.toFixed(4) +
+          '. Active datasets: ' +
+          ds.join(', ');
+        try {
+          if (
+            navigator &&
+            navigator.clipboard &&
+            navigator.clipboard.writeText
+          ) {
+            navigator.clipboard.writeText(message);
+          } else {
+            let ta = document.createElement('textarea');
+            ta.value = message;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'absolute';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+        } catch {}
         this.setState({
           latlong: { x: pt.latitude.toFixed(4), y: pt.longitude.toFixed(4) },
           selecting: false,
           datasets: ds,
+          instructionsText:
+            "Data has been added to your clipboard. Click the 'Service Desk' button and paste the clipboard content inside the Helpdesk's message box",
         });
         handler.remove();
       }.bind(this),
@@ -120,12 +149,10 @@ class ErrorReport extends React.Component {
       this.state.latlong.y +
       '. Active datasets: ' +
       datasets.join(', ');
-    let url = this.helpdeskUrl + '?message=' + encodeURIComponent(message);
-
-    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(message);
-    } else {
-      try {
+    try {
+      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(message);
+      } else {
         let ta = document.createElement('textarea');
         ta.value = message;
         ta.setAttribute('readonly', '');
@@ -135,42 +162,21 @@ class ErrorReport extends React.Component {
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-      } catch {}
-    }
-
-    let w = window.open(url, '_blank');
-    try {
-      if (w) {
-        let tryFill = () => {
-          try {
-            let el = w.document.getElementById('field-message_1637825835875');
-            if (el) {
-              el.value = message;
-              try {
-                let evt = new w.Event('input', { bubbles: true });
-                el.dispatchEvent(evt);
-              } catch {}
-              return true;
-            }
-          } catch {}
-          return false;
-        };
-        let attempts = 0;
-        let timer = setInterval(() => {
-          attempts++;
-          if (tryFill() || attempts > 20) {
-            clearInterval(timer);
-          }
-        }, 250);
       }
     } catch {}
+    window.open(this.helpdeskUrl, '_blank');
   }
 
   resetData() {
     if (this.state.selecting) {
       this.state.selecting.remove();
     }
-    this.setState({ latlong: null, selecting: false, datasets: [] });
+    this.setState({
+      latlong: null,
+      selecting: false,
+      datasets: [],
+      instructionsText: 'First select a pixel in the data viewer',
+    });
   }
 
   async componentDidMount() {
@@ -252,8 +258,7 @@ class ErrorReport extends React.Component {
             <div className="right-panel-content">
               <div className="error-report-panel">
                 <div className="error-report-instructions">
-                  First select a pixel in the data viewer and then click on the
-                  Service desk button
+                  {this.state.instructionsText}
                 </div>
                 <button
                   className="error-report-button"
