@@ -5,6 +5,7 @@ class ErrorReport extends React.Component {
   constructor(props) {
     super(props);
     this.container = createRef();
+    this.originalParent = null;
     this.state = {
       showMapMenu: false,
       latlong: null,
@@ -289,6 +290,9 @@ class ErrorReport extends React.Component {
   async componentDidMount() {
     await this.loader();
     if (!this.container.current) return;
+    try {
+      this.originalParent = this.container.current.parentNode;
+    } catch {}
     this.props.view.when(() => {
       if (!this.container.current) return;
       var group = document.querySelector('.esri-ui-top-right.esri-ui-corner');
@@ -312,6 +316,24 @@ class ErrorReport extends React.Component {
         addSelf();
       }
     });
+  }
+
+  componentWillUnmount() {
+    try {
+      if (this.state && this.state.selecting) {
+        this.state.selecting.remove();
+      }
+    } catch {}
+    try {
+      if (
+        this.container &&
+        this.container.current &&
+        this.originalParent &&
+        this.container.current.parentNode !== this.originalParent
+      ) {
+        this.originalParent.appendChild(this.container.current);
+      }
+    } catch {}
   }
 
   render() {
