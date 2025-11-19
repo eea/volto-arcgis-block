@@ -5,6 +5,7 @@ class ErrorReport extends React.Component {
   constructor(props) {
     super(props);
     this.container = createRef();
+    this.originalParent = null;
     this.state = {
       showMapMenu: false,
       latlong: null,
@@ -96,6 +97,7 @@ class ErrorReport extends React.Component {
   }
 
   getCheckedDatasets() {
+    let checked = [];
     try {
       let uid = sessionStorage.getItem('mv_hydrated_for');
       let key = uid ? 'user_' + uid : 'user_anonymous';
@@ -109,24 +111,130 @@ class ErrorReport extends React.Component {
           } catch {}
         }
         if (Array.isArray(cl)) {
-          return [...new Set(cl)].filter((v) => v);
+          checked = [...new Set(cl)].filter((v) => v);
         }
       }
     } catch {}
-    try {
-      let ss = sessionStorage.getItem('checkedLayers');
-      if (ss) {
-        let cl = ss;
-        if (typeof ss === 'string') {
+    if (!checked.length) {
+      try {
+        let ss = sessionStorage.getItem('checkedLayers');
+        if (ss) {
+          let cl = ss;
+          if (typeof ss === 'string') {
+            try {
+              cl = JSON.parse(ss);
+            } catch {}
+          }
+          if (Array.isArray(cl)) {
+            checked = [...new Set(cl)].filter((v) => v);
+          }
+        }
+      } catch {}
+    }
+    if (checked.length) {
+      let titles = [];
+      try {
+        let esc = function (s) {
           try {
-            cl = JSON.parse(ss);
+            return CSS && CSS.escape
+              ? CSS.escape(s)
+              : String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+          } catch {
+            return String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+          }
+        };
+        let findTitleFor = function (val) {
+          let v = String(val);
+          let e = null;
+          try {
+            e = document.querySelector('[data-layer-id="' + esc(v) + '"]');
           } catch {}
+          if (!e) {
+            try {
+              e = document.querySelector('[data-id="' + esc(v) + '"]');
+            } catch {}
+          }
+          if (!e) {
+            try {
+              let sel1 = 'input[type="checkbox"][value="' + esc(v) + '"]';
+              e = document.querySelector(sel1);
+            } catch {}
+          }
+          if (!e) {
+            try {
+              let sel2 = 'input[type="checkbox"][id*="' + esc(v) + '"]';
+              e = document.querySelector(sel2);
+            } catch {}
+          }
+          if (e && e.tagName && e.tagName.toLowerCase() === 'input') {
+            let id = e.id;
+            if (id) {
+              try {
+                let selLab = 'label[for="' + esc(id) + '"]';
+                let lab = document.querySelector(selLab);
+                if (lab && lab.textContent) return lab.textContent.trim();
+              } catch {}
+            }
+            try {
+              let cont = e.closest('.toc-item,.ccl-tree__item,.layer-item');
+              if (cont) {
+                let selT =
+                  '.toc-item-title,.ccl-tree__label,.layer-title,.title';
+
+                let lab = cont.querySelector(selT);
+                if (lab && lab.textContent) return lab.textContent.trim();
+              }
+            } catch {}
+          }
+          if (e) {
+            try {
+              let sel3 = '.toc-item-title,.ccl-tree__label,.layer-title,.title';
+              let lab = e.querySelector(sel3);
+              if (lab && lab.textContent) return lab.textContent.trim();
+            } catch {}
+            try {
+              let t = e.getAttribute('data-title');
+              if (t) return t;
+            } catch {}
+            try {
+              if (e.textContent) return e.textContent.trim();
+            } catch {}
+          }
+          return null;
+        };
+        checked.forEach(function (v) {
+          let t = findTitleFor(v);
+          if (t) titles.push(t);
+        });
+      } catch {}
+      if (titles.length) return [...new Set(titles)];
+      let all = [];
+      try {
+        let coll =
+          this.props.view &&
+          this.props.view.map &&
+          this.props.view.map.allLayers;
+        if (coll && coll.items) {
+          all = coll.items;
+        } else if (coll && coll.toArray) {
+          all = coll.toArray();
         }
-        if (Array.isArray(cl)) {
-          return [...new Set(cl)].filter((v) => v);
-        }
-      }
-    } catch {}
+      } catch {}
+      let byId = {};
+      let byTitle = {};
+      try {
+        all.forEach(function (l) {
+          if (l && l.id) byId[l.id] = l.title || l.id;
+          if (l && l.title) byTitle[l.title] = l.title;
+        });
+      } catch {}
+      let titles2 = [];
+      checked.forEach(function (v) {
+        if (byTitle[v]) titles2.push(byTitle[v]);
+        else if (byId[v]) titles2.push(byId[v]);
+      });
+      if (titles2.length) return [...new Set(titles2)];
+    }
     let layers = [];
     this.props.view.map.layers.forEach(function (l) {
       if (l.visible) {
@@ -182,6 +290,9 @@ class ErrorReport extends React.Component {
   async componentDidMount() {
     await this.loader();
     if (!this.container.current) return;
+    try {
+      this.originalParent = this.container.current.parentNode;
+    } catch {}
     this.props.view.when(() => {
       if (!this.container.current) return;
       var group = document.querySelector('.esri-ui-top-right.esri-ui-corner');
@@ -205,6 +316,24 @@ class ErrorReport extends React.Component {
         addSelf();
       }
     });
+  }
+
+  componentWillUnmount() {
+    try {
+      if (this.state && this.state.selecting) {
+        this.state.selecting.remove();
+      }
+    } catch {}
+    try {
+      if (
+        this.container &&
+        this.container.current &&
+        this.originalParent &&
+        this.container.current.parentNode !== this.originalParent
+      ) {
+        this.originalParent.appendChild(this.container.current);
+      }
+    } catch {}
   }
 
   render() {
