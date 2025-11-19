@@ -313,6 +313,27 @@ button.upload-bookmark-button {
   font-size: 30px !important;
 }
 
+/* Error report */
+.error-report-button {
+  border: 1px solid #a0b128 !important;
+  background-color: white !important;
+  color: #a0b128 !important;
+  transition: all 0.3s ease-out;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+.error-report-button:hover {
+  border-color: #a0b128 !important;
+  background-color: #a0b128 !important;
+  color: white !important;
+}
+
 body.section-map-viewer
   #page-document.ui.container
   .esri-widget__content--empty
