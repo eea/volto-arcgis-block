@@ -87,7 +87,7 @@ class ErrorReport extends React.Component {
           selecting: false,
           datasets: ds,
           instructionsText:
-            "Data has been added to your clipboard. Click the 'Service Desk' button and paste the clipboard content inside the Helpdesk's message box",
+            "The error report data has been added to your clipboard. Click the 'Service Desk' button and paste the clipboard content inside the Helpdesk's message box",
         });
         handler.remove();
       }.bind(this),
