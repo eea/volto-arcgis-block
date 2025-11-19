@@ -188,7 +188,7 @@ class ErrorReport extends React.Component {
       var addSelf = () => {
         this.props.view.ui.add(this.container.current, {
           position: 'top-right',
-          index: 9999,
+          // index: 9999,
         });
       };
       if (group && group.children && group.children.length > 0) {

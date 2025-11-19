@@ -315,17 +315,17 @@ button.upload-bookmark-button {
 
 /* Error report */
 .error-report-button {
-  border: 1px solid #a0b128 !important;
-  background-color: white !important;
-  color: #a0b128 !important;
-  transition: all 0.3s ease-out;
   display: block;
   width: 100%;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
+  border: 1px solid #a0b128 !important;
   margin: 1rem 0;
-  text-align: center;
+  background-color: white !important;
+  color: #a0b128 !important;
   cursor: pointer;
+  text-align: center;
+  transition: all 0.3s ease-out;
 }
 
 .error-report-button:hover {
@@ -335,10 +335,10 @@ button.upload-bookmark-button {
 }
 
 .error-report-datasets-title {
-  font-size: 1.17em;
-  font-weight: bold;
   margin-top: 1em;
   margin-bottom: 0.5em;
+  font-size: 1.17em;
+  font-weight: bold;
 }
 
 body.section-map-viewer
