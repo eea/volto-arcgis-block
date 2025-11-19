@@ -30,6 +30,7 @@ import PanWidget from './PanWidget';
 import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
 import UploadWidget from './UploadWidget';
+import ErrorReportWidget from './ErrorReportWidget';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 import { fetchCatalogApiDates } from '../../actions';
@@ -1016,6 +1017,10 @@ class MapViewer extends React.Component {
         />
       );
   }
+  renderErrorReport() {
+    if (this.view)
+      return <ErrorReportWidget view={this.view} mapViewer={this} />;
+  }
   /**
    * This method renders the map viewer, invoking if necessary the methods
    * to render the other widgets to display
@@ -1048,6 +1053,7 @@ class MapViewer extends React.Component {
             {this.renderLoadingSpinner()}
             <CheckUserID reference={this} />
             {this.renderUploadService()}
+            {this.renderErrorReport()}
           </div>
         </div>
       );

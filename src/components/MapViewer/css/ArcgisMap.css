@@ -313,6 +313,34 @@ button.upload-bookmark-button {
   font-size: 30px !important;
 }
 
+/* Error report */
+.error-report-button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem;
+  border: 1px solid #a0b128 !important;
+  margin: 1rem 0;
+  background-color: white !important;
+  color: #a0b128 !important;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s ease-out;
+}
+
+.error-report-button:hover {
+  border-color: #a0b128 !important;
+  background-color: #a0b128 !important;
+  color: white !important;
+}
+
+.error-report-datasets-title {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-size: 1.17em;
+  font-weight: bold;
+}
+
 body.section-map-viewer
   #page-document.ui.container
   .esri-widget__content--empty
