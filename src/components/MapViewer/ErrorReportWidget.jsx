@@ -62,7 +62,7 @@ class ErrorReport extends React.Component {
           pt.latitude.toFixed(4) +
           ' Lon ' +
           pt.longitude.toFixed(4) +
-          '. Active datasets: ' +
+          '. Active layers: ' +
           ds.join(', ');
         try {
           if (
@@ -255,7 +255,7 @@ class ErrorReport extends React.Component {
       this.state.latlong.x +
       ' Lon ' +
       this.state.latlong.y +
-      '. Active datasets: ' +
+      '. Active layers: ' +
       datasets.join(', ');
     try {
       if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
@@ -407,7 +407,7 @@ class ErrorReport extends React.Component {
                 {this.state.datasets && this.state.datasets.length > 0 && (
                   <>
                     <div className="error-report-datasets-title">
-                      Active datasets
+                      Active layers
                     </div>
                     <ul className="error-report-datasets">
                       {this.state.datasets.map((d, i) => (
