@@ -334,11 +334,20 @@ button.upload-bookmark-button {
   color: white !important;
 }
 
+.error-report-coords-heading,
 .error-report-datasets-title {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
-  font-size: 1.17em;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
   font-weight: bold;
+  color: inherit;
+}
+
+.error-report-coords,
+.error-report-datasets {
+  font-size: 1rem;
+  font-weight: normal;
+  color: inherit;
 }
 
 body.section-map-viewer
