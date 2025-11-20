@@ -338,16 +338,17 @@ button.upload-bookmark-button {
 .error-report-datasets-title {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  color: inherit;
   font-size: 1rem;
   font-weight: bold;
-  color: inherit;
 }
 
 .error-report-coords,
-.error-report-datasets {
-  font-size: 1rem;
-  font-weight: normal;
+.error-report-datasets,
+.error-report-datasets li {
   color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 body.section-map-viewer
