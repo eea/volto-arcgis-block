@@ -62,7 +62,7 @@ class ErrorReport extends React.Component {
           pt.latitude.toFixed(4) +
           ' Lon ' +
           pt.longitude.toFixed(4) +
-          '. Active datasets: ' +
+          '. Active layers: ' +
           ds.join(', ');
         try {
           if (
@@ -71,16 +71,6 @@ class ErrorReport extends React.Component {
             navigator.clipboard.writeText
           ) {
             navigator.clipboard.writeText(message);
-          } else {
-            let ta = document.createElement('textarea');
-            ta.value = message;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'absolute';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
           }
         } catch {}
         this.setState({
@@ -407,7 +397,7 @@ class ErrorReport extends React.Component {
                 {this.state.datasets && this.state.datasets.length > 0 && (
                   <>
                     <div className="error-report-datasets-title">
-                      Active datasets
+                      Active layers
                     </div>
                     <ul className="error-report-datasets">
                       {this.state.datasets.map((d, i) => (

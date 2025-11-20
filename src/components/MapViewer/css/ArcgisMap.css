@@ -354,11 +354,11 @@ button.upload-bookmark-button {
 body.section-map-viewer
   #page-document.ui.container
   .esri-widget__content--empty
-  h1 {
-  width: auto !important;
-}
-
-div.esri-popover
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem; /* Increased font size */
+  font-weight: bold;
+  color: inherit;
   div
   div.esri-button-menu__content
   ul.esri-button-menu__item-wrapper
