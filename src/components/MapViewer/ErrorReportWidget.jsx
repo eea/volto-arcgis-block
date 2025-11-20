@@ -255,7 +255,7 @@ class ErrorReport extends React.Component {
       this.state.latlong.x +
       ' Lon ' +
       this.state.latlong.y +
-      '. Active datasets: ' +
+      '. Active layers: ' +
       datasets.join(', ');
     try {
       if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
