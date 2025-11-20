@@ -71,6 +71,16 @@ class ErrorReport extends React.Component {
             navigator.clipboard.writeText
           ) {
             navigator.clipboard.writeText(message);
+          } else {
+            let ta = document.createElement('textarea');
+            ta.value = message;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'absolute';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
           }
         } catch {}
         this.setState({

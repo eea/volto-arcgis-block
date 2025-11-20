@@ -334,12 +334,13 @@ button.upload-bookmark-button {
   color: white !important;
 }
 
+.right-panel-header span,
 .error-report-coords-heading,
 .error-report-datasets-title {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
   color: inherit;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
 }
 
@@ -353,12 +354,16 @@ button.upload-bookmark-button {
 
 body.section-map-viewer
   #page-document.ui.container
-  .esri-widget__content--empty
+  .esri-widget__content--empty {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  font-size: 1.25rem; /* Increased font size */
-  font-weight: bold;
   color: inherit;
+  font-size: 1.25rem; /* Increased font size */
+}
+
+body.section-map-viewer
+  #page-document.ui.container
+  .esri-widget__content--empty
   div
   div.esri-button-menu__content
   ul.esri-button-menu__item-wrapper
