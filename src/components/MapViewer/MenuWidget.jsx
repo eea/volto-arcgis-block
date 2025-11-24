@@ -2982,8 +2982,8 @@ class MenuWidget extends React.Component {
       if (!userService) this.checkForHotspots(elem, productContainerId);
       // Auto-fit extent once for OGC WMS layers on manual toggle
       if (
-        this.layers(elem.id).DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-        this.layers(elem.id).DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
       ) {
         this.view.zoom = 5;
         this.setState({});
