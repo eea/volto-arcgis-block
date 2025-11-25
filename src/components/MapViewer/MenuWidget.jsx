@@ -2981,14 +2981,6 @@ class MenuWidget extends React.Component {
       }
       if (!userService) this.checkForHotspots(elem, productContainerId);
       // Auto-fit extent once for OGC WMS layers on manual toggle
-      if (
-        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
-      ) {
-        this.view.zoom = 5;
-        this.setState({});
-        return;
-      }
       try {
         const isCDSE =
           !!this.url &&
@@ -4047,7 +4039,21 @@ class MenuWidget extends React.Component {
         ymax: BBoxes['dataset'].ymax,
       });
     }
-    this.view.goTo(myExtent);
+    if (
+      this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+      this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+    ) {
+      let myExtent = new Extent({
+        xmin: -13478905.5678019,
+        ymin: 23797904.386302948,
+        xmax: 20538395.093334593,
+        ymax: 11175665.272476234,
+        spatialReference: 3857,
+      });
+      this.view.goTo({ center: myExtent.center, zoom: 3 });
+    } else {
+      this.view.goTo(myExtent);
+    }
   }
 
   async fullExtent(elem) {
@@ -4067,6 +4073,7 @@ class MenuWidget extends React.Component {
     }
     let BBoxes = {};
     let firstLayer;
+    let myExtent = null;
     let landCoverAndLandUseMapping = document.querySelector('#component_0');
     let productIds = [];
     if (
@@ -4273,14 +4280,27 @@ class MenuWidget extends React.Component {
       } else {
         firstLayer = BBoxes[elem.attributes.layerid.value];
       }
-
-      let myExtent = new Extent({
+      myExtent = new Extent({
         xmin: firstLayer.xmin,
         ymin: firstLayer.ymin,
         xmax: firstLayer.xmax,
         ymax: firstLayer.ymax,
       });
-      this.view.goTo(myExtent);
+      if (
+        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+      ) {
+        let myExtent = new Extent({
+          xmin: -13478905.5678019,
+          ymin: 23797904.386302948,
+          xmax: 20538395.093334593,
+          ymax: 11175665.272476234,
+          spatialReference: 3857,
+        });
+        this.view.goTo({ center: myExtent.center, zoom: 3 });
+      } else {
+        this.view.goTo(myExtent);
+      }
     }
     this.url = null;
   }
