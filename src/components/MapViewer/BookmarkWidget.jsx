@@ -352,7 +352,7 @@ class BookmarkWidget extends React.Component {
                             ? bookmarks.selectedHotspotFilter
                             : null,
                       };
-                      let filename = 'bookmark_' + selectedBookmark.items.name;
+                      let filename = 'bookmark_' + selectedBookmark.items?.name;
                       const blob = new Blob(
                         [JSON.stringify(selectedBookmark)],
                         {
@@ -1198,22 +1198,28 @@ class BookmarkWidget extends React.Component {
           );
         } catch (e) {}
         this.loadBookmarksToWidget();
-        this.Bookmarks.bookmarks = this.sessionBookmarks.map((bm) => {
-          if (bm.extent) {
-            const { extent, ...rest } = bm;
-            let geometry;
-            if (extent && typeof extent === 'object') {
-              geometry = extent.type ? extent : new Extent(extent);
+        if (this.Bookmarks && this.Bookmarks.bookmarks) {
+          const mapped = this.sessionBookmarks.map((bm) => {
+            if (bm && bm.extent) {
+              const { extent, ...rest } = bm;
+              let geometry;
+              if (extent && typeof extent === 'object') {
+                geometry = extent.type ? extent : new Extent(extent);
+              }
+              return {
+                ...rest,
+                viewpoint: { targetGeometry: geometry },
+              };
             }
-            return {
-              ...rest,
-              viewpoint: {
-                targetGeometry: geometry,
-              },
-            };
-          }
-          return bm;
-        });
+            return bm;
+          });
+          this.Bookmarks.bookmarks.removeAll();
+          mapped.forEach((item) => this.Bookmarks.bookmarks.add(item));
+          this.sessionBookmarks = [];
+          this.Bookmarks.bookmarks.items.forEach((bookmark) => {
+            this.sessionBookmarks.push(bookmark);
+          });
+        }
       };
       reader.readAsText(file);
     }
