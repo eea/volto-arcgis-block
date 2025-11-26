@@ -85,163 +85,84 @@ class ErrorReport extends React.Component {
         } catch {}
         this.setState({
           latlong: { x: pt.latitude.toFixed(4), y: pt.longitude.toFixed(4) },
-          selecting: false,
           datasets: ds,
           instructionsText:
             "The error report data has been added to your clipboard. Click the 'Service Desk' button and paste the clipboard content inside the Helpdesk's message box",
         });
-        handler.remove();
       }.bind(this),
     );
     this.setState({ selecting: handler });
   }
 
+  getLayerTitle(layer) {
+    let title;
+    if (layer.ViewService && layer.ViewService.toLowerCase().includes('cdse')) {
+      title = layer.title;
+    } else if (layer.url.toLowerCase().includes('wmts')) {
+      title = layer._wmtsTitle;
+    } else if (layer.url.toLowerCase().toLowerCase().endsWith('mapserver')) {
+      title = layer.title;
+    } else {
+      if (layer.sublayers) {
+        title = layer.sublayers.items[0].title;
+      } else if (layer.activeLayer) {
+        title = layer.activeLayer.title;
+      } else {
+        title = layer.title;
+      }
+    }
+    return title;
+  }
+
+  getLayerName(layer) {
+    let title;
+    if (layer.sublayers) {
+      title = layer.sublayers.items[0].name;
+    } else if (layer.activeLayer) {
+      title = layer.activeLayer.name;
+    } else {
+      title = layer.name;
+    }
+    return title;
+  }
+
   getCheckedDatasets() {
-    let checked = [];
+    let items = [];
     try {
-      let uid = sessionStorage.getItem('mv_hydrated_for');
-      let key = uid ? 'user_' + uid : 'user_anonymous';
-      let raw = localStorage.getItem(key);
-      if (raw) {
-        let obj = JSON.parse(raw);
-        let cl = obj && obj.checkedLayers;
-        if (typeof cl === 'string') {
-          try {
-            cl = JSON.parse(cl);
-          } catch {}
-        }
-        if (Array.isArray(cl)) {
-          checked = [...new Set(cl)].filter((v) => v);
-        }
+      let view = this.props.view;
+      let coll = view && view.map && view.map.layers;
+      if (coll && coll.items) {
+        items = coll.items;
+      } else if (coll && coll.toArray) {
+        items = coll.toArray();
       }
     } catch {}
-    if (!checked.length) {
+    let layers = items.filter((a) => a && a.visible && a.title !== 'nuts');
+    let titles = [];
+    layers.forEach((layer) => {
+      let title;
       try {
-        let ss = sessionStorage.getItem('checkedLayers');
-        if (ss) {
-          let cl = ss;
-          if (typeof ss === 'string') {
-            try {
-              cl = JSON.parse(ss);
-            } catch {}
-          }
-          if (Array.isArray(cl)) {
-            checked = [...new Set(cl)].filter((v) => v);
-          }
-        }
-      } catch {}
-    }
-    if (checked.length) {
-      let titles = [];
-      try {
-        let esc = function (s) {
-          try {
-            return CSS && CSS.escape
-              ? CSS.escape(s)
-              : String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
-          } catch {
-            return String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
-          }
-        };
-        let findTitleFor = function (val) {
-          let v = String(val);
-          let e = null;
-          try {
-            e = document.querySelector('[data-layer-id="' + esc(v) + '"]');
-          } catch {}
-          if (!e) {
-            try {
-              e = document.querySelector('[data-id="' + esc(v) + '"]');
-            } catch {}
-          }
-          if (!e) {
-            try {
-              let sel1 = 'input[type="checkbox"][value="' + esc(v) + '"]';
-              e = document.querySelector(sel1);
-            } catch {}
-          }
-          if (!e) {
-            try {
-              let sel2 = 'input[type="checkbox"][id*="' + esc(v) + '"]';
-              e = document.querySelector(sel2);
-            } catch {}
-          }
-          if (e && e.tagName && e.tagName.toLowerCase() === 'input') {
-            let id = e.id;
-            if (id) {
-              try {
-                let selLab = 'label[for="' + esc(id) + '"]';
-                let lab = document.querySelector(selLab);
-                if (lab && lab.textContent) return lab.textContent.trim();
-              } catch {}
-            }
-            try {
-              let cont = e.closest('.toc-item,.ccl-tree__item,.layer-item');
-              if (cont) {
-                let selT =
-                  '.toc-item-title,.ccl-tree__label,.layer-title,.title';
-
-                let lab = cont.querySelector(selT);
-                if (lab && lab.textContent) return lab.textContent.trim();
+        if (this && this.props && this.props.hotspotData) {
+          let layerId = this.getLayerName(layer);
+          outerLoop: for (let key in this.props.hotspotData) {
+            let item = this.props.hotspotData[key];
+            for (let prop in item) {
+              if (prop === layerId) {
+                if (this.props.hotspotData[key][prop].Title !== undefined) {
+                  title = this.props.hotspotData[key][prop].Title;
+                  break outerLoop;
+                }
               }
-            } catch {}
+            }
           }
-          if (e) {
-            try {
-              let sel3 = '.toc-item-title,.ccl-tree__label,.layer-title,.title';
-              let lab = e.querySelector(sel3);
-              if (lab && lab.textContent) return lab.textContent.trim();
-            } catch {}
-            try {
-              let t = e.getAttribute('data-title');
-              if (t) return t;
-            } catch {}
-            try {
-              if (e.textContent) return e.textContent.trim();
-            } catch {}
-          }
-          return null;
-        };
-        checked.forEach(function (v) {
-          let t = findTitleFor(v);
-          if (t) titles.push(t);
-        });
-      } catch {}
-      if (titles.length) return [...new Set(titles)];
-      let all = [];
-      try {
-        let coll =
-          this.props.view &&
-          this.props.view.map &&
-          this.props.view.map.allLayers;
-        if (coll && coll.items) {
-          all = coll.items;
-        } else if (coll && coll.toArray) {
-          all = coll.toArray();
         }
       } catch {}
-      let byId = {};
-      let byTitle = {};
-      try {
-        all.forEach(function (l) {
-          if (l && l.id) byId[l.id] = l.title || l.id;
-          if (l && l.title) byTitle[l.title] = l.title;
-        });
-      } catch {}
-      let titles2 = [];
-      checked.forEach(function (v) {
-        if (byTitle[v]) titles2.push(byTitle[v]);
-        else if (byId[v]) titles2.push(byId[v]);
-      });
-      if (titles2.length) return [...new Set(titles2)];
-    }
-    let layers = [];
-    this.props.view.map.layers.forEach(function (l) {
-      if (l.visible) {
-        layers.push(l.title || l.id || 'layer');
+      if (!title) {
+        title = this.getLayerTitle(layer);
       }
+      if (title) titles.push(title);
     });
-    return layers;
+    return [...new Set(titles)];
   }
 
   serviceDeskRedirect() {
