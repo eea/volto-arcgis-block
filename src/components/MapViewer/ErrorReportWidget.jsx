@@ -193,7 +193,13 @@ class ErrorReport extends React.Component {
         document.body.removeChild(ta);
       }
     } catch {}
-    window.open(this.helpdeskUrl, '_blank');
+    let url = this.helpdeskUrl;
+    try {
+      let u = new URL(url);
+      u.hash = 'error-report';
+      url = u.toString();
+    } catch {}
+    window.open(url, '_blank');
   }
 
   resetData() {
