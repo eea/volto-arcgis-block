@@ -463,6 +463,7 @@ class MenuWidget extends React.Component {
     this.xml = null;
     this.dataBBox = null;
     this.extentInitiated = false;
+    this.extentCenter = null;
     this.hotspotLayerIds = [];
     this.getHotspotLayerIds = this.getHotspotLayerIds.bind(this);
     this.prepareHotspotLayers = this.prepareHotspotLayers.bind(this);
@@ -476,7 +477,11 @@ class MenuWidget extends React.Component {
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
       let node;
+      if (this.view && this.view.center) {
+        this.extentCenter = { x: this.view.center.x, y: this.view.center.y };
+      }
       if (isStationary) {
+        this.extentInitiated = false;
         let zoom = this.view.get('zoom');
         if (this.props.download) {
           node = document.querySelector('.zoom-in-message-dataset');
@@ -2893,6 +2898,12 @@ class MenuWidget extends React.Component {
         }
       }
       if (
+        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+      ) {
+        this.fullExtentDataset(elem);
+      }
+      if (
         (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
         (this.layers['lc_filter'] || this.layers['lcc_filter']) &&
         !userService
@@ -3028,6 +3039,7 @@ class MenuWidget extends React.Component {
         }
       } catch (e) {}
     } else {
+      this.extentInitiated = false;
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
@@ -3305,6 +3317,29 @@ class MenuWidget extends React.Component {
         this.toggleLayer(element);
       }
     });
+    if (!value) {
+      let filterIds = ['lcc_filter', 'lc_filter', 'klc_filter', 'pa_filter'];
+      for (let i = 0; i < filterIds.length; i++) {
+        let fid = filterIds[i];
+        if (this.layers && this.layers[fid]) {
+          this.deleteFilteredLayer(fid);
+          let mapLayer = this.map && this.map.findLayerById(fid);
+          if (mapLayer) {
+            if (mapLayer.type && mapLayer.type !== 'base-tile') {
+              mapLayer.clear();
+            }
+            mapLayer.destroy();
+            this.map.remove(mapLayer);
+          }
+          if (this.activeLayersJSON && this.activeLayersJSON[fid])
+            delete this.activeLayersJSON[fid];
+          if (this.visibleLayers && this.visibleLayers[fid])
+            delete this.visibleLayers[fid];
+          if (this.timeLayers && this.timeLayers[fid])
+            delete this.timeLayers[fid];
+        }
+      }
+    }
   }
 
   /**
@@ -4040,8 +4075,9 @@ class MenuWidget extends React.Component {
       });
     }
     if (
-      this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-      this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+      this.extentInitiated === false &&
+      (this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df')
     ) {
       let myExtent = new Extent({
         xmin: -13478905.5678019,
@@ -4050,7 +4086,20 @@ class MenuWidget extends React.Component {
         ymax: 11175665.272476234,
         spatialReference: 3857,
       });
-      this.view.goTo({ center: myExtent.center, zoom: 3 });
+      const targetCenter = myExtent.center;
+      if (this.extentCenter) {
+        const epsilon = 1e-3;
+        const sameStoredCenter =
+          Math.abs(this.extentCenter.x - targetCenter.x) < epsilon &&
+          Math.abs(this.extentCenter.y - targetCenter.y) < epsilon;
+        if (sameStoredCenter) {
+          this.extentInitiated = true;
+          return;
+        }
+      }
+      this.view.goTo({ center: targetCenter, zoom: 3 });
+      this.extentCenter = { x: targetCenter.x, y: targetCenter.y };
+      this.extentInitiated = true;
     } else {
       this.view.goTo(myExtent);
     }
@@ -4287,8 +4336,10 @@ class MenuWidget extends React.Component {
         ymax: firstLayer.ymax,
       });
       if (
-        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+        this.extentInitiated === false &&
+        (this.layers[elem.id].DatasetId ===
+          '65f8eded11d94a1ba5540ceecaddd4e6' ||
+          this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df')
       ) {
         let myExtent = new Extent({
           xmin: -13478905.5678019,
@@ -4297,7 +4348,26 @@ class MenuWidget extends React.Component {
           ymax: 11175665.272476234,
           spatialReference: 3857,
         });
-        this.view.goTo({ center: myExtent.center, zoom: 3 });
+        const targetCenter = myExtent.center;
+        if (this.extentCenter) {
+          const epsilon = 1e-3;
+          const sameStoredCenter =
+            Math.abs(this.extentCenter.x - targetCenter.x) < epsilon &&
+            Math.abs(this.extentCenter.y - targetCenter.y) < epsilon;
+          if (sameStoredCenter) {
+            if (this.toggleHotspotWidget.view.zoom !== 3) {
+              this.view.zoom = 3;
+              this.setState({}); // Force re-render
+              return;
+            } else {
+              this.extentInitiated = true;
+              return;
+            }
+          }
+        }
+        this.view.goTo({ center: targetCenter, zoom: 3 });
+        this.extentCenter = { x: targetCenter.x, y: targetCenter.y };
+        this.extentInitiated = true;
       } else {
         this.view.goTo(myExtent);
       }
@@ -4887,12 +4957,60 @@ class MenuWidget extends React.Component {
    */
   saveOpacity(layer, value) {
     if (this.props.download) return;
+
+    // Resolve layer id from string or layer object
+    let layerId = typeof layer === 'string' ? layer : null;
+    if (!layerId && layer && typeof layer === 'object') {
+      let lid = null;
+      if (layer.id) {
+        lid = layer.id;
+      } else if (layer.LayerId) {
+        lid = layer.LayerId;
+      } else if (layer.layer && layer.layer.id) {
+        lid = layer.layer.id;
+      }
+      layerId = lid;
+    }
+    if (!layerId) return;
+
+    // Update sessionStorage
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
       layerOpacities = {};
     }
-    layerOpacities[layer] = value;
+    layerOpacities[layerId] = value;
     sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
+
+    // Persist basic layer information (metadata + current opacity + visibility)
+    try {
+      let layersInfo = JSON.parse(sessionStorage.getItem('layersInfo'));
+      if (layersInfo === null) layersInfo = {};
+      if (this.layers && this.layers[layerId]) {
+        const l = this.layers[layerId];
+        layersInfo[layerId] = {
+          id: layerId,
+          title: l.title || l.DatasetTitle || l.LayerTitle || '',
+          DatasetId: l.DatasetId || '',
+          ViewService: l.ViewService || l.url || '',
+          type: l.type || '',
+          opacity: value,
+          visible: !!l.visible,
+        };
+        sessionStorage.setItem('layersInfo', JSON.stringify(layersInfo));
+      }
+    } catch (e) {}
+
+    // Mirror into user-specific localStorage blob for persistence across sessions
+    try {
+      const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+      const existing = localStorage.getItem(userKey);
+      const storeObj = existing ? JSON.parse(existing) : {};
+      storeObj['layerOpacities'] = JSON.stringify(layerOpacities);
+      if (sessionStorage.getItem('layersInfo')) {
+        storeObj['layersInfo'] = sessionStorage.getItem('layersInfo');
+      }
+      localStorage.setItem(userKey, JSON.stringify(storeObj));
+    } catch (e) {}
 
     // Save to localStorage for user service layers
     const savedServices = JSON.parse(
@@ -4904,7 +5022,7 @@ class MenuWidget extends React.Component {
 
       // Update opacity for matching layer in user services
       savedServices.forEach((service) => {
-        if (service.LayerId === layer) {
+        if (service.LayerId === layerId) {
           service.opacity = value;
           servicesUpdated = true;
         }
