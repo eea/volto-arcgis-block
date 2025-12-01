@@ -463,6 +463,7 @@ class MenuWidget extends React.Component {
     this.xml = null;
     this.dataBBox = null;
     this.extentInitiated = false;
+    this.extentCenter = null;
     this.hotspotLayerIds = [];
     this.getHotspotLayerIds = this.getHotspotLayerIds.bind(this);
     this.prepareHotspotLayers = this.prepareHotspotLayers.bind(this);
@@ -476,7 +477,11 @@ class MenuWidget extends React.Component {
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
       let node;
+      if (this.view && this.view.center) {
+        this.extentCenter = { x: this.view.center.x, y: this.view.center.y };
+      }
       if (isStationary) {
+        this.extentInitiated = false;
         let zoom = this.view.get('zoom');
         if (this.props.download) {
           node = document.querySelector('.zoom-in-message-dataset');
@@ -2893,6 +2898,12 @@ class MenuWidget extends React.Component {
         }
       }
       if (
+        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+      ) {
+        this.fullExtentDataset(elem);
+      }
+      if (
         (elem.id.includes('all_lcc') || elem.id.includes('all_present')) &&
         (this.layers['lc_filter'] || this.layers['lcc_filter']) &&
         !userService
@@ -3028,6 +3039,7 @@ class MenuWidget extends React.Component {
         }
       } catch (e) {}
     } else {
+      this.extentInitiated = false;
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
@@ -4040,8 +4052,9 @@ class MenuWidget extends React.Component {
       });
     }
     if (
-      this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-      this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+      this.extentInitiated === false &&
+      (this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
+        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df')
     ) {
       let myExtent = new Extent({
         xmin: -13478905.5678019,
@@ -4050,7 +4063,20 @@ class MenuWidget extends React.Component {
         ymax: 11175665.272476234,
         spatialReference: 3857,
       });
-      this.view.goTo({ center: myExtent.center, zoom: 3 });
+      const targetCenter = myExtent.center;
+      if (this.extentCenter) {
+        const epsilon = 1e-3;
+        const sameStoredCenter =
+          Math.abs(this.extentCenter.x - targetCenter.x) < epsilon &&
+          Math.abs(this.extentCenter.y - targetCenter.y) < epsilon;
+        if (sameStoredCenter) {
+          this.extentInitiated = true;
+          return;
+        }
+      }
+      this.view.goTo({ center: targetCenter, zoom: 3 });
+      this.extentCenter = { x: targetCenter.x, y: targetCenter.y };
+      this.extentInitiated = true;
     } else {
       this.view.goTo(myExtent);
     }
@@ -4287,8 +4313,10 @@ class MenuWidget extends React.Component {
         ymax: firstLayer.ymax,
       });
       if (
-        this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
+        this.extentInitiated === false &&
+        (this.layers[elem.id].DatasetId ===
+          '65f8eded11d94a1ba5540ceecaddd4e6' ||
+          this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df')
       ) {
         let myExtent = new Extent({
           xmin: -13478905.5678019,
@@ -4297,7 +4325,26 @@ class MenuWidget extends React.Component {
           ymax: 11175665.272476234,
           spatialReference: 3857,
         });
-        this.view.goTo({ center: myExtent.center, zoom: 3 });
+        const targetCenter = myExtent.center;
+        if (this.extentCenter) {
+          const epsilon = 1e-3;
+          const sameStoredCenter =
+            Math.abs(this.extentCenter.x - targetCenter.x) < epsilon &&
+            Math.abs(this.extentCenter.y - targetCenter.y) < epsilon;
+          if (sameStoredCenter) {
+            if (this.toggleHotspotWidget.view.zoom !== 3) {
+              this.view.zoom = 3;
+              this.setState({}); // Force re-render
+              return;
+            } else {
+              this.extentInitiated = true;
+              return;
+            }
+          }
+        }
+        this.view.goTo({ center: targetCenter, zoom: 3 });
+        this.extentCenter = { x: targetCenter.x, y: targetCenter.y };
+        this.extentInitiated = true;
       } else {
         this.view.goTo(myExtent);
       }
