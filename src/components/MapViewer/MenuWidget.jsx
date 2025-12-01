@@ -3317,6 +3317,29 @@ class MenuWidget extends React.Component {
         this.toggleLayer(element);
       }
     });
+    if (!value) {
+      let filterIds = ['lcc_filter', 'lc_filter', 'klc_filter', 'pa_filter'];
+      for (let i = 0; i < filterIds.length; i++) {
+        let fid = filterIds[i];
+        if (this.layers && this.layers[fid]) {
+          this.deleteFilteredLayer(fid);
+          let mapLayer = this.map && this.map.findLayerById(fid);
+          if (mapLayer) {
+            if (mapLayer.type && mapLayer.type !== 'base-tile') {
+              mapLayer.clear();
+            }
+            mapLayer.destroy();
+            this.map.remove(mapLayer);
+          }
+          if (this.activeLayersJSON && this.activeLayersJSON[fid])
+            delete this.activeLayersJSON[fid];
+          if (this.visibleLayers && this.visibleLayers[fid])
+            delete this.visibleLayers[fid];
+          if (this.timeLayers && this.timeLayers[fid])
+            delete this.timeLayers[fid];
+        }
+      }
+    }
   }
 
   /**
