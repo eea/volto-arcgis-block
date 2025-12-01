@@ -4957,12 +4957,60 @@ class MenuWidget extends React.Component {
    */
   saveOpacity(layer, value) {
     if (this.props.download) return;
+
+    // Resolve layer id from string or layer object
+    let layerId = typeof layer === 'string' ? layer : null;
+    if (!layerId && layer && typeof layer === 'object') {
+      let lid = null;
+      if (layer.id) {
+        lid = layer.id;
+      } else if (layer.LayerId) {
+        lid = layer.LayerId;
+      } else if (layer.layer && layer.layer.id) {
+        lid = layer.layer.id;
+      }
+      layerId = lid;
+    }
+    if (!layerId) return;
+
+    // Update sessionStorage
     let layerOpacities = JSON.parse(sessionStorage.getItem('layerOpacities'));
     if (layerOpacities === null) {
       layerOpacities = {};
     }
-    layerOpacities[layer] = value;
+    layerOpacities[layerId] = value;
     sessionStorage.setItem('layerOpacities', JSON.stringify(layerOpacities));
+
+    // Persist basic layer information (metadata + current opacity + visibility)
+    try {
+      let layersInfo = JSON.parse(sessionStorage.getItem('layersInfo'));
+      if (layersInfo === null) layersInfo = {};
+      if (this.layers && this.layers[layerId]) {
+        const l = this.layers[layerId];
+        layersInfo[layerId] = {
+          id: layerId,
+          title: l.title || l.DatasetTitle || l.LayerTitle || '',
+          DatasetId: l.DatasetId || '',
+          ViewService: l.ViewService || l.url || '',
+          type: l.type || '',
+          opacity: value,
+          visible: !!l.visible,
+        };
+        sessionStorage.setItem('layersInfo', JSON.stringify(layersInfo));
+      }
+    } catch (e) {}
+
+    // Mirror into user-specific localStorage blob for persistence across sessions
+    try {
+      const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+      const existing = localStorage.getItem(userKey);
+      const storeObj = existing ? JSON.parse(existing) : {};
+      storeObj['layerOpacities'] = JSON.stringify(layerOpacities);
+      if (sessionStorage.getItem('layersInfo')) {
+        storeObj['layersInfo'] = sessionStorage.getItem('layersInfo');
+      }
+      localStorage.setItem(userKey, JSON.stringify(storeObj));
+    } catch (e) {}
 
     // Save to localStorage for user service layers
     const savedServices = JSON.parse(
@@ -4974,7 +5022,7 @@ class MenuWidget extends React.Component {
 
       // Update opacity for matching layer in user services
       savedServices.forEach((service) => {
-        if (service.LayerId === layer) {
+        if (service.LayerId === layerId) {
           service.opacity = value;
           servicesUpdated = true;
         }
