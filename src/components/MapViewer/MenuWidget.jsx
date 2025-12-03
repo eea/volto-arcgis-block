@@ -3311,14 +3311,17 @@ class MenuWidget extends React.Component {
       if (productDropdown) {
         let btn = productDropdown.querySelector('.ccl-expandable__button');
         if (btn) btn.setAttribute('aria-expanded', 'true');
+        if (btn) this.addExpandedDropdown(btn.id);
       }
       if (familyDropdown) {
         let btn = familyDropdown.querySelector('.ccl-expandable__button');
         if (btn) btn.setAttribute('aria-expanded', 'true');
+        if (btn) this.addExpandedDropdown(btn.id);
       }
       if (datasetDropdown) {
         let btn = datasetDropdown.querySelector('.ccl-expandable__button');
         if (btn) btn.setAttribute('aria-expanded', 'true');
+        if (btn) this.addExpandedDropdown(btn.id);
       }
     }
     if (value) {
@@ -3389,6 +3392,7 @@ class MenuWidget extends React.Component {
       if (productContainer) {
         let btn = productContainer.querySelector('.ccl-expandable__button');
         if (btn) btn.setAttribute('aria-expanded', 'true');
+        if (btn) this.addExpandedDropdown(btn.id);
       }
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
@@ -3398,6 +3402,7 @@ class MenuWidget extends React.Component {
           if (datasetDropdown) {
             let btn = datasetDropdown.querySelector('.ccl-expandable__button');
             if (btn) btn.setAttribute('aria-expanded', 'true');
+            if (btn) this.addExpandedDropdown(btn.id);
           }
         }
       }
@@ -3425,6 +3430,7 @@ class MenuWidget extends React.Component {
       if (familyContainer) {
         let btn = familyContainer.querySelector('.ccl-expandable__button');
         if (btn) btn.setAttribute('aria-expanded', 'true');
+        if (btn) this.addExpandedDropdown(btn.id);
       }
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
@@ -3434,6 +3440,7 @@ class MenuWidget extends React.Component {
           if (datasetDropdown) {
             let btn = datasetDropdown.querySelector('.ccl-expandable__button');
             if (btn) btn.setAttribute('aria-expanded', 'true');
+            if (btn) this.addExpandedDropdown(btn.id);
           }
         }
       }
@@ -3501,6 +3508,35 @@ class MenuWidget extends React.Component {
     }
     storeObj.expandedDropdowns = expandedDropdowns;
     localStorage.setItem(userKey, JSON.stringify(storeObj));
+  }
+
+  addExpandedDropdown(id) {
+    if (!id || this.props.download) return;
+    try {
+      let expandedDropdowns = JSON.parse(
+        sessionStorage.getItem('expandedDropdowns'),
+      );
+      if (!Array.isArray(expandedDropdowns)) expandedDropdowns = [];
+      if (!expandedDropdowns.includes(id)) {
+        expandedDropdowns.push(id);
+        sessionStorage.setItem(
+          'expandedDropdowns',
+          JSON.stringify(expandedDropdowns),
+        );
+        const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+        const existing = localStorage.getItem(userKey);
+        let storeObj = {};
+        if (existing) {
+          try {
+            storeObj = JSON.parse(existing) || {};
+          } catch (e) {
+            storeObj = {};
+          }
+        }
+        storeObj.expandedDropdowns = expandedDropdowns;
+        localStorage.setItem(userKey, JSON.stringify(storeObj));
+      }
+    } catch (e) {}
   }
   findCheckedDatasetNoServiceToVisualize(elem) {
     let parentId = elem.getAttribute('parentid');
@@ -5678,16 +5714,25 @@ class MenuWidget extends React.Component {
     if (existing) {
       try {
         const storeObj = JSON.parse(existing) || {};
-        if (storeObj && storeObj.expandedDropdowns)
-          expandedDropdowns = storeObj.expandedDropdowns;
+        const stored = storeObj ? storeObj.expandedDropdowns : null;
+        if (Array.isArray(stored)) {
+          expandedDropdowns = stored;
+        } else if (typeof stored === 'string') {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) expandedDropdowns = parsed;
+        }
       } catch (e) {}
     }
-    if (!expandedDropdowns) {
-      expandedDropdowns = JSON.parse(
-        sessionStorage.getItem('expandedDropdowns'),
-      );
+    if (!Array.isArray(expandedDropdowns)) {
+      try {
+        const fromSession = sessionStorage.getItem('expandedDropdowns');
+        if (fromSession) {
+          const parsed = JSON.parse(fromSession);
+          if (Array.isArray(parsed)) expandedDropdowns = parsed;
+        }
+      } catch (e) {}
     }
-    if (expandedDropdowns) {
+    if (Array.isArray(expandedDropdowns)) {
       expandedDropdowns.forEach((id) => {
         let dd = document.getElementById(id);
         if (dd) {
