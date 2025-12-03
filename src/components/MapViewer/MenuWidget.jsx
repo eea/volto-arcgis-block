@@ -1097,6 +1097,18 @@ class MenuWidget extends React.Component {
       let checkedLayers = sessionStorage.getItem('checkedLayers');
       if (expandedDropdowns) {
         sessionStorage.setItem('expandedDropdowns', JSON.stringify([]));
+        const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+        const existing = localStorage.getItem(userKey);
+        let storeObj = {};
+        if (existing) {
+          try {
+            storeObj = JSON.parse(existing) || {};
+          } catch (e) {
+            storeObj = {};
+          }
+        }
+        storeObj.expandedDropdowns = [];
+        localStorage.setItem(userKey, JSON.stringify(storeObj));
       }
       if (checkedLayers) {
         sessionStorage.setItem('checkedLayers', JSON.stringify([]));
@@ -3477,6 +3489,18 @@ class MenuWidget extends React.Component {
         JSON.stringify(expandedDropdowns),
       );
     }
+    const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+    const existing = localStorage.getItem(userKey);
+    let storeObj = {};
+    if (existing) {
+      try {
+        storeObj = JSON.parse(existing) || {};
+      } catch (e) {
+        storeObj = {};
+      }
+    }
+    storeObj.expandedDropdowns = expandedDropdowns;
+    localStorage.setItem(userKey, JSON.stringify(storeObj));
   }
   findCheckedDatasetNoServiceToVisualize(elem) {
     let parentId = elem.getAttribute('parentid');
@@ -5648,9 +5672,21 @@ class MenuWidget extends React.Component {
    */
   expandDropdowns() {
     if (this.props.download) return;
-    let expandedDropdowns = JSON.parse(
-      sessionStorage.getItem('expandedDropdowns'),
-    );
+    let expandedDropdowns = null;
+    const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+    const existing = localStorage.getItem(userKey);
+    if (existing) {
+      try {
+        const storeObj = JSON.parse(existing) || {};
+        if (storeObj && storeObj.expandedDropdowns)
+          expandedDropdowns = storeObj.expandedDropdowns;
+      } catch (e) {}
+    }
+    if (!expandedDropdowns) {
+      expandedDropdowns = JSON.parse(
+        sessionStorage.getItem('expandedDropdowns'),
+      );
+    }
     if (expandedDropdowns) {
       expandedDropdowns.forEach((id) => {
         let dd = document.getElementById(id);
