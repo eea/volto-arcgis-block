@@ -464,7 +464,6 @@ class BookmarkWidget extends React.Component {
                   }
                 }
                 shouldUpdate = true;
-                break;
               }
             }
           } else if (e.moved) {

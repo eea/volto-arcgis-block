@@ -1379,8 +1379,10 @@ div.upload-container.esri-component
 }
 
 .calendar-button:hover {
-  background-color: #a0b128;
-  color: white;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #a0b128;
+  border-radius: 2px;
 }
 
 .datepicker {
