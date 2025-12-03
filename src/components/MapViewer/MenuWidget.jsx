@@ -3293,6 +3293,23 @@ class MenuWidget extends React.Component {
     let layerChecks = [];
     let selector = [];
     if (value) {
+      let productDropdown = e.closest('.map-menu-product-dropdown');
+      let datasetDropdown = e.closest('.map-menu-dropdown');
+      let familyDropdown = e.closest('.map-menu-family-dropdown');
+      if (productDropdown) {
+        let btn = productDropdown.querySelector('.ccl-expandable__button');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
+      if (familyDropdown) {
+        let btn = familyDropdown.querySelector('.ccl-expandable__button');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
+      if (datasetDropdown) {
+        let btn = datasetDropdown.querySelector('.ccl-expandable__button');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+    if (value) {
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
         if (selector) {
@@ -3356,9 +3373,21 @@ class MenuWidget extends React.Component {
     let selector = [];
 
     if (value) {
+      let productContainer = document.querySelector('[productid="' + id + '"]');
+      if (productContainer) {
+        let btn = productContainer.querySelector('.ccl-expandable__button');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
         datasetChecks.push(selector);
+        if (selector) {
+          let datasetDropdown = selector.closest('.map-menu-dropdown');
+          if (datasetDropdown) {
+            let btn = datasetDropdown.querySelector('.ccl-expandable__button');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+          }
+        }
       }
     } else {
       datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
@@ -3380,9 +3409,21 @@ class MenuWidget extends React.Component {
     let selector = [];
 
     if (value) {
+      let familyContainer = document.querySelector('[productid="' + id + '"]');
+      if (familyContainer) {
+        let btn = familyContainer.querySelector('.ccl-expandable__button');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
       for (let i = 0; i < splitdefCheck.length; i++) {
         selector = document.querySelector(`[id="${splitdefCheck[i]}"]`);
         datasetChecks.push(selector);
+        if (selector) {
+          let datasetDropdown = selector.closest('.map-menu-dropdown');
+          if (datasetDropdown) {
+            let btn = datasetDropdown.querySelector('.ccl-expandable__button');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+          }
+        }
       }
     } else {
       datasetChecks = document.querySelectorAll(`[parentid=${id}]`);
