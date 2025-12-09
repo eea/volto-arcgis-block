@@ -178,25 +178,10 @@ class ErrorReport extends React.Component {
       this.state.latlong.y +
       '. Active layers: ' +
       datasets.join(', ');
-    try {
-      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(message);
-      } else {
-        let ta = document.createElement('textarea');
-        ta.value = message;
-        ta.setAttribute('readonly', '');
-        ta.style.position = 'absolute';
-        ta.style.left = '-9999px';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
-    } catch {}
     let url = this.helpdeskUrl;
     try {
       let u = new URL(url);
-      u.hash = 'error-report';
+      u.searchParams.set('text', message);
       url = u.toString();
     } catch {}
     window.open(url, '_blank');
