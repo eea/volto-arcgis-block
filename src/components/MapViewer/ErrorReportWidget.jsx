@@ -86,8 +86,7 @@ class ErrorReport extends React.Component {
         this.setState({
           latlong: { x: pt.latitude.toFixed(4), y: pt.longitude.toFixed(4) },
           datasets: ds,
-          instructionsText:
-            "The error report data has been added to your clipboard. Click the 'Service Desk' button and paste the clipboard content inside the Helpdesk's message box",
+          instructionsText: `The data will be automatically added in the technical support service's Message field`,
         });
       }.bind(this),
     );
