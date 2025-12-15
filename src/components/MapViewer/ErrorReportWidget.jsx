@@ -86,7 +86,7 @@ class ErrorReport extends React.Component {
         this.setState({
           latlong: { x: pt.latitude.toFixed(4), y: pt.longitude.toFixed(4) },
           datasets: ds,
-          instructionsText: `The data will be automatically added in the technical support service's Message field`,
+          instructionsText: `Click on the ‘Service Desk’ button, and the data will be automatically added to the Message field of the technical support service.`,
         });
       }.bind(this),
     );
