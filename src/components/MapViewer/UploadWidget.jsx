@@ -3,7 +3,7 @@ import { loadModules } from 'esri-loader';
 // import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-var WMSLayer;
+var WMSLayer, WMTSLayer, WFSLayer;
 
 class UploadWidget extends React.Component {
   /**
@@ -21,6 +21,7 @@ class UploadWidget extends React.Component {
       showInfoPopup: false,
       infoPopupType: '',
       wmsServiceUrl: '',
+      selectedServiceType: '',
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -32,8 +33,12 @@ class UploadWidget extends React.Component {
   }
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer']).then(([_WMSLayer]) => {
-      [WMSLayer] = [_WMSLayer];
+    return loadModules([
+      'esri/layers/WMSLayer',
+      'esri/layers/WMTSLayer',
+      'esri/layers/WFSLayer',
+    ]).then(([_WMSLayer, _WMTSLayer, _WFSLayer]) => {
+      [WMSLayer, WMTSLayer, WFSLayer] = [_WMSLayer, _WMTSLayer, _WFSLayer];
     });
   }
 
@@ -128,8 +133,12 @@ class UploadWidget extends React.Component {
     this.setState({ wmsServiceUrl: event.target.value });
   };
 
+  handleServiceTypeChange = (event) => {
+    this.setState({ selectedServiceType: event.target.value });
+  };
+
   handleUploadService = async () => {
-    const { wmsServiceUrl } = this.state;
+    const { wmsServiceUrl, selectedServiceType } = this.state;
     try {
       // Use a CORS proxy or add mode: 'no-cors' if you just need to check if service exists
       let urlResult = await fetch(wmsServiceUrl, {
@@ -148,18 +157,35 @@ class UploadWidget extends React.Component {
       this.setState({ wmsServiceUrl: '' });
       return;
     }
-    // If service is valid and is a WMS service
-    if (
-      wmsServiceUrl &&
-      wmsServiceUrl.trim() !== '' &&
-      wmsServiceUrl.toLowerCase().includes('wms')
-    ) {
-      this.uploadUrlServiceHandler(wmsServiceUrl);
+    if (selectedServiceType && wmsServiceUrl && wmsServiceUrl.trim() !== '') {
+      if (selectedServiceType === 'WMS') {
+        this.uploadWMSService(wmsServiceUrl);
+      } else if (selectedServiceType === 'WMTS') {
+        this.uploadWMTSService(wmsServiceUrl);
+      } else if (selectedServiceType === 'WFS') {
+        this.uploadWFSService(wmsServiceUrl);
+      } else {
+        this.errorPopup();
+        this.setState({ wmsServiceUrl: '' });
+        return;
+      }
       this.setState({ wmsServiceUrl: '' });
     } else {
       this.errorPopup();
       this.setState({ wmsServiceUrl: '' });
     }
+  };
+
+  uploadWMSService = (url) => {
+    this.uploadUrlServiceHandler(url, 'WMS');
+  };
+
+  uploadWMTSService = (url) => {
+    this.uploadUrlServiceHandler(url, 'WMTS');
+  };
+
+  uploadWFSService = (url) => {
+    this.uploadUrlServiceHandler(url, 'WFS');
   };
 
   errorPopup = () => {
@@ -188,8 +214,18 @@ class UploadWidget extends React.Component {
         url: '',
         title: 'WMS Layer',
       });
+      const wmtsLayer = new WMTSLayer({
+        url: '',
+        title: 'WMTS Layer',
+      });
+      const wfsLayer = new WFSLayer({
+        url: '',
+        title: 'WFS Layer',
+      });
       this.setState({
         wmsLayer: wmsLayer,
+        wmtsLayer: wmtsLayer,
+        wfsLayer: wfsLayer,
       });
     });
   }
@@ -208,11 +244,11 @@ class UploadWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="upload-container">
-          <div tooltip="Add Map service" direction="left" type="widget">
+          <div tooltip="Add External Service" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="map_upload_button"
-              aria-label="WMS service upload"
+              aria-label="External service upload"
               onClick={this.openMenu.bind(this)}
               onKeyDown={(e) => {
                 if (
@@ -232,7 +268,7 @@ class UploadWidget extends React.Component {
           </div>
           <div className="right-panel">
             <div className="right-panel-header">
-              <span>Add map service</span>
+              <span>Add external service</span>
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
@@ -257,6 +293,20 @@ class UploadWidget extends React.Component {
                 <div className="ccl-form">
                   <div className="field">
                     <label>
+                      Service type
+                      <select
+                        value={this.state.selectedServiceType}
+                        onBlur={this.handleServiceTypeChange}
+                      >
+                        <option value="">Select a service</option>
+                        <option value="WMS">WMS</option>
+                        <option value="WMTS">WMTS</option>
+                        <option value="WFS">WFS</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div className="field">
+                    <label>
                       Map service address
                       <input
                         type="text"
@@ -269,6 +319,13 @@ class UploadWidget extends React.Component {
                   <button
                     className="esri-button"
                     onClick={this.handleUploadService}
+                    disabled={
+                      !this.state.selectedServiceType ||
+                      !(
+                        this.state.wmsServiceUrl &&
+                        this.state.wmsServiceUrl.trim() !== ''
+                      )
+                    }
                   >
                     Upload service
                   </button>
