@@ -633,6 +633,22 @@ div.upload-container.esri-component
   color: #a0b128;
 }
 
+.upload-container .esri-button:disabled,
+.upload-container .esri-button[disabled] {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.upload-container .esri-button:disabled:hover,
+.upload-container .esri-button[disabled]:hover {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
 .upload-panel {
   display: unset !important;
 }
