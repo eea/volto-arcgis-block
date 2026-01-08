@@ -296,6 +296,7 @@ class UploadWidget extends React.Component {
                       Service type
                       <select
                         value={this.state.selectedServiceType}
+                        onChangeCapture={this.handleServiceTypeChange}
                         onBlur={this.handleServiceTypeChange}
                       >
                         <option value="">Select a service</option>
