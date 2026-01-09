@@ -20,7 +20,7 @@ class UploadWidget extends React.Component {
       showMapMenu: false,
       showInfoPopup: false,
       infoPopupType: '',
-      wmsServiceUrl: '',
+      serviceUrl: '',
       selectedServiceType: '',
     };
     this.menuClass =
@@ -122,57 +122,91 @@ class UploadWidget extends React.Component {
     //}
     //this.setState({
     //  wmsLayer: null,
-    //  wmsServiceUrl: '',
+    //  serviceUrl: '',
     //});
 
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
   }
 
-  handleWmsServiceUrlChange = (event) => {
-    this.setState({ wmsServiceUrl: event.target.value });
+  handleserviceUrlChange = (event) => {
+    this.setState({ serviceUrl: event.target.value });
   };
 
   handleServiceTypeChange = (event) => {
     this.setState({ selectedServiceType: event.target.value });
   };
 
-  handleUploadService = async () => {
-    const { wmsServiceUrl, selectedServiceType } = this.state;
-    try {
-      // Use a CORS proxy or add mode: 'no-cors' if you just need to check if service exists
-      let urlResult = await fetch(wmsServiceUrl, {
-        method: 'GET',
-        mode: 'cors', // You might need to change this to 'no-cors' if proxy isn't available
-      });
-
-      // Check if service is valid and properly responds
-      if (!urlResult || !urlResult.ok) {
-        this.errorPopup();
-        this.setState({ wmsServiceUrl: '' });
-        return;
-      }
-    } catch (error) {
-      this.errorPopup();
-      this.setState({ wmsServiceUrl: '' });
-      return;
+  getNormalizedUrlForType = (serviceUrl, serviceType) => {
+    if (serviceType === 'WMTS') {
+      try {
+        const parsedUrl = new URL(serviceUrl);
+        const pathName = parsedUrl.pathname;
+        const searchQuery = parsedUrl.search.toLowerCase();
+        if (
+          pathName.includes('/wmts/') &&
+          searchQuery.includes('request=gettile')
+        ) {
+          const pathParts = pathName.split('/').filter(Boolean);
+          const wmtsIndex = pathParts.indexOf('wmts');
+          const projection = pathParts[wmtsIndex + 1] || '';
+          const variant = pathParts[wmtsIndex + 2] || '';
+          if (projection && variant) {
+            return (
+              parsedUrl.origin +
+              '/wmts/' +
+              projection +
+              '/' +
+              variant +
+              '/1.0.0/WMTSCapabilities.xml'
+            );
+          }
+        }
+      } catch (error) {}
     }
-    if (selectedServiceType && wmsServiceUrl && wmsServiceUrl.trim() !== '') {
+    return serviceUrl;
+  };
+
+  handleUploadService = async () => {
+    const { serviceUrl, selectedServiceType } = this.state;
+    // try {
+    //   // Use a CORS proxy or add mode: 'no-cors' if you just need to check if service exists
+    //   let urlResult = await fetch(serviceUrl, {
+    //     method: 'GET',
+    //     mode: 'no-cors', // You might need to change this to 'no-cors' if proxy isn't available
+    //   });
+
+    //   // Check if service is valid and properly responds
+    //   if (!urlResult || !urlResult.ok) {
+    //     this.errorPopup();
+    //     this.setState({ serviceUrl: '' });
+    //     return;
+    //   }
+    // } catch (error) {
+    //   this.errorPopup();
+    //   this.setState({ serviceUrl: '' });
+    //   return;
+    // }
+    if (selectedServiceType && serviceUrl && serviceUrl.trim() !== '') {
+      const normalizedUrl = this.getNormalizedUrlForType(
+        serviceUrl,
+        selectedServiceType,
+      );
       if (selectedServiceType === 'WMS') {
-        this.uploadWMSService(wmsServiceUrl);
+        this.uploadWMSService(normalizedUrl);
       } else if (selectedServiceType === 'WMTS') {
-        this.uploadWMTSService(wmsServiceUrl);
+        this.uploadWMTSService(normalizedUrl);
       } else if (selectedServiceType === 'WFS') {
-        this.uploadWFSService(wmsServiceUrl);
+        this.uploadWFSService(normalizedUrl);
       } else {
         this.errorPopup();
-        this.setState({ wmsServiceUrl: '' });
+        this.setState({ serviceUrl: '' });
         return;
       }
-      this.setState({ wmsServiceUrl: '' });
+      this.setState({ serviceUrl: '' });
     } else {
       this.errorPopup();
-      this.setState({ wmsServiceUrl: '' });
+      this.setState({ serviceUrl: '' });
     }
   };
 
@@ -312,8 +346,8 @@ class UploadWidget extends React.Component {
                       <input
                         type="text"
                         placeholder="Add map service URL (https://...)"
-                        value={this.state.wmsServiceUrl}
-                        onChange={this.handleWmsServiceUrlChange}
+                        value={this.state.serviceUrl}
+                        onChange={this.handleserviceUrlChange}
                       />
                     </label>
                   </div>
@@ -323,8 +357,8 @@ class UploadWidget extends React.Component {
                     disabled={
                       !this.state.selectedServiceType ||
                       !(
-                        this.state.wmsServiceUrl &&
-                        this.state.wmsServiceUrl.trim() !== ''
+                        this.state.serviceUrl &&
+                        this.state.serviceUrl.trim() !== ''
                       )
                     }
                   >

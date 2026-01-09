@@ -12,6 +12,7 @@ export const USER_SERVICES_KEY = 'user_services_session';
 
 var WMSLayer,
   WMTSLayer,
+  WFSLayer,
   FeatureLayer,
   BaseTileLayer,
   esriRequest,
@@ -550,6 +551,7 @@ class MenuWidget extends React.Component {
     return loadModules([
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
+      'esri/layers/WFSLayer',
       'esri/layers/FeatureLayer',
       'esri/layers/BaseTileLayer',
       'esri/request',
@@ -562,6 +564,7 @@ class MenuWidget extends React.Component {
       ([
         _WMSLayer,
         _WMTSLayer,
+        _WFSLayer,
         _FeatureLayer,
         _BaseTileLayer,
         _esriRequest,
@@ -574,6 +577,7 @@ class MenuWidget extends React.Component {
         [
           WMSLayer,
           WMTSLayer,
+          WFSLayer,
           FeatureLayer,
           BaseTileLayer,
           esriRequest,
@@ -585,6 +589,7 @@ class MenuWidget extends React.Component {
         ] = [
           _WMSLayer,
           _WMTSLayer,
+          _WFSLayer,
           _FeatureLayer,
           _BaseTileLayer,
           _esriRequest,
@@ -599,9 +604,10 @@ class MenuWidget extends React.Component {
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (nextProps.wmsServiceUrl !== prevState.wmsServiceUrl) {
+    if (nextProps.userServiceUrl !== prevState.userServiceUrl) {
       return {
-        wmsServiceUrl: nextProps.wmsServiceUrl,
+        userServiceUrl: nextProps.userServiceUrl,
+        userServiceType: nextProps.userServiceType,
       };
     }
     return null;
@@ -2277,11 +2283,9 @@ class MenuWidget extends React.Component {
     );
   }
 
-  async handleNewMapServiceLayer(viewService) {
-    // First, properly normalize the URL for comparison
+  async handleNewMapServiceLayer(viewService, serviceType) {
     const normalizedViewService = viewService.trim();
 
-    // Check if the layer already exists in this.layers before adding
     if (
       this.state.wmsUserServiceLayers.some(
         (layer) =>
@@ -2289,19 +2293,45 @@ class MenuWidget extends React.Component {
           layer.ViewService === normalizedViewService,
       )
     ) {
-      // Call the uploadFileErrorHandler to show the error popup
       this.props.uploadFileErrorHandler();
       return;
     }
 
-    // CREATE A TEMPORARY LAYER OBJECT TO EXTRACT DATA
+    let detectedServiceType = serviceType || 'WMS';
+    if (!serviceType) {
+      const lowerCaseUrl = normalizedViewService.toLowerCase();
+      if (
+        lowerCaseUrl.includes('/wmts/') ||
+        lowerCaseUrl.includes('wmtscapabilities.xml') ||
+        lowerCaseUrl.includes('service=wmts') ||
+        lowerCaseUrl.includes('request=gettile')
+      ) {
+        detectedServiceType = 'WMTS';
+      } else if (
+        lowerCaseUrl.includes('/wfs') ||
+        lowerCaseUrl.includes('service=wfs') ||
+        lowerCaseUrl.includes('request=getfeature')
+      ) {
+        detectedServiceType = 'WFS';
+      }
+    }
+
     let resourceLayer;
     try {
-      resourceLayer = new WMSLayer({
-        url: viewService,
-      });
+      if (detectedServiceType === 'WMTS') {
+        resourceLayer = new WMTSLayer({
+          url: viewService,
+        });
+      } else if (detectedServiceType === 'WFS') {
+        resourceLayer = new WFSLayer({
+          url: viewService,
+        });
+      } else {
+        resourceLayer = new WMSLayer({
+          url: viewService,
+        });
+      }
     } catch (error) {
-      // Set a popup error message in here
       this.props.uploadFileErrorHandler();
       return;
     }
@@ -2311,9 +2341,10 @@ class MenuWidget extends React.Component {
     let layerId, layerObj;
 
     await resourceLayer.load().then(() => {
-      // EXTRACT DATA FOR NEW LAYER REQUEST
       let { featureInfoUrl, title } = resourceLayer;
-      layerId = title.toUpperCase().replace(/ /g, '_');
+      layerId = title
+        ? title.toUpperCase().replace(/ /g, '_')
+        : normalizedViewService;
       const constructedSublayers = resourceLayer.sublayers?.items?.map(
         (sublayer) => {
           const {
@@ -2343,30 +2374,42 @@ class MenuWidget extends React.Component {
         },
       );
 
-      layerObj = {
-        url: viewService,
-        featureInfoFormat: 'text/html',
-        featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
-        title,
-        legendEnabled: true,
-        sublayers: constructedSublayers,
-        ViewService: viewService,
-        LayerId: layerId,
-      };
+      if (detectedServiceType === 'WMS') {
+        layerObj = {
+          url: viewService,
+          featureInfoFormat: 'text/html',
+          featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
+          title,
+          legendEnabled: true,
+          sublayers: constructedSublayers,
+          ViewService: viewService,
+          LayerId: layerId,
+        };
+      } else {
+        layerObj = {
+          url: viewService,
+          title,
+          ViewService: viewService,
+          LayerId: layerId,
+        };
+      }
       return layerObj;
     });
 
-    // DESTROY THE TEMPORARY LAYER OBJECT
     resourceLayer.destroy();
-    resourceLayer = null; // Important: clear the reference to the old layer
+    resourceLayer = null;
 
     const { LayerId } = layerObj;
 
-    // Check if the layer already exists in this.layers before adding
     if (!this.layers[LayerId]) {
       try {
-        // Create and add the new layer
-        this.layers[LayerId] = new WMSLayer(layerObj);
+        if (detectedServiceType === 'WMTS') {
+          this.layers[LayerId] = new WMTSLayer(layerObj);
+        } else if (detectedServiceType === 'WFS') {
+          this.layers[LayerId] = new WFSLayer(layerObj);
+        } else {
+          this.layers[LayerId] = new WMSLayer(layerObj);
+        }
 
         this.saveCheckedLayer(layerId);
 
@@ -2381,7 +2424,6 @@ class MenuWidget extends React.Component {
 
         this.props.onServiceChange();
       } catch (error) {
-        // Set a popup error message in here
         this.props.uploadFileErrorHandler();
         return;
       }
@@ -5297,14 +5339,14 @@ class MenuWidget extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.props.download) return;
 
-    if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
-      const { wmsServiceUrl } = this.props;
+    if (prevProps.userServiceUrl !== this.props.userServiceUrl) {
+      const { userServiceUrl, userServiceType } = this.props;
       if (
-        wmsServiceUrl &&
-        typeof wmsServiceUrl === 'string' &&
-        wmsServiceUrl !== ''
+        userServiceUrl &&
+        typeof userServiceUrl === 'string' &&
+        userServiceUrl !== ''
       ) {
-        this.handleNewMapServiceLayer(wmsServiceUrl);
+        this.handleNewMapServiceLayer(userServiceUrl, userServiceType);
       }
     }
 
