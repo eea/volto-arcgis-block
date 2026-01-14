@@ -1102,6 +1102,7 @@ export const CheckUserID = ({ reference }) => {
             hotspotData={reference.state.hotspotData}
             bookmarkHandler={reference.bookmarkHandler}
             bookmarkData={reference.state.bookmarkData}
+            isLoggedIn={isLoggedIn}
           />
 
           {/* MenuWidget with user_id */}
