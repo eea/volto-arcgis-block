@@ -167,7 +167,7 @@ class BookmarkWidget extends React.Component {
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'top-right');
     });
-    if (this.userID != null) {
+    if (this.userID != null && this.props?.isLoggedIn !== false) {
       this.migrateLegacyBookmarksToUserObject();
       // this.sessionBookmarks =
       //   JSON.parse(
