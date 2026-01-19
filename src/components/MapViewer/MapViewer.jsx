@@ -618,11 +618,19 @@ class MapViewer extends React.Component {
     }, 3000);
   };
 
-  uploadUrlServiceHandler = (newUrl, newType) => {
+  uploadUrlServiceHandler = (newUrl, newType, newSelection) => {
     if (newUrl && typeof newUrl === 'string') {
-      this.setState({ userServiceUrl: newUrl, userServiceType: newType || '' });
+      this.setState({
+        userServiceUrl: newUrl,
+        userServiceType: newType || '',
+        userSelection: newSelection || [],
+      });
     } else {
-      this.setState({ userServiceUrl: '', userServiceType: '' });
+      this.setState({
+        userServiceUrl: '',
+        userServiceType: '',
+        userSelection: [],
+      });
     }
   };
 

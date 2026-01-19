@@ -3,7 +3,7 @@ import { loadModules } from 'esri-loader';
 // import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-var WMSLayer, WMTSLayer, WFSLayer;
+var WMSLayer, WMTSLayer, WFSLayer, esriRequest;
 
 class UploadWidget extends React.Component {
   /**
@@ -22,6 +22,8 @@ class UploadWidget extends React.Component {
       infoPopupType: '',
       serviceUrl: '',
       selectedServiceType: '',
+      wfsFeatures: {},
+      wfsSelectionVersion: 0,
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -30,6 +32,7 @@ class UploadWidget extends React.Component {
     this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
     this.uploadFileErrorHandler = this.props.uploadFileErrorHandler;
     this.errorPopup = this.errorPopup.bind(this);
+    this.selectedFeatures = [];
   }
 
   loader() {
@@ -37,8 +40,14 @@ class UploadWidget extends React.Component {
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
       'esri/layers/WFSLayer',
-    ]).then(([_WMSLayer, _WMTSLayer, _WFSLayer]) => {
-      [WMSLayer, WMTSLayer, WFSLayer] = [_WMSLayer, _WMTSLayer, _WFSLayer];
+      'esri/request',
+    ]).then(([_WMSLayer, _WMTSLayer, _WFSLayer, _esriRequest]) => {
+      [WMSLayer, WMTSLayer, WFSLayer, esriRequest] = [
+        _WMSLayer,
+        _WMTSLayer,
+        _WFSLayer,
+        _esriRequest,
+      ];
     });
   }
 
@@ -167,26 +176,90 @@ class UploadWidget extends React.Component {
     return serviceUrl;
   };
 
+  getCapabilities = (url, serviceType) => {
+    // Get the coordinates of the click on the view
+    return esriRequest(url, {
+      responseType: 'html',
+      sync: 'true',
+      query: {
+        request: 'GetCapabilities',
+        service: serviceType,
+        version: serviceType === 'WFS' ? '2.0.0' : '1.3.0',
+      },
+    })
+      .then((response) => {
+        const xmlDoc = response.data;
+        const parser = new DOMParser();
+        this.xml = parser.parseFromString(xmlDoc, 'text/html');
+      })
+      .catch(() => {});
+  };
+
+  parseWFSFeatures = (xml) => {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const features = {};
+      const featureTypes = doc.querySelectorAll('FeatureType, featuretype');
+      featureTypes.forEach((ft) => {
+        const titleEl =
+          ft.querySelector('Title') || ft.querySelector('ows\\:Title');
+        const keywordsNodes = ft.querySelectorAll('ows\\:Keyword, Keyword');
+        const key =
+          keywordsNodes && keywordsNodes.length > 1
+            ? (keywordsNodes[1].textContent || '').trim()
+            : null;
+        const title = titleEl ? (titleEl.textContent || '').trim() : null;
+        if (key) {
+          features[key] = title ?? null;
+        }
+      });
+      return features;
+    } catch (e) {
+      return {};
+    }
+  };
+
+  handleFeatureCheckboxChange = (event) => {
+    const key = event.target.value;
+    if (event.target.checked) {
+      if (!this.selectedFeatures.includes(key)) {
+        this.selectedFeatures.push(key);
+      }
+    } else {
+      this.selectedFeatures = this.selectedFeatures.filter((k) => k !== key);
+    }
+    this.setState((prev) => ({
+      wfsSelectionVersion: prev.wfsSelectionVersion + 1,
+    }));
+  };
+
+  handleSelectLayers = async () => {
+    const { serviceUrl, selectedServiceType } = this.state;
+    if (
+      selectedServiceType === 'WFS' &&
+      serviceUrl &&
+      serviceUrl.trim() !== ''
+    ) {
+      const normalizedUrl = this.getNormalizedUrlForType(
+        serviceUrl,
+        selectedServiceType,
+      );
+      await this.getCapabilities(normalizedUrl, selectedServiceType);
+      const result = this.parseWFSFeatures(this.xml);
+      this.setState(() => ({
+        wfsFeatures: result,
+      }));
+    } else {
+      this.errorPopup();
+    }
+  };
+
   handleUploadService = async () => {
     const { serviceUrl, selectedServiceType } = this.state;
-    // try {
-    //   // Use a CORS proxy or add mode: 'no-cors' if you just need to check if service exists
-    //   let urlResult = await fetch(serviceUrl, {
-    //     method: 'GET',
-    //     mode: 'no-cors', // You might need to change this to 'no-cors' if proxy isn't available
-    //   });
-
-    //   // Check if service is valid and properly responds
-    //   if (!urlResult || !urlResult.ok) {
-    //     this.errorPopup();
-    //     this.setState({ serviceUrl: '' });
-    //     return;
-    //   }
-    // } catch (error) {
-    //   this.errorPopup();
-    //   this.setState({ serviceUrl: '' });
-    //   return;
-    // }
     if (selectedServiceType && serviceUrl && serviceUrl.trim() !== '') {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
@@ -219,7 +292,7 @@ class UploadWidget extends React.Component {
   };
 
   uploadWFSService = (url) => {
-    this.uploadUrlServiceHandler(url, 'WFS');
+    this.uploadUrlServiceHandler(url, 'WFS', this.selectedFeatures);
   };
 
   errorPopup = () => {
@@ -264,7 +337,7 @@ class UploadWidget extends React.Component {
     });
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (!prevProps.showErrorPopup && this.props.showErrorPopup) {
       this.errorPopup();
     }
@@ -275,6 +348,13 @@ class UploadWidget extends React.Component {
    * @returns jsx
    */
   render() {
+    const { selectedServiceType, serviceUrl, wfsFeatures } = this.state;
+    const isUploadDisabled =
+      !selectedServiceType ||
+      !(serviceUrl && serviceUrl.trim() !== '') ||
+      (selectedServiceType === 'WFS' &&
+        Object.keys(wfsFeatures || {}).length > 0 &&
+        this.selectedFeatures.length === 0);
     return (
       <>
         <div ref={this.container} className="upload-container">
@@ -351,19 +431,66 @@ class UploadWidget extends React.Component {
                       />
                     </label>
                   </div>
-                  <button
-                    className="esri-button"
-                    onClick={this.handleUploadService}
-                    disabled={
-                      !this.state.selectedServiceType ||
-                      !(
-                        this.state.serviceUrl &&
-                        this.state.serviceUrl.trim() !== ''
-                      )
-                    }
-                  >
-                    Upload service
-                  </button>
+                  {this.state.selectedServiceType === 'WFS' &&
+                  Object.keys(this.state.wfsFeatures || {}).length === 0 ? (
+                    <button
+                      className="esri-button"
+                      onClick={this.handleSelectLayers}
+                      disabled={
+                        !this.state.selectedServiceType ||
+                        !(
+                          this.state.serviceUrl &&
+                          this.state.serviceUrl.trim() !== ''
+                        )
+                      }
+                    >
+                      Select Layers
+                    </button>
+                  ) : (
+                    <button
+                      className="esri-button"
+                      onClick={this.handleUploadService}
+                      disabled={isUploadDisabled}
+                    >
+                      Upload service
+                    </button>
+                  )}
+                  {Object.keys(this.state.wfsFeatures || {}).length > 0 && (
+                    <div
+                      className="wfs-features-list"
+                      style={{
+                        overflowY: 'auto',
+                        overflowX: 'auto',
+                        maxHeight: '280px',
+                        width: '100%',
+                      }}
+                    >
+                      {Object.entries(this.state.wfsFeatures).map(
+                        ([key, title]) => (
+                          <label
+                            key={key}
+                            className="field"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              margin: '6px 0',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              value={key}
+                              onChange={this.handleFeatureCheckboxChange}
+                              checked={this.selectedFeatures.includes(key)}
+                              style={{ width: '18px', height: '18px' }}
+                            />
+                            <span>{title || key}</span>
+                          </label>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
