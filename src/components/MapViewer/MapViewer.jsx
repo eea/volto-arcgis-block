@@ -623,13 +623,13 @@ class MapViewer extends React.Component {
       this.setState({
         userServiceUrl: newUrl,
         userServiceType: newType || '',
-        userSelection: newSelection || [],
+        userServiceSelection: newSelection || [],
       });
     } else {
       this.setState({
         userServiceUrl: '',
         userServiceType: '',
-        userSelection: [],
+        userServiceSelection: [],
       });
     }
   };
@@ -1140,6 +1140,7 @@ export const CheckUserID = ({ reference }) => {
             uploadUrlServiceHandler={reference.uploadUrlServiceHandler}
             userServiceUrl={reference.state.userServiceUrl}
             userServiceType={reference.state.userServiceType}
+            userServiceSelection={reference.state.userServiceSelection}
             onServiceChange={reference.serviceChangeHandler}
             uploadFileErrorHandler={reference.uploadFileErrorHandler}
             userID={user_id}

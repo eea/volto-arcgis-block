@@ -2283,9 +2283,9 @@ class MenuWidget extends React.Component {
     );
   }
 
-  async handleNewMapServiceLayer(viewService, serviceType) {
+  async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     const normalizedViewService = viewService.trim();
-
+    console.log('selection: ', serviceSelection);
     if (
       this.state.wmsUserServiceLayers.some(
         (layer) =>
@@ -2323,12 +2323,41 @@ class MenuWidget extends React.Component {
           url: viewService,
         });
       } else if (detectedServiceType === 'WFS') {
-        resourceLayer = new WFSLayer({
-          url: viewService,
-        });
+        let typeNameParam = null;
+        let baseUrl = normalizedViewService;
+        try {
+          const u = new URL(normalizedViewService);
+          baseUrl = u.origin + u.pathname;
+          typeNameParam = Array.isArray(serviceSelection)
+            ? serviceSelection[0]
+            : serviceSelection ||
+              u.searchParams.get('typeName') ||
+              u.searchParams.get('typename') ||
+              u.searchParams.get('typeNames') ||
+              u.searchParams.get('TYPENAMES');
+        } catch (e) {
+          baseUrl = normalizedViewService.split('?')[0];
+          typeNameParam = Array.isArray(serviceSelection)
+            ? serviceSelection[0]
+            : serviceSelection || null;
+        }
+
+        const wfsProps = {
+          url: baseUrl,
+          version: '2.0.0',
+          customParameters: {
+            outputFormat: 'application/json',
+            SrsName: 'EPSG:4326',
+          },
+        };
+        if (typeNameParam) {
+          wfsProps.name = typeNameParam;
+        }
+        resourceLayer = new WFSLayer(wfsProps);
       } else {
         resourceLayer = new WMSLayer({
           url: viewService,
+          typename: serviceSelection || [],
         });
       }
     } catch (error) {
@@ -2384,6 +2413,34 @@ class MenuWidget extends React.Component {
           sublayers: constructedSublayers,
           ViewService: viewService,
           LayerId: layerId,
+        };
+      } else if (detectedServiceType === 'WFS') {
+        let nameProp = null;
+        try {
+          nameProp = resourceLayer.name || null;
+        } catch (e) {
+          nameProp = null;
+        }
+        let baseUrl = normalizedViewService;
+        try {
+          const u = new URL(normalizedViewService);
+          baseUrl = u.origin + u.pathname;
+        } catch (e) {
+          baseUrl = normalizedViewService.split('?')[0];
+        }
+        layerObj = {
+          url: baseUrl,
+          title,
+          ViewService: baseUrl,
+          LayerId: nameProp
+            ? nameProp.toUpperCase().replace(/ /g, '_')
+            : layerId,
+          name: nameProp || undefined,
+          version: '2.0.0',
+          customParameters: {
+            outputFormat: 'application/json',
+            SrsName: 'EPSG:4326',
+          },
         };
       } else {
         layerObj = {
@@ -5340,13 +5397,21 @@ class MenuWidget extends React.Component {
     if (this.props.download) return;
 
     if (prevProps.userServiceUrl !== this.props.userServiceUrl) {
-      const { userServiceUrl, userServiceType } = this.props;
+      const {
+        userServiceUrl,
+        userServiceType,
+        userServiceSelection,
+      } = this.props;
       if (
         userServiceUrl &&
         typeof userServiceUrl === 'string' &&
         userServiceUrl !== ''
       ) {
-        this.handleNewMapServiceLayer(userServiceUrl, userServiceType);
+        this.handleNewMapServiceLayer(
+          userServiceUrl,
+          userServiceType,
+          userServiceSelection,
+        );
       }
     }
 

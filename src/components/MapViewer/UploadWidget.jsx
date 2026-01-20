@@ -23,7 +23,6 @@ class UploadWidget extends React.Component {
       serviceUrl: '',
       selectedServiceType: '',
       wfsFeatures: {},
-      wfsSelectionVersion: 0,
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -232,9 +231,7 @@ class UploadWidget extends React.Component {
     } else {
       this.selectedFeatures = this.selectedFeatures.filter((k) => k !== key);
     }
-    this.setState((prev) => ({
-      wfsSelectionVersion: prev.wfsSelectionVersion + 1,
-    }));
+    this.setState({});
   };
 
   handleSelectLayers = async () => {
@@ -267,8 +264,10 @@ class UploadWidget extends React.Component {
       );
       if (selectedServiceType === 'WMS') {
         this.uploadWMSService(normalizedUrl);
+        this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WMTS') {
         this.uploadWMTSService(normalizedUrl);
+        this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WFS') {
         this.uploadWFSService(normalizedUrl);
       } else {
@@ -276,7 +275,6 @@ class UploadWidget extends React.Component {
         this.setState({ serviceUrl: '' });
         return;
       }
-      this.setState({ serviceUrl: '' });
     } else {
       this.errorPopup();
       this.setState({ serviceUrl: '' });
@@ -292,7 +290,10 @@ class UploadWidget extends React.Component {
   };
 
   uploadWFSService = (url) => {
+    console.log('this.selectedFeatures: ', this.selectedFeatures);
     this.uploadUrlServiceHandler(url, 'WFS', this.selectedFeatures);
+    this.selectedFeatures = [];
+    this.setState({ wfsFeatures: {}, serviceUrl: '' });
   };
 
   errorPopup = () => {
