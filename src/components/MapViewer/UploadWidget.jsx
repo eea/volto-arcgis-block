@@ -290,7 +290,6 @@ class UploadWidget extends React.Component {
   };
 
   uploadWFSService = (url) => {
-    console.log('this.selectedFeatures: ', this.selectedFeatures);
     this.uploadUrlServiceHandler(url, 'WFS', this.selectedFeatures);
     this.selectedFeatures = [];
     this.setState({ wfsFeatures: {}, serviceUrl: '' });

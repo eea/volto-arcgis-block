@@ -2285,7 +2285,6 @@ class MenuWidget extends React.Component {
 
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     const normalizedViewService = viewService.trim();
-    console.log('selection: ', serviceSelection);
     if (
       this.state.wmsUserServiceLayers.some(
         (layer) =>
