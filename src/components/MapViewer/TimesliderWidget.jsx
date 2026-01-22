@@ -280,8 +280,8 @@ class TimesliderWidget extends React.Component {
         return;
       }
       this.TimesliderWidget.fullTimeExtent = new TimeExtent({
-        start: new Date(arr[arr.length - 1]),
-        end: new Date(arr[0]),
+        start: new Date(arr[0]),
+        end: new Date(arr[arr.length - 1]),
       });
       this.TimesliderWidget.stops = {
         dates: arr.map((e) => new Date(e)),
