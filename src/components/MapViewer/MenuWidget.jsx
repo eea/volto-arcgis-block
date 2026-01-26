@@ -12,7 +12,6 @@ export const USER_SERVICES_KEY = 'user_services_session';
 
 var WMSLayer,
   WMTSLayer,
-  WFSLayer,
   FeatureLayer,
   GeoJSONLayer,
   BaseTileLayer,
@@ -552,7 +551,6 @@ class MenuWidget extends React.Component {
     return loadModules([
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
-      'esri/layers/WFSLayer',
       'esri/layers/FeatureLayer',
       'esri/layers/GeoJSONLayer',
       'esri/layers/BaseTileLayer',
@@ -566,7 +564,6 @@ class MenuWidget extends React.Component {
       ([
         _WMSLayer,
         _WMTSLayer,
-        _WFSLayer,
         _FeatureLayer,
         _GeoJSONLayer,
         _BaseTileLayer,
@@ -580,7 +577,6 @@ class MenuWidget extends React.Component {
         [
           WMSLayer,
           WMTSLayer,
-          WFSLayer,
           FeatureLayer,
           GeoJSONLayer,
           BaseTileLayer,
@@ -593,7 +589,6 @@ class MenuWidget extends React.Component {
         ] = [
           _WMSLayer,
           _WMTSLayer,
-          _WFSLayer,
           _FeatureLayer,
           _GeoJSONLayer,
           _BaseTileLayer,
@@ -2305,11 +2300,15 @@ class MenuWidget extends React.Component {
         resourceLayers = Object.entries(serviceSelection || {})
           .map(([name, title]) => {
             if (!name) return null;
-            const wfsUrl =
-              baseUrl +
-              '?service=WFS&request=GetFeature&version=2.0.0&typeNames=' +
-              encodeURIComponent(name) +
-              '&outputFormat=application/json&srsName=EPSG:3857';
+            const params = new URLSearchParams({
+              service: 'WFS',
+              request: 'GetFeature',
+              version: '2.0.0',
+              typeName: name,
+              outputFormat: 'application/json',
+              srsName: 'EPSG:4326',
+            }).toString();
+            const wfsUrl = baseUrl + '?' + params;
 
             const id = (name || baseUrl).toUpperCase().replace(/[: ]/g, '_');
             const layer = new GeoJSONLayer({

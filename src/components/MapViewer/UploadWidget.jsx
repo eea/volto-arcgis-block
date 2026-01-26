@@ -205,12 +205,15 @@ class UploadWidget extends React.Component {
       const featureTypes = doc.querySelectorAll('FeatureType, featuretype');
       featureTypes.forEach((ft) => {
         const titleEl =
-          ft.querySelector('Title') || ft.querySelector('ows\\:Title');
-        const keywordsNodes = ft.querySelectorAll('ows\\:Keyword, Keyword');
-        const key =
-          keywordsNodes && keywordsNodes.length > 1
-            ? (keywordsNodes[1].textContent || '').trim()
-            : null;
+          ft.querySelector('Title') ||
+          ft.querySelector('title') ||
+          ft.querySelector('ows\\:Title');
+        const nameEl =
+          ft.querySelector('Name') ||
+          ft.querySelector('name') ||
+          ft.querySelector('wfs\\:Name') ||
+          ft.querySelector('ows\\:Identifier');
+        const key = nameEl ? (nameEl.textContent || '').trim() : null;
         const title = titleEl ? (titleEl.textContent || '').trim() : null;
         if (key) {
           features[key] = title ?? null;
