@@ -3055,9 +3055,13 @@ class MenuWidget extends React.Component {
       if (!userService) this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
-        if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
-        mapLayer.destroy();
-        this.map.remove(this.layers[elem.id]);
+        if (!userService) {
+          if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
+          mapLayer.destroy();
+          this.map.remove(this.layers[elem.id]);
+        } else {
+          this.map.remove(mapLayer);
+        }
       }
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
