@@ -627,18 +627,23 @@ div.upload-container.esri-component
   background-color: #a0b128;
 }
 
-.upload-container .esri-button {
-  border-color: #a0b128;
-  background-color: white;
-  color: #a0b128;
-}
-
-.upload-container .esri-button:disabled,
-.upload-container .esri-button[disabled] {
-  border: 1px solid #999999;
-  background-color: #cccccc;
-  color: #666666;
-  cursor: not-allowed;
+div.upload-container div.wfs-features-list label.field input[type='checkbox'] {
+  position: relative;
+  display: inline-block;
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  box-sizing: border-box;
+  flex: 0 0 18px !important;
+  border: 1px solid #8a8a8a;
+  margin: 0 6px 0 0;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-color: #ffffff;
+  border-radius: 3px;
+  vertical-align: middle;
 }
 
 .upload-container .esri-button:disabled:hover,
