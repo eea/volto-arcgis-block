@@ -3,7 +3,7 @@ import { loadModules } from 'esri-loader';
 // import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-var WMSLayer;
+var WMSLayer, WMTSLayer, WFSLayer, esriRequest;
 
 class UploadWidget extends React.Component {
   /**
@@ -20,7 +20,9 @@ class UploadWidget extends React.Component {
       showMapMenu: false,
       showInfoPopup: false,
       infoPopupType: '',
-      wmsServiceUrl: '',
+      serviceUrl: '',
+      selectedServiceType: '',
+      wfsFeatures: {},
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -29,11 +31,22 @@ class UploadWidget extends React.Component {
     this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
     this.uploadFileErrorHandler = this.props.uploadFileErrorHandler;
     this.errorPopup = this.errorPopup.bind(this);
+    this.selectedFeatures = {};
   }
 
   loader() {
-    return loadModules(['esri/layers/WMSLayer']).then(([_WMSLayer]) => {
-      [WMSLayer] = [_WMSLayer];
+    return loadModules([
+      'esri/layers/WMSLayer',
+      'esri/layers/WMTSLayer',
+      'esri/layers/WFSLayer',
+      'esri/request',
+    ]).then(([_WMSLayer, _WMTSLayer, _WFSLayer, _esriRequest]) => {
+      [WMSLayer, WMTSLayer, WFSLayer, esriRequest] = [
+        _WMSLayer,
+        _WMTSLayer,
+        _WFSLayer,
+        _esriRequest,
+      ];
     });
   }
 
@@ -117,49 +130,177 @@ class UploadWidget extends React.Component {
     //}
     //this.setState({
     //  wmsLayer: null,
-    //  wmsServiceUrl: '',
+    //  serviceUrl: '',
     //});
 
     document.querySelector('.esri-attribution__powered-by').style.display =
       'none';
   }
 
-  handleWmsServiceUrlChange = (event) => {
-    this.setState({ wmsServiceUrl: event.target.value });
+  handleserviceUrlChange = (event) => {
+    this.setState({ serviceUrl: event.target.value });
+  };
+
+  handleServiceTypeChange = (event) => {
+    this.setState({ selectedServiceType: event.target.value });
+  };
+
+  getNormalizedUrlForType = (serviceUrl, serviceType) => {
+    if (serviceType === 'WMTS') {
+      try {
+        const parsedUrl = new URL(serviceUrl);
+        const pathName = parsedUrl.pathname;
+        const searchQuery = parsedUrl.search.toLowerCase();
+        if (
+          pathName.includes('/wmts/') &&
+          searchQuery.includes('request=gettile')
+        ) {
+          const pathParts = pathName.split('/').filter(Boolean);
+          const wmtsIndex = pathParts.indexOf('wmts');
+          const projection = pathParts[wmtsIndex + 1] || '';
+          const variant = pathParts[wmtsIndex + 2] || '';
+          if (projection && variant) {
+            return (
+              parsedUrl.origin +
+              '/wmts/' +
+              projection +
+              '/' +
+              variant +
+              '/1.0.0/WMTSCapabilities.xml'
+            );
+          }
+        }
+      } catch (error) {}
+    }
+    return serviceUrl;
+  };
+
+  getCapabilities = (url, serviceType) => {
+    // Get the coordinates of the click on the view
+    return esriRequest(url, {
+      responseType: 'html',
+      sync: 'true',
+      query: {
+        request: 'GetCapabilities',
+        service: serviceType,
+        version: serviceType === 'WFS' ? '2.0.0' : '1.3.0',
+      },
+    })
+      .then((response) => {
+        const xmlDoc = response.data;
+        const parser = new DOMParser();
+        this.xml = parser.parseFromString(xmlDoc, 'text/html');
+      })
+      .catch(() => {});
+  };
+
+  parseWFSFeatures = (xml) => {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const features = {};
+      const featureTypes = doc.querySelectorAll('FeatureType, featuretype');
+      featureTypes.forEach((ft) => {
+        const titleEl =
+          ft.querySelector('Title') ||
+          ft.querySelector('title') ||
+          ft.querySelector('ows\\:Title');
+        const nameEl =
+          ft.querySelector('Name') ||
+          ft.querySelector('name') ||
+          ft.querySelector('wfs\\:Name') ||
+          ft.querySelector('ows\\:Identifier');
+        const key = nameEl ? (nameEl.textContent || '').trim() : null;
+        const title = titleEl ? (titleEl.textContent || '').trim() : null;
+        if (key) {
+          features[key] = title ?? null;
+        }
+      });
+      return features;
+    } catch (e) {
+      return {};
+    }
+  };
+
+  handleFeatureCheckboxChange = (event) => {
+    const key = event.target.value;
+    const { wfsFeatures } = this.state;
+    if (event.target.checked) {
+      this.selectedFeatures[key] =
+        wfsFeatures && wfsFeatures[key] ? wfsFeatures[key] : key;
+    } else {
+      if (
+        this.selectedFeatures &&
+        Object.prototype.hasOwnProperty.call(this.selectedFeatures, key)
+      ) {
+        delete this.selectedFeatures[key];
+      }
+    }
+    this.setState({});
+  };
+
+  handleSelectLayers = async () => {
+    const { serviceUrl, selectedServiceType } = this.state;
+    if (
+      selectedServiceType === 'WFS' &&
+      serviceUrl &&
+      serviceUrl.trim() !== ''
+    ) {
+      const normalizedUrl = this.getNormalizedUrlForType(
+        serviceUrl,
+        selectedServiceType,
+      );
+      await this.getCapabilities(normalizedUrl, selectedServiceType);
+      const result = this.parseWFSFeatures(this.xml);
+      this.setState(() => ({
+        wfsFeatures: result,
+      }));
+    } else {
+      this.errorPopup();
+    }
   };
 
   handleUploadService = async () => {
-    const { wmsServiceUrl } = this.state;
-    try {
-      // Use a CORS proxy or add mode: 'no-cors' if you just need to check if service exists
-      let urlResult = await fetch(wmsServiceUrl, {
-        method: 'GET',
-        mode: 'cors', // You might need to change this to 'no-cors' if proxy isn't available
-      });
-
-      // Check if service is valid and properly responds
-      if (!urlResult || !urlResult.ok) {
+    const { serviceUrl, selectedServiceType } = this.state;
+    if (selectedServiceType && serviceUrl && serviceUrl.trim() !== '') {
+      const normalizedUrl = this.getNormalizedUrlForType(
+        serviceUrl,
+        selectedServiceType,
+      );
+      if (selectedServiceType === 'WMS') {
+        this.uploadWMSService(normalizedUrl);
+        this.setState({ serviceUrl: '' });
+      } else if (selectedServiceType === 'WMTS') {
+        this.uploadWMTSService(normalizedUrl);
+        this.setState({ serviceUrl: '' });
+      } else if (selectedServiceType === 'WFS') {
+        this.uploadWFSService(normalizedUrl);
+      } else {
         this.errorPopup();
-        this.setState({ wmsServiceUrl: '' });
+        this.setState({ serviceUrl: '' });
         return;
       }
-    } catch (error) {
-      this.errorPopup();
-      this.setState({ wmsServiceUrl: '' });
-      return;
-    }
-    // If service is valid and is a WMS service
-    if (
-      wmsServiceUrl &&
-      wmsServiceUrl.trim() !== '' &&
-      wmsServiceUrl.toLowerCase().includes('wms')
-    ) {
-      this.uploadUrlServiceHandler(wmsServiceUrl);
-      this.setState({ wmsServiceUrl: '' });
     } else {
       this.errorPopup();
-      this.setState({ wmsServiceUrl: '' });
+      this.setState({ serviceUrl: '' });
     }
+  };
+
+  uploadWMSService = (url) => {
+    this.uploadUrlServiceHandler(url, 'WMS');
+  };
+
+  uploadWMTSService = (url) => {
+    this.uploadUrlServiceHandler(url, 'WMTS');
+  };
+
+  uploadWFSService = (url) => {
+    this.uploadUrlServiceHandler(url, 'WFS', this.selectedFeatures);
+    this.selectedFeatures = {};
+    this.setState({ wfsFeatures: {}, serviceUrl: '' });
   };
 
   errorPopup = () => {
@@ -188,13 +329,23 @@ class UploadWidget extends React.Component {
         url: '',
         title: 'WMS Layer',
       });
+      const wmtsLayer = new WMTSLayer({
+        url: '',
+        title: 'WMTS Layer',
+      });
+      const wfsLayer = new WFSLayer({
+        url: '',
+        title: 'WFS Layer',
+      });
       this.setState({
         wmsLayer: wmsLayer,
+        wmtsLayer: wmtsLayer,
+        wfsLayer: wfsLayer,
       });
     });
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (!prevProps.showErrorPopup && this.props.showErrorPopup) {
       this.errorPopup();
     }
@@ -205,14 +356,21 @@ class UploadWidget extends React.Component {
    * @returns jsx
    */
   render() {
+    const { selectedServiceType, serviceUrl, wfsFeatures } = this.state;
+    const isUploadDisabled =
+      !selectedServiceType ||
+      !(serviceUrl && serviceUrl.trim() !== '') ||
+      (selectedServiceType === 'WFS' &&
+        Object.keys(wfsFeatures || {}).length > 0 &&
+        Object.keys(this.selectedFeatures || {}).length === 0);
     return (
       <>
         <div ref={this.container} className="upload-container">
-          <div tooltip="Add Map service" direction="left" type="widget">
+          <div tooltip="Add External Service" direction="left" type="widget">
             <div
               className={this.menuClass}
               id="map_upload_button"
-              aria-label="WMS service upload"
+              aria-label="External service upload"
               onClick={this.openMenu.bind(this)}
               onKeyDown={(e) => {
                 if (
@@ -232,7 +390,7 @@ class UploadWidget extends React.Component {
           </div>
           <div className="right-panel">
             <div className="right-panel-header">
-              <span>Add map service</span>
+              <span>Add external service</span>
               <span
                 className="map-menu-icon esri-icon-close"
                 onClick={this.openMenu.bind(this)}
@@ -257,21 +415,90 @@ class UploadWidget extends React.Component {
                 <div className="ccl-form">
                   <div className="field">
                     <label>
+                      Service type
+                      <select
+                        value={this.state.selectedServiceType}
+                        onChangeCapture={this.handleServiceTypeChange}
+                        onBlur={this.handleServiceTypeChange}
+                      >
+                        <option value="">Select a service</option>
+                        <option value="WMS">WMS</option>
+                        <option value="WMTS">WMTS</option>
+                        <option value="WFS">WFS</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div className="field">
+                    <label>
                       Map service address
                       <input
                         type="text"
                         placeholder="Add map service URL (https://...)"
-                        value={this.state.wmsServiceUrl}
-                        onChange={this.handleWmsServiceUrlChange}
+                        value={this.state.serviceUrl}
+                        onChange={this.handleserviceUrlChange}
                       />
                     </label>
                   </div>
-                  <button
-                    className="esri-button"
-                    onClick={this.handleUploadService}
-                  >
-                    Upload service
-                  </button>
+                  {this.state.selectedServiceType === 'WFS' &&
+                  Object.keys(this.state.wfsFeatures || {}).length === 0 ? (
+                    <button
+                      className="esri-button"
+                      onClick={this.handleSelectLayers}
+                      disabled={
+                        !this.state.selectedServiceType ||
+                        !(
+                          this.state.serviceUrl &&
+                          this.state.serviceUrl.trim() !== ''
+                        )
+                      }
+                    >
+                      Select Layers
+                    </button>
+                  ) : (
+                    <button
+                      className="esri-button"
+                      onClick={this.handleUploadService}
+                      disabled={isUploadDisabled}
+                    >
+                      Upload service
+                    </button>
+                  )}
+                  {Object.keys(this.state.wfsFeatures || {}).length > 0 && (
+                    <div
+                      className="wfs-features-list"
+                      style={{
+                        overflowY: 'auto',
+                        overflowX: 'auto',
+                        maxHeight: '280px',
+                        width: '100%',
+                      }}
+                    >
+                      {Object.entries(this.state.wfsFeatures).map(
+                        ([key, title]) => (
+                          <label
+                            key={key}
+                            className="field"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              margin: '6px 0',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              value={key}
+                              onChange={this.handleFeatureCheckboxChange}
+                              checked={Boolean(this.selectedFeatures[key])}
+                              style={{ width: '18px', height: '18px' }}
+                            />
+                            <span>{title || key}</span>
+                          </label>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
