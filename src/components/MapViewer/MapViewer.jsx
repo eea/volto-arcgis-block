@@ -623,13 +623,13 @@ class MapViewer extends React.Component {
       this.setState({
         userServiceUrl: newUrl,
         userServiceType: newType || '',
-        userServiceSelection: newSelection || [],
+        userServiceSelection: newSelection || {},
       });
     } else {
       this.setState({
         userServiceUrl: '',
         userServiceType: '',
-        userServiceSelection: [],
+        userServiceSelection: {},
       });
     }
   };

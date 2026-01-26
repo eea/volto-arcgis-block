@@ -31,7 +31,7 @@ class UploadWidget extends React.Component {
     this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
     this.uploadFileErrorHandler = this.props.uploadFileErrorHandler;
     this.errorPopup = this.errorPopup.bind(this);
-    this.selectedFeatures = [];
+    this.selectedFeatures = {};
   }
 
   loader() {
@@ -224,12 +224,17 @@ class UploadWidget extends React.Component {
 
   handleFeatureCheckboxChange = (event) => {
     const key = event.target.value;
+    const { wfsFeatures } = this.state;
     if (event.target.checked) {
-      if (!this.selectedFeatures.includes(key)) {
-        this.selectedFeatures.push(key);
-      }
+      this.selectedFeatures[key] =
+        wfsFeatures && wfsFeatures[key] ? wfsFeatures[key] : key;
     } else {
-      this.selectedFeatures = this.selectedFeatures.filter((k) => k !== key);
+      if (
+        this.selectedFeatures &&
+        Object.prototype.hasOwnProperty.call(this.selectedFeatures, key)
+      ) {
+        delete this.selectedFeatures[key];
+      }
     }
     this.setState({});
   };
@@ -291,7 +296,7 @@ class UploadWidget extends React.Component {
 
   uploadWFSService = (url) => {
     this.uploadUrlServiceHandler(url, 'WFS', this.selectedFeatures);
-    this.selectedFeatures = [];
+    this.selectedFeatures = {};
     this.setState({ wfsFeatures: {}, serviceUrl: '' });
   };
 
@@ -354,7 +359,7 @@ class UploadWidget extends React.Component {
       !(serviceUrl && serviceUrl.trim() !== '') ||
       (selectedServiceType === 'WFS' &&
         Object.keys(wfsFeatures || {}).length > 0 &&
-        this.selectedFeatures.length === 0);
+        Object.keys(this.selectedFeatures || {}).length === 0);
     return (
       <>
         <div ref={this.container} className="upload-container">
@@ -482,7 +487,7 @@ class UploadWidget extends React.Component {
                               type="checkbox"
                               value={key}
                               onChange={this.handleFeatureCheckboxChange}
-                              checked={this.selectedFeatures.includes(key)}
+                              checked={Boolean(this.selectedFeatures[key])}
                               style={{ width: '18px', height: '18px' }}
                             />
                             <span>{title || key}</span>

@@ -14,6 +14,7 @@ var WMSLayer,
   WMTSLayer,
   WFSLayer,
   FeatureLayer,
+  GeoJSONLayer,
   BaseTileLayer,
   esriRequest,
   Extent,
@@ -553,6 +554,7 @@ class MenuWidget extends React.Component {
       'esri/layers/WMTSLayer',
       'esri/layers/WFSLayer',
       'esri/layers/FeatureLayer',
+      'esri/layers/GeoJSONLayer',
       'esri/layers/BaseTileLayer',
       'esri/request',
       'esri/geometry/Extent',
@@ -566,6 +568,7 @@ class MenuWidget extends React.Component {
         _WMTSLayer,
         _WFSLayer,
         _FeatureLayer,
+        _GeoJSONLayer,
         _BaseTileLayer,
         _esriRequest,
         _Extent,
@@ -579,6 +582,7 @@ class MenuWidget extends React.Component {
           WMTSLayer,
           WFSLayer,
           FeatureLayer,
+          GeoJSONLayer,
           BaseTileLayer,
           esriRequest,
           Extent,
@@ -591,6 +595,7 @@ class MenuWidget extends React.Component {
           _WMTSLayer,
           _WFSLayer,
           _FeatureLayer,
+          _GeoJSONLayer,
           _BaseTileLayer,
           _esriRequest,
           _Extent,
@@ -2284,195 +2289,89 @@ class MenuWidget extends React.Component {
   }
 
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
-    const normalizedViewService = viewService.trim();
-    if (
-      this.state.wmsUserServiceLayers.some(
-        (layer) =>
-          layer.url === normalizedViewService ||
-          layer.ViewService === normalizedViewService,
-      )
-    ) {
-      this.props.uploadFileErrorHandler();
-      return;
-    }
-
-    let detectedServiceType = serviceType || 'WMS';
-    if (!serviceType) {
-      const lowerCaseUrl = normalizedViewService.toLowerCase();
-      if (
-        lowerCaseUrl.includes('/wmts/') ||
-        lowerCaseUrl.includes('wmtscapabilities.xml') ||
-        lowerCaseUrl.includes('service=wmts') ||
-        lowerCaseUrl.includes('request=gettile')
-      ) {
-        detectedServiceType = 'WMTS';
-      } else if (
-        lowerCaseUrl.includes('/wfs') ||
-        lowerCaseUrl.includes('service=wfs') ||
-        lowerCaseUrl.includes('request=getfeature')
-      ) {
-        detectedServiceType = 'WFS';
-      }
-    }
-
-    let resourceLayer;
+    let resourceLayers = [];
     try {
-      if (detectedServiceType === 'WMTS') {
-        resourceLayer = new WMTSLayer({
-          url: viewService,
-        });
-      } else if (detectedServiceType === 'WFS') {
-        let typeNameParam = null;
-        let baseUrl = normalizedViewService;
-        try {
-          const u = new URL(normalizedViewService);
-          baseUrl = u.origin + u.pathname;
-          typeNameParam = Array.isArray(serviceSelection)
-            ? serviceSelection[0]
-            : serviceSelection ||
-              u.searchParams.get('typeName') ||
-              u.searchParams.get('typename') ||
-              u.searchParams.get('typeNames') ||
-              u.searchParams.get('TYPENAMES');
-        } catch (e) {
-          baseUrl = normalizedViewService.split('?')[0];
-          typeNameParam = Array.isArray(serviceSelection)
-            ? serviceSelection[0]
-            : serviceSelection || null;
-        }
+      const rawUrl = (viewService || '').trim();
+      const baseUrl = rawUrl.split('?')[0];
+      const isWFS =
+        serviceType === 'WFS' ||
+        /service=WFS/i.test(rawUrl) ||
+        /\/wfs(\b|\/)/i.test(baseUrl) ||
+        /\/(ows|ogc)(\b|\/)/i.test(baseUrl);
 
-        const wfsProps = {
-          url: baseUrl,
-          version: '2.0.0',
-          customParameters: {
-            outputFormat: 'application/json',
-            SrsName: 'EPSG:4326',
-          },
-        };
-        if (typeNameParam) {
-          wfsProps.name = typeNameParam;
-        }
-        resourceLayer = new WFSLayer(wfsProps);
+      if (serviceType === 'WMTS') {
+        resourceLayers = [new WMTSLayer({ url: viewService })];
+      } else if (isWFS) {
+        resourceLayers = Object.entries(serviceSelection || {})
+          .map(([name, title]) => {
+            if (!name) return null;
+            const wfsUrl =
+              baseUrl +
+              '?service=WFS&request=GetFeature&version=2.0.0&typeNames=' +
+              encodeURIComponent(name) +
+              '&outputFormat=application/json&srsName=EPSG:3857';
+
+            const id = (name || baseUrl).toUpperCase().replace(/[: ]/g, '_');
+            const layer = new GeoJSONLayer({
+              url: wfsUrl,
+              id: id,
+              title: title || name,
+            });
+            layer.LayerId = id;
+            layer.ViewService = baseUrl;
+            layer.name = name;
+            return layer;
+          })
+          .filter(Boolean);
       } else {
-        resourceLayer = new WMSLayer({
-          url: viewService,
-          typename: serviceSelection || [],
-        });
+        resourceLayers = [
+          new WMSLayer({ url: viewService, typename: serviceSelection || [] }),
+        ];
       }
     } catch (error) {
       this.props.uploadFileErrorHandler();
       return;
     }
 
-    const legendRequest =
-      'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
-    let layerId, layerObj;
-
-    await resourceLayer.load().then(() => {
-      let { featureInfoUrl, title } = resourceLayer;
-      layerId = title
-        ? title.toUpperCase().replace(/ /g, '_')
-        : normalizedViewService;
-      const constructedSublayers = resourceLayer.sublayers?.items?.map(
-        (sublayer) => {
-          const {
-            index,
-            name,
-            title,
-            legendUrl,
-            featureInfoUrl,
-            queryable,
-            popupEnabled,
-            visible,
-            legendEnabled,
-          } = sublayer;
-          return {
-            index,
-            name,
-            title,
-            popupEnabled,
-            queryable,
-            visible,
-            legendEnabled,
-            legendUrl: legendUrl
-              ? legendUrl
-              : viewService + legendRequest + name,
-            featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
-          };
-        },
+    for (const resourceLayer of resourceLayers) {
+      const isDuplicate = this.state.wmsUserServiceLayers.some(
+        (layer) =>
+          layer.id === resourceLayer.id ||
+          layer.LayerId === resourceLayer.LayerId,
       );
-
-      if (detectedServiceType === 'WMS') {
-        layerObj = {
-          url: viewService,
-          featureInfoFormat: 'text/html',
-          featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
-          title,
-          legendEnabled: true,
-          sublayers: constructedSublayers,
-          ViewService: viewService,
-          LayerId: layerId,
-        };
-      } else if (detectedServiceType === 'WFS') {
-        let nameProp = null;
-        try {
-          nameProp = resourceLayer.name || null;
-        } catch (e) {
-          nameProp = null;
-        }
-        let baseUrl = normalizedViewService;
-        try {
-          const u = new URL(normalizedViewService);
-          baseUrl = u.origin + u.pathname;
-        } catch (e) {
-          baseUrl = normalizedViewService.split('?')[0];
-        }
-        layerObj = {
-          url: baseUrl,
-          title,
-          ViewService: baseUrl,
-          LayerId: nameProp
-            ? nameProp.toUpperCase().replace(/ /g, '_')
-            : layerId,
-          name: nameProp || undefined,
-          version: '2.0.0',
-          customParameters: {
-            outputFormat: 'application/json',
-            SrsName: 'EPSG:4326',
-          },
-        };
-      } else {
-        layerObj = {
-          url: viewService,
-          title,
-          ViewService: viewService,
-          LayerId: layerId,
-        };
+      if (isDuplicate) {
+        continue;
       }
-      return layerObj;
-    });
 
-    resourceLayer.destroy();
-    resourceLayer = null;
-
-    const { LayerId } = layerObj;
-
-    if (!this.layers[LayerId]) {
       try {
-        if (detectedServiceType === 'WMTS') {
-          this.layers[LayerId] = new WMTSLayer(layerObj);
-        } else if (detectedServiceType === 'WFS') {
-          this.layers[LayerId] = new WFSLayer(layerObj);
-        } else {
-          this.layers[LayerId] = new WMSLayer(layerObj);
+        if (typeof resourceLayer.load === 'function') {
+          try {
+            await resourceLayer.load();
+          } catch (e) {}
         }
 
-        this.saveCheckedLayer(layerId);
+        if (!resourceLayer.LayerId) {
+          const computedId = resourceLayer.title
+            ? resourceLayer.title.toUpperCase().replace(/ /g, '_')
+            : resourceLayer.id || viewService;
+          resourceLayer.LayerId = computedId;
+          resourceLayer.id = computedId;
+        }
+        if (!resourceLayer.ViewService) {
+          resourceLayer.ViewService = (viewService || '').trim();
+        }
+
+        const key = resourceLayer.LayerId;
+        if (!this.layers[key]) {
+          this.layers[key] = resourceLayer;
+        }
+
+        this.saveCheckedLayer(key);
 
         this.setState((prevState) => {
           const updatedLayers = [
             ...prevState.wmsUserServiceLayers,
-            this.layers[LayerId],
+            this.layers[key],
           ];
           this.saveUserServicesToStorage(updatedLayers);
           return { wmsUserServiceLayers: updatedLayers };
@@ -2483,7 +2382,6 @@ class MenuWidget extends React.Component {
         this.props.uploadFileErrorHandler();
         return;
       }
-    } else {
     }
   }
 
