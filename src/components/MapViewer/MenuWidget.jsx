@@ -13,6 +13,7 @@ export const USER_SERVICES_KEY = 'user_services_session';
 var WMSLayer,
   WMTSLayer,
   FeatureLayer,
+  GeoJSONLayer,
   BaseTileLayer,
   esriRequest,
   Extent,
@@ -551,6 +552,7 @@ class MenuWidget extends React.Component {
       'esri/layers/WMSLayer',
       'esri/layers/WMTSLayer',
       'esri/layers/FeatureLayer',
+      'esri/layers/GeoJSONLayer',
       'esri/layers/BaseTileLayer',
       'esri/request',
       'esri/geometry/Extent',
@@ -563,6 +565,7 @@ class MenuWidget extends React.Component {
         _WMSLayer,
         _WMTSLayer,
         _FeatureLayer,
+        _GeoJSONLayer,
         _BaseTileLayer,
         _esriRequest,
         _Extent,
@@ -575,6 +578,7 @@ class MenuWidget extends React.Component {
           WMSLayer,
           WMTSLayer,
           FeatureLayer,
+          GeoJSONLayer,
           BaseTileLayer,
           esriRequest,
           Extent,
@@ -586,6 +590,7 @@ class MenuWidget extends React.Component {
           _WMSLayer,
           _WMTSLayer,
           _FeatureLayer,
+          _GeoJSONLayer,
           _BaseTileLayer,
           _esriRequest,
           _Extent,
@@ -599,9 +604,10 @@ class MenuWidget extends React.Component {
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (nextProps.wmsServiceUrl !== prevState.wmsServiceUrl) {
+    if (nextProps.userServiceUrl !== prevState.userServiceUrl) {
       return {
-        wmsServiceUrl: nextProps.wmsServiceUrl,
+        userServiceUrl: nextProps.userServiceUrl,
+        userServiceType: nextProps.userServiceType,
       };
     }
     return null;
@@ -2277,103 +2283,94 @@ class MenuWidget extends React.Component {
     );
   }
 
-  async handleNewMapServiceLayer(viewService) {
-    // First, properly normalize the URL for comparison
-    const normalizedViewService = viewService.trim();
-
-    // Check if the layer already exists in this.layers before adding
-    if (
-      this.state.wmsUserServiceLayers.some(
-        (layer) =>
-          layer.url === normalizedViewService ||
-          layer.ViewService === normalizedViewService,
-      )
-    ) {
-      // Call the uploadFileErrorHandler to show the error popup
-      this.props.uploadFileErrorHandler();
-      return;
-    }
-
-    // CREATE A TEMPORARY LAYER OBJECT TO EXTRACT DATA
-    let resourceLayer;
+  async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
+    let resourceLayers = [];
     try {
-      resourceLayer = new WMSLayer({
-        url: viewService,
-      });
+      const rawUrl = (viewService || '').trim();
+      const baseUrl = rawUrl.split('?')[0];
+      const isWFS =
+        serviceType === 'WFS' ||
+        /service=WFS/i.test(rawUrl) ||
+        /\/wfs(\b|\/)/i.test(baseUrl) ||
+        /\/(ows|ogc)(\b|\/)/i.test(baseUrl);
+
+      if (serviceType === 'WMTS') {
+        resourceLayers = [new WMTSLayer({ url: viewService })];
+      } else if (isWFS) {
+        resourceLayers = Object.entries(serviceSelection || {})
+          .map(([name, title]) => {
+            if (!name) return null;
+            const params = new URLSearchParams({
+              service: 'WFS',
+              request: 'GetFeature',
+              version: '2.0.0',
+              typeName: name,
+              outputFormat: 'application/json',
+              srsName: 'EPSG:4326',
+            }).toString();
+            const wfsUrl = baseUrl + '?' + params;
+
+            const id = (name || baseUrl).toUpperCase().replace(/[: ]/g, '_');
+            const layer = new GeoJSONLayer({
+              url: wfsUrl,
+              id: id,
+              title: title || name,
+            });
+            layer.LayerId = id;
+            layer.ViewService = baseUrl;
+            layer.name = name;
+            return layer;
+          })
+          .filter(Boolean);
+      } else {
+        resourceLayers = [
+          new WMSLayer({ url: viewService, typename: serviceSelection || [] }),
+        ];
+      }
     } catch (error) {
-      // Set a popup error message in here
       this.props.uploadFileErrorHandler();
       return;
     }
 
-    const legendRequest =
-      'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
-    let layerId, layerObj;
-
-    await resourceLayer.load().then(() => {
-      // EXTRACT DATA FOR NEW LAYER REQUEST
-      let { featureInfoUrl, title } = resourceLayer;
-      layerId = title.toUpperCase().replace(/ /g, '_');
-      const constructedSublayers = resourceLayer.sublayers?.items?.map(
-        (sublayer) => {
-          const {
-            index,
-            name,
-            title,
-            legendUrl,
-            featureInfoUrl,
-            queryable,
-            popupEnabled,
-            visible,
-            legendEnabled,
-          } = sublayer;
-          return {
-            index,
-            name,
-            title,
-            popupEnabled,
-            queryable,
-            visible,
-            legendEnabled,
-            legendUrl: legendUrl
-              ? legendUrl
-              : viewService + legendRequest + name,
-            featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
-          };
-        },
+    for (const resourceLayer of resourceLayers) {
+      const isDuplicate = this.state.wmsUserServiceLayers.some(
+        (layer) =>
+          layer.id === resourceLayer.id ||
+          layer.LayerId === resourceLayer.LayerId,
       );
+      if (isDuplicate) {
+        continue;
+      }
 
-      layerObj = {
-        url: viewService,
-        featureInfoFormat: 'text/html',
-        featureInfoUrl: featureInfoUrl ? featureInfoUrl : viewService,
-        title,
-        legendEnabled: true,
-        sublayers: constructedSublayers,
-        ViewService: viewService,
-        LayerId: layerId,
-      };
-      return layerObj;
-    });
-
-    // DESTROY THE TEMPORARY LAYER OBJECT
-    resourceLayer.destroy();
-    resourceLayer = null; // Important: clear the reference to the old layer
-
-    const { LayerId } = layerObj;
-
-    // Check if the layer already exists in this.layers before adding
-    if (!this.layers[LayerId]) {
       try {
-        // Create and add the new layer
-        this.layers[LayerId] = new WMSLayer(layerObj);
+        if (typeof resourceLayer.load === 'function') {
+          try {
+            await resourceLayer.load();
+          } catch (e) {}
+        }
 
-        this.saveCheckedLayer(layerId);
+        if (!resourceLayer.LayerId) {
+          const computedId = resourceLayer.title
+            ? resourceLayer.title.toUpperCase().replace(/ /g, '_')
+            : resourceLayer.id || viewService;
+          resourceLayer.LayerId = computedId;
+          resourceLayer.id = computedId;
+        }
+        if (!resourceLayer.ViewService) {
+          resourceLayer.ViewService = (viewService || '').trim();
+        }
+
+        const key = resourceLayer.LayerId;
+        if (!this.layers[key]) {
+          this.layers[key] = resourceLayer;
+        }
+
+        this.saveCheckedLayer(key);
 
         this.setState((prevState) => {
           const updatedLayers = [
             ...prevState.wmsUserServiceLayers,
-            this.layers[LayerId],
+            this.layers[key],
           ];
           this.saveUserServicesToStorage(updatedLayers);
           return { wmsUserServiceLayers: updatedLayers };
@@ -2381,11 +2378,9 @@ class MenuWidget extends React.Component {
 
         this.props.onServiceChange();
       } catch (error) {
-        // Set a popup error message in here
         this.props.uploadFileErrorHandler();
         return;
       }
-    } else {
     }
   }
 
@@ -3060,9 +3055,13 @@ class MenuWidget extends React.Component {
       if (!userService) this.deleteFilteredLayer(elem.id);
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
-        if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
-        mapLayer.destroy();
-        this.map.remove(this.layers[elem.id]);
+        if (!userService) {
+          if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
+          mapLayer.destroy();
+          this.map.remove(this.layers[elem.id]);
+        } else {
+          this.map.remove(mapLayer);
+        }
       }
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -5297,14 +5296,22 @@ class MenuWidget extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.props.download) return;
 
-    if (prevProps.wmsServiceUrl !== this.props.wmsServiceUrl) {
-      const { wmsServiceUrl } = this.props;
+    if (prevProps.userServiceUrl !== this.props.userServiceUrl) {
+      const {
+        userServiceUrl,
+        userServiceType,
+        userServiceSelection,
+      } = this.props;
       if (
-        wmsServiceUrl &&
-        typeof wmsServiceUrl === 'string' &&
-        wmsServiceUrl !== ''
+        userServiceUrl &&
+        typeof userServiceUrl === 'string' &&
+        userServiceUrl !== ''
       ) {
-        this.handleNewMapServiceLayer(wmsServiceUrl);
+        this.handleNewMapServiceLayer(
+          userServiceUrl,
+          userServiceType,
+          userServiceSelection,
+        );
       }
     }
 

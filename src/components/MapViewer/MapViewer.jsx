@@ -339,6 +339,8 @@ class MapViewer extends React.Component {
       layers: {},
       uploadedFile: true,
       wmsServiceUrl: '',
+      userServiceUrl: '',
+      userServiceType: '',
       uploadError: false,
       // Track current user state for comparison in componentDidUpdate
       currentUserState: props.initialUserState || {
@@ -616,18 +618,25 @@ class MapViewer extends React.Component {
     }, 3000);
   };
 
-  uploadUrlServiceHandler = (newUrl) => {
+  uploadUrlServiceHandler = (newUrl, newType, newSelection) => {
     if (newUrl && typeof newUrl === 'string') {
-      this.setState({ wmsServiceUrl: newUrl });
+      this.setState({
+        userServiceUrl: newUrl,
+        userServiceType: newType || '',
+        userServiceSelection: newSelection || {},
+      });
     } else {
-      //set popup error messsage
-      this.setState({ wmsServiceUrl: '' });
+      this.setState({
+        userServiceUrl: '',
+        userServiceType: '',
+        userServiceSelection: {},
+      });
     }
   };
 
   serviceChangeHandler = () => {
-    // Reset wmsServiceUrl without causing a new update of the children
-    this.setState({ wmsServiceUrl: '' });
+    // Reset userServiceUrl/type without causing a new update of the children
+    this.setState({ userServiceUrl: '', userServiceType: '' });
   };
 
   loader() {
@@ -1129,7 +1138,9 @@ export const CheckUserID = ({ reference }) => {
             uploadedFile={reference.state.uploadedFile}
             uploadFileHandler={reference.uploadFileHandler}
             uploadUrlServiceHandler={reference.uploadUrlServiceHandler}
-            wmsServiceUrl={reference.state.wmsServiceUrl}
+            userServiceUrl={reference.state.userServiceUrl}
+            userServiceType={reference.state.userServiceType}
+            userServiceSelection={reference.state.userServiceSelection}
             onServiceChange={reference.serviceChangeHandler}
             uploadFileErrorHandler={reference.uploadFileErrorHandler}
             userID={user_id}

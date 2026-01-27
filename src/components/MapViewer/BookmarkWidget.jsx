@@ -167,7 +167,7 @@ class BookmarkWidget extends React.Component {
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'top-right');
     });
-    if (this.userID != null && this.props?.isLoggedIn !== false) {
+    if (this.userID !== null && this.props?.isLoggedIn !== false) {
       this.migrateLegacyBookmarksToUserObject();
       // this.sessionBookmarks =
       //   JSON.parse(
@@ -348,7 +348,7 @@ class BookmarkWidget extends React.Component {
                           ? bookmarks.hotspot[index]
                           : [],
                         selectedHotspotFilter:
-                          bookmarks.selectedHotspotFilter != null
+                          bookmarks.selectedHotspotFilter !== null
                             ? bookmarks.selectedHotspotFilter
                             : null,
                       };
@@ -544,7 +544,7 @@ class BookmarkWidget extends React.Component {
           // this.sessionBookmarkHotspot = newSessionBookmarkHotspot;
           // shouldUpdate = true;
           // }
-          if (shouldUpdate && this.userID != null) {
+          if (shouldUpdate && this.userID !== null) {
             if (this._skipNextChangePersist) {
               this._skipNextChangePersist = false;
               if (e.added && e.added[0]) {
@@ -621,7 +621,7 @@ class BookmarkWidget extends React.Component {
               this.sessionBookmarkHotspot[index] = hotspotFilters;
             }
           }
-          if (this.userID != null) {
+          if (this.userID !== null) {
             // localStorage.setItem(
             //   BOOKMARK_SESSION_KEY + '_' + this.userID,
             //   JSON.stringify(this.Bookmarks.bookmarks.items),
@@ -973,7 +973,7 @@ class BookmarkWidget extends React.Component {
     const visible = Array.isArray(bookmarks.visible) ? bookmarks.visible : [];
     const hotspot = Array.isArray(bookmarks.hotspot) ? bookmarks.hotspot : [];
     const selectedHotspotFilter =
-      bookmarks.selectedHotspotFilter != null
+      bookmarks.selectedHotspotFilter !== null
         ? bookmarks.selectedHotspotFilter
         : null;
     this.sessionBookmarks = items.map((b) => {
@@ -1036,10 +1036,10 @@ class BookmarkWidget extends React.Component {
           if (
             g &&
             (g.type === 'extent' ||
-              (g.xmin != null &&
-                g.ymin != null &&
-                g.xmax != null &&
-                g.ymax != null))
+              (g.xmin !== null &&
+                g.ymin !== null &&
+                g.xmax !== null &&
+                g.ymax !== null))
           ) {
             out.extent = {
               xmin: g.xmin,
@@ -1137,7 +1137,7 @@ class BookmarkWidget extends React.Component {
       visible: Array.isArray(bookmarks.visible) ? bookmarks.visible[index] : [],
       hotspot: Array.isArray(bookmarks.hotspot) ? bookmarks.hotspot[index] : [],
       selectedHotspotFilter:
-        bookmarks.selectedHotspotFilter != null
+        bookmarks.selectedHotspotFilter !== null
           ? bookmarks.selectedHotspotFilter
           : null,
     };
