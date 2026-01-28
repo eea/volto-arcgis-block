@@ -2283,6 +2283,19 @@ class MenuWidget extends React.Component {
     );
   }
 
+  stripProtocol(url) {
+    return (url || '').replace(/^https?:\/\//i, '');
+  }
+
+  getProxyBase() {
+    const href = window.location.href || '';
+    return href.replace('/en/map-viewer', '/ogcproxy/');
+  }
+
+  buildProxiedUrl(url) {
+    return this.getProxyBase() + this.stripProtocol(url);
+  }
+
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     let resourceLayers = [];
     try {
@@ -2295,7 +2308,7 @@ class MenuWidget extends React.Component {
         /\/(ows|ogc)(\b|\/)/i.test(baseUrl);
 
       if (serviceType === 'WMTS') {
-        resourceLayers = [new WMTSLayer({ url: viewService })];
+        resourceLayers = [new WMTSLayer({ url: this.buildProxiedUrl(rawUrl) })];
       } else if (isWFS) {
         resourceLayers = Object.entries(serviceSelection || {})
           .map(([name, title]) => {
@@ -2308,7 +2321,7 @@ class MenuWidget extends React.Component {
               outputFormat: 'application/json',
               srsName: 'EPSG:4326',
             }).toString();
-            const wfsUrl = baseUrl + '?' + params;
+            const wfsUrl = this.buildProxiedUrl(baseUrl) + '?' + params;
 
             const id = (name || baseUrl).toUpperCase().replace(/[: ]/g, '_');
             const layer = new GeoJSONLayer({
@@ -2324,7 +2337,10 @@ class MenuWidget extends React.Component {
           .filter(Boolean);
       } else {
         resourceLayers = [
-          new WMSLayer({ url: viewService, typename: serviceSelection || [] }),
+          new WMSLayer({
+            url: this.buildProxiedUrl(rawUrl),
+            typename: serviceSelection || [],
+          }),
         ];
       }
     } catch (error) {
