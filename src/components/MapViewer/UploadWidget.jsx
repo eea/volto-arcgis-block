@@ -175,6 +175,15 @@ class UploadWidget extends React.Component {
     return serviceUrl;
   };
 
+  isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   getCapabilities = (url, serviceType) => {
     // Get the coordinates of the click on the view
     return esriRequest(url, {
@@ -247,7 +256,8 @@ class UploadWidget extends React.Component {
     if (
       selectedServiceType === 'WFS' &&
       serviceUrl &&
-      serviceUrl.trim() !== ''
+      serviceUrl.trim() !== '' &&
+      this.isValidUrl(serviceUrl)
     ) {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
@@ -265,7 +275,12 @@ class UploadWidget extends React.Component {
 
   handleUploadService = async () => {
     const { serviceUrl, selectedServiceType } = this.state;
-    if (selectedServiceType && serviceUrl && serviceUrl.trim() !== '') {
+    if (
+      selectedServiceType &&
+      serviceUrl &&
+      serviceUrl.trim() !== '' &&
+      this.isValidUrl(serviceUrl)
+    ) {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
         selectedServiceType,
