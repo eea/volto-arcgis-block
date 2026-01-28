@@ -175,9 +175,32 @@ class UploadWidget extends React.Component {
     return serviceUrl;
   };
 
+  isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  stripProtocol = (url) => {
+    return (url || '').replace(/^https?:\/\//i, '');
+  };
+
+  getProxyBase = () => {
+    const href = window.location.href || '';
+    return href.replace('/en/map-viewer', '/ogcproxy/');
+  };
+
+  buildProxiedUrl = (url) => {
+    return this.getProxyBase() + this.stripProtocol(url);
+  };
+
   getCapabilities = (url, serviceType) => {
     // Get the coordinates of the click on the view
-    return esriRequest(url, {
+    const proxiedUrl = this.buildProxiedUrl(url);
+    return esriRequest(proxiedUrl, {
       responseType: 'html',
       sync: 'true',
       query: {
@@ -247,7 +270,8 @@ class UploadWidget extends React.Component {
     if (
       selectedServiceType === 'WFS' &&
       serviceUrl &&
-      serviceUrl.trim() !== ''
+      serviceUrl.trim() !== '' &&
+      this.isValidUrl(serviceUrl)
     ) {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
@@ -265,19 +289,27 @@ class UploadWidget extends React.Component {
 
   handleUploadService = async () => {
     const { serviceUrl, selectedServiceType } = this.state;
-    if (selectedServiceType && serviceUrl && serviceUrl.trim() !== '') {
+    if (
+      selectedServiceType &&
+      serviceUrl &&
+      serviceUrl.trim() !== '' &&
+      this.isValidUrl(serviceUrl)
+    ) {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
         selectedServiceType,
       );
+      const proxiedUrl = this.buildProxiedUrl(normalizedUrl);
       if (selectedServiceType === 'WMS') {
-        this.uploadWMSService(normalizedUrl);
+        this.uploadUrlServiceHandler(proxiedUrl, 'WMS');
         this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WMTS') {
-        this.uploadWMTSService(normalizedUrl);
+        this.uploadUrlServiceHandler(proxiedUrl, 'WMTS');
         this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WFS') {
-        this.uploadWFSService(normalizedUrl);
+        this.uploadUrlServiceHandler(proxiedUrl, 'WFS');
+        this.selectedFeatures = {};
+        this.setState({ wfsFeatures: {}, serviceUrl: '' });
       } else {
         this.errorPopup();
         this.setState({ serviceUrl: '' });
