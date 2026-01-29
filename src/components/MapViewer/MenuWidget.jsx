@@ -2357,6 +2357,53 @@ class MenuWidget extends React.Component {
     }
   }
 
+  parseWMSServiceTitle(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      let title = null;
+      const serviceEl = doc.querySelector('Service, service');
+      if (serviceEl) {
+        const tEl =
+          serviceEl.querySelector('Title') || serviceEl.querySelector('title');
+        if (tEl) {
+          title = (tEl.textContent || '').trim();
+        }
+      }
+      if (!title) {
+        const capTitleEl =
+          doc.querySelector('Capability > Layer > Title') ||
+          doc.querySelector('capability > layer > title');
+        if (capTitleEl) {
+          title = (capTitleEl.textContent || '').trim();
+        }
+      }
+      return title || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  parseWMTSServiceTitle(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const tEl =
+        doc.querySelector('ServiceIdentification > Title') ||
+        doc.querySelector('serviceidentification > title') ||
+        doc.querySelector('ows\\:ServiceIdentification > ows\\:Title');
+      return tEl ? (tEl.textContent || '').trim() : '';
+    } catch (e) {
+      return '';
+    }
+  }
+
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     let resourceLayers = [];
     const proxiedUrl = this.buildProxiedUrl(viewService);
@@ -2373,10 +2420,11 @@ class MenuWidget extends React.Component {
         await this.getCapabilities(viewService, 'WMTS');
         const wmtsLayers = this.parseWMTSLayers(this.xml);
         const active = wmtsLayers && wmtsLayers.length ? wmtsLayers[0] : null;
+        const serviceTitle = this.parseWMTSServiceTitle(this.xml);
         resourceLayers = [
           new WMTSLayer({
             url: rawUrl,
-            title: active && active.title ? active.title : '',
+            title: serviceTitle || (active && active.title ? active.title : ''),
             activeLayer: active
               ? { id: active.id, title: active.title || active.id }
               : undefined,
@@ -2412,6 +2460,7 @@ class MenuWidget extends React.Component {
       } else {
         await this.getCapabilities(viewService, 'WMS');
         const wmsLayers = this.parseWMSLayers(this.xml);
+        const serviceTitle = this.parseWMSServiceTitle(this.xml);
         const legendRequest =
           'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
         const sep = rawUrl.includes('?') ? '&' : '?';
@@ -2430,7 +2479,7 @@ class MenuWidget extends React.Component {
             url: rawUrl,
             featureInfoFormat: 'text/html',
             featureInfoUrl: rawUrl,
-            title: '',
+            title: serviceTitle || '',
             legendEnabled: true,
             sublayers: sublayers,
             ViewService: rawUrl,
