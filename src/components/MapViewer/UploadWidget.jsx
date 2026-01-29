@@ -23,6 +23,7 @@ class UploadWidget extends React.Component {
       serviceUrl: '',
       selectedServiceType: '',
       wfsFeatures: {},
+      selectedFeatures: {},
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -31,7 +32,6 @@ class UploadWidget extends React.Component {
     this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
     this.uploadFileErrorHandler = this.props.uploadFileErrorHandler;
     this.errorPopup = this.errorPopup.bind(this);
-    this.selectedFeatures = {};
   }
 
   loader() {
@@ -191,6 +191,7 @@ class UploadWidget extends React.Component {
   getProxyBase = () => {
     const href = window.location.href || '';
     return href.replace('/en/map-viewer', '/ogcproxy/');
+    // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
   };
 
   buildProxiedUrl = (url) => {
@@ -250,19 +251,20 @@ class UploadWidget extends React.Component {
 
   handleFeatureCheckboxChange = (event) => {
     const key = event.target.value;
-    const { wfsFeatures } = this.state;
+    const { wfsFeatures, selectedFeatures } = this.state;
+    const nextSelected = { ...selectedFeatures };
     if (event.target.checked) {
-      this.selectedFeatures[key] =
-        wfsFeatures && wfsFeatures[key] ? wfsFeatures[key] : key;
+      if (wfsFeatures && wfsFeatures[key]) {
+        nextSelected[key] = wfsFeatures[key];
+      } else {
+        nextSelected[key] = key;
+      }
     } else {
-      if (
-        this.selectedFeatures &&
-        Object.prototype.hasOwnProperty.call(this.selectedFeatures, key)
-      ) {
-        delete this.selectedFeatures[key];
+      if (Object.prototype.hasOwnProperty.call(nextSelected, key)) {
+        delete nextSelected[key];
       }
     }
-    this.setState({});
+    this.setState({ selectedFeatures: nextSelected });
   };
 
   handleSelectLayers = async () => {
@@ -288,7 +290,9 @@ class UploadWidget extends React.Component {
   };
 
   handleUploadService = async () => {
-    const { serviceUrl, selectedServiceType } = this.state;
+    const serviceUrl = this.state.serviceUrl;
+    const selectedServiceType = this.state.selectedServiceType;
+    const selectedFeatures = this.state.selectedFeatures;
     if (
       selectedServiceType &&
       serviceUrl &&
@@ -307,9 +311,9 @@ class UploadWidget extends React.Component {
         this.uploadUrlServiceHandler(proxiedUrl, 'WMTS');
         this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WFS') {
-        this.uploadUrlServiceHandler(proxiedUrl, 'WFS');
-        this.selectedFeatures = {};
+        this.uploadUrlServiceHandler(proxiedUrl, 'WFS', selectedFeatures);
         this.setState({ wfsFeatures: {}, serviceUrl: '' });
+        this.setState({ selectedFeatures: {} });
       } else {
         this.errorPopup();
         this.setState({ serviceUrl: '' });
@@ -330,9 +334,8 @@ class UploadWidget extends React.Component {
   };
 
   uploadWFSService = (url) => {
-    this.uploadUrlServiceHandler(url, 'WFS', this.selectedFeatures);
-    this.selectedFeatures = {};
-    this.setState({ wfsFeatures: {}, serviceUrl: '' });
+    this.uploadUrlServiceHandler(url, 'WFS', this.state.selectedFeatures);
+    this.setState({ wfsFeatures: {}, serviceUrl: '', selectedFeatures: {} });
   };
 
   errorPopup = () => {
@@ -388,13 +391,16 @@ class UploadWidget extends React.Component {
    * @returns jsx
    */
   render() {
-    const { selectedServiceType, serviceUrl, wfsFeatures } = this.state;
+    const selectedServiceType = this.state.selectedServiceType;
+    const serviceUrl = this.state.serviceUrl;
+    const wfsFeatures = this.state.wfsFeatures;
+    const selectedFeatures = this.state.selectedFeatures;
     const isUploadDisabled =
       !selectedServiceType ||
       !(serviceUrl && serviceUrl.trim() !== '') ||
       (selectedServiceType === 'WFS' &&
         Object.keys(wfsFeatures || {}).length > 0 &&
-        Object.keys(this.selectedFeatures || {}).length === 0);
+        Object.keys(selectedFeatures || {}).length === 0);
     return (
       <>
         <div ref={this.container} className="upload-container">
@@ -522,7 +528,12 @@ class UploadWidget extends React.Component {
                               type="checkbox"
                               value={key}
                               onChange={this.handleFeatureCheckboxChange}
-                              checked={Boolean(this.selectedFeatures[key])}
+                              checked={
+                                this.state.selectedFeatures &&
+                                this.state.selectedFeatures[key]
+                                  ? true
+                                  : false
+                              }
                               style={{ width: '18px', height: '18px' }}
                             />
                             <span>{title || key}</span>
