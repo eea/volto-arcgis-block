@@ -657,6 +657,18 @@ div.upload-container div.wfs-features-list label.field input[type='checkbox'] {
   vertical-align: middle;
 }
 
+div.upload-container
+  div.wfs-features-list
+  label.field
+  input[type='checkbox']:checked {
+  border-color: #a0b128;
+  background-color: #a0b128;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23fff' d='M6.173 12.927L1.24 8l1.414-1.414 3.52 3.52 7.07-7.07L14.658 4.45z'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+}
+
 .upload-container .esri-button:disabled:hover,
 .upload-container .esri-button[disabled]:hover {
   border: 1px solid #999999;
