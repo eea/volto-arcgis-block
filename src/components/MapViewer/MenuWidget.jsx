@@ -2283,10 +2283,132 @@ class MenuWidget extends React.Component {
     );
   }
 
+  stripProtocol(url) {
+    return (url || '').replace(/^https?:\/\//i, '');
+  }
+
+  getProxyBase() {
+    return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
+  }
+
+  buildProxiedUrl(url) {
+    if (!url) return url;
+    const hasProxy = /\/ogcproxy\//i.test(url);
+    return hasProxy ? url : this.getProxyBase() + this.stripProtocol(url);
+  }
+
+  parseWMSLayers(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const layers = [];
+      const layerEls = doc.querySelectorAll('Layer, layer');
+      layerEls.forEach((el) => {
+        const nameEl =
+          el.querySelector('Name') ||
+          el.querySelector('name') ||
+          el.querySelector('wms\\:Name');
+        const titleEl =
+          el.querySelector('Title') ||
+          el.querySelector('title') ||
+          el.querySelector('wms\\:Title');
+        const name = nameEl ? (nameEl.textContent || '').trim() : null;
+        const title = titleEl ? (titleEl.textContent || '').trim() : null;
+        if (name) {
+          layers.push({ name: name, title: title });
+        }
+      });
+      return layers;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  parseWMTSLayers(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const layers = [];
+      const layerEls = doc.querySelectorAll('Layer, layer');
+      layerEls.forEach((el) => {
+        const idEl =
+          el.querySelector('Identifier') ||
+          el.querySelector('identifier') ||
+          el.querySelector('ows\\:Identifier');
+        const titleEl =
+          el.querySelector('Title') ||
+          el.querySelector('title') ||
+          el.querySelector('ows\\:Title');
+        const id = idEl ? (idEl.textContent || '').trim() : null;
+        const title = titleEl ? (titleEl.textContent || '').trim() : null;
+        if (id) {
+          layers.push({ id: id, title: title });
+        }
+      });
+      return layers;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  parseWMSServiceTitle(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      let title = null;
+      const serviceEl = doc.querySelector('Service, service');
+      if (serviceEl) {
+        const tEl =
+          serviceEl.querySelector('Title') || serviceEl.querySelector('title');
+        if (tEl) {
+          title = (tEl.textContent || '').trim();
+        }
+      }
+      if (!title) {
+        const capTitleEl =
+          doc.querySelector('Capability > Layer > Title') ||
+          doc.querySelector('capability > layer > title');
+        if (capTitleEl) {
+          title = (capTitleEl.textContent || '').trim();
+        }
+      }
+      return title || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  parseWMTSServiceTitle(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const tEl =
+        doc.querySelector('ServiceIdentification > Title') ||
+        doc.querySelector('serviceidentification > title') ||
+        doc.querySelector('ows\\:ServiceIdentification > ows\\:Title');
+      return tEl ? (tEl.textContent || '').trim() : '';
+    } catch (e) {
+      return '';
+    }
+  }
+
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     let resourceLayers = [];
+    const proxiedUrl = this.buildProxiedUrl(viewService);
     try {
-      const rawUrl = (viewService || '').trim();
+      const rawUrl = (proxiedUrl || '').trim();
       const baseUrl = rawUrl.split('?')[0];
       const isWFS =
         serviceType === 'WFS' ||
@@ -2295,7 +2417,20 @@ class MenuWidget extends React.Component {
         /\/(ows|ogc)(\b|\/)/i.test(baseUrl);
 
       if (serviceType === 'WMTS') {
-        resourceLayers = [new WMTSLayer({ url: baseUrl })];
+        await this.getCapabilities(viewService, 'WMTS');
+        const wmtsLayers = this.parseWMTSLayers(this.xml);
+        const active = wmtsLayers && wmtsLayers.length ? wmtsLayers[0] : null;
+        const serviceTitle = this.parseWMTSServiceTitle(this.xml);
+        resourceLayers = [
+          new WMTSLayer({
+            url: rawUrl,
+            title: serviceTitle || (active && active.title ? active.title : ''),
+            activeLayer: active
+              ? { id: active.id, title: active.title || active.id }
+              : undefined,
+            ViewService: rawUrl,
+          }),
+        ];
       } else if (isWFS) {
         resourceLayers = Object.entries(serviceSelection || {})
           .map(([name, title]) => {
@@ -2323,10 +2458,31 @@ class MenuWidget extends React.Component {
           })
           .filter(Boolean);
       } else {
+        await this.getCapabilities(viewService, 'WMS');
+        const wmsLayers = this.parseWMSLayers(this.xml);
+        const serviceTitle = this.parseWMSServiceTitle(this.xml);
+        const legendRequest =
+          'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
+        const sep = rawUrl.includes('?') ? '&' : '?';
+        const sublayers = (wmsLayers || []).map((l) => ({
+          name: l.name,
+          title: l.title || l.name,
+          popupEnabled: true,
+          queryable: true,
+          visible: true,
+          legendEnabled: true,
+          legendUrl: rawUrl + sep + legendRequest + l.name,
+          featureInfoUrl: rawUrl,
+        }));
         resourceLayers = [
           new WMSLayer({
-            url: baseUrl,
-            typename: serviceSelection || [],
+            url: rawUrl,
+            featureInfoFormat: 'text/html',
+            featureInfoUrl: rawUrl,
+            title: serviceTitle || '',
+            legendEnabled: true,
+            sublayers: sublayers,
+            ViewService: rawUrl,
           }),
         ];
       }
@@ -2346,12 +2502,23 @@ class MenuWidget extends React.Component {
       }
 
       try {
-        if (typeof resourceLayer.load === 'function') {
+        if (typeof resourceLayer.load === 'function' && serviceType === 'WFS') {
           try {
             await resourceLayer.load();
           } catch (e) {}
         }
-
+        if (serviceType === 'WMS' || serviceType === 'WMTS') {
+          const forced = (proxiedUrl || '').trim();
+          if (forced) {
+            if (typeof resourceLayer.url === 'string') {
+              resourceLayer.url = forced;
+            }
+            if (resourceLayer.featureInfoUrl) {
+              resourceLayer.featureInfoUrl = forced;
+            }
+            resourceLayer.ViewService = forced;
+          }
+        }
         if (!resourceLayer.LayerId) {
           const computedId = resourceLayer.title
             ? resourceLayer.title.toUpperCase().replace(/ /g, '_')
@@ -3974,7 +4141,8 @@ class MenuWidget extends React.Component {
 
   getCapabilities = (url, serviceType) => {
     // Get the coordinates of the click on the view
-    return esriRequest(url, {
+    const proxiedUrl = this.buildProxiedUrl(url);
+    return esriRequest(proxiedUrl, {
       responseType: 'html',
       sync: 'true',
       query: {
