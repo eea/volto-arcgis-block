@@ -728,7 +728,32 @@ div.upload-container
 
 .map-left-menu-container {
   display: flex;
+  padding-top: 1.5rem;
   box-shadow: none !important;
+}
+
+.esri-search {
+  width: 30.3rem !important;
+  margin-top: 0.4rem;
+  margin-left: 1rem;
+}
+
+.esri-widget--button.esri-search__clear-button {
+  background-color: white !important;
+  color: black !important;
+}
+
+.esri-widget--button.esri-search__clear-button:hover {
+  background-color: white !important;
+  color: black !important;
+}
+
+.esri-search__input {
+  height: 100% !important;
+}
+
+.esri-search__input:focus {
+  outline: 2px solid black !important;
 }
 
 .map-menu .ccl-fieldset {
