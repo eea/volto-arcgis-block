@@ -20,6 +20,7 @@ import BasemapWidget from './BasemapWidget';
 import MeasurementWidget from './MeasurementWidget';
 import PrintWidget from './PrintWidget';
 import SwipeWidget from './SwipeWidget';
+import SearchWidget from './SearchWidget';
 import AreaWidget from './AreaWidget';
 import ScaleWidget from './ScaleWidget';
 import LegendWidget from './LegendWidget';
@@ -914,6 +915,10 @@ class MapViewer extends React.Component {
         />
       );
   }
+  renderSearch() {
+    if (this.props.mapviewer_config.Download) return;
+    if (this.view) return <SearchWidget view={this.view} mapViewer={this} />;
+  }
 
   renderArea() {
     if (this.props.mapviewer_config.Download) return;
@@ -1054,6 +1059,7 @@ class MapViewer extends React.Component {
             {this.renderMeasurement()}
             {this.renderPrint()}
             {this.renderSwipe()}
+            {this.renderSearch()}
             {this.renderArea()}
             {this.renderPan()}
             {this.renderScale()}
