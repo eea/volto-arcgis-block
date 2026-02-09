@@ -14,6 +14,8 @@ var WMSLayer,
   WMTSLayer,
   FeatureLayer,
   GeoJSONLayer,
+  Graphic,
+  Field,
   BaseTileLayer,
   esriRequest,
   Extent,
@@ -553,6 +555,8 @@ class MenuWidget extends React.Component {
       'esri/layers/WMTSLayer',
       'esri/layers/FeatureLayer',
       'esri/layers/GeoJSONLayer',
+      'esri/Graphic',
+      'esri/layers/support/Field',
       'esri/layers/BaseTileLayer',
       'esri/request',
       'esri/geometry/Extent',
@@ -566,6 +570,8 @@ class MenuWidget extends React.Component {
         _WMTSLayer,
         _FeatureLayer,
         _GeoJSONLayer,
+        _Graphic,
+        _Field,
         _BaseTileLayer,
         _esriRequest,
         _Extent,
@@ -579,6 +585,8 @@ class MenuWidget extends React.Component {
           WMTSLayer,
           FeatureLayer,
           GeoJSONLayer,
+          Graphic,
+          Field,
           BaseTileLayer,
           esriRequest,
           Extent,
@@ -591,6 +599,8 @@ class MenuWidget extends React.Component {
           _WMTSLayer,
           _FeatureLayer,
           _GeoJSONLayer,
+          _Graphic,
+          _Field,
           _BaseTileLayer,
           _esriRequest,
           _Extent,
@@ -607,6 +617,12 @@ class MenuWidget extends React.Component {
     if (nextProps.userServiceUrl !== prevState.userServiceUrl) {
       return {
         userServiceUrl: nextProps.userServiceUrl,
+        userServiceType: nextProps.userServiceType,
+      };
+    }
+    if (nextProps.userServiceFile !== prevState.userServiceFile) {
+      return {
+        userServiceFile: nextProps.userServiceFile,
         userServiceType: nextProps.userServiceType,
       };
     }
@@ -2551,6 +2567,129 @@ class MenuWidget extends React.Component {
         this.props.uploadFileErrorHandler();
         return;
       }
+    }
+  }
+
+  async handleUploadedShapefile(fileObj) {
+    if (!fileObj || !FeatureLayer || !Graphic || !Field) return;
+    const fileName = (fileObj.name || 'upload.zip').toLowerCase();
+    const formData = new FormData();
+    formData.append('file', fileObj, fileObj.name || 'upload.zip');
+
+    const params = {
+      name: fileName.replace(/\.zip$/i, ''),
+      targetSR: this.view?.spatialReference,
+      maxRecordCount: 1000,
+      enforceInputFileSizeLimit: true,
+      enforceOutputJsonSizeLimit: true,
+      generalize: true,
+      maxAllowableOffset: 10,
+      reducePrecision: true,
+      numberOfDigitsAfterDecimal: 0,
+    };
+
+    const myContent = {
+      filetype: 'shapefile',
+      publishParameters: JSON.stringify(params),
+      f: 'json',
+    };
+
+    const portal = this.props?.urls?.uploadPortal || '';
+    const endpoint = portal + '/sharing/rest/content/features/generate';
+    try {
+      const response = await esriRequest(endpoint, {
+        query: myContent,
+        body: formData,
+        responseType: 'json',
+      });
+      const featureCollection = response?.data?.featureCollection;
+      if (!featureCollection) {
+        this.props.uploadFileErrorHandler();
+        return;
+      }
+      this.addUploadedFeatureCollectionToMap(featureCollection);
+      this.props.onServiceChange && this.props.onServiceChange();
+    } catch (error) {
+      this.props.uploadFileErrorHandler();
+    }
+  }
+
+  addUploadedFeatureCollectionToMap(featureCollection) {
+    try {
+      let sourceGraphics = [];
+      const featureLayers = (featureCollection.layers || []).map((layer) => {
+        const graphics = (layer.featureSet.features || []).map((feature) => {
+          const g = Graphic.fromJSON(feature);
+          const polygonSymbol = {
+            type: 'simple-fill',
+            color: [234, 168, 72, 0.8],
+            outline: {
+              color: '#000000',
+              width: 0.1,
+            },
+          };
+          g.symbol = polygonSymbol;
+          return g;
+        });
+        sourceGraphics = sourceGraphics.concat(graphics);
+        const fl = new FeatureLayer({
+          objectIdField: 'FID',
+          source: graphics,
+          legendEnabled: false,
+          title: 'Uploaded Shapefile',
+          fields: (layer.layerDefinition.fields || []).map((f) =>
+            Field.fromJSON(f),
+          ),
+        });
+        return fl;
+      });
+
+      if (!featureLayers.length) {
+        this.props.uploadFileErrorHandler();
+        return;
+      }
+
+      const layerId = 'UPLOADED_SHAPE_' + Date.now();
+      const featureLayer = featureLayers[0];
+      featureLayer.id = layerId;
+      featureLayer.LayerId = layerId;
+
+      // Register in internal layers map
+      this.layers[layerId] = featureLayer;
+
+      // Prepare visibility and checked state
+      if (!this.visibleLayers) this.visibleLayers = {};
+      this.visibleLayers[layerId] = ['fas', 'eye'];
+      const checkedLayers =
+        JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+      if (!checkedLayers.includes(layerId)) {
+        checkedLayers.unshift(layerId);
+        sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+        window.dispatchEvent(new Event('storage'));
+      }
+
+      // Push into user services to render in "My Services"
+      this.setState(
+        (prevState) => ({
+          wmsUserServiceLayers: [
+            ...prevState.wmsUserServiceLayers,
+            featureLayer,
+          ],
+        }),
+        () => {
+          this.saveUserServicesToStorage(this.state.wmsUserServiceLayers);
+        },
+      );
+
+      // Show graphics and zoom
+      if (sourceGraphics.length && this.view) {
+        try {
+          this.view.graphics.addMany(sourceGraphics);
+          this.view.goTo(sourceGraphics).catch(() => {});
+        } catch (e) {}
+      }
+    } catch (e) {
+      this.props.uploadFileErrorHandler();
     }
   }
 
@@ -5484,6 +5623,14 @@ class MenuWidget extends React.Component {
           userServiceSelection,
         );
       }
+    }
+
+    if (
+      prevProps.userServiceFile !== this.props.userServiceFile &&
+      this.props.userServiceType === 'FILE' &&
+      this.props.userServiceFile
+    ) {
+      this.handleUploadedShapefile(this.props.userServiceFile);
     }
 
     if (prevState.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {

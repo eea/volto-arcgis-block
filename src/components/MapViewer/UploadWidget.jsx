@@ -24,6 +24,7 @@ class UploadWidget extends React.Component {
       selectedServiceType: '',
       wfsFeatures: {},
       selectedFeatures: {},
+      activeTab: 'url',
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -32,6 +33,9 @@ class UploadWidget extends React.Component {
     this.uploadUrlServiceHandler = this.props.uploadUrlServiceHandler;
     this.uploadFileErrorHandler = this.props.uploadFileErrorHandler;
     this.errorPopup = this.errorPopup.bind(this);
+    this.setActiveTab = this.setActiveTab.bind(this);
+    this.handleBrowseClick = this.handleBrowseClick.bind(this);
+    this.handleFileSelected = this.handleFileSelected.bind(this);
   }
 
   loader() {
@@ -145,6 +149,43 @@ class UploadWidget extends React.Component {
     this.setState({ selectedServiceType: event.target.value });
   };
 
+  setActiveTab(tab) {
+    this.setState({ activeTab: tab });
+  }
+
+  handleBrowseClick() {
+    if (this.fileInput && this.fileInput.current) {
+      this.fileInput.current.click();
+    }
+  }
+
+  handleFileSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      return;
+    }
+    const name = (file.name || '').toLowerCase();
+    const ext = name.split('.').pop();
+    if (ext !== 'zip') {
+      this.setState({ showInfoPopup: true, infoPopupType: 'fileUploadError' });
+      if (typeof this.uploadFileErrorHandler === 'function') {
+        this.uploadFileErrorHandler();
+      }
+      e.target.value = null;
+      return;
+    }
+    try {
+      this.uploadUrlServiceHandler(file, 'FILE');
+    } catch (err) {
+      this.errorPopup();
+      if (typeof this.uploadFileErrorHandler === 'function') {
+        this.uploadFileErrorHandler();
+      }
+    } finally {
+      e.target.value = null;
+    }
+  }
+
   getNormalizedUrlForType = (serviceUrl, serviceType) => {
     if (serviceType === 'WMTS') {
       try {
@@ -203,7 +244,6 @@ class UploadWidget extends React.Component {
     const proxiedUrl = this.buildProxiedUrl(url);
     return esriRequest(proxiedUrl, {
       responseType: 'html',
-      sync: 'true',
       query: {
         request: 'GetCapabilities',
         service: serviceType,
@@ -395,6 +435,7 @@ class UploadWidget extends React.Component {
     const serviceUrl = this.state.serviceUrl;
     const wfsFeatures = this.state.wfsFeatures;
     const selectedFeatures = this.state.selectedFeatures;
+    const activeTab = this.state.activeTab;
     const isUploadDisabled =
       !selectedServiceType ||
       !(serviceUrl && serviceUrl.trim() !== '') ||
@@ -450,99 +491,219 @@ class UploadWidget extends React.Component {
             </div>
             <div className="right-panel-content">
               <div className="upload-panel">
-                <div className="ccl-form">
-                  <div className="field">
-                    <label>
-                      Service type
-                      <select
-                        value={this.state.selectedServiceType}
-                        onChangeCapture={this.handleServiceTypeChange}
-                        onBlur={this.handleServiceTypeChange}
+                <div
+                  className="tab-nav"
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    width: '100%',
+                    marginBottom: '14px',
+                    borderBottom: '1px solid #e6e6e6',
+                  }}
+                >
+                  <button
+                    onClick={() => this.setActiveTab('url')}
+                    tabIndex="0"
+                    style={{
+                      padding: '10px 16px',
+                      border: '1px solid #e6e6e6',
+                      borderBottom:
+                        activeTab === 'url'
+                          ? '2px solid #c0d36b'
+                          : '1px solid #e6e6e6',
+                      background: activeTab === 'url' ? '#ffffff' : '#f6f6f6',
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                  >
+                    URL
+                  </button>
+                  <button
+                    onClick={() => this.setActiveTab('file')}
+                    tabIndex="0"
+                    style={{
+                      padding: '10px 16px',
+                      border: '1px solid #e6e6e6',
+                      borderBottom:
+                        activeTab === 'file'
+                          ? '2px solid #c0d36b'
+                          : '1px solid #e6e6e6',
+                      background: activeTab === 'file' ? '#ffffff' : '#f6f6f6',
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                  >
+                    File
+                  </button>
+                </div>
+                {activeTab === 'url' && (
+                  <div className="ccl-form">
+                    <div className="field">
+                      <label>
+                        Service type
+                        <select
+                          value={this.state.selectedServiceType}
+                          onChangeCapture={this.handleServiceTypeChange}
+                          onBlur={this.handleServiceTypeChange}
+                        >
+                          <option value="">Select a service</option>
+                          <option value="WMS">WMS</option>
+                          <option value="WMTS">WMTS</option>
+                          <option value="WFS">WFS</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div className="field">
+                      <label>
+                        Map service address
+                        <input
+                          type="text"
+                          placeholder="Add map service URL (https://...)"
+                          value={this.state.serviceUrl}
+                          onChange={this.handleserviceUrlChange}
+                        />
+                      </label>
+                    </div>
+                    {this.state.selectedServiceType === 'WFS' &&
+                    Object.keys(this.state.wfsFeatures || {}).length === 0 ? (
+                      <button
+                        className="esri-button"
+                        onClick={this.handleSelectLayers}
+                        disabled={
+                          !this.state.selectedServiceType ||
+                          !(
+                            this.state.serviceUrl &&
+                            this.state.serviceUrl.trim() !== ''
+                          )
+                        }
                       >
-                        <option value="">Select a service</option>
-                        <option value="WMS">WMS</option>
-                        <option value="WMTS">WMTS</option>
-                        <option value="WFS">WFS</option>
-                      </select>
-                    </label>
+                        Select Layers
+                      </button>
+                    ) : (
+                      <button
+                        className="esri-button"
+                        onClick={this.handleUploadService}
+                        disabled={isUploadDisabled}
+                      >
+                        Upload service
+                      </button>
+                    )}
+                    {Object.keys(this.state.wfsFeatures || {}).length > 0 && (
+                      <div
+                        className="wfs-features-list"
+                        style={{
+                          overflowY: 'auto',
+                          overflowX: 'auto',
+                          maxHeight: '280px',
+                          width: '100%',
+                        }}
+                      >
+                        {Object.entries(this.state.wfsFeatures).map(
+                          ([key, title]) => (
+                            <label
+                              key={key}
+                              className="field"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                margin: '6px 0',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                value={key}
+                                onChange={this.handleFeatureCheckboxChange}
+                                checked={
+                                  this.state.selectedFeatures &&
+                                  this.state.selectedFeatures[key]
+                                    ? true
+                                    : false
+                                }
+                                style={{ width: '18px', height: '18px' }}
+                              />
+                              <span>{title || key}</span>
+                            </label>
+                          ),
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="field">
-                    <label>
-                      Map service address
-                      <input
-                        type="text"
-                        placeholder="Add map service URL (https://...)"
-                        value={this.state.serviceUrl}
-                        onChange={this.handleserviceUrlChange}
-                      />
-                    </label>
-                  </div>
-                  {this.state.selectedServiceType === 'WFS' &&
-                  Object.keys(this.state.wfsFeatures || {}).length === 0 ? (
-                    <button
-                      className="esri-button"
-                      onClick={this.handleSelectLayers}
-                      disabled={
-                        !this.state.selectedServiceType ||
-                        !(
-                          this.state.serviceUrl &&
-                          this.state.serviceUrl.trim() !== ''
-                        )
-                      }
-                    >
-                      Select Layers
-                    </button>
-                  ) : (
-                    <button
-                      className="esri-button"
-                      onClick={this.handleUploadService}
-                      disabled={isUploadDisabled}
-                    >
-                      Upload service
-                    </button>
-                  )}
-                  {Object.keys(this.state.wfsFeatures || {}).length > 0 && (
+                )}
+                {activeTab === 'file' && (
+                  <div className="file-upload-panel" style={{ width: '100%' }}>
                     <div
-                      className="wfs-features-list"
                       style={{
-                        overflowY: 'auto',
-                        overflowX: 'auto',
-                        maxHeight: '280px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '16px',
                         width: '100%',
                       }}
                     >
-                      {Object.entries(this.state.wfsFeatures).map(
-                        ([key, title]) => (
-                          <label
-                            key={key}
-                            className="field"
+                      <div
+                        style={{
+                          width: '100%',
+                          minHeight: '180px',
+                          border: '2px dashed #cdd1c5',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#ffffff',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '12px',
+                            color: '#6b6b6b',
+                            textAlign: 'center',
+                          }}
+                        >
+                          <div>
+                            Drag and drop
+                            <br />
+                            or browse your PC
+                          </div>
+                          <div
                             style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '8px',
-                              margin: '6px 0',
-                              whiteSpace: 'nowrap',
                             }}
                           >
-                            <input
-                              type="checkbox"
-                              value={key}
-                              onChange={this.handleFeatureCheckboxChange}
-                              checked={
-                                this.state.selectedFeatures &&
-                                this.state.selectedFeatures[key]
-                                  ? true
-                                  : false
-                              }
-                              style={{ width: '18px', height: '18px' }}
-                            />
-                            <span>{title || key}</span>
-                          </label>
-                        ),
-                      )}
+                            <FontAwesomeIcon icon={['fas', 'file']} />
+                            <span>.zip</span>
+                          </div>
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        ref={this.fileInput}
+                        accept=".zip"
+                        style={{ display: 'none' }}
+                        onChange={this.handleFileSelected}
+                      />
+                      <button
+                        className="esri-button"
+                        disabled={false}
+                        style={{
+                          width: '100%',
+                          border: '2px solid #c0d36b',
+                          background: '#ffffff',
+                          color: '#8ea92a',
+                        }}
+                        onClick={this.handleBrowseClick}
+                      >
+                        Browse
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -557,6 +718,16 @@ class UploadWidget extends React.Component {
                       </span>
                       <div className="drawRectanglePopup-text">
                         Error uploading the map service.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'fileUploadError' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Invalid file type. Please upload a .zip shapefile.
                       </div>
                     </>
                   )}
