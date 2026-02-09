@@ -14,6 +14,8 @@ var WMSLayer,
   WMTSLayer,
   FeatureLayer,
   GeoJSONLayer,
+  Graphic,
+  Field,
   BaseTileLayer,
   esriRequest,
   Extent,
@@ -545,6 +547,7 @@ class MenuWidget extends React.Component {
     this.activeLayersHandler = this.props.activeLayersHandler;
     this.getTaxonomy = this.props.getTaxonomy;
     this.tax = this.props.tax;
+    this.uploadedGraphics = {};
   }
 
   loader() {
@@ -553,6 +556,8 @@ class MenuWidget extends React.Component {
       'esri/layers/WMTSLayer',
       'esri/layers/FeatureLayer',
       'esri/layers/GeoJSONLayer',
+      'esri/Graphic',
+      'esri/layers/support/Field',
       'esri/layers/BaseTileLayer',
       'esri/request',
       'esri/geometry/Extent',
@@ -566,6 +571,8 @@ class MenuWidget extends React.Component {
         _WMTSLayer,
         _FeatureLayer,
         _GeoJSONLayer,
+        _Graphic,
+        _Field,
         _BaseTileLayer,
         _esriRequest,
         _Extent,
@@ -579,6 +586,8 @@ class MenuWidget extends React.Component {
           WMTSLayer,
           FeatureLayer,
           GeoJSONLayer,
+          Graphic,
+          Field,
           BaseTileLayer,
           esriRequest,
           Extent,
@@ -591,6 +600,8 @@ class MenuWidget extends React.Component {
           _WMTSLayer,
           _FeatureLayer,
           _GeoJSONLayer,
+          _Graphic,
+          _Field,
           _BaseTileLayer,
           _esriRequest,
           _Extent,
@@ -607,6 +618,12 @@ class MenuWidget extends React.Component {
     if (nextProps.userServiceUrl !== prevState.userServiceUrl) {
       return {
         userServiceUrl: nextProps.userServiceUrl,
+        userServiceType: nextProps.userServiceType,
+      };
+    }
+    if (nextProps.userServiceFile !== prevState.userServiceFile) {
+      return {
+        userServiceFile: nextProps.userServiceFile,
         userServiceType: nextProps.userServiceType,
       };
     }
@@ -2554,6 +2571,131 @@ class MenuWidget extends React.Component {
     }
   }
 
+  async handleUploadedShapefile(fileObj) {
+    if (!fileObj || !FeatureLayer || !Graphic || !Field) return;
+    const fileName = (fileObj.name || 'upload.zip').toLowerCase();
+    const displayTitle = fileObj.name || 'upload.zip';
+    const formData = new FormData();
+    formData.append('file', fileObj, fileObj.name || 'upload.zip');
+
+    const params = {
+      name: fileName.replace(/\.zip$/i, ''),
+      targetSR: this.view?.spatialReference,
+      maxRecordCount: 1000,
+      enforceInputFileSizeLimit: true,
+      enforceOutputJsonSizeLimit: true,
+      generalize: true,
+      maxAllowableOffset: 10,
+      reducePrecision: true,
+      numberOfDigitsAfterDecimal: 0,
+    };
+
+    const myContent = {
+      filetype: 'shapefile',
+      publishParameters: JSON.stringify(params),
+      f: 'json',
+    };
+
+    const portal = this.props?.urls?.uploadPortal || '';
+    const endpoint = portal + '/sharing/rest/content/features/generate';
+    try {
+      const response = await esriRequest(endpoint, {
+        query: myContent,
+        body: formData,
+        responseType: 'json',
+      });
+      const featureCollection = response?.data?.featureCollection;
+      if (!featureCollection) {
+        this.props.uploadFileErrorHandler();
+        return;
+      }
+      this.addUploadedFeatureCollectionToMap(featureCollection, displayTitle);
+      this.props.onServiceChange && this.props.onServiceChange();
+    } catch (error) {
+      this.props.uploadFileErrorHandler();
+    }
+  }
+
+  addUploadedFeatureCollectionToMap(featureCollection, uploadedTitle) {
+    try {
+      let sourceGraphics = [];
+      const featureLayers = (featureCollection.layers || []).map((layer) => {
+        const graphics = (layer.featureSet.features || []).map((feature) => {
+          const g = Graphic.fromJSON(feature);
+          const polygonSymbol = {
+            type: 'simple-fill',
+            color: [234, 168, 72, 0.8],
+            outline: {
+              color: '#000000',
+              width: 0.1,
+            },
+          };
+          g.symbol = polygonSymbol;
+          return g;
+        });
+        sourceGraphics = sourceGraphics.concat(graphics);
+        const fl = new FeatureLayer({
+          objectIdField: 'FID',
+          source: graphics,
+          legendEnabled: false,
+          title: uploadedTitle || 'Uploaded Shapefile',
+          fields: (layer.layerDefinition.fields || []).map((f) =>
+            Field.fromJSON(f),
+          ),
+        });
+        return fl;
+      });
+
+      if (!featureLayers.length) {
+        this.props.uploadFileErrorHandler();
+        return;
+      }
+
+      const layerId = 'UPLOADED_SHAPE_' + Date.now();
+      const featureLayer = featureLayers[0];
+      featureLayer.id = layerId;
+      featureLayer.LayerId = layerId;
+
+      // Register in internal layers map
+      this.layers[layerId] = featureLayer;
+
+      // Prepare visibility and checked state
+      if (!this.visibleLayers) this.visibleLayers = {};
+      this.visibleLayers[layerId] = ['fas', 'eye'];
+      const checkedLayers =
+        JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
+      if (!checkedLayers.includes(layerId)) {
+        checkedLayers.unshift(layerId);
+        sessionStorage.setItem('checkedLayers', JSON.stringify(checkedLayers));
+        window.dispatchEvent(new Event('storage'));
+      }
+
+      // Push into user services to render in "My Services"
+      this.setState(
+        (prevState) => ({
+          wmsUserServiceLayers: [
+            ...prevState.wmsUserServiceLayers,
+            featureLayer,
+          ],
+        }),
+        () => {
+          this.saveUserServicesToStorage(this.state.wmsUserServiceLayers);
+        },
+      );
+
+      // Show graphics and zoom
+      if (sourceGraphics.length && this.view) {
+        try {
+          this.uploadedGraphics[layerId] = sourceGraphics;
+          this.view.graphics.addMany(sourceGraphics);
+          this.view.goTo(sourceGraphics).catch(() => {});
+        } catch (e) {}
+      }
+    } catch (e) {
+      this.props.uploadFileErrorHandler();
+    }
+  }
+
   createUserServices(serviceLayers) {
     const fieldset = document.getElementById('map-menu-services');
     if (!fieldset) return;
@@ -2565,7 +2707,11 @@ class MenuWidget extends React.Component {
       const checkboxId = LayerId;
 
       return (
-        <div className="map-menu-dataset-dropdown" id={'my-service-' + LayerId}>
+        <div
+          key={LayerId}
+          className="map-menu-dataset-dropdown"
+          id={'my-service-' + LayerId}
+        >
           <fieldset className="ccl-fieldset">
             <div className="ccl-expandable__button" aria-expanded="false">
               <div className="dropdown-icon">
@@ -2645,6 +2791,13 @@ class MenuWidget extends React.Component {
       removeLayer.destroy();
       this.props.map.remove(removeLayer);
       removeLayer = null;
+    }
+
+    if (this.uploadedGraphics && this.uploadedGraphics[elemId]) {
+      try {
+        this.view.graphics.removeMany(this.uploadedGraphics[elemId]);
+      } catch (e) {}
+      delete this.uploadedGraphics[elemId];
     }
 
     this.props.onServiceChange();
@@ -3138,9 +3291,12 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       let layer = this.layers[elem.id];
-      let isMapServer = layer?.url.toLowerCase().endsWith('mapserver')
-        ? true
-        : false;
+      let isMapServer =
+        layer &&
+        typeof layer.url === 'string' &&
+        layer.url.toLowerCase().endsWith('mapserver')
+          ? true
+          : false;
       if (group) {
         elem.title =
           this.layers[elem.id].type === 'map-image'
@@ -3232,6 +3388,12 @@ class MenuWidget extends React.Component {
         } else {
           this.map.remove(mapLayer);
         }
+      }
+      if (this.uploadedGraphics && this.uploadedGraphics[elem.id]) {
+        try {
+          this.view.graphics.removeMany(this.uploadedGraphics[elem.id]);
+        } catch (e) {}
+        delete this.uploadedGraphics[elem.id];
       }
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
@@ -5484,6 +5646,14 @@ class MenuWidget extends React.Component {
           userServiceSelection,
         );
       }
+    }
+
+    if (
+      prevProps.userServiceFile !== this.props.userServiceFile &&
+      this.props.userServiceType === 'FILE' &&
+      this.props.userServiceFile
+    ) {
+      this.handleUploadedShapefile(this.props.userServiceFile);
     }
 
     if (prevState.wmsUserServiceLayers !== this.state.wmsUserServiceLayers) {

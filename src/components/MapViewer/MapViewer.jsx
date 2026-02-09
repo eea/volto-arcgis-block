@@ -342,6 +342,7 @@ class MapViewer extends React.Component {
       wmsServiceUrl: '',
       userServiceUrl: '',
       userServiceType: '',
+      userServiceFile: null,
       uploadError: false,
       // Track current user state for comparison in componentDidUpdate
       currentUserState: props.initialUserState || {
@@ -620,17 +621,26 @@ class MapViewer extends React.Component {
   };
 
   uploadUrlServiceHandler = (newUrl, newType, newSelection) => {
-    if (newUrl && typeof newUrl === 'string') {
+    if (newType === 'FILE' && newUrl && typeof newUrl === 'object') {
+      this.setState({
+        userServiceFile: newUrl,
+        userServiceType: 'FILE',
+        userServiceUrl: '',
+        userServiceSelection: newSelection || {},
+      });
+    } else if (newUrl && typeof newUrl === 'string') {
       this.setState({
         userServiceUrl: newUrl,
         userServiceType: newType || '',
         userServiceSelection: newSelection || {},
+        userServiceFile: null,
       });
     } else {
       this.setState({
         userServiceUrl: '',
         userServiceType: '',
         userServiceSelection: {},
+        userServiceFile: null,
       });
     }
   };
@@ -1147,6 +1157,7 @@ export const CheckUserID = ({ reference }) => {
             userServiceUrl={reference.state.userServiceUrl}
             userServiceType={reference.state.userServiceType}
             userServiceSelection={reference.state.userServiceSelection}
+            userServiceFile={reference.state.userServiceFile}
             onServiceChange={reference.serviceChangeHandler}
             uploadFileErrorHandler={reference.uploadFileErrorHandler}
             userID={user_id}
