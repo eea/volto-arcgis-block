@@ -25,6 +25,7 @@ class UploadWidget extends React.Component {
       wfsFeatures: {},
       selectedFeatures: {},
       activeTab: 'url',
+      globalDragActive: false,
     };
     this.menuClass =
       'esri-icon-sketch-rectangle esri-widget--button esri-widget esri-interactive';
@@ -36,6 +37,10 @@ class UploadWidget extends React.Component {
     this.setActiveTab = this.setActiveTab.bind(this);
     this.handleBrowseClick = this.handleBrowseClick.bind(this);
     this.handleFileSelected = this.handleFileSelected.bind(this);
+    this.handleDragOver = this.handleDragOver.bind(this);
+    this.handleDrop = this.handleDrop.bind(this);
+    this.handleAddClick = this.handleAddClick.bind(this);
+    this.clearSelectedFile = this.clearSelectedFile.bind(this);
   }
 
   loader() {
@@ -174,16 +179,8 @@ class UploadWidget extends React.Component {
       e.target.value = null;
       return;
     }
-    try {
-      this.uploadUrlServiceHandler(file, 'FILE');
-    } catch (err) {
-      this.errorPopup();
-      if (typeof this.uploadFileErrorHandler === 'function') {
-        this.uploadFileErrorHandler();
-      }
-    } finally {
-      e.target.value = null;
-    }
+    this.setState({ selectedFile: file, globalDragActive: false });
+    e.target.value = null;
   }
 
   getNormalizedUrlForType = (serviceUrl, serviceType) => {
@@ -418,6 +415,43 @@ class UploadWidget extends React.Component {
         wfsLayer: wfsLayer,
       });
     });
+    this.handleWindowDragEnter = (e) => {
+      if (
+        e &&
+        e.dataTransfer &&
+        Array.from(e.dataTransfer.types || []).includes('Files')
+      ) {
+        e.preventDefault();
+        this.setState({ globalDragActive: true });
+      }
+    };
+    this.handleWindowDragOver = (e) => {
+      if (
+        e &&
+        e.dataTransfer &&
+        Array.from(e.dataTransfer.types || []).includes('Files')
+      ) {
+        e.preventDefault();
+      }
+    };
+    this.handleWindowDragLeave = (e) => {
+      this.setState({ globalDragActive: false });
+    };
+    this.handleWindowDrop = (e) => {
+      e.preventDefault();
+      this.setState({ globalDragActive: false });
+    };
+    window.addEventListener('dragenter', this.handleWindowDragEnter);
+    window.addEventListener('dragover', this.handleWindowDragOver);
+    window.addEventListener('dragleave', this.handleWindowDragLeave);
+    window.addEventListener('drop', this.handleWindowDrop);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('dragenter', this.handleWindowDragEnter);
+    window.removeEventListener('dragover', this.handleWindowDragOver);
+    window.removeEventListener('dragleave', this.handleWindowDragLeave);
+    window.removeEventListener('drop', this.handleWindowDrop);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -489,7 +523,10 @@ class UploadWidget extends React.Component {
                 role="button"
               ></span>
             </div>
-            <div className="right-panel-content">
+            <div
+              className="right-panel-content"
+              style={{ position: 'relative' }}
+            >
               <div className="upload-panel">
                 <div
                   className="tab-nav"
@@ -631,80 +668,35 @@ class UploadWidget extends React.Component {
                     )}
                   </div>
                 )}
-                {activeTab === 'file' && (
-                  <div className="file-upload-panel" style={{ width: '100%' }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '16px',
-                        width: '100%',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '100%',
-                          minHeight: '180px',
-                          border: '2px dashed #cdd1c5',
-                          borderRadius: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: '#ffffff',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '12px',
-                            color: '#6b6b6b',
-                            textAlign: 'center',
-                          }}
-                        >
-                          <div>
-                            Drag and drop
-                            <br />
-                            or browse your PC
-                          </div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                            }}
-                          >
-                            <FontAwesomeIcon icon={['fas', 'file']} />
-                            <span>.zip</span>
-                          </div>
-                        </div>
-                      </div>
-                      <input
-                        type="file"
-                        ref={this.fileInput}
-                        accept=".zip"
-                        style={{ display: 'none' }}
-                        onChange={this.handleFileSelected}
-                      />
-                      <button
-                        className="esri-button"
-                        disabled={false}
-                        style={{
-                          width: '100%',
-                          border: '2px solid #c0d36b',
-                          background: '#ffffff',
-                          color: '#8ea92a',
-                        }}
-                        onClick={this.handleBrowseClick}
-                      >
-                        Browse
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {activeTab === 'file' && this.renderFileDropArea(false)}
               </div>
+              <input
+                type="file"
+                ref={this.fileInput}
+                accept=".zip"
+                style={{ display: 'none' }}
+                onChange={this.handleFileSelected}
+              />
+              {this.state.globalDragActive && this.state.showMapMenu && (
+                <div
+                  className="global-file-drop-overlay"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255,255,255,0.85)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                  }}
+                  onDragOver={this.handleDragOver}
+                >
+                  {this.renderFileDropArea(true)}
+                </div>
+              )}
             </div>
           </div>
           {this.state.showInfoPopup && (
@@ -738,6 +730,185 @@ class UploadWidget extends React.Component {
         </div>
       </>
     );
+  }
+
+  renderFileDropArea(isOverlay) {
+    const selectedFile = this.state.selectedFile;
+    const globalDragActive = this.state.globalDragActive;
+    const dashedBorder =
+      '2px dashed ' + (globalDragActive ? '#c0d36b' : '#cdd1c5');
+    return (
+      <div className="file-upload-panel" style={{ width: '100%' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+            width: '100%',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              minHeight: '180px',
+              border: dashedBorder,
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: globalDragActive ? '#f9fff2' : '#ffffff',
+            }}
+            onDragOver={this.handleDragOver}
+            onDrop={(e) => {
+              e.stopPropagation();
+              this.handleDrop(e);
+            }}
+          >
+            {selectedFile ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  width: '90%',
+                  color: '#6b6b6b',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <FontAwesomeIcon icon={['fas', 'file']} />
+                  <div>
+                    <div>Selected file:</div>
+                    <div>{selectedFile.name}</div>
+                  </div>
+                </div>
+                <span
+                  className="map-menu-icon esri-icon-close"
+                  onClick={this.clearSelectedFile}
+                  onKeyDown={this.clearSelectedFile}
+                  tabIndex="0"
+                  role="button"
+                ></span>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '12px',
+                  color: '#6b6b6b',
+                  textAlign: 'center',
+                }}
+              >
+                <div>
+                  Drag and drop
+                  <br />
+                  or browse your PC
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <FontAwesomeIcon icon={['fas', 'file']} />
+                  <span>.zip</span>
+                </div>
+              </div>
+            )}
+          </div>
+          {selectedFile ? (
+            <button
+              className="esri-button"
+              disabled={!selectedFile}
+              style={{
+                width: '100%',
+                border: '2px solid #c0d36b',
+                background: '#ffffff',
+                color: '#8ea92a',
+              }}
+              onClick={this.handleAddClick}
+            >
+              Add
+            </button>
+          ) : (
+            <button
+              className="esri-button"
+              disabled={false}
+              style={{
+                width: '100%',
+                border: '2px solid #c0d36b',
+                background: '#ffffff',
+                color: '#8ea92a',
+              }}
+              onClick={this.handleBrowseClick}
+            >
+              Browse
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  handleDragOver(e) {
+    e.preventDefault();
+  }
+
+  handleDrop(e) {
+    e.preventDefault();
+    const file =
+      e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    const name = (file.name || '').toLowerCase();
+    const ext = name.split('.').pop();
+    if (ext !== 'zip') {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: 'fileUploadError',
+        selectedFile: null,
+      });
+      if (typeof this.uploadFileErrorHandler === 'function') {
+        this.uploadFileErrorHandler();
+      }
+      return;
+    }
+    this.setState({ selectedFile: file, globalDragActive: false });
+  }
+
+  handleAddClick() {
+    const file = this.state.selectedFile;
+    if (!file) return;
+    try {
+      this.uploadUrlServiceHandler(file, 'FILE');
+    } catch (err) {
+      this.errorPopup();
+      if (typeof this.uploadFileErrorHandler === 'function') {
+        this.uploadFileErrorHandler();
+      }
+    } finally {
+      this.setState({ selectedFile: null, globalDragActive: false });
+      if (this.fileInput && this.fileInput.current) {
+        this.fileInput.current.value = null;
+      }
+    }
+  }
+
+  clearSelectedFile() {
+    this.setState({ selectedFile: null, globalDragActive: false });
+    if (this.fileInput && this.fileInput.current) {
+      this.fileInput.current.value = null;
+    }
   }
 }
 export default UploadWidget;

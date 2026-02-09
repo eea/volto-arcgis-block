@@ -547,6 +547,7 @@ class MenuWidget extends React.Component {
     this.activeLayersHandler = this.props.activeLayersHandler;
     this.getTaxonomy = this.props.getTaxonomy;
     this.tax = this.props.tax;
+    this.uploadedGraphics = {};
   }
 
   loader() {
@@ -2573,6 +2574,7 @@ class MenuWidget extends React.Component {
   async handleUploadedShapefile(fileObj) {
     if (!fileObj || !FeatureLayer || !Graphic || !Field) return;
     const fileName = (fileObj.name || 'upload.zip').toLowerCase();
+    const displayTitle = fileObj.name || 'upload.zip';
     const formData = new FormData();
     formData.append('file', fileObj, fileObj.name || 'upload.zip');
 
@@ -2607,14 +2609,14 @@ class MenuWidget extends React.Component {
         this.props.uploadFileErrorHandler();
         return;
       }
-      this.addUploadedFeatureCollectionToMap(featureCollection);
+      this.addUploadedFeatureCollectionToMap(featureCollection, displayTitle);
       this.props.onServiceChange && this.props.onServiceChange();
     } catch (error) {
       this.props.uploadFileErrorHandler();
     }
   }
 
-  addUploadedFeatureCollectionToMap(featureCollection) {
+  addUploadedFeatureCollectionToMap(featureCollection, uploadedTitle) {
     try {
       let sourceGraphics = [];
       const featureLayers = (featureCollection.layers || []).map((layer) => {
@@ -2636,7 +2638,7 @@ class MenuWidget extends React.Component {
           objectIdField: 'FID',
           source: graphics,
           legendEnabled: false,
-          title: 'Uploaded Shapefile',
+          title: uploadedTitle || 'Uploaded Shapefile',
           fields: (layer.layerDefinition.fields || []).map((f) =>
             Field.fromJSON(f),
           ),
@@ -2684,6 +2686,7 @@ class MenuWidget extends React.Component {
       // Show graphics and zoom
       if (sourceGraphics.length && this.view) {
         try {
+          this.uploadedGraphics[layerId] = sourceGraphics;
           this.view.graphics.addMany(sourceGraphics);
           this.view.goTo(sourceGraphics).catch(() => {});
         } catch (e) {}
@@ -2704,7 +2707,11 @@ class MenuWidget extends React.Component {
       const checkboxId = LayerId;
 
       return (
-        <div className="map-menu-dataset-dropdown" id={'my-service-' + LayerId}>
+        <div
+          key={LayerId}
+          className="map-menu-dataset-dropdown"
+          id={'my-service-' + LayerId}
+        >
           <fieldset className="ccl-fieldset">
             <div className="ccl-expandable__button" aria-expanded="false">
               <div className="dropdown-icon">
@@ -2784,6 +2791,13 @@ class MenuWidget extends React.Component {
       removeLayer.destroy();
       this.props.map.remove(removeLayer);
       removeLayer = null;
+    }
+
+    if (this.uploadedGraphics && this.uploadedGraphics[elemId]) {
+      try {
+        this.view.graphics.removeMany(this.uploadedGraphics[elemId]);
+      } catch (e) {}
+      delete this.uploadedGraphics[elemId];
     }
 
     this.props.onServiceChange();
@@ -3277,9 +3291,12 @@ class MenuWidget extends React.Component {
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
       let layer = this.layers[elem.id];
-      let isMapServer = layer?.url.toLowerCase().endsWith('mapserver')
-        ? true
-        : false;
+      let isMapServer =
+        layer &&
+        typeof layer.url === 'string' &&
+        layer.url.toLowerCase().endsWith('mapserver')
+          ? true
+          : false;
       if (group) {
         elem.title =
           this.layers[elem.id].type === 'map-image'
@@ -3371,6 +3388,12 @@ class MenuWidget extends React.Component {
         } else {
           this.map.remove(mapLayer);
         }
+      }
+      if (this.uploadedGraphics && this.uploadedGraphics[elem.id]) {
+        try {
+          this.view.graphics.removeMany(this.uploadedGraphics[elem.id]);
+        } catch (e) {}
+        delete this.uploadedGraphics[elem.id];
       }
       delete this.activeLayersJSON[elem.id];
       delete this.visibleLayers[elem.id];
