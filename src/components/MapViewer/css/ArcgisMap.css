@@ -999,6 +999,10 @@ div.upload-container
   margin-left: 1.75rem;
 }
 
+#map-menu-services .map-menu-icon.map-menu-service-icon {
+  margin-left: auto;
+}
+
 .map-menu-dropdown i:hover {
   color: black;
 }
