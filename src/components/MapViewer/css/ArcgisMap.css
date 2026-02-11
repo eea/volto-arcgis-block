@@ -1931,3 +1931,37 @@ div.map-container.popup-block {
 .filters-element.filter-logo.filters-header {
   justify-content: space-between;
 }
+
+.esri-popup__header {
+  background-color: #a0b128;
+}
+
+.esri-widget__heading {
+  color: white !important;
+}
+
+.esri-popup__icon {
+  color: white;
+}
+
+.esri-widget__anchor {
+  color: #7c8921 !important;
+  outline: 0px !important;
+}
+/* .esri-widget__anchor:focus {
+  background-color: #a0b128 !important;
+} */
+
+.esri-popup__header-container {
+  background-color: #a0b128 !important;
+  outline: 0px !important;
+}
+
+.esri-menu__list-item {
+  font-size: 15px;
+}
+
+.esri-popup__button {
+  background-color: #a0b128 !important;
+  outline: 0px !important;
+}
