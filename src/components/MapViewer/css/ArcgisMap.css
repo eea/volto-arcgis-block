@@ -1941,16 +1941,13 @@ div.map-container.popup-block {
 }
 
 .esri-popup__icon {
-  color: white;
+  color: auto;
 }
 
 .esri-widget__anchor {
   color: #7c8921 !important;
   outline: 0px !important;
 }
-/* .esri-widget__anchor:focus {
-  background-color: #a0b128 !important;
-} */
 
 .esri-popup__header-container {
   background-color: #a0b128 !important;
@@ -1963,5 +1960,16 @@ div.map-container.popup-block {
 
 .esri-popup__button {
   background-color: #a0b128 !important;
+  color: white !important;
   outline: 0px !important;
+}
+
+.esri-popup__button:hover {
+  background-color: #7c8921 !important;
+}
+
+.esri-popup__action:hover {
+  background-color: white !important;
+  color: #a0b128 !important;
+  outline: solid 2px #a0b128 !important;
 }
