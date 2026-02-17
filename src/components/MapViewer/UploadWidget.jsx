@@ -272,11 +272,163 @@ class UploadWidget extends React.Component {
     return this.getProxyBase() + this.stripProtocol(url);
   };
 
+  resolveNodeValue = (nodeValue) => {
+    if (nodeValue === null || nodeValue === undefined) {
+      return null;
+    }
+    if (typeof nodeValue === 'string' || typeof nodeValue === 'number') {
+      const textValue = String(nodeValue).trim();
+      return textValue === '' ? null : textValue;
+    }
+    if (Array.isArray(nodeValue)) {
+      for (let i = 0; i < nodeValue.length; i += 1) {
+        const resolvedValue = this.resolveNodeValue(nodeValue[i]);
+        if (resolvedValue) {
+          return resolvedValue;
+        }
+      }
+      return null;
+    }
+    if (typeof nodeValue === 'object') {
+      if (Object.prototype.hasOwnProperty.call(nodeValue, '#text')) {
+        return this.resolveNodeValue(nodeValue['#text']);
+      }
+      if (Object.prototype.hasOwnProperty.call(nodeValue, '_')) {
+        return this.resolveNodeValue(nodeValue._);
+      }
+      if (Object.prototype.hasOwnProperty.call(nodeValue, '$t')) {
+        return this.resolveNodeValue(nodeValue.$t);
+      }
+      if (Object.prototype.hasOwnProperty.call(nodeValue, 'value')) {
+        return this.resolveNodeValue(nodeValue.value);
+      }
+    }
+    return null;
+  };
+
+  processXmlCapabilitiesData = (xmlInput) => {
+    let xmlDoc = xmlInput;
+    if (typeof xmlInput === 'string') {
+      const parser = new DOMParser();
+      xmlDoc = parser.parseFromString(xmlInput, 'text/xml');
+    }
+    if (!xmlDoc || typeof xmlDoc.querySelectorAll !== 'function') {
+      return null;
+    }
+    const featureTypeList = [];
+    const featureTypes = xmlDoc.querySelectorAll('FeatureType, featuretype');
+    featureTypes.forEach((featureTypeNode) => {
+      const titleNode =
+        featureTypeNode.querySelector('Title') ||
+        featureTypeNode.querySelector('title') ||
+        featureTypeNode.querySelector('ows\\:Title');
+      const nameNode =
+        featureTypeNode.querySelector('Name') ||
+        featureTypeNode.querySelector('name') ||
+        featureTypeNode.querySelector('wfs\\:Name') ||
+        featureTypeNode.querySelector('ows\\:Identifier');
+      const nameValue = this.resolveNodeValue(nameNode && nameNode.textContent);
+      const titleValue = this.resolveNodeValue(
+        titleNode && titleNode.textContent,
+      );
+      if (nameValue) {
+        featureTypeList.push({
+          Name: nameValue,
+          Title: titleValue,
+        });
+      }
+    });
+    return {
+      FeatureTypeList: {
+        FeatureType: featureTypeList,
+      },
+    };
+  };
+
+  resolveCapabilitiesData = (capabilitiesResponse) => {
+    if (
+      capabilitiesResponse &&
+      typeof capabilitiesResponse === 'object' &&
+      !Array.isArray(capabilitiesResponse) &&
+      typeof capabilitiesResponse.querySelectorAll !== 'function'
+    ) {
+      return capabilitiesResponse;
+    }
+    if (typeof capabilitiesResponse === 'string') {
+      const trimmedResponse = capabilitiesResponse.trim();
+      if (trimmedResponse === '') {
+        return null;
+      }
+      try {
+        return JSON.parse(trimmedResponse);
+      } catch (e) {
+        return this.processXmlCapabilitiesData(trimmedResponse);
+      }
+    }
+    if (
+      capabilitiesResponse &&
+      typeof capabilitiesResponse === 'object' &&
+      typeof capabilitiesResponse.querySelectorAll === 'function'
+    ) {
+      return this.processXmlCapabilitiesData(capabilitiesResponse);
+    }
+    return null;
+  };
+
+  resolveFeatureTypeList = (capabilitiesData) => {
+    const featureTypeList = [];
+    const processNode = (nodeValue) => {
+      if (nodeValue === null || nodeValue === undefined) {
+        return;
+      }
+      if (Array.isArray(nodeValue)) {
+        nodeValue.forEach((itemValue) => {
+          processNode(itemValue);
+        });
+        return;
+      }
+      if (typeof nodeValue !== 'object') {
+        return;
+      }
+      const nameValue = this.resolveNodeValue(
+        nodeValue.Name ||
+          nodeValue.name ||
+          nodeValue['wfs:Name'] ||
+          nodeValue['ows:Identifier'],
+      );
+      const titleValue = this.resolveNodeValue(
+        nodeValue.Title || nodeValue.title || nodeValue['ows:Title'],
+      );
+      if (nameValue) {
+        featureTypeList.push({
+          Name: nameValue,
+          Title: titleValue,
+        });
+      }
+      const nestedFeatureType =
+        nodeValue.FeatureType || nodeValue.featureType || nodeValue.featuretype;
+      if (nestedFeatureType) {
+        processNode(nestedFeatureType);
+      }
+      Object.keys(nodeValue).forEach((keyValue) => {
+        if (
+          keyValue !== 'FeatureType' &&
+          keyValue !== 'featureType' &&
+          keyValue !== 'featuretype'
+        ) {
+          processNode(nodeValue[keyValue]);
+        }
+      });
+    };
+    processNode(capabilitiesData);
+    return featureTypeList;
+  };
+
   getCapabilities = (url, serviceType) => {
     // Get the coordinates of the click on the view
     const proxiedUrl = this.buildProxiedUrl(url);
     return esriRequest(proxiedUrl, {
-      responseType: 'html',
+      responseType: 'text',
       query: {
         request: 'GetCapabilities',
         service: serviceType,
@@ -284,34 +436,19 @@ class UploadWidget extends React.Component {
       },
     })
       .then((response) => {
-        const xmlDoc = response.data;
-        const parser = new DOMParser();
-        this.xml = parser.parseFromString(xmlDoc, 'text/html');
+        const capabilitiesData = this.resolveCapabilitiesData(response.data);
+        this.capabilitiesData = capabilitiesData;
       })
       .catch(() => {});
   };
 
-  parseWFSFeatures = (xml) => {
-    let doc = xml;
+  parseWFSFeatures = (capabilitiesData) => {
     try {
-      if (typeof xml === 'string') {
-        const parser = new DOMParser();
-        doc = parser.parseFromString(xml, 'text/xml');
-      }
       const features = {};
-      const featureTypes = doc.querySelectorAll('FeatureType, featuretype');
-      featureTypes.forEach((ft) => {
-        const titleEl =
-          ft.querySelector('Title') ||
-          ft.querySelector('title') ||
-          ft.querySelector('ows\\:Title');
-        const nameEl =
-          ft.querySelector('Name') ||
-          ft.querySelector('name') ||
-          ft.querySelector('wfs\\:Name') ||
-          ft.querySelector('ows\\:Identifier');
-        const key = nameEl ? (nameEl.textContent || '').trim() : null;
-        const title = titleEl ? (titleEl.textContent || '').trim() : null;
+      const featureTypeList = this.resolveFeatureTypeList(capabilitiesData);
+      featureTypeList.forEach((featureTypeValue) => {
+        const key = this.resolveNodeValue(featureTypeValue.Name);
+        const title = this.resolveNodeValue(featureTypeValue.Title);
         if (key) {
           features[key] = title ?? null;
         }
@@ -354,7 +491,7 @@ class UploadWidget extends React.Component {
         selectedServiceType,
       );
       await this.getCapabilities(normalizedUrl, selectedServiceType);
-      const result = this.parseWFSFeatures(this.xml);
+      const result = this.parseWFSFeatures(this.capabilitiesData);
       this.setState(() => ({
         wfsFeatures: result,
       }));
@@ -413,10 +550,10 @@ class UploadWidget extends React.Component {
     this.setState({ wfsFeatures: {}, serviceUrl: '', selectedFeatures: {} });
   };
 
-  errorPopup = () => {
+  errorPopup = (popupType = 'uploadError') => {
     this.setState({
       showInfoPopup: true,
-      infoPopupType: 'uploadError',
+      infoPopupType: popupType,
     });
     setTimeout(() => {
       this.setState({
@@ -494,7 +631,7 @@ class UploadWidget extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (!prevProps.showErrorPopup && this.props.showErrorPopup) {
-      this.errorPopup();
+      this.errorPopup(this.props.showErrorPopupType || 'uploadError');
     }
   }
 
@@ -758,6 +895,17 @@ class UploadWidget extends React.Component {
                       </span>
                       <div className="drawRectanglePopup-text">
                         Invalid file type. Please upload a .zip shapefile.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'noGeometryError' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Selected service has no geometry data and cannot be
+                        displayed on the map.
                       </div>
                     </>
                   )}

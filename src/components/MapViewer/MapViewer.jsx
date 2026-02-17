@@ -344,6 +344,7 @@ class MapViewer extends React.Component {
       userServiceType: '',
       userServiceFile: null,
       uploadError: false,
+      uploadErrorType: 'uploadError',
       // Track current user state for comparison in componentDidUpdate
       currentUserState: props.initialUserState || {
         user_id: null,
@@ -613,10 +614,10 @@ class MapViewer extends React.Component {
     this.setState({ uploadedFile: message });
   }
 
-  uploadFileErrorHandler = () => {
-    this.setState({ uploadError: true });
+  uploadFileErrorHandler = (errorType = 'uploadError') => {
+    this.setState({ uploadError: true, uploadErrorType: errorType });
     setTimeout(() => {
-      this.setState({ uploadError: false });
+      this.setState({ uploadError: false, uploadErrorType: 'uploadError' });
     }, 3000);
   };
 
@@ -1036,6 +1037,7 @@ class MapViewer extends React.Component {
           mapViewer={this}
           wmsServiceUrl={this.state.wmsServiceUrl}
           showErrorPopup={this.state.uploadError}
+          showErrorPopupType={this.state.uploadErrorType}
           uploadUrlServiceHandler={this.uploadUrlServiceHandler}
           uploadFileErrorHandler={this.uploadFileErrorHandler}
         />

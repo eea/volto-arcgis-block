@@ -2421,6 +2421,349 @@ class MenuWidget extends React.Component {
     }
   }
 
+  resolveRequestConfig(xml) {
+    let doc = xml;
+    try {
+      if (typeof xml === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xml, 'text/xml');
+      }
+      const versionSet = new Set();
+      const formatSet = new Set();
+      const rootVersion = doc?.documentElement?.getAttribute?.('version');
+      if (rootVersion) {
+        versionSet.add(rootVersion.trim());
+      }
+      const serviceTypeVersionNodes = doc.querySelectorAll(
+        'ServiceTypeVersion, ows\\:ServiceTypeVersion',
+      );
+      serviceTypeVersionNodes.forEach((node) => {
+        const nodeValue = (node.textContent || '').trim();
+        if (nodeValue) {
+          versionSet.add(nodeValue);
+        }
+      });
+      const acceptVersionNodes = doc.querySelectorAll(
+        'Parameter[name="AcceptVersions"] Value, ows\\:Parameter[name="AcceptVersions"] ows\\:Value',
+      );
+      acceptVersionNodes.forEach((node) => {
+        const nodeValue = (node.textContent || '').trim();
+        if (nodeValue) {
+          versionSet.add(nodeValue);
+        }
+      });
+      const outputNodes = doc.querySelectorAll(
+        'OutputFormats > Format, OutputFormat, Parameter[name="outputFormat"] Value, ows\\:Parameter[name="outputFormat"] ows\\:Value',
+      );
+      outputNodes.forEach((node) => {
+        const nodeValue = (node.textContent || '').trim();
+        if (nodeValue) {
+          formatSet.add(nodeValue);
+        }
+      });
+      const srsSet = new Set();
+      const srsNodes = doc.querySelectorAll(
+        'DefaultSRS, DefaultCRS, OtherSRS, OtherCRS, Parameter[name="srsName"] Value, ows\\:Parameter[name="srsName"] ows\\:Value',
+      );
+      srsNodes.forEach((node) => {
+        const nodeValue = (node.textContent || '').trim();
+        if (nodeValue) {
+          srsSet.add(nodeValue);
+        }
+      });
+      const versionList = Array.from(versionSet);
+      const formatList = Array.from(formatSet);
+      const srsList = Array.from(srsSet);
+      const requestVersion = versionList.includes('2.0.0')
+        ? '2.0.0'
+        : versionList.includes('1.1.0')
+        ? '1.1.0'
+        : versionList.includes('1.0.0')
+        ? '1.0.0'
+        : rootVersion || '2.0.0';
+      const preferredJsonFormat = formatList.find((item) =>
+        /application\/json|geojson|json/i.test(item),
+      );
+      const preferredXmlFormat = formatList.find((item) =>
+        /text\/xml|xml|gml/i.test(item),
+      );
+      const requestSrsName = srsList.includes('EPSG:4326')
+        ? 'EPSG:4326'
+        : srsList[0] || 'EPSG:4326';
+      return {
+        requestVersion,
+        requestFormat: preferredJsonFormat || preferredXmlFormat || null,
+        hasJsonFormat: Boolean(preferredJsonFormat),
+        requestSrsName,
+      };
+    } catch (e) {
+      return {
+        requestVersion: '2.0.0',
+        requestFormat: 'application/json',
+        hasJsonFormat: true,
+        requestSrsName: 'EPSG:4326',
+      };
+    }
+  }
+
+  resolveExceptionMessage(responseText) {
+    const textValue = typeof responseText === 'string' ? responseText : '';
+    if (!textValue) {
+      return '';
+    }
+    const exceptionMatch = textValue.match(
+      /<(?:\w+:)?ExceptionText>\s*([\s\S]*?)\s*<\/(?:\w+:)?ExceptionText>/i,
+    );
+    if (exceptionMatch && exceptionMatch[1]) {
+      return exceptionMatch[1].trim();
+    }
+    return '';
+  }
+
+  isNoGeometryError(error) {
+    const message = ((error && error.message) || '').toLowerCase();
+    return (
+      message.includes('no geometry') ||
+      message.includes('cannot be displayed on map')
+    );
+  }
+
+  hasExceptionResponse(responseText) {
+    const textValue = typeof responseText === 'string' ? responseText : '';
+    if (!textValue) {
+      return false;
+    }
+    return /<\s*(?:\w+:)?ExceptionReport\b|<\s*(?:\w+:)?Exception\b/i.test(
+      textValue,
+    );
+  }
+
+  processXmlData(xmlInput) {
+    let doc = xmlInput;
+    if (typeof xmlInput === 'string') {
+      const parser = new DOMParser();
+      doc = parser.parseFromString(xmlInput, 'text/xml');
+    }
+    if (!doc || !doc.documentElement) {
+      return null;
+    }
+    const processNodeData = (node) => {
+      const nodeData = {
+        name: node.localName || node.nodeName,
+        value: null,
+        attributes: {},
+        children: [],
+      };
+      if (node.attributes && node.attributes.length) {
+        Array.from(node.attributes).forEach((attributeNode) => {
+          nodeData.attributes[attributeNode.name] = attributeNode.value;
+        });
+      }
+      if (node.childNodes && node.childNodes.length) {
+        Array.from(node.childNodes).forEach((childNode) => {
+          if (childNode.nodeType === 1) {
+            nodeData.children.push(processNodeData(childNode));
+          } else if (childNode.nodeType === 3) {
+            const value = (childNode.nodeValue || '').trim();
+            if (value) {
+              nodeData.value = value;
+            }
+          }
+        });
+      }
+      return nodeData;
+    };
+    return processNodeData(doc.documentElement);
+  }
+
+  resolveNodeList(nodeData, nodeName) {
+    const resultList = [];
+    const processNodeData = (currentNode) => {
+      if (!currentNode) {
+        return;
+      }
+      if ((currentNode.name || '').toLowerCase() === nodeName.toLowerCase()) {
+        resultList.push(currentNode);
+      }
+      (currentNode.children || []).forEach((childNode) => {
+        processNodeData(childNode);
+      });
+    };
+    processNodeData(nodeData);
+    return resultList;
+  }
+
+  resolveCoordinateResult(valueText) {
+    const textValue = (valueText || '').trim();
+    if (!textValue) {
+      return [];
+    }
+    if (textValue.includes(',')) {
+      return textValue
+        .trim()
+        .split(/\s+/)
+        .map((item) => item.split(',').map(Number))
+        .filter((item) => item.length >= 2 && !item.some(Number.isNaN))
+        .map((item) => [item[0], item[1]]);
+    }
+    const valueList = textValue
+      .split(/\s+/)
+      .map(Number)
+      .filter((item) => !Number.isNaN(item));
+    const resultList = [];
+    for (let i = 0; i + 1 < valueList.length; i += 2) {
+      resultList.push([valueList[i], valueList[i + 1]]);
+    }
+    return resultList;
+  }
+
+  resolveGeometryResult(featureData) {
+    const geometryTypeList = [
+      'Point',
+      'LineString',
+      'Polygon',
+      'MultiPoint',
+      'MultiLineString',
+      'MultiPolygon',
+    ];
+    const geometryNode = geometryTypeList
+      .map((typeValue) => this.resolveNodeList(featureData, typeValue)[0])
+      .find(Boolean);
+    if (!geometryNode) {
+      return null;
+    }
+    const nodeName = geometryNode.name;
+    if (nodeName === 'Point') {
+      const posNode =
+        this.resolveNodeList(geometryNode, 'pos')[0] ||
+        this.resolveNodeList(geometryNode, 'coordinates')[0];
+      const points = this.resolveCoordinateResult(posNode?.value || '');
+      if (!points.length) {
+        return null;
+      }
+      return { type: 'Point', coordinates: points[0] };
+    }
+    if (nodeName === 'LineString') {
+      const posListNode =
+        this.resolveNodeList(geometryNode, 'posList')[0] ||
+        this.resolveNodeList(geometryNode, 'coordinates')[0];
+      const points = this.resolveCoordinateResult(posListNode?.value || '');
+      if (!points.length) {
+        return null;
+      }
+      return { type: 'LineString', coordinates: points };
+    }
+    if (nodeName === 'Polygon') {
+      const ringNodes = this.resolveNodeList(geometryNode, 'LinearRing');
+      const ringList = ringNodes
+        .map((ringNode) => {
+          const posListNode =
+            this.resolveNodeList(ringNode, 'posList')[0] ||
+            this.resolveNodeList(ringNode, 'coordinates')[0];
+          return this.resolveCoordinateResult(posListNode?.value || '');
+        })
+        .filter((ringValue) => ringValue.length > 0);
+      if (!ringList.length) {
+        return null;
+      }
+      return { type: 'Polygon', coordinates: ringList };
+    }
+    return null;
+  }
+
+  resolveFeatureResult(featureData) {
+    const geometryResult = this.resolveGeometryResult(featureData);
+    if (!geometryResult) {
+      return null;
+    }
+    const processPropertyData = (nodeData, propertyData) => {
+      if (!nodeData) {
+        return;
+      }
+      const geometryNames = new Set([
+        'Point',
+        'LineString',
+        'Polygon',
+        'MultiPoint',
+        'MultiLineString',
+        'MultiPolygon',
+        'pos',
+        'posList',
+        'coordinates',
+        'LinearRing',
+        'exterior',
+        'interior',
+        'boundedBy',
+      ]);
+      if (geometryNames.has(nodeData.name)) {
+        return;
+      }
+      if ((nodeData.children || []).length === 0 && nodeData.value) {
+        if (!propertyData[nodeData.name]) {
+          propertyData[nodeData.name] = nodeData.value;
+        }
+        return;
+      }
+      (nodeData.children || []).forEach((childNode) => {
+        processPropertyData(childNode, propertyData);
+      });
+    };
+    const properties = {};
+    processPropertyData(featureData, properties);
+    const featureId =
+      featureData.attributes['gml:id'] ||
+      featureData.attributes.id ||
+      featureData.attributes.fid ||
+      null;
+    return {
+      type: 'Feature',
+      id: featureId,
+      geometry: geometryResult,
+      properties,
+    };
+  }
+
+  resolveFeatureCollection(xmlData) {
+    const memberList = [
+      ...this.resolveNodeList(xmlData, 'featureMember'),
+      ...this.resolveNodeList(xmlData, 'member'),
+    ];
+    const featureList = memberList
+      .map((memberData) => {
+        const featureData = (memberData.children || []).find(
+          (childData) => childData.name !== 'boundedBy',
+        );
+        if (!featureData) {
+          return null;
+        }
+        return this.resolveFeatureResult(featureData);
+      })
+      .filter(Boolean);
+    return {
+      type: 'FeatureCollection',
+      features: featureList,
+      memberCount: memberList.length,
+    };
+  }
+
+  buildRequestParams(featureName, requestConfig) {
+    const typeParam =
+      requestConfig.requestVersion === '2.0.0' ? 'typeNames' : 'typeName';
+    const params = {
+      service: 'WFS',
+      request: 'GetFeature',
+      version: requestConfig.requestVersion,
+      [typeParam]: featureName,
+      srsName: requestConfig.requestSrsName,
+    };
+    if (requestConfig.requestVersion === '2.0.0') {
+      params.count = '1000';
+    } else {
+      params.maxFeatures = '1000';
+    }
+    return params;
+  }
+
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     let resourceLayers = [];
     const proxiedUrl = this.buildProxiedUrl(viewService);
@@ -2598,31 +2941,73 @@ class MenuWidget extends React.Component {
           }),
         ];
       } else if (isWFS) {
-        resourceLayers = Object.entries(serviceSelection || {})
-          .map(([name, title]) => {
+        await this.getCapabilities(viewService, 'WFS');
+        const requestConfig = this.resolveRequestConfig(this.xml);
+        const serviceEntries = Object.entries(serviceSelection || {});
+        const layerResults = await Promise.all(
+          serviceEntries.map(async ([name, title]) => {
             if (!name) return null;
-            const params = new URLSearchParams({
-              service: 'WFS',
-              request: 'GetFeature',
-              version: '2.0.0',
-              typeName: name,
-              outputFormat: 'application/json',
-              srsName: 'EPSG:4326',
-            }).toString();
-            const wfsUrl = baseUrl + '?' + params;
+            const requestParams = this.buildRequestParams(name, requestConfig);
+            if (requestConfig.hasJsonFormat && requestConfig.requestFormat) {
+              requestParams.outputFormat = requestConfig.requestFormat;
+            }
+            const requestQuery = new URLSearchParams(requestParams).toString();
+            const requestUrl = baseUrl + '?' + requestQuery;
 
             const id = (name || baseUrl).toUpperCase().replace(/[: ]/g, '_');
+            if (requestConfig.hasJsonFormat) {
+              const layer = new GeoJSONLayer({
+                url: requestUrl,
+                id: id,
+                title: title || name,
+              });
+              layer.LayerId = id;
+              layer.ViewService = baseUrl;
+              layer.name = name;
+              return layer;
+            }
+
+            const xmlResponse = await esriRequest(requestUrl, {
+              responseType: 'text',
+            });
+            if (this.hasExceptionResponse(xmlResponse.data)) {
+              const exceptionMessage = this.resolveExceptionMessage(
+                xmlResponse.data,
+              );
+              throw new Error(exceptionMessage || 'WFS request failed');
+            }
+            const xmlData = this.processXmlData(xmlResponse.data);
+            const featureCollection = this.resolveFeatureCollection(xmlData);
+            if (
+              featureCollection &&
+              featureCollection.memberCount > 0 &&
+              (!featureCollection.features ||
+                featureCollection.features.length === 0)
+            ) {
+              throw new Error(
+                'Selected WFS feature type has no geometry and cannot be displayed on map',
+              );
+            }
+            if (!featureCollection || !featureCollection.features?.length) {
+              throw new Error('No WFS features were returned for this layer');
+            }
+            const blobData = new Blob([JSON.stringify(featureCollection)], {
+              type: 'application/json',
+            });
+            const blobUrl = URL.createObjectURL(blobData);
             const layer = new GeoJSONLayer({
-              url: wfsUrl,
+              url: blobUrl,
               id: id,
               title: title || name,
             });
             layer.LayerId = id;
             layer.ViewService = baseUrl;
             layer.name = name;
+            layer.ServiceDataUrl = blobUrl;
             return layer;
-          })
-          .filter(Boolean);
+          }),
+        );
+        resourceLayers = layerResults.filter(Boolean);
       } else {
         await this.getCapabilities(viewService, 'WMS');
         const wmsLayers = this.parseWMSLayers(this.xml);
@@ -2657,7 +3042,11 @@ class MenuWidget extends React.Component {
         resourceLayers[0].fullExtent = bboxData;
       }
     } catch (error) {
-      this.props.uploadFileErrorHandler();
+      if (this.isNoGeometryError(error)) {
+        this.props.uploadFileErrorHandler('noGeometryError');
+      } else {
+        this.props.uploadFileErrorHandler();
+      }
       return;
     }
 
@@ -2675,7 +3064,9 @@ class MenuWidget extends React.Component {
         if (typeof resourceLayer.load === 'function' && serviceType === 'WFS') {
           try {
             await resourceLayer.load();
-          } catch (e) {}
+          } catch (e) {
+            throw e;
+          }
         }
         if (serviceType === 'WMS' || serviceType === 'WMTS') {
           const forced = (proxiedUrl || '').trim();
@@ -2718,7 +3109,11 @@ class MenuWidget extends React.Component {
 
         this.props.onServiceChange();
       } catch (error) {
-        this.props.uploadFileErrorHandler();
+        if (this.isNoGeometryError(error)) {
+          this.props.uploadFileErrorHandler('noGeometryError');
+        } else {
+          this.props.uploadFileErrorHandler();
+        }
         return;
       }
     }
@@ -2935,7 +3330,14 @@ class MenuWidget extends React.Component {
     }
 
     // Delete from layers object
-    if (this.layers[elemId]) delete this.layers[elemId];
+    if (this.layers[elemId]) {
+      if (this.layers[elemId].ServiceDataUrl) {
+        try {
+          URL.revokeObjectURL(this.layers[elemId].ServiceDataUrl);
+        } catch (e) {}
+      }
+      delete this.layers[elemId];
+    }
 
     // Remove from ArcGIS map
     let removeLayer = this.props.map.findLayerById(elemId) || null;
@@ -4458,7 +4860,7 @@ class MenuWidget extends React.Component {
     // Get the coordinates of the click on the view
     const proxiedUrl = this.buildProxiedUrl(url);
     return esriRequest(proxiedUrl, {
-      responseType: 'html',
+      responseType: 'text',
       sync: 'true',
       query: {
         request: 'GetCapabilities',
@@ -4468,7 +4870,7 @@ class MenuWidget extends React.Component {
       .then((response) => {
         const xmlDoc = response.data;
         const parser = new DOMParser();
-        this.xml = parser.parseFromString(xmlDoc, 'text/html');
+        this.xml = parser.parseFromString(xmlDoc, 'text/xml');
       })
       .catch(() => {});
   };
