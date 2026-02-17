@@ -150,8 +150,32 @@ class UploadWidget extends React.Component {
     this.setState({ serviceUrl: event.target.value });
   };
 
+  buildUploadResetState = () => {
+    return {
+      serviceUrl: '',
+      wfsFeatures: {},
+      selectedFeatures: {},
+      selectedFile: null,
+      showInfoPopup: false,
+      infoPopupType: '',
+      globalDragActive: false,
+    };
+  };
+
   handleServiceTypeChange = (event) => {
-    this.setState({ selectedServiceType: event.target.value });
+    const nextServiceType = event.target.value;
+    this.setState((prevState) => {
+      if (prevState.selectedServiceType === nextServiceType) {
+        return null;
+      }
+      return {
+        selectedServiceType: nextServiceType,
+        ...this.buildUploadResetState(),
+      };
+    });
+    if (this.fileInput && this.fileInput.current) {
+      this.fileInput.current.value = null;
+    }
   };
 
   setActiveTab(tab) {
