@@ -3247,12 +3247,18 @@ class MenuWidget extends React.Component {
   createUserServices(serviceLayers) {
     const fieldset = document.getElementById('map-menu-services');
     if (!fieldset) return;
+    const processTitleData = (titleText) => {
+      if (!titleText) return titleText;
+      if (titleText.length <= 33) return titleText;
+      return titleText.slice(0, 33) + '...';
+    };
 
     // Create an array of all layer elements
     const layerElements = serviceLayers.map((layer, index) => {
       const { LayerId, title, description } = layer;
       const parentIndex = this.layers[layer.id];
       const checkboxId = LayerId;
+      const displayTitle = processTitleData(title || `Layer ${index + 1}`);
 
       return (
         <div
@@ -3288,14 +3294,14 @@ class MenuWidget extends React.Component {
                       <legend className="ccl-form-legend">
                         {description ? (
                           <Popup
-                            trigger={<span>{title}</span>}
+                            trigger={<span>{displayTitle}</span>}
                             content={description}
                             basic
                             className="custom"
                             style={{ transform: 'translateX(-4rem)' }}
                           />
                         ) : (
-                          <span>{title || `Layer ${index + 1}`}</span>
+                          <span>{displayTitle}</span>
                         )}
                       </legend>
                     </label>

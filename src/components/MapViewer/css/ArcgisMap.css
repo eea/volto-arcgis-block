@@ -999,7 +999,32 @@ div.upload-container
   margin-left: 1.75rem;
 }
 
+.land #map-menu-services .map-menu-service {
+  width: 100%;
+  align-items: center;
+}
+
+.land #map-menu-services .ccl-expandable__button .dropdown-icon {
+  display: flex;
+  width: 100%;
+  height: auto;
+  margin-right: 0;
+}
+
+.land #map-menu-services .map-menu-service .ccl-form-check-label {
+  min-width: 0;
+  flex: 1;
+}
+
+.land #map-menu-services .map-menu-service .ccl-form-legend {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #map-menu-services .map-menu-icon.map-menu-service-icon {
+  margin-right: 0;
   margin-left: auto;
 }
 
