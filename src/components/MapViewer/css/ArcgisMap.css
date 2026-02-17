@@ -685,6 +685,19 @@ div.upload-container
   cursor: default;
 }
 
+.upload-container .esri-button {
+  border: 1px solid #a0b128;
+  background-color: #a0b128;
+  color: white;
+}
+
+.upload-container .esri-button:enabled:hover,
+.upload-container .esri-button[enabled]:hover {
+  border: 1px solid #a0b128;
+  background-color: white;
+  color: #a0b128;
+}
+
 .upload-panel {
   display: unset !important;
 }

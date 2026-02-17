@@ -922,6 +922,27 @@ class UploadWidget extends React.Component {
                       </div>
                     </>
                   )}
+                  {this.state.infoPopupType === 'fileLimit' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        File exceeds the max size allowed of 10MB.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'shapefileLimit' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Uploading shapefiles files larger than 2MB is not
+                        allowed.
+                      </div>
+                    </>
+                  )}
                   {this.state.infoPopupType === 'noGeometryError' && (
                     <>
                       <span className="drawRectanglePopup-icon">
@@ -1043,9 +1064,6 @@ class UploadWidget extends React.Component {
               disabled={!selectedFile}
               style={{
                 width: '100%',
-                border: '2px solid #c0d36b',
-                background: '#ffffff',
-                color: '#8ea92a',
               }}
               onClick={this.handleAddClick}
             >
@@ -1057,9 +1075,6 @@ class UploadWidget extends React.Component {
               disabled={false}
               style={{
                 width: '100%',
-                border: '2px solid #c0d36b',
-                background: '#ffffff',
-                color: '#8ea92a',
               }}
               onClick={this.handleBrowseClick}
             >

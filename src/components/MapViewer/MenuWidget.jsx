@@ -2528,6 +2528,49 @@ class MenuWidget extends React.Component {
     );
   }
 
+  resolveUploadErrorType(error) {
+    const detailsFromRoot =
+      error && error.details && Array.isArray(error.details)
+        ? error.details
+        : [];
+    const detailsFromNested =
+      error &&
+      error.details &&
+      error.details.details &&
+      Array.isArray(error.details.details)
+        ? error.details.details
+        : [];
+    const detailsFromResponse =
+      error &&
+      error.response &&
+      error.response.data &&
+      error.response.data.error &&
+      Array.isArray(error.response.data.error.details)
+        ? error.response.data.error.details
+        : [];
+    const errorDetails = [
+      ...detailsFromRoot,
+      ...detailsFromNested,
+      ...detailsFromResponse,
+    ];
+    const normalizedDetails = errorDetails.map((detailValue) =>
+      String(detailValue || '').toLowerCase(),
+    );
+    const hasShapefileLimit = normalizedDetails.some((detailValue) =>
+      detailValue.includes('shape file exceeds the max size allowed of 2mb'),
+    );
+    if (hasShapefileLimit) {
+      return 'shapefileLimit';
+    }
+    const hasFileLimit = normalizedDetails.some((detailValue) =>
+      detailValue.includes('file exceeds the max size allowed of 10mb'),
+    );
+    if (hasFileLimit) {
+      return 'fileLimit';
+    }
+    return 'uploadError';
+  }
+
   hasExceptionResponse(responseText) {
     const textValue = typeof responseText === 'string' ? responseText : '';
     if (!textValue) {
@@ -3160,7 +3203,7 @@ class MenuWidget extends React.Component {
       this.addUploadedFeatureCollectionToMap(featureCollection, displayTitle);
       this.props.onServiceChange && this.props.onServiceChange();
     } catch (error) {
-      this.props.uploadFileErrorHandler();
+      this.props.uploadFileErrorHandler(this.resolveUploadErrorType(error));
     }
   }
 
