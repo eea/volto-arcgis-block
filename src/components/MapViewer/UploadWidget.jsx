@@ -222,6 +222,42 @@ class UploadWidget extends React.Component {
     }
   };
 
+  getServiceTypeFromUrl = (serviceUrl) => {
+    try {
+      const parsedUrl = new URL(serviceUrl);
+      const queryService = (parsedUrl.searchParams.get('service') || '')
+        .trim()
+        .toUpperCase();
+      if (
+        queryService === 'WMS' ||
+        queryService === 'WMTS' ||
+        queryService === 'WFS'
+      ) {
+        return queryService;
+      }
+      const encodedUrl = (
+        (parsedUrl.hostname || '') + (parsedUrl.pathname || '')
+      ).toLowerCase();
+      const serviceMatch = encodedUrl.match(
+        /(^|[^a-z])(wmts|wms|wfs)([^a-z]|$)/i,
+      );
+      if (serviceMatch && serviceMatch[2]) {
+        return serviceMatch[2].toUpperCase();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  isServiceTypeMatchingUrl = (serviceUrl, selectedServiceType) => {
+    const encodedServiceType = this.getServiceTypeFromUrl(serviceUrl);
+    if (!encodedServiceType) {
+      return true;
+    }
+    return encodedServiceType === selectedServiceType;
+  };
+
   stripProtocol = (url) => {
     return (url || '').replace(/^https?:\/\//i, '');
   };
@@ -310,7 +346,8 @@ class UploadWidget extends React.Component {
       selectedServiceType === 'WFS' &&
       serviceUrl &&
       serviceUrl.trim() !== '' &&
-      this.isValidUrl(serviceUrl)
+      this.isValidUrl(serviceUrl) &&
+      this.isServiceTypeMatchingUrl(serviceUrl, selectedServiceType)
     ) {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
@@ -334,7 +371,8 @@ class UploadWidget extends React.Component {
       selectedServiceType &&
       serviceUrl &&
       serviceUrl.trim() !== '' &&
-      this.isValidUrl(serviceUrl)
+      this.isValidUrl(serviceUrl) &&
+      this.isServiceTypeMatchingUrl(serviceUrl, selectedServiceType)
     ) {
       const normalizedUrl = this.getNormalizedUrlForType(
         serviceUrl,
