@@ -2427,6 +2427,155 @@ class MenuWidget extends React.Component {
     try {
       const rawUrl = (proxiedUrl || '').trim();
       const baseUrl = rawUrl.split('?')[0];
+      const processBboxData = (xml) => {
+        const buildExtentResult = (xmin, ymin, xmax, ymax) => {
+          const numericValues = [xmin, ymin, xmax, ymax].map((value) =>
+            Number(value),
+          );
+          if (numericValues.some((value) => Number.isNaN(value))) {
+            return null;
+          }
+          return {
+            xmin: numericValues[0],
+            ymin: numericValues[1],
+            xmax: numericValues[2],
+            ymax: numericValues[3],
+            spatialReference: { wkid: 4326 },
+          };
+        };
+        const parseCornerValues = (value) => {
+          if (!value || typeof value !== 'string') {
+            return [];
+          }
+          return value
+            .trim()
+            .split(/\s+/)
+            .map((item) => Number(item));
+        };
+        try {
+          let doc = xml;
+          if (typeof xml === 'string') {
+            const parser = new DOMParser();
+            doc = parser.parseFromString(xml, 'text/xml');
+          }
+          if (doc && typeof doc.querySelector === 'function') {
+            const wgs84Node =
+              doc.querySelector('ows\\:WGS84BoundingBox') ||
+              doc.querySelector('WGS84BoundingBox') ||
+              doc.querySelector('wgs84boundingbox');
+            if (wgs84Node) {
+              const lowerCornerNode =
+                wgs84Node.querySelector('ows\\:LowerCorner') ||
+                wgs84Node.querySelector('LowerCorner') ||
+                wgs84Node.querySelector('lowercorner');
+              const upperCornerNode =
+                wgs84Node.querySelector('ows\\:UpperCorner') ||
+                wgs84Node.querySelector('UpperCorner') ||
+                wgs84Node.querySelector('uppercorner');
+              const lowerCorner = parseCornerValues(
+                lowerCornerNode ? lowerCornerNode.textContent : '',
+              );
+              const upperCorner = parseCornerValues(
+                upperCornerNode ? upperCornerNode.textContent : '',
+              );
+              if (lowerCorner.length >= 2 && upperCorner.length >= 2) {
+                const extentResult = buildExtentResult(
+                  lowerCorner[0],
+                  lowerCorner[1],
+                  upperCorner[0],
+                  upperCorner[1],
+                );
+                if (extentResult) {
+                  return extentResult;
+                }
+              }
+            }
+
+            const exGeoNode =
+              doc.querySelector('EX_GeographicBoundingBox') ||
+              doc.querySelector('ex_geographicboundingbox');
+            if (exGeoNode) {
+              const westNode =
+                exGeoNode.querySelector('westBoundLongitude') ||
+                exGeoNode.querySelector('ows\\:westBoundLongitude') ||
+                exGeoNode.querySelector('westboundlongitude');
+              const eastNode =
+                exGeoNode.querySelector('eastBoundLongitude') ||
+                exGeoNode.querySelector('ows\\:eastBoundLongitude') ||
+                exGeoNode.querySelector('eastboundlongitude');
+              const southNode =
+                exGeoNode.querySelector('southBoundLatitude') ||
+                exGeoNode.querySelector('ows\\:southBoundLatitude') ||
+                exGeoNode.querySelector('southboundlatitude');
+              const northNode =
+                exGeoNode.querySelector('northBoundLatitude') ||
+                exGeoNode.querySelector('ows\\:northBoundLatitude') ||
+                exGeoNode.querySelector('northboundlatitude');
+              const extentResult = buildExtentResult(
+                westNode ? westNode.textContent : NaN,
+                southNode ? southNode.textContent : NaN,
+                eastNode ? eastNode.textContent : NaN,
+                northNode ? northNode.textContent : NaN,
+              );
+              if (extentResult) {
+                return extentResult;
+              }
+            }
+          }
+        } catch (e) {}
+
+        let xmlText = '';
+        if (typeof xml === 'string') {
+          xmlText = xml;
+        } else if (xml && typeof xml.xml === 'string') {
+          xmlText = xml.xml;
+        }
+        if (xmlText) {
+          const lowerMatch = xmlText.match(
+            /<(?:ows:)?LowerCorner>\s*([^<]+?)\s*<\/(?:ows:)?LowerCorner>/i,
+          );
+          const upperMatch = xmlText.match(
+            /<(?:ows:)?UpperCorner>\s*([^<]+?)\s*<\/(?:ows:)?UpperCorner>/i,
+          );
+          if (lowerMatch && upperMatch) {
+            const lowerCorner = parseCornerValues(lowerMatch[1]);
+            const upperCorner = parseCornerValues(upperMatch[1]);
+            if (lowerCorner.length >= 2 && upperCorner.length >= 2) {
+              const extentResult = buildExtentResult(
+                lowerCorner[0],
+                lowerCorner[1],
+                upperCorner[0],
+                upperCorner[1],
+              );
+              if (extentResult) {
+                return extentResult;
+              }
+            }
+          }
+
+          const westMatch = xmlText.match(
+            /<(?:ows:)?westBoundLongitude>\s*([^<]+?)\s*<\/(?:ows:)?westBoundLongitude>/i,
+          );
+          const eastMatch = xmlText.match(
+            /<(?:ows:)?eastBoundLongitude>\s*([^<]+?)\s*<\/(?:ows:)?eastBoundLongitude>/i,
+          );
+          const southMatch = xmlText.match(
+            /<(?:ows:)?southBoundLatitude>\s*([^<]+?)\s*<\/(?:ows:)?southBoundLatitude>/i,
+          );
+          const northMatch = xmlText.match(
+            /<(?:ows:)?northBoundLatitude>\s*([^<]+?)\s*<\/(?:ows:)?northBoundLatitude>/i,
+          );
+          if (westMatch && eastMatch && southMatch && northMatch) {
+            return buildExtentResult(
+              westMatch[1],
+              southMatch[1],
+              eastMatch[1],
+              northMatch[1],
+            );
+          }
+        }
+        return null;
+      };
       const isWFS =
         serviceType === 'WFS' ||
         /service=WFS/i.test(rawUrl) ||
@@ -2502,6 +2651,10 @@ class MenuWidget extends React.Component {
             ViewService: rawUrl,
           }),
         ];
+      }
+      const bboxData = processBboxData(this.xml);
+      if (bboxData && resourceLayers[0]) {
+        resourceLayers[0].fullExtent = bboxData;
       }
     } catch (error) {
       this.props.uploadFileErrorHandler();
@@ -4654,9 +4807,36 @@ class MenuWidget extends React.Component {
         });
         this.view.goTo(myExtent);
       }
+    } else if (serviceLayer) {
+      const storedServiceExtent =
+        this.layers[elem.id]?.fullExtent ||
+        serviceLayer.fullExtent ||
+        (this.layers[elem.id]?.fullExtents &&
+        this.layers[elem.id]?.fullExtents[0]
+          ? this.layers[elem.id]?.fullExtents[0]
+          : null) ||
+        (serviceLayer.fullExtents && serviceLayer.fullExtents[0]
+          ? serviceLayer.fullExtents[0]
+          : null);
+      if (
+        storedServiceExtent &&
+        storedServiceExtent.xmin !== undefined &&
+        storedServiceExtent.ymin !== undefined &&
+        storedServiceExtent.xmax !== undefined &&
+        storedServiceExtent.ymax !== undefined
+      ) {
+        BBoxes = {
+          dataset: {
+            xmin: Number(storedServiceExtent.xmin),
+            ymin: Number(storedServiceExtent.ymin),
+            xmax: Number(storedServiceExtent.xmax),
+            ymax: Number(storedServiceExtent.ymax),
+          },
+        };
+      }
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
+    } else if (this.url?.toLowerCase().includes('wms')) {
       await this.getCapabilities(this.url, 'wms');
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
