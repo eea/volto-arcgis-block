@@ -281,14 +281,13 @@ class UploadWidget extends React.Component {
       ) {
         return queryService;
       }
-      const encodedUrl = (
-        (parsedUrl.hostname || '') + (parsedUrl.pathname || '')
-      ).toLowerCase();
-      const serviceMatch = encodedUrl.match(
-        /(^|[^a-z])(wmts|wms|wfs)([^a-z]|$)/i,
+      const pathName = (parsedUrl.pathname || '').toLowerCase();
+      const pathSegments = pathName.split('/').filter(Boolean);
+      const serviceMatch = pathSegments.find((segment) =>
+        /^(wmts|wms|wfs)$/i.test(segment),
       );
-      if (serviceMatch && serviceMatch[2]) {
-        return serviceMatch[2].toUpperCase();
+      if (serviceMatch) {
+        return serviceMatch.toUpperCase();
       }
       return null;
     } catch (e) {
