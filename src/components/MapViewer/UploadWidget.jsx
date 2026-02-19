@@ -4,6 +4,7 @@ import { loadModules } from 'esri-loader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 var WMSLayer, WMTSLayer, WFSLayer, esriRequest;
+const SHAPEFILE_MAX_SIZE_BYTES = 2097152;
 
 class UploadWidget extends React.Component {
   /**
@@ -193,18 +194,39 @@ class UploadWidget extends React.Component {
     if (!file) {
       return;
     }
-    const name = (file.name || '').toLowerCase();
-    const ext = name.split('.').pop();
-    if (ext !== 'zip') {
-      this.setState({ showInfoPopup: true, infoPopupType: 'fileUploadError' });
-      if (typeof this.uploadFileErrorHandler === 'function') {
-        this.uploadFileErrorHandler();
-      }
-      e.target.value = null;
-      return;
-    }
-    this.setState({ selectedFile: file, globalDragActive: false });
+    this.processInputPayload(file);
     e.target.value = null;
+  }
+
+  resolveInputError(filePayload) {
+    const inputName = ((filePayload && filePayload.name) || '').toLowerCase();
+    const inputExtension = inputName.split('.').pop();
+    if (inputExtension !== 'zip') {
+      return 'fileUploadError';
+    }
+    const inputSize = (filePayload && filePayload.size) || 0;
+    if (inputSize > SHAPEFILE_MAX_SIZE_BYTES) {
+      return 'shapefileLimit';
+    }
+    return null;
+  }
+
+  processInputPayload(filePayload) {
+    const inputError = this.resolveInputError(filePayload);
+    if (inputError) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: inputError,
+        selectedFile: null,
+        globalDragActive: false,
+      });
+      if (typeof this.uploadFileErrorHandler === 'function') {
+        this.uploadFileErrorHandler(inputError);
+      }
+      return false;
+    }
+    this.setState({ selectedFile: filePayload, globalDragActive: false });
+    return true;
   }
 
   getNormalizedUrlForType = (serviceUrl, serviceType) => {
@@ -1095,25 +1117,28 @@ class UploadWidget extends React.Component {
     const file =
       e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (!file) return;
-    const name = (file.name || '').toLowerCase();
-    const ext = name.split('.').pop();
-    if (ext !== 'zip') {
-      this.setState({
-        showInfoPopup: true,
-        infoPopupType: 'fileUploadError',
-        selectedFile: null,
-      });
-      if (typeof this.uploadFileErrorHandler === 'function') {
-        this.uploadFileErrorHandler();
-      }
-      return;
-    }
-    this.setState({ selectedFile: file, globalDragActive: false });
+    this.processInputPayload(file);
   }
 
   handleAddClick() {
     const file = this.state.selectedFile;
     if (!file) return;
+    const inputError = this.resolveInputError(file);
+    if (inputError) {
+      this.setState({
+        showInfoPopup: true,
+        infoPopupType: inputError,
+        selectedFile: null,
+        globalDragActive: false,
+      });
+      if (typeof this.uploadFileErrorHandler === 'function') {
+        this.uploadFileErrorHandler(inputError);
+      }
+      if (this.fileInput && this.fileInput.current) {
+        this.fileInput.current.value = null;
+      }
+      return;
+    }
     try {
       this.uploadUrlServiceHandler(file, 'FILE');
     } catch (err) {
