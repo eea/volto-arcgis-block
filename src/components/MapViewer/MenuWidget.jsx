@@ -2474,6 +2474,17 @@ class MenuWidget extends React.Component {
       const versionList = Array.from(versionSet);
       const formatList = Array.from(formatSet);
       const srsList = Array.from(srsSet);
+      const normalizedSrsList = srsList
+        .map((srsValue) => {
+          const textValue = (srsValue || '').trim();
+          const epsgMatch = textValue.match(/EPSG(?::|::|\/)(\d+)/i);
+          if (epsgMatch && epsgMatch[1]) {
+            return `EPSG:${epsgMatch[1]}`;
+          }
+          const normalizedSrsValue = textValue.toUpperCase();
+          return normalizedSrsValue || null;
+        })
+        .filter(Boolean);
       const requestVersion = versionList.includes('2.0.0')
         ? '2.0.0'
         : versionList.includes('1.1.0')
@@ -2487,9 +2498,9 @@ class MenuWidget extends React.Component {
       const preferredXmlFormat = formatList.find((item) =>
         /text\/xml|xml|gml/i.test(item),
       );
-      const requestSrsName = srsList.includes('EPSG:4326')
+      const requestSrsName = normalizedSrsList.includes('EPSG:4326')
         ? 'EPSG:4326'
-        : srsList[0] || 'EPSG:4326';
+        : normalizedSrsList[0] || 'EPSG:4326';
       return {
         requestVersion,
         requestFormat: preferredJsonFormat || preferredXmlFormat || null,
@@ -2578,6 +2589,69 @@ class MenuWidget extends React.Component {
     }
     return /<\s*(?:\w+:)?ExceptionReport\b|<\s*(?:\w+:)?Exception\b/i.test(
       textValue,
+    );
+  }
+
+  resolveResponseData(responseData) {
+    const resolveJsonData = (dataValue) => {
+      if (!dataValue || typeof dataValue !== 'object') {
+        return null;
+      }
+      if (
+        dataValue.type === 'FeatureCollection' &&
+        Array.isArray(dataValue.features)
+      ) {
+        return {
+          ...dataValue,
+          type: 'FeatureCollection',
+          features: dataValue.features,
+        };
+      }
+      if (Array.isArray(dataValue.features)) {
+        return {
+          ...dataValue,
+          type: 'FeatureCollection',
+          features: dataValue.features,
+        };
+      }
+      if (dataValue.type === 'Feature' && dataValue.geometry) {
+        return {
+          type: 'FeatureCollection',
+          features: [dataValue],
+        };
+      }
+      return null;
+    };
+
+    if (typeof responseData === 'string') {
+      const textValue = responseData.trim();
+      if (!textValue) {
+        return null;
+      }
+      if (this.hasExceptionResponse(textValue)) {
+        const exceptionMessage = this.resolveExceptionMessage(textValue);
+        throw new Error(exceptionMessage || 'WFS request failed');
+      }
+      let parsedData = null;
+      try {
+        parsedData = JSON.parse(textValue);
+      } catch (e) {}
+      const jsonData = resolveJsonData(parsedData);
+      if (jsonData) {
+        return jsonData;
+      }
+      const xmlData = this.processXmlData(textValue);
+      return this.resolveFeatureCollection(xmlData);
+    }
+
+    return resolveJsonData(responseData);
+  }
+
+  hasResultData(resultData) {
+    return Boolean(
+      resultData &&
+        Array.isArray(resultData.features) &&
+        resultData.features.length > 0,
     );
   }
 
@@ -2993,34 +3067,16 @@ class MenuWidget extends React.Component {
             const requestParams = this.buildRequestParams(name, requestConfig);
             if (requestConfig.hasJsonFormat && requestConfig.requestFormat) {
               requestParams.outputFormat = requestConfig.requestFormat;
+              requestParams.outputformat = requestConfig.requestFormat;
             }
             const requestQuery = new URLSearchParams(requestParams).toString();
             const requestUrl = baseUrl + '?' + requestQuery;
 
             const id = (name || baseUrl).toUpperCase().replace(/[: ]/g, '_');
-            if (requestConfig.hasJsonFormat) {
-              const layer = new GeoJSONLayer({
-                url: requestUrl,
-                id: id,
-                title: title || name,
-              });
-              layer.LayerId = id;
-              layer.ViewService = baseUrl;
-              layer.name = name;
-              return layer;
-            }
-
-            const xmlResponse = await esriRequest(requestUrl, {
+            const response = await esriRequest(requestUrl, {
               responseType: 'text',
             });
-            if (this.hasExceptionResponse(xmlResponse.data)) {
-              const exceptionMessage = this.resolveExceptionMessage(
-                xmlResponse.data,
-              );
-              throw new Error(exceptionMessage || 'WFS request failed');
-            }
-            const xmlData = this.processXmlData(xmlResponse.data);
-            const featureCollection = this.resolveFeatureCollection(xmlData);
+            const featureCollection = this.resolveResponseData(response.data);
             if (
               featureCollection &&
               featureCollection.memberCount > 0 &&
@@ -3031,7 +3087,7 @@ class MenuWidget extends React.Component {
                 'Selected WFS feature type has no geometry and cannot be displayed on map',
               );
             }
-            if (!featureCollection || !featureCollection.features?.length) {
+            if (!this.hasResultData(featureCollection)) {
               throw new Error('No WFS features were returned for this layer');
             }
             const blobData = new Blob([JSON.stringify(featureCollection)], {
