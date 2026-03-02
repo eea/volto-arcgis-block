@@ -36,6 +36,7 @@ class BookmarkWidget extends React.Component {
     this._isMounted = false;
     this._skipNextChangePersist = true;
     this._hasBookmarkContainerListeners = false;
+    this.bookmarkMutationObserver = null;
     this.fileInput = createRef();
   }
 
@@ -164,8 +165,17 @@ class BookmarkWidget extends React.Component {
   async componentDidMount() {
     this._isMounted = true;
     await this.loader();
-    if (!this.container.current) return;
+    if (!this.container.current || !this.props.view || !this.props.view.when)
+      return;
     this.props.view.when(() => {
+      if (
+        !this._isMounted ||
+        !this.container.current ||
+        !this.props.view ||
+        !this.props.view.ui
+      ) {
+        return;
+      }
       this.props.view.ui.add(this.container.current, 'top-right');
     });
     if (this.userID !== null && this.props?.isLoggedIn !== false) {
@@ -375,6 +385,7 @@ class BookmarkWidget extends React.Component {
         };
         const observer = new MutationObserver(callback);
         observer.observe(bookmarkList, config);
+        this.bookmarkMutationObserver = observer;
       }
       this.arcgisEventHandles.push(
         this.Bookmarks.bookmarks.on('change', (e) => {
@@ -933,9 +944,27 @@ class BookmarkWidget extends React.Component {
   }
   componentWillUnmount() {
     this._isMounted = false;
+    if (
+      this.props.view &&
+      this.props.view.ui &&
+      this.container &&
+      this.container.current
+    ) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
     if (this.arcgisEventHandles) {
-      this.arcgisEventHandles.forEach((handle) => handle.remove());
+      this.arcgisEventHandles.forEach((handle) => {
+        if (handle && handle.remove) {
+          handle.remove();
+        }
+      });
       this.arcgisEventHandles = [];
+    }
+    if (this.bookmarkMutationObserver) {
+      this.bookmarkMutationObserver.disconnect();
+      this.bookmarkMutationObserver = null;
     }
     if (this.Bookmarks && this.Bookmarks.container) {
       this.Bookmarks.container.removeEventListener(
@@ -947,6 +976,12 @@ class BookmarkWidget extends React.Component {
         this.boundLimitMaxLenth,
       );
     }
+    if (this.Bookmarks && this.Bookmarks.destroy) {
+      try {
+        this.Bookmarks.destroy();
+      } catch (error) {}
+    }
+    this.Bookmarks = null;
     this._hasBookmarkContainerListeners = false;
   }
   loadBookmarksToWidget() {

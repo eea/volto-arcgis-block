@@ -793,8 +793,8 @@ class MapViewer extends React.Component {
         previousViewState?.viewMode || this.state.viewMode,
       );
 
-      this.saveSessionToLocalStorage();
-      this.closeActiveWidget();
+      this.saveSessionToLocalStorage({ shouldClearSession: false });
+      this.processWidgetShutdown();
 
       this.reclaimWidgetNodesFromViewUi();
       await this.setWidgetRenderState(false);
@@ -866,7 +866,8 @@ class MapViewer extends React.Component {
   }
 
   // Enhanced method to save session data to localStorage with instance tracking
-  saveSessionToLocalStorage = () => {
+  saveSessionToLocalStorage = (options = {}) => {
+    const { shouldClearSession = true } = options;
     const { user_id, isLoggedIn } = this.context;
     //const instanceId = this.instanceId || 'unknown';
 
@@ -897,7 +898,9 @@ class MapViewer extends React.Component {
     } else if (!isLoggedIn) {
       saveToLocal('user_anonymous');
     }
-    sessionStorage.clear();
+    if (shouldClearSession) {
+      sessionStorage.clear();
+    }
   };
 
   // Handle page unload events (navigation, refresh, close)
@@ -1340,6 +1343,31 @@ class MapViewer extends React.Component {
     }
   }
 
+  processWidgetShutdown() {
+    this.closeActiveWidget();
+
+    const widgetPanelList = document.querySelectorAll('.right-panel');
+    widgetPanelList.forEach((widgetPanel) => {
+      if (widgetPanel && widgetPanel.style) {
+        widgetPanel.style.display = 'none';
+      }
+    });
+
+    const activeWidgetList = document.querySelectorAll('.active-widget');
+    activeWidgetList.forEach((activeWidgetNode) => {
+      if (activeWidgetNode && activeWidgetNode.classList) {
+        activeWidgetNode.classList.remove('active-widget');
+      }
+    });
+
+    const topRightCornerNode = document.querySelector(
+      '.esri-ui-top-right.esri-ui-corner',
+    );
+    if (topRightCornerNode && topRightCornerNode.classList) {
+      topRightCornerNode.classList.remove('show-panel');
+    }
+  }
+
   /**
    * This method evaluates the ability to render the basemaps widget and
    * returns the jsx allowing such a render (if conditions are ok)
@@ -1677,18 +1705,20 @@ export const CheckUserID = ({ reference }) => {
       {reference.view && (
         <>
           {/* BookmarkWidget with user_id */}
-          <BookmarkWidget
-            key={reference.getWidgetRenderKey('bookmark')}
-            view={reference.view}
-            map={reference.map}
-            layers={reference.state.layers}
-            mapViewer={reference}
-            userID={user_id}
-            hotspotData={reference.state.hotspotData}
-            bookmarkHandler={reference.bookmarkHandler}
-            bookmarkData={reference.state.bookmarkData}
-            isLoggedIn={isLoggedIn}
-          />
+          {reference.view.type === '2d' && (
+            <BookmarkWidget
+              key={reference.getWidgetRenderKey('bookmark')}
+              view={reference.view}
+              map={reference.map}
+              layers={reference.state.layers}
+              mapViewer={reference}
+              userID={user_id}
+              hotspotData={reference.state.hotspotData}
+              bookmarkHandler={reference.bookmarkHandler}
+              bookmarkData={reference.state.bookmarkData}
+              isLoggedIn={isLoggedIn}
+            />
+          )}
 
           {/* MenuWidget with user_id */}
           <MenuWidget

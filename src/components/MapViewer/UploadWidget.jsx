@@ -625,12 +625,16 @@ class UploadWidget extends React.Component {
   async componentDidMount() {
     this.isComponentMounted = true;
     await this.loader();
+    if (!this.props.view || !this.props.view.when) {
+      return;
+    }
     this.props.view.when(() => {
-      if (!this.isComponentMounted) {
+      if (!this.isComponentMounted || !this.props.view || !this.props.view.ui) {
         return;
       }
-      this.container.current !== null &&
+      if (this.container.current) {
         this.props.view.ui.add(this.container.current, 'top-right');
+      }
       //load an empty wms layer to use the variable
       const wmsLayer = new WMSLayer({
         url: '',
@@ -827,7 +831,7 @@ class UploadWidget extends React.Component {
                       <label>
                         Service type
                         <select
-                          value={this.state.selectedServiceType}
+                          defaultValue=""
                           onBlur={this.handleServiceTypeChange}
                         >
                           <option value="">Select a service</option>
