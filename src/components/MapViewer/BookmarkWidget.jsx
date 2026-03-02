@@ -35,6 +35,7 @@ class BookmarkWidget extends React.Component {
     this.boundLimitMaxLenth = this.limitMaxLenth.bind(this);
     this._isMounted = false;
     this._skipNextChangePersist = true;
+    this._hasBookmarkContainerListeners = false;
     this.fileInput = createRef();
   }
 
@@ -907,17 +908,27 @@ class BookmarkWidget extends React.Component {
         }
       } catch (e) {}
     }
-    this.props.view.when(() => {
-      this.Bookmarks.when(() => {
-        this.Bookmarks.container.addEventListener(
-          'keydown',
-          this.boundLimitMaxLenth,
-        );
-        this.Bookmarks.container.addEventListener(
-          'paste',
-          this.boundLimitMaxLenth,
-        );
-      });
+    if (
+      this._hasBookmarkContainerListeners ||
+      !this.props.view ||
+      !this.props.view.ready ||
+      !this.Bookmarks
+    ) {
+      return;
+    }
+    this.Bookmarks.when(() => {
+      if (!this._isMounted || !this.Bookmarks || !this.Bookmarks.container) {
+        return;
+      }
+      this.Bookmarks.container.addEventListener(
+        'keydown',
+        this.boundLimitMaxLenth,
+      );
+      this.Bookmarks.container.addEventListener(
+        'paste',
+        this.boundLimitMaxLenth,
+      );
+      this._hasBookmarkContainerListeners = true;
     });
   }
   componentWillUnmount() {
@@ -936,6 +947,7 @@ class BookmarkWidget extends React.Component {
         this.boundLimitMaxLenth,
       );
     }
+    this._hasBookmarkContainerListeners = false;
   }
   loadBookmarksToWidget() {
     if (this.userID == null) return;

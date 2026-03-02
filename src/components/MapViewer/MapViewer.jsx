@@ -37,7 +37,7 @@ import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 import { fetchCatalogApiDates } from '../../actions';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
-var Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent;
+var Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
 
 const CheckLanguage = () => {
@@ -322,12 +322,14 @@ class MapViewer extends React.Component {
     //code, for example, to create later a MapView component
     //that will use the map div to show the map
     this.mapdiv = createRef();
+    this.mapContainer = createRef();
     this.mapCfg = props.cfg.Map;
     this.compCfg = this.props.cfg.Components;
     this.url = this.props.cfg.url || ''; // Get url or default
     this.location = this.props.location;
     this.map = null;
     this.id = props.id;
+    this.viewModeContainer = createRef();
     this.mapClass = classNames('map-container', {
       [`${props.customClass}`]: props.customClass || null,
     });
@@ -345,6 +347,9 @@ class MapViewer extends React.Component {
       userServiceFile: null,
       uploadError: false,
       uploadErrorType: 'uploadError',
+      viewMode: this.normalizeViewMode(this.mapCfg.defaultViewMode),
+      viewRevision: 0,
+      isWidgetRenderEnabled: true,
       // Track current user state for comparison in componentDidUpdate
       currentUserState: props.initialUserState || {
         user_id: null,
@@ -365,8 +370,490 @@ class MapViewer extends React.Component {
     this.uploadFileHandler = this.uploadFileHandler.bind(this);
     this.uploadFileErrorHandler = this.uploadFileErrorHandler.bind(this);
     this.uploadUrlServiceHandler = this.uploadUrlServiceHandler.bind(this);
+    this.switchViewMode = this.switchViewMode.bind(this);
     this.getTaxonomy = this.props.getTaxonomy.bind(this);
     this.tax = null;
+    this.viewWatchers = [];
+    this.zoom = null;
+    this.isComponentMounted = false;
+    this.viewTransitionTaskId = 0;
+    this.isViewSwitchInProgress = false;
+    this.syncViewTask = null;
+  }
+
+  normalizeViewMode(viewMode) {
+    return viewMode === '3d' ? '3d' : '2d';
+  }
+
+  getViewConstraintExtent(useZoomInBounds) {
+    const geometryConfig = useZoomInBounds
+      ? this.mapCfg.geometryZoomIn
+      : this.mapCfg.geometry;
+    return new Extent({
+      xmin: geometryConfig.xmin,
+      ymin: geometryConfig.ymin,
+      xmax: geometryConfig.xmax,
+      ymax: geometryConfig.ymax,
+      spatialReference: 4326,
+    });
+  }
+
+  getViewStateSnapshot() {
+    if (!this.view) {
+      return {
+        center: mapStatus.center,
+        zoom: mapStatus.zoom,
+        viewpoint: null,
+        viewMode: this.normalizeViewMode(this.state.viewMode),
+      };
+    }
+
+    return {
+      center:
+        this.view.center && this.view.center.toJSON
+          ? this.view.center.toJSON()
+          : this.view.center,
+      zoom: this.view.zoom,
+      viewpoint:
+        this.view.viewpoint && this.view.viewpoint.clone
+          ? this.view.viewpoint.clone()
+          : this.view.viewpoint,
+      viewMode: this.normalizeViewMode(this.view.type),
+    };
+  }
+
+  resolveViewState(previousViewState, normalizedViewMode) {
+    if (!previousViewState) {
+      return {
+        viewpoint: null,
+      };
+    }
+
+    const isViewModeCompatible =
+      previousViewState.viewMode === normalizedViewMode;
+
+    return {
+      viewpoint: isViewModeCompatible ? previousViewState.viewpoint : null,
+    };
+  }
+
+  buildFallbackViewState(normalizedViewMode) {
+    return {
+      center: this.resolveViewCenter(
+        mapStatus.center || this.mapCfg.center,
+        normalizedViewMode,
+      ),
+      zoom:
+        typeof mapStatus.zoom === 'number' ? mapStatus.zoom : this.mapCfg.zoom,
+      viewpoint: null,
+      viewMode: normalizedViewMode,
+    };
+  }
+
+  resolveViewCenter(centerValue, normalizedViewMode) {
+    if (!centerValue) {
+      return centerValue;
+    }
+
+    if (normalizedViewMode !== '2d') {
+      return centerValue;
+    }
+
+    if (Array.isArray(centerValue)) {
+      return centerValue.slice(0, 2);
+    }
+
+    if (typeof centerValue === 'object') {
+      if (
+        typeof centerValue.longitude === 'number' &&
+        typeof centerValue.latitude === 'number'
+      ) {
+        return [centerValue.longitude, centerValue.latitude];
+      }
+
+      const sanitizedCenter = { ...centerValue };
+      if ('z' in sanitizedCenter) {
+        delete sanitizedCenter.z;
+      }
+      return sanitizedCenter;
+    }
+
+    return centerValue;
+  }
+
+  removeViewWatchers() {
+    if (Array.isArray(this.viewWatchers) && this.viewWatchers.length > 0) {
+      this.viewWatchers.forEach((watchHandler) => {
+        if (watchHandler && watchHandler.remove) {
+          watchHandler.remove();
+        }
+      });
+    }
+    this.viewWatchers = [];
+  }
+
+  attachViewWatchers() {
+    if (!this.view) return;
+
+    this.removeViewWatchers();
+
+    const centerWatcher = this.view.watch('center', (newValue) => {
+      this.setCenterState(newValue);
+    });
+
+    const zoomWatcher = this.view.watch('zoom', (newValue) => {
+      this.setZoomState(newValue);
+      const shouldUseZoomInBounds = newValue > this.mapCfg.minZoom;
+      const constraintExtent = this.getViewConstraintExtent(
+        shouldUseZoomInBounds,
+      );
+
+      if (this.view.type === '2d') {
+        this.view.constraints.geometry = constraintExtent;
+      } else {
+        this.view.clippingArea = constraintExtent;
+      }
+    });
+
+    this.viewWatchers.push(centerWatcher, zoomWatcher);
+  }
+
+  addViewModeControl() {
+    return;
+  }
+
+  syncViewWidgetContainers() {
+    if (!this.view || !this.view.ui) return;
+
+    const uiContainerConfig = [
+      { selector: '.map-left-menu-container', position: 'top-left' },
+      { selector: '.search-container', position: 'top-left' },
+      { selector: '.basemap-container', position: 'top-right' },
+      { selector: '.legend-container', position: 'top-right' },
+      { selector: '.measurement-container', position: 'top-right' },
+      { selector: '.print-container', position: 'top-right' },
+      { selector: '.swipe-container', position: 'top-right' },
+      { selector: '.area-container', position: 'top-right' },
+      { selector: '.pan-container', position: 'top-right' },
+      { selector: '.info-container', position: 'top-right' },
+      { selector: '.hotspot-container', position: 'top-right' },
+      { selector: '.bookmark-container', position: 'top-right' },
+      { selector: '.upload-container', position: 'top-right' },
+      { selector: '.error-report-container', position: 'top-right' },
+    ];
+
+    uiContainerConfig.forEach(({ selector, position }) => {
+      const containerNode = document.querySelector(selector);
+      if (!containerNode) return;
+      try {
+        this.view.ui.add(containerNode, position);
+      } catch (error) {}
+    });
+
+    const loaderNode = document.querySelector('#loader');
+    if (loaderNode) {
+      try {
+        this.view.ui.add(loaderNode, 'manual');
+      } catch (error) {}
+    }
+  }
+
+  scheduleViewSyncTask() {
+    if (this.syncViewTask) {
+      cancelAnimationFrame(this.syncViewTask);
+      this.syncViewTask = null;
+    }
+
+    this.syncViewTask = requestAnimationFrame(() => {
+      if (!this.isComponentMounted || !this.view) {
+        return;
+      }
+      this.syncViewWidgetContainers();
+      this.syncViewTask = null;
+    });
+  }
+
+  disposeViewResource(preserveMap = true) {
+    if (!this.view) return;
+
+    this.removeViewWatchers();
+
+    try {
+      if (this.zoom) {
+        this.zoom.destroy();
+      }
+    } catch (error) {}
+    this.zoom = null;
+
+    if (preserveMap && this.view.map) {
+      this.view.map = null;
+    }
+
+    try {
+      this.view.container = null;
+      this.view.destroy();
+    } catch (error) {}
+
+    this.view = null;
+  }
+
+  reclaimWidgetNodesFromViewUi() {
+    const mapContainerNode = this.mapContainer.current;
+    if (!mapContainerNode) {
+      return;
+    }
+
+    const widgetSelectorList = [
+      '.map-left-menu-container',
+      '.search-container',
+      '.basemap-container',
+      '.legend-container',
+      '.measurement-container',
+      '.print-container',
+      '.swipe-container',
+      '.area-container',
+      '.pan-container',
+      '.info-container',
+      '.hotspot-container',
+      '.bookmark-container',
+      '.upload-container',
+      '.error-report-container',
+      '.viewmode-container',
+      '#loader',
+    ];
+
+    widgetSelectorList.forEach((selector) => {
+      const widgetNode = document.querySelector(selector);
+      if (!widgetNode) {
+        return;
+      }
+
+      try {
+        if (this.view && this.view.ui) {
+          this.view.ui.remove(widgetNode);
+        }
+      } catch (error) {}
+
+      if (widgetNode.parentNode !== mapContainerNode) {
+        try {
+          mapContainerNode.appendChild(widgetNode);
+        } catch (error) {}
+      }
+    });
+  }
+
+  setWidgetRenderState(isWidgetRenderEnabled) {
+    return new Promise((resolveStateUpdate) => {
+      this.setState({ isWidgetRenderEnabled }, resolveStateUpdate);
+    });
+  }
+
+  waitForRenderTask() {
+    return new Promise((resolveRenderTask) => {
+      requestAnimationFrame(() => {
+        resolveRenderTask();
+      });
+    });
+  }
+
+  waitForViewReady(view, timeoutMs = 15000) {
+    return Promise.race([
+      view.when(),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('view_ready_timeout')), timeoutMs);
+      }),
+    ]);
+  }
+
+  async createView(
+    viewMode,
+    previousViewState,
+    transitionTaskId = this.viewTransitionTaskId,
+  ) {
+    const normalizedViewMode = this.normalizeViewMode(viewMode);
+    const resolvedViewState = this.resolveViewState(
+      previousViewState,
+      normalizedViewMode,
+    );
+    const nextCenter = previousViewState?.center || mapStatus.center;
+    const sanitizedCenter = this.resolveViewCenter(
+      nextCenter,
+      normalizedViewMode,
+    );
+    const nextZoom =
+      previousViewState?.zoom !== undefined
+        ? previousViewState.zoom
+        : mapStatus.zoom;
+
+    const baseViewProperties = {
+      container: this.mapdiv.current,
+      map: this.map,
+      center: sanitizedCenter,
+      zoom: nextZoom,
+      ui: {
+        components: ['attribution'],
+      },
+    };
+
+    const mapViewConstraints = {
+      minZoom: this.mapCfg.minZoom,
+      maxZoom: this.mapCfg.maxZoom,
+      rotationEnabled: false,
+      geometry: this.getViewConstraintExtent(nextZoom > this.mapCfg.minZoom),
+    };
+
+    try {
+      if (normalizedViewMode === '3d') {
+        this.view = new SceneView({
+          ...baseViewProperties,
+          constraints: {
+            minZoom: this.mapCfg.minZoom,
+            maxZoom: this.mapCfg.maxZoom,
+            tilt: {
+              max: 80,
+            },
+          },
+          clippingArea: this.getViewConstraintExtent(
+            nextZoom > this.mapCfg.minZoom,
+          ),
+        });
+      } else {
+        this.view = new MapView({
+          ...baseViewProperties,
+          constraints: mapViewConstraints,
+        });
+      }
+    } catch (error) {
+      if (this.view) {
+        this.disposeViewResource(true);
+      }
+      return false;
+    }
+
+    try {
+      await this.waitForViewReady(this.view);
+    } catch (error) {
+      if (this.view) {
+        this.disposeViewResource(true);
+      }
+      return false;
+    }
+
+    if (
+      !this.isComponentMounted ||
+      transitionTaskId !== this.viewTransitionTaskId
+    ) {
+      this.disposeViewResource(true);
+      return false;
+    }
+
+    if (resolvedViewState.viewpoint) {
+      this.view.viewpoint = resolvedViewState.viewpoint;
+    }
+
+    this.zoom = new Zoom({
+      view: this.view,
+    });
+    this.view.ui.add(this.zoom, {
+      position: 'top-right',
+    });
+
+    this.attachViewWatchers();
+    this.view.popup.autoOpenEnabled = false;
+    this.addViewModeControl();
+    this.syncViewWidgetContainers();
+    return true;
+  }
+
+  async switchViewMode(nextViewMode) {
+    const normalizedNextMode = this.normalizeViewMode(nextViewMode);
+    if (
+      normalizedNextMode === this.state.viewMode ||
+      !this.map ||
+      this.isViewSwitchInProgress
+    ) {
+      return;
+    }
+
+    this.isViewSwitchInProgress = true;
+
+    const transitionTaskId = this.viewTransitionTaskId + 1;
+    this.viewTransitionTaskId = transitionTaskId;
+
+    try {
+      if (
+        !this.isComponentMounted ||
+        transitionTaskId !== this.viewTransitionTaskId
+      ) {
+        return;
+      }
+
+      const previousViewState = this.getViewStateSnapshot();
+      const resolvedPreviousViewMode = this.normalizeViewMode(
+        previousViewState?.viewMode || this.state.viewMode,
+      );
+
+      this.saveSessionToLocalStorage();
+      this.closeActiveWidget();
+
+      this.reclaimWidgetNodesFromViewUi();
+      await this.setWidgetRenderState(false);
+      await this.waitForRenderTask();
+      this.disposeViewResource(true);
+
+      let isViewCreated = await this.createView(
+        normalizedNextMode,
+        previousViewState,
+        transitionTaskId,
+      );
+
+      if (
+        !isViewCreated &&
+        this.isComponentMounted &&
+        transitionTaskId === this.viewTransitionTaskId
+      ) {
+        const fallbackViewState = this.buildFallbackViewState(
+          normalizedNextMode,
+        );
+        isViewCreated = await this.createView(
+          normalizedNextMode,
+          fallbackViewState,
+          transitionTaskId,
+        );
+      }
+
+      if (
+        !isViewCreated ||
+        !this.isComponentMounted ||
+        transitionTaskId !== this.viewTransitionTaskId
+      ) {
+        await this.createView(
+          resolvedPreviousViewMode,
+          previousViewState,
+          transitionTaskId,
+        );
+        if (this.isComponentMounted) {
+          await this.setWidgetRenderState(true);
+        }
+        return;
+      }
+
+      if (this.isComponentMounted) {
+        this.setState({
+          viewMode: normalizedNextMode,
+          isWidgetRenderEnabled: true,
+        });
+      }
+    } finally {
+      if (this.isComponentMounted && !this.state.isWidgetRenderEnabled) {
+        this.setState({ isWidgetRenderEnabled: true });
+      }
+      this.isViewSwitchInProgress = false;
+    }
+  }
+
+  getWidgetRenderKey(widgetName) {
+    return `${widgetName}`;
   }
 
   // Method to handle user state changes from the monitoring wrapper
@@ -655,6 +1142,7 @@ class MapViewer extends React.Component {
     return loadModules([
       'esri/WebMap',
       'esri/views/MapView',
+      'esri/views/SceneView',
       'esri/widgets/Zoom',
       'esri/intl',
       'esri/Basemap',
@@ -662,10 +1150,20 @@ class MapViewer extends React.Component {
       'esri/geometry/Extent',
       'esri/widgets/Bookmarks',
     ]).then(
-      ([_Map, _MapView, _Zoom, _intl, _Basemap, _WebTileLayer, _Extent]) => {
-        [Map, MapView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
+      ([
+        _Map,
+        _MapView,
+        _SceneView,
+        _Zoom,
+        _intl,
+        _Basemap,
+        _WebTileLayer,
+        _Extent,
+      ]) => {
+        [Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent] = [
           _Map,
           _MapView,
+          _SceneView,
           _Zoom,
           _intl,
           _Basemap,
@@ -690,6 +1188,7 @@ class MapViewer extends React.Component {
   // }
 
   async componentDidMount() {
+    this.isComponentMounted = true;
     loadCss();
     await this.loader();
     this.tax = await this.getTaxonomy('collective.taxonomy.family');
@@ -729,56 +1228,10 @@ class MapViewer extends React.Component {
     } else {
     }
 
-    this.view = new MapView({
-      container: this.mapdiv.current,
-      map: this.map,
+    await this.createView(this.state.viewMode, {
       center: mapStatus.center,
       zoom: mapStatus.zoom,
-      constraints: {
-        minZoom: this.mapCfg.minZoom,
-        maxZoom: this.mapCfg.maxZoom,
-        rotationEnabled: false,
-        geometry: this.mapCfg.geometry,
-      },
-      ui: {
-        components: ['attribution'],
-      },
-    });
-    this.view.when(() => {
-      this.zoom = new Zoom({
-        view: this.view,
-      });
-      this.view.ui.add(this.zoom, {
-        position: 'top-right',
-      });
-
-      this.view.watch('center', (newValue, oldValue, property, object) => {
-        this.setCenterState(newValue);
-      });
-
-      let constraintExtent = null;
-      this.view.watch('zoom', (newValue, oldValue, property, object) => {
-        this.setZoomState(newValue);
-        if (mapStatus.zoom <= this.mapCfg.minZoom) {
-          constraintExtent = new Extent({
-            xmin: this.mapCfg.geometry.xmin,
-            ymin: this.mapCfg.geometry.ymin,
-            xmax: this.mapCfg.geometry.xmax,
-            ymax: this.mapCfg.geometry.ymax,
-            spatialReference: 4326,
-          });
-        } else {
-          constraintExtent = new Extent({
-            xmin: this.mapCfg.geometryZoomIn.xmin,
-            ymin: this.mapCfg.geometryZoomIn.ymin,
-            xmax: this.mapCfg.geometryZoomIn.xmax,
-            ymax: this.mapCfg.geometryZoomIn.ymax,
-            spatialReference: 4326,
-          });
-        }
-        this.view.constraints.geometry = constraintExtent;
-      });
-      this.view.popup.autoOpenEnabled = false;
+      viewpoint: null,
     });
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
@@ -834,9 +1287,21 @@ class MapViewer extends React.Component {
       // Handle the user state change
       this.handleSessionStateUpdate(newUserState, prevUserState);
     }
+
+    if (prevState.viewMode !== this.state.viewMode) {
+      this.scheduleViewSyncTask();
+    }
   }
 
   componentWillUnmount() {
+    this.isComponentMounted = false;
+    this.viewTransitionTaskId += 1;
+
+    if (this.syncViewTask) {
+      cancelAnimationFrame(this.syncViewTask);
+      this.syncViewTask = null;
+    }
+
     window.removeEventListener('beforeunload', this.handlePageUnload);
     window.removeEventListener('pagehide', this.handlePageUnload);
     document.removeEventListener(
@@ -847,11 +1312,7 @@ class MapViewer extends React.Component {
     // Save data using the extracted method
     this.saveSessionToLocalStorage();
 
-    if (this.view) {
-      this.view.container = null;
-      this.view.destroy();
-      delete this.view;
-    }
+    this.disposeViewResource(true);
   }
 
   setWidgetState() {}
@@ -870,7 +1331,11 @@ class MapViewer extends React.Component {
 
   closeActiveWidget() {
     if (this.activeWidget) {
-      this.activeWidget.openMenu();
+      try {
+        if (this.activeWidget.openMenu) {
+          this.activeWidget.openMenu();
+        }
+      } catch (error) {}
       this.activeWidget = null;
     }
   }
@@ -884,7 +1349,12 @@ class MapViewer extends React.Component {
     if (this.props.mapviewer_config.Download) return;
     if (this.view)
       return (
-        <BasemapWidget view={this.view} mapViewer={this} urls={this.cfgUrls} />
+        <BasemapWidget
+          key={this.getWidgetRenderKey('basemap')}
+          view={this.view}
+          mapViewer={this}
+          urls={this.cfgUrls}
+        />
       );
   }
 
@@ -892,6 +1362,7 @@ class MapViewer extends React.Component {
     if (this.view)
       return (
         <LegendWidget
+          key={this.getWidgetRenderKey('legend')}
           view={this.view}
           mapViewer={this}
           download={this.props.mapviewer_config.Download}
@@ -906,12 +1377,27 @@ class MapViewer extends React.Component {
   renderMeasurement() {
     if (this.props.mapviewer_config.Download) return;
     if (this.view)
-      return <MeasurementWidget view={this.view} mapViewer={this} />;
+      return (
+        <MeasurementWidget
+          key={this.getWidgetRenderKey('measurement')}
+          view={this.view}
+          mapViewer={this}
+          viewMode={this.state.viewMode}
+        />
+      );
   }
 
   renderPrint() {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <PrintWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <PrintWidget
+          key={this.getWidgetRenderKey('print')}
+          view={this.view}
+          mapViewer={this}
+          viewMode={this.state.viewMode}
+        />
+      );
   }
 
   renderSwipe() {
@@ -919,6 +1405,7 @@ class MapViewer extends React.Component {
     if (this.view)
       return (
         <SwipeWidget
+          key={this.getWidgetRenderKey('swipe')}
           view={this.view}
           mapViewer={this}
           map={this.map}
@@ -928,7 +1415,14 @@ class MapViewer extends React.Component {
   }
   renderSearch() {
     if (this.props.mapviewer_config.Download) return;
-    if (this.view) return <SearchWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <SearchWidget
+          key={this.getWidgetRenderKey('search')}
+          view={this.view}
+          mapViewer={this}
+        />
+      );
   }
 
   renderArea() {
@@ -939,13 +1433,21 @@ class MapViewer extends React.Component {
   }
 
   renderScale() {
-    if (this.view) return <ScaleWidget view={this.view} mapViewer={this} />;
+    if (this.view)
+      return (
+        <ScaleWidget
+          key={this.getWidgetRenderKey('scale')}
+          view={this.view}
+          mapViewer={this}
+        />
+      );
   }
 
   renderInfo() {
     if (this.view)
       return (
         <InfoWidget
+          key={this.getWidgetRenderKey('info')}
           view={this.view}
           map={this.map}
           mapViewer={this}
@@ -956,13 +1458,21 @@ class MapViewer extends React.Component {
 
   renderPan() {
     if (this.view)
-      return <PanWidget view={this.view} map={this.map} mapViewer={this} />;
+      return (
+        <PanWidget
+          key={this.getWidgetRenderKey('pan')}
+          view={this.view}
+          map={this.map}
+          mapViewer={this}
+        />
+      );
   }
 
   renderHotspot() {
     if (this.view)
       return (
         <HotspotWidget
+          key={this.getWidgetRenderKey('hotspot')}
           view={this.view}
           map={this.map}
           selectedLayers={this.state.layers}
@@ -1023,7 +1533,11 @@ class MapViewer extends React.Component {
 
   renderLoadingSpinner() {
     return (
-      <LoadingSpinner view={this.view} layerLoading={this.state.layerLoading} />
+      <LoadingSpinner
+        key={this.getWidgetRenderKey('loading')}
+        view={this.view}
+        layerLoading={this.state.layerLoading}
+      />
     );
   }
 
@@ -1031,6 +1545,7 @@ class MapViewer extends React.Component {
     if (this.view)
       return (
         <UploadWidget
+          key={this.getWidgetRenderKey('upload')}
           mapviewer_config={this.props.mapviewer_config}
           view={this.view}
           map={this.map}
@@ -1045,7 +1560,44 @@ class MapViewer extends React.Component {
   }
   renderErrorReport() {
     if (this.view)
-      return <ErrorReportWidget view={this.view} mapViewer={this} />;
+      return (
+        <ErrorReportWidget
+          key={this.getWidgetRenderKey('error-report')}
+          view={this.view}
+          mapViewer={this}
+        />
+      );
+  }
+
+  renderViewModeSwitcher() {
+    if (!this.view) return null;
+
+    return (
+      <div className="viewmode-container esri-component esri-widget">
+        <div className="viewmode-button-group">
+          <button
+            className={classNames('viewmode-button', {
+              'active-widget': this.state.viewMode === '2d',
+            })}
+            onClick={() => this.switchViewMode('2d')}
+            type="button"
+            aria-label="Switch to 2D view"
+          >
+            2D
+          </button>
+          <button
+            className={classNames('viewmode-button', {
+              'active-widget': this.state.viewMode === '3d',
+            })}
+            onClick={() => this.switchViewMode('3d')}
+            type="button"
+            aria-label="Switch to 3D view"
+          >
+            3D
+          </button>
+        </div>
+      </div>
+    );
   }
   /**
    * This method renders the map viewer, invoking if necessary the methods
@@ -1057,31 +1609,35 @@ class MapViewer extends React.Component {
     // DOM element to be mounted (but not yet mounted)
     if ('loading' in this.props.mapviewer_config) {
       return (
-        <div className={this.mapClass}>
+        <div ref={this.mapContainer} className={this.mapClass}>
           <div ref={this.mapdiv} className="map" />
         </div>
       );
     } else {
       return (
-        <div className={this.mapClass}>
-          <div ref={this.mapdiv} className="map">
-            {this.appLanguage()}
-            {this.renderBasemap()}
-            {this.renderLegend()}
-            {this.renderMeasurement()}
-            {this.renderPrint()}
-            {this.renderSwipe()}
-            {this.renderSearch()}
-            {this.renderArea()}
-            {this.renderPan()}
-            {this.renderScale()}
-            {this.renderInfo()}
-            {this.renderHotspot()}
-            {this.renderLoadingSpinner()}
-            <CheckUserID reference={this} />
-            {this.renderUploadService()}
-            {this.renderErrorReport()}
-          </div>
+        <div ref={this.mapContainer} className={this.mapClass}>
+          <div ref={this.mapdiv} className="map" />
+          {this.appLanguage()}
+          {this.state.isWidgetRenderEnabled && (
+            <>
+              {this.renderBasemap()}
+              {this.renderLegend()}
+              {this.renderMeasurement()}
+              {this.renderPrint()}
+              {this.renderSwipe()}
+              {this.renderSearch()}
+              {this.renderViewModeSwitcher()}
+              {this.renderArea()}
+              {this.renderPan()}
+              {this.renderScale()}
+              {this.renderInfo()}
+              {this.renderHotspot()}
+              {this.renderLoadingSpinner()}
+              <CheckUserID reference={this} />
+              {this.renderUploadService()}
+              {this.renderErrorReport()}
+            </>
+          )}
         </div>
       );
     }
@@ -1096,6 +1652,7 @@ export const CheckLogin = ({ reference }) => {
     <>
       {isLoggedIn && (
         <AreaWidget
+          key={reference.getWidgetRenderKey('area')}
           view={reference.view}
           map={reference.map}
           mapViewer={reference}
@@ -1121,6 +1678,7 @@ export const CheckUserID = ({ reference }) => {
         <>
           {/* BookmarkWidget with user_id */}
           <BookmarkWidget
+            key={reference.getWidgetRenderKey('bookmark')}
             view={reference.view}
             map={reference.map}
             layers={reference.state.layers}
@@ -1134,6 +1692,7 @@ export const CheckUserID = ({ reference }) => {
 
           {/* MenuWidget with user_id */}
           <MenuWidget
+            key={reference.getWidgetRenderKey('menu')}
             location={reference.location}
             view={reference.view}
             conf={reference.props.mapviewer_config.Components}

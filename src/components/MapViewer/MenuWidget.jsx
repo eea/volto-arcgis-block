@@ -6397,21 +6397,17 @@ class MenuWidget extends React.Component {
     const latestLayer = JSON.parse(sessionStorage.getItem('TMSLayerObj'));
 
     if (latestLayer && BaseTileLayer) {
-      this.view.when(() => {
-        if (this.view.stationary) {
-          const { layer, checkboxId, dataset } = latestLayer;
-          this.processTMSLayer(checkboxId, layer, dataset);
-        }
-      });
+      if (this.view && this.view.ready && this.view.stationary) {
+        const { layer, checkboxId, dataset } = latestLayer;
+        this.processTMSLayer(checkboxId, layer, dataset);
+      }
     } else if (latestLayer) {
       // If we have a layer but BaseTileLayer isn't loaded yet, wait for it
       this.loader().then(() => {
-        this.view.when(() => {
-          if (this.view.stationary) {
-            const { layer, checkboxId, dataset } = latestLayer;
-            this.processTMSLayer(checkboxId, layer, dataset);
-          }
-        });
+        if (this.view && this.view.ready && this.view.stationary) {
+          const { layer, checkboxId, dataset } = latestLayer;
+          this.processTMSLayer(checkboxId, layer, dataset);
+        }
       });
     }
     this.setLegendOpacity();

@@ -22,6 +22,9 @@ class PanWidget extends React.Component {
   async componentDidMount() {
     if (!this.container.current) return;
     this.props.view.when(() => {
+      if (!this.container.current || !this.props.view || !this.props.view.ui) {
+        return;
+      }
       this.props.view.ui.add({
         component: this.container.current,
         position: 'top-right',

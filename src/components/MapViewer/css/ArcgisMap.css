@@ -101,6 +101,29 @@
   order: 8;
 }
 
+.viewmode-container {
+  display: flex;
+  padding: 0;
+}
+
+.viewmode-button-group {
+  display: flex;
+}
+
+.viewmode-button {
+  padding: 0.5rem 0.65rem;
+  border: 0;
+  background: white;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.viewmode-button + .viewmode-button {
+  border-left: 1px solid #dadada;
+}
+
 /* Basemap */
 .basemap-container {
   display: flex;
@@ -267,6 +290,13 @@
 .print-container .esri-print .esri-print__refresh-button:hover {
   background: none;
   color: #212529;
+}
+
+.print-panel-message {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
 }
 /* Bookmark*/
 .esri-bookmarks .esri-button {

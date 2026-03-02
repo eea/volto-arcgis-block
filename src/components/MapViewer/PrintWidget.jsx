@@ -26,6 +26,10 @@ class PrintWidget extends React.Component {
     this.scaleMax = 600000000;
   }
 
+  isThreeDimensionalView() {
+    return this.props.viewMode === '3d' || this.props.view?.type === '3d';
+  }
+
   loader() {
     return loadModules(['esri/widgets/Print']).then(([_Print]) => {
       Print = _Print;
@@ -83,14 +87,17 @@ class PrintWidget extends React.Component {
     if (!this.container.current) return;
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'top-right');
-      this.print = new Print({
-        view: this.props.view,
-        container: this.container.current.querySelector('.print-panel'),
-      });
+      if (!this.isThreeDimensionalView()) {
+        this.print = new Print({
+          view: this.props.view,
+          container: this.container.current.querySelector('.print-panel'),
+        });
+      }
     });
   }
 
   componentDidUpdate() {
+    if (this.isThreeDimensionalView()) return;
     this.setLayoutConstraints();
     this.setMapOnlyConstraints();
   }
@@ -273,7 +280,20 @@ class PrintWidget extends React.Component {
               ></span>
             </div>
             <div className="right-panel-content">
-              <div className="print-panel"></div>
+              {this.isThreeDimensionalView() ? (
+                <div className="print-panel print-panel-message">
+                  <span>Print is available only in 2D view.</span>
+                  <button
+                    className="ccl-button ccl-button-green"
+                    onClick={() => this.props.mapViewer.switchViewMode('2d')}
+                    type="button"
+                  >
+                    Switch to 2D
+                  </button>
+                </div>
+              ) : (
+                <div className="print-panel"></div>
+              )}
             </div>
           </div>
         </div>
