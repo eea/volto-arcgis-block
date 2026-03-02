@@ -347,7 +347,9 @@ class MapViewer extends React.Component {
       userServiceFile: null,
       uploadError: false,
       uploadErrorType: 'uploadError',
-      viewMode: this.normalizeViewMode(this.mapCfg.defaultViewMode),
+      viewMode: this.normalizeViewMode(
+        this.props.initialViewMode || this.mapCfg.defaultViewMode,
+      ),
       viewRevision: 0,
       isWidgetRenderEnabled: true,
       // Track current user state for comparison in componentDidUpdate
@@ -379,6 +381,7 @@ class MapViewer extends React.Component {
     this.viewTransitionTaskId = 0;
     this.isViewSwitchInProgress = false;
     this.syncViewTask = null;
+    this.viewUiOperationState = null;
   }
 
   normalizeViewMode(viewMode) {
@@ -523,7 +526,13 @@ class MapViewer extends React.Component {
   }
 
   syncViewWidgetContainers() {
-    if (!this.view || !this.view.ui) return;
+    if (
+      !this.view ||
+      !this.view.ui ||
+      this.isViewSwitchInProgress ||
+      !this.state.isWidgetRenderEnabled
+    )
+      return;
 
     const uiContainerConfig = [
       { selector: '.map-left-menu-container', position: 'top-left' },
@@ -543,11 +552,14 @@ class MapViewer extends React.Component {
     ];
 
     uiContainerConfig.forEach(({ selector, position }) => {
-      const containerNode = document.querySelector(selector);
-      if (!containerNode) return;
-      try {
-        this.view.ui.add(containerNode, position);
-      } catch (error) {}
+      const containerNodeList = document.querySelectorAll(selector);
+      if (!containerNodeList || containerNodeList.length === 0) return;
+      containerNodeList.forEach((containerNode) => {
+        if (!containerNode) return;
+        try {
+          this.view.ui.add(containerNode, position);
+        } catch (error) {}
+      });
     });
 
     const loaderNode = document.querySelector('#loader');
@@ -565,7 +577,12 @@ class MapViewer extends React.Component {
     }
 
     this.syncViewTask = requestAnimationFrame(() => {
-      if (!this.isComponentMounted || !this.view) {
+      if (
+        !this.isComponentMounted ||
+        !this.view ||
+        this.isViewSwitchInProgress ||
+        !this.state.isWidgetRenderEnabled
+      ) {
         return;
       }
       this.syncViewWidgetContainers();
@@ -603,6 +620,16 @@ class MapViewer extends React.Component {
       return;
     }
 
+    const resolveWidgetParentNode = (widgetNode) => {
+      if (
+        widgetNode &&
+        widgetNode.__mapViewerContainerParentNode instanceof Node
+      ) {
+        return widgetNode.__mapViewerContainerParentNode;
+      }
+      return mapContainerNode;
+    };
+
     const widgetSelectorList = [
       '.map-left-menu-container',
       '.search-container',
@@ -618,27 +645,36 @@ class MapViewer extends React.Component {
       '.bookmark-container',
       '.upload-container',
       '.error-report-container',
+      '.timeslider-container',
+      '.esri-swipe',
       '.viewmode-container',
       '#loader',
     ];
 
     widgetSelectorList.forEach((selector) => {
-      const widgetNode = document.querySelector(selector);
-      if (!widgetNode) {
+      const widgetNodeList = document.querySelectorAll(selector);
+      if (!widgetNodeList || widgetNodeList.length === 0) {
         return;
       }
 
-      try {
-        if (this.view && this.view.ui) {
-          this.view.ui.remove(widgetNode);
+      widgetNodeList.forEach((widgetNode) => {
+        if (!widgetNode) {
+          return;
         }
-      } catch (error) {}
 
-      if (widgetNode.parentNode !== mapContainerNode) {
         try {
-          mapContainerNode.appendChild(widgetNode);
+          if (this.view && this.view.ui) {
+            this.view.ui.remove(widgetNode);
+          }
         } catch (error) {}
-      }
+
+        const widgetParentNode = resolveWidgetParentNode(widgetNode);
+        if (widgetNode.parentNode !== widgetParentNode) {
+          try {
+            widgetParentNode.appendChild(widgetNode);
+          } catch (error) {}
+        }
+      });
     });
   }
 
@@ -663,6 +699,55 @@ class MapViewer extends React.Component {
         setTimeout(() => reject(new Error('view_ready_timeout')), timeoutMs);
       }),
     ]);
+  }
+
+  freezeViewUiOperations() {
+    if (
+      this.viewUiOperationState ||
+      !this.view ||
+      !this.view.ui ||
+      !this.view.ui.add ||
+      !this.view.ui.remove
+    ) {
+      return;
+    }
+
+    this.viewUiOperationState = {
+      viewUi: this.view.ui,
+      add: this.view.ui.add,
+      remove: this.view.ui.remove,
+    };
+
+    this.view.ui.add = () => {};
+    this.view.ui.remove = () => {};
+  }
+
+  restoreViewUiOperations() {
+    if (!this.viewUiOperationState) {
+      return;
+    }
+
+    const { viewUi, add, remove } = this.viewUiOperationState;
+    try {
+      if (viewUi) {
+        viewUi.add = add;
+        viewUi.remove = remove;
+      }
+    } catch (error) {}
+
+    this.viewUiOperationState = null;
+  }
+
+  async processWidgetTeardown() {
+    this.processWidgetShutdown();
+    this.reclaimWidgetNodesFromViewUi();
+    this.freezeViewUiOperations();
+    try {
+      await this.setWidgetRenderState(false);
+      await this.waitForRenderTask();
+      this.reclaimWidgetNodesFromViewUi();
+      await this.waitForRenderTask();
+    } catch (error) {}
   }
 
   async createView(
@@ -767,6 +852,17 @@ class MapViewer extends React.Component {
 
   async switchViewMode(nextViewMode) {
     const normalizedNextMode = this.normalizeViewMode(nextViewMode);
+
+    if (
+      normalizedNextMode === '2d' &&
+      this.state.viewMode === '3d' &&
+      this.props.requestViewRebuild
+    ) {
+      this.saveSessionToLocalStorage({ shouldClearSession: false });
+      this.props.requestViewRebuild(normalizedNextMode);
+      return;
+    }
+
     if (
       normalizedNextMode === this.state.viewMode ||
       !this.map ||
@@ -776,6 +872,11 @@ class MapViewer extends React.Component {
     }
 
     this.isViewSwitchInProgress = true;
+
+    if (this.syncViewTask) {
+      cancelAnimationFrame(this.syncViewTask);
+      this.syncViewTask = null;
+    }
 
     const transitionTaskId = this.viewTransitionTaskId + 1;
     this.viewTransitionTaskId = transitionTaskId;
@@ -794,12 +895,10 @@ class MapViewer extends React.Component {
       );
 
       this.saveSessionToLocalStorage({ shouldClearSession: false });
-      this.processWidgetShutdown();
-
-      this.reclaimWidgetNodesFromViewUi();
-      await this.setWidgetRenderState(false);
-      await this.waitForRenderTask();
+      await this.processWidgetTeardown();
+      this.saveSessionToLocalStorage({ shouldClearSession: false });
       this.disposeViewResource(true);
+      this.restoreViewUiOperations();
 
       let isViewCreated = await this.createView(
         normalizedNextMode,
@@ -845,6 +944,7 @@ class MapViewer extends React.Component {
         });
       }
     } finally {
+      this.restoreViewUiOperations();
       if (this.isComponentMounted && !this.state.isWidgetRenderEnabled) {
         this.setState({ isWidgetRenderEnabled: true });
       }
@@ -1299,6 +1399,7 @@ class MapViewer extends React.Component {
   componentWillUnmount() {
     this.isComponentMounted = false;
     this.viewTransitionTaskId += 1;
+    this.freezeViewUiOperations();
 
     if (this.syncViewTask) {
       cancelAnimationFrame(this.syncViewTask);
@@ -1315,7 +1416,9 @@ class MapViewer extends React.Component {
     // Save data using the extracted method
     this.saveSessionToLocalStorage();
 
+    this.reclaimWidgetNodesFromViewUi();
     this.disposeViewResource(true);
+    this.restoreViewUiOperations();
   }
 
   setWidgetState() {}
@@ -1773,6 +1876,8 @@ const mapDispatchToProps = (dispatch) => ({
 const MapViewerWithProvider = (props) => {
   const mapViewerRef = useRef(null);
   const cartState = useCartState();
+  const [mapViewerInstanceRevision, setMapViewerInstanceRevision] = useState(0);
+  const [initialViewMode, setInitialViewMode] = useState(null);
 
   // Get initial user state
   const initialUserState = {
@@ -1793,14 +1898,22 @@ const MapViewerWithProvider = (props) => {
     [],
   );
 
+  const handleViewRebuild = useCallback((nextViewMode) => {
+    setInitialViewMode(nextViewMode || null);
+    setMapViewerInstanceRevision((prevRevision) => prevRevision + 1);
+  }, []);
+
   return (
     <UserProvider>
       <UserStorageManager>
         <MapViewerStateMonitor onUserStateChange={handleUserStateChange}>
           <MapViewer
             {...props}
+            key={`map-viewer-${mapViewerInstanceRevision}`}
             ref={mapViewerRef}
             initialUserState={initialUserState}
+            initialViewMode={initialViewMode}
+            requestViewRebuild={handleViewRebuild}
           />
         </MapViewerStateMonitor>
       </UserStorageManager>

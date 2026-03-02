@@ -30,6 +30,82 @@ class SwipeWidget extends React.Component {
     this.prevActiveLayers = this.props.mapViewer.activeLayers
       ? this.props.mapViewer.activeLayers
       : [];
+    this._isMounted = false;
+    this.layerChangeHandle = null;
+  }
+
+  attachLayerChangeListener() {
+    if (this.layerChangeHandle || !this.map || !this.map.layers) {
+      return;
+    }
+    this.layerChangeHandle = this.map.layers.on('change', () => {
+      if (!this._isMounted) {
+        return;
+      }
+      this.loadOptions();
+      if (this.hasSwipe && this.swipe) {
+        this.map.layers.removeAll();
+        if (this.swipe.leadingLayers && this.swipe.leadingLayers.items[0]) {
+          this.map.layers.add(this.swipe.leadingLayers.items[0]);
+        }
+        if (this.swipe.trailingLayers && this.swipe.trailingLayers.items[0]) {
+          this.map.layers.add(this.swipe.trailingLayers.items[0]);
+        }
+      }
+    });
+  }
+
+  removeLayerChangeListener() {
+    if (this.layerChangeHandle && this.layerChangeHandle.remove) {
+      this.layerChangeHandle.remove();
+    }
+    this.layerChangeHandle = null;
+  }
+
+  cleanupSwipeResource() {
+    if (!this.swipe) {
+      return;
+    }
+
+    try {
+      if (this.swipe.leadingLayers) {
+        this.swipe.leadingLayers.removeAll();
+      }
+      if (this.swipe.trailingLayers) {
+        this.swipe.trailingLayers.removeAll();
+      }
+      if (this.props.view && this.props.view.ui) {
+        this.props.view.ui.remove(this.swipe);
+      }
+      this.swipe.destroy();
+    } catch (error) {}
+
+    this.hasSwipe = false;
+  }
+
+  cleanupSwipeState() {
+    if (!this.container.current) {
+      return;
+    }
+
+    const panelNode = this.container.current.querySelector('.right-panel');
+    if (panelNode && panelNode.style) {
+      panelNode.style.display = 'none';
+    }
+
+    const buttonNode = this.container.current.querySelector(
+      '.esri-widget--button',
+    );
+    if (buttonNode && buttonNode.classList) {
+      buttonNode.classList.remove('active-widget');
+    }
+
+    const topRightCornerNode = document.querySelector(
+      '.esri-ui-top-right.esri-ui-corner',
+    );
+    if (topRightCornerNode && topRightCornerNode.classList) {
+      topRightCornerNode.classList.remove('show-panel');
+    }
   }
 
   loader() {
@@ -44,22 +120,15 @@ class SwipeWidget extends React.Component {
    * and close actions of the component
    */
   openMenu() {
+    if (!this._isMounted) {
+      return;
+    }
     if (this.state.showMapMenu) {
       // CLOSE
       this.props.mapViewer.setActiveWidget();
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.remove('active-widget');
-      document
-        .querySelector('.esri-ui-top-right.esri-ui-corner')
-        .classList.remove('show-panel');
+      this.cleanupSwipeState();
       this.loadVisibleLayers();
-      this.swipe.leadingLayers.removeAll();
-      this.swipe.trailingLayers.removeAll();
-      this.props.view.ui.remove(this.swipe);
-      this.hasSwipe = false;
-      this.container.current.querySelector('.right-panel').style.display =
-        'none';
+      this.cleanupSwipeResource();
       this.setState({ showMapMenu: false });
     } else {
       // OPEN
@@ -75,18 +144,7 @@ class SwipeWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.loadOptions();
-      this.map.layers.on('change', () => {
-        this.loadOptions();
-        if (this.hasSwipe) {
-          this.map.layers.removeAll();
-          if (this.swipe.leadingLayers && this.swipe.leadingLayers.items[0]) {
-            this.map.layers.add(this.swipe.leadingLayers.items[0]);
-          }
-          if (this.swipe.trailingLayers && this.swipe.trailingLayers.items[0]) {
-            this.map.layers.add(this.swipe.trailingLayers.items[0]);
-          }
-        }
-      });
+      this.attachLayerChangeListener();
       this.setState({ showMapMenu: true });
     }
   }
@@ -94,9 +152,14 @@ class SwipeWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    this._isMounted = true;
     await this.loader();
     if (!this.container.current) return;
+    this.container.current.__mapViewerContainerParentNode = this.container.current.parentNode;
     this.props.view.when(() => {
+      if (!this._isMounted || !this.props.view || !this.props.view.ui) {
+        return;
+      }
       this.props.view.ui.add(this.container.current, 'top-right');
       this.swipe = new Swipe({
         view: this.props.view,
@@ -125,6 +188,19 @@ class SwipeWidget extends React.Component {
       }
     }
     this.prevActiveLayers = curr;
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+    this.removeLayerChangeListener();
+    this.cleanupSwipeState();
+    this.cleanupSwipeResource();
+
+    if (this.props.view && this.props.view.ui && this.container.current) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
   }
 
   getLayerTitle(layer) {
