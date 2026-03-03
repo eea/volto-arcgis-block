@@ -15,7 +15,9 @@ var Graphic,
   SimpleLineSymbol,
   SimpleFillSymbol,
   SpatialReference,
-  Polygon;
+  Polygon,
+  TextSymbol,
+  Point;
 
 class AreaWidget extends React.Component {
   /**
@@ -39,6 +41,12 @@ class AreaWidget extends React.Component {
         south: '',
         east: '',
         west: '',
+      },
+      areaCoordinates: {
+        originLat: '',
+        originLon: '',
+        cursorLat: '',
+        cursorLon: '',
       },
     };
     this.menuClass =
@@ -74,6 +82,8 @@ class AreaWidget extends React.Component {
       'esri/symbols/SimpleFillSymbol',
       'esri/geometry/SpatialReference',
       'esri/geometry/Polygon',
+      'esri/symbols/TextSymbol',
+      'esri/geometry/Point',
     ]).then(
       ([
         _Graphic,
@@ -89,6 +99,8 @@ class AreaWidget extends React.Component {
         _SimpleFillSymbol,
         _SpatialReference,
         _Polygon,
+        _TextSymbol,
+        _Point,
       ]) => {
         [
           Graphic,
@@ -104,6 +116,8 @@ class AreaWidget extends React.Component {
           SimpleFillSymbol,
           SpatialReference,
           Polygon,
+          TextSymbol,
+          Point,
         ] = [
           _Graphic,
           _Extent,
@@ -118,6 +132,8 @@ class AreaWidget extends React.Component {
           _SimpleFillSymbol,
           _SpatialReference,
           _Polygon,
+          _TextSymbol,
+          _Point,
         ];
       },
     );
@@ -922,12 +938,35 @@ class AreaWidget extends React.Component {
 
     let extentGraphic = null;
     let origin = null;
+    let originGraphic = null;
+    let cursorGraphic = null;
     const drawGraphics = this.props.view.on('drag', (e) => {
       if (this.props.mapViewer.pan_enabled) return;
       e.stopPropagation();
       if (e.action === 'start') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
+        if (originGraphic) this.props.view.graphics.remove(originGraphic);
         origin = this.props.view.toMap(e);
+        this.setState({
+          areaCoordinates: {
+            originLat: origin.latitude.toFixed(3),
+            originLon: origin.longitude.toFixed(3),
+          },
+        });
+        let originTextSymbol = new TextSymbol(
+          this.state.areaCoordinates.originLon +
+            ' , ' +
+            this.state.areaCoordinates.originLat,
+        );
+        originTextSymbol.horizontalAlignment = 'right';
+        originTextSymbol.verticalAlignment = 'bottom';
+        originTextSymbol.font.size = 8;
+        var point = new Point(
+          this.state.areaCoordinates.originLon,
+          this.state.areaCoordinates.originLat,
+        );
+        originGraphic = new Graphic(point, originTextSymbol);
+        this.props.view.graphics.add(originGraphic);
         if (extentGraphic && this.checkExtent(extentGraphic.geometry)) {
           this.setState({
             showInfoPopup: true,
@@ -963,7 +1002,16 @@ class AreaWidget extends React.Component {
         }
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
+        if (cursorGraphic) this.props.view.graphics.remove(cursorGraphic);
         let p = this.props.view.toMap(e);
+        this.setState({
+          areaCoordinates: {
+            originLat: this.state.areaCoordinates.originLat,
+            originLon: this.state.areaCoordinates.originLon,
+            cursorLat: p.latitude.toFixed(3),
+            cursorLon: p.longitude.toFixed(3),
+          },
+        });
         extentGraphic = new Graphic({
           geometry: new Extent({
             xmin: Math.min(p.x, origin.x),
@@ -1012,6 +1060,20 @@ class AreaWidget extends React.Component {
           end: { x: p.longitude, y: p.latitude },
         });
         this.props.view.graphics.add(extentGraphic);
+        let cursorTextSymbol = new TextSymbol(
+          this.state.areaCoordinates.cursorLon +
+            ' , ' +
+            this.state.areaCoordinates.cursorLat,
+        );
+        cursorTextSymbol.horizontalAlignment = 'left';
+        cursorTextSymbol.verticalAlignment = 'top';
+        cursorTextSymbol.font.size = 8;
+        var point2 = new Point(
+          this.state.areaCoordinates.cursorLon,
+          this.state.areaCoordinates.cursorLat,
+        );
+        cursorGraphic = new Graphic(point2, cursorTextSymbol);
+        this.props.view.graphics.add(cursorGraphic);
       }
     });
     this.setState({
