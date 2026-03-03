@@ -39,6 +39,7 @@ import { fetchCatalogApiDates } from '../../actions';
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent;
 let mapStatus = {};
+const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
 
 const CheckLanguage = () => {
   const { locale } = useIntl();
@@ -383,6 +384,42 @@ class MapViewer extends React.Component {
     this.syncViewTask = null;
     this.viewUiOperationState = null;
     this.shouldClearSessionOnUnmount = true;
+    this.processPendingWidgetActivation = this.processPendingWidgetActivation.bind(
+      this,
+    );
+  }
+
+  processPendingWidgetActivation() {
+    if (!this.view || this.view.type !== '2d') {
+      return;
+    }
+
+    const pendingWidget = sessionStorage.getItem(PENDING_WIDGET_ACTIVATION_KEY);
+    if (!pendingWidget) {
+      return;
+    }
+
+    let widgetButtonId = null;
+    if (pendingWidget === 'swipe') {
+      widgetButtonId = 'map_swipe_button';
+    } else if (pendingWidget === 'print') {
+      widgetButtonId = 'map_print_button';
+    }
+
+    if (!widgetButtonId) {
+      sessionStorage.removeItem(PENDING_WIDGET_ACTIVATION_KEY);
+      return;
+    }
+
+    const widgetButtonNode = document.getElementById(widgetButtonId);
+    if (!widgetButtonNode) {
+      return;
+    }
+
+    sessionStorage.removeItem(PENDING_WIDGET_ACTIVATION_KEY);
+    if (!widgetButtonNode.classList.contains('active-widget')) {
+      widgetButtonNode.click();
+    }
   }
 
   normalizeViewMode(viewMode) {
@@ -1360,6 +1397,10 @@ class MapViewer extends React.Component {
 
     // visibilitychange - catches tab switches and window minimizing
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+
+    requestAnimationFrame(() => {
+      this.processPendingWidgetActivation();
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -1403,6 +1444,8 @@ class MapViewer extends React.Component {
     if (prevState.viewMode !== this.state.viewMode) {
       this.scheduleViewSyncTask();
     }
+
+    this.processPendingWidgetActivation();
   }
 
   componentWillUnmount() {

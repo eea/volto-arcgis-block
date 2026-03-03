@@ -3,6 +3,7 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 var Swipe;
+const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
 
 class SwipeWidget extends React.Component {
   /**
@@ -114,6 +115,18 @@ class SwipeWidget extends React.Component {
     });
   }
 
+  isThreeDimensionalView() {
+    return this.props.viewMode === '3d' || this.props.view?.type === '3d';
+  }
+
+  isSwipeResourceReady() {
+    return !!(
+      this.swipe &&
+      this.swipe.leadingLayers &&
+      this.swipe.trailingLayers
+    );
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
@@ -121,6 +134,11 @@ class SwipeWidget extends React.Component {
    */
   openMenu() {
     if (!this._isMounted) {
+      return;
+    }
+    if (this.isThreeDimensionalView()) {
+      sessionStorage.setItem(PENDING_WIDGET_ACTIVATION_KEY, 'swipe');
+      this.props.mapViewer.switchViewMode('2d');
       return;
     }
     if (this.state.showMapMenu) {
@@ -143,7 +161,9 @@ class SwipeWidget extends React.Component {
         .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.loadOptions();
+      if (this.isSwipeResourceReady()) {
+        this.loadOptions();
+      }
       this.attachLayerChangeListener();
       this.setState({ showMapMenu: true });
     }
@@ -161,11 +181,16 @@ class SwipeWidget extends React.Component {
         return;
       }
       this.props.view.ui.add(this.container.current, 'top-right');
-      this.swipe = new Swipe({
-        view: this.props.view,
-        direction: 'horizontal',
-        position: 50,
-      });
+      if (!this.isThreeDimensionalView()) {
+        this.swipe = new Swipe({
+          view: this.props.view,
+          direction: 'horizontal',
+          position: 50,
+        });
+        if (this.state.showMapMenu) {
+          this.loadOptions();
+        }
+      }
     });
   }
 
@@ -178,7 +203,9 @@ class SwipeWidget extends React.Component {
       if (curr.length === 0) {
         sessionStorage.setItem('checkedLayers', JSON.stringify([]));
         this.map.layers.removeAll();
-        this.props.view.ui.remove(this.swipe);
+        if (this.swipe && this.props.view && this.props.view.ui) {
+          this.props.view.ui.remove(this.swipe);
+        }
         this.hasSwipe = false;
         this.resetSwipeWidgetToDefault();
         // this.openMenu(this);
@@ -220,6 +247,7 @@ class SwipeWidget extends React.Component {
   }
   loadOptions() {
     const layers = this.props.layers;
+    const isSwipeResourceReady = this.isSwipeResourceReady();
     var selectLeadingLayer = document.getElementById('select-leading-layer');
     if (selectLeadingLayer) {
       this.removeOptions(selectLeadingLayer);
@@ -293,7 +321,7 @@ class SwipeWidget extends React.Component {
           }
           if (selectLeadingLayer) {
             if (
-              this.swipe.leadingLayers &&
+              isSwipeResourceReady &&
               this.swipe.leadingLayers.items[0] &&
               this.swipe.leadingLayers.items[0].id === layerId
             ) {
@@ -313,7 +341,7 @@ class SwipeWidget extends React.Component {
           }
           if (selectTrailingLayer) {
             if (
-              this.swipe.trailingLayers &&
+              isSwipeResourceReady &&
               this.swipe.trailingLayers.items[0] &&
               this.swipe.trailingLayers.items[0].id === layerId
             ) {
@@ -372,6 +400,13 @@ class SwipeWidget extends React.Component {
     }
   }
   renderApplySwipeButton() {
+    if (
+      !this.isSwipeResourceReady() ||
+      !this.props.view ||
+      !this.props.view.ui
+    ) {
+      return;
+    }
     const layers = this.props.layers;
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);

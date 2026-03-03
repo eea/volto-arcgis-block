@@ -3,6 +3,7 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 var Print;
+const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
 
 class PrintWidget extends React.Component {
   /**
@@ -42,6 +43,12 @@ class PrintWidget extends React.Component {
    * and close actions of the component
    */
   openMenu() {
+    if (this.isThreeDimensionalView()) {
+      sessionStorage.setItem(PENDING_WIDGET_ACTIVATION_KEY, 'print');
+      this.props.mapViewer.switchViewMode('2d');
+      return;
+    }
+
     if (this.state.showMapMenu) {
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
@@ -280,20 +287,7 @@ class PrintWidget extends React.Component {
               ></span>
             </div>
             <div className="right-panel-content">
-              {this.isThreeDimensionalView() ? (
-                <div className="print-panel print-panel-message">
-                  <span>Print is available only in 2D view.</span>
-                  <button
-                    className="ccl-button ccl-button-green"
-                    onClick={() => this.props.mapViewer.switchViewMode('2d')}
-                    type="button"
-                  >
-                    Switch to 2D
-                  </button>
-                </div>
-              ) : (
-                <div className="print-panel"></div>
-              )}
+              <div className="print-panel"></div>
             </div>
           </div>
         </div>
