@@ -4,6 +4,7 @@ import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var Swipe;
 const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
+const PENDING_WIDGET_RETURN_KEY = 'mapViewerPendingWidgetReturn';
 
 class SwipeWidget extends React.Component {
   /**
@@ -138,16 +139,25 @@ class SwipeWidget extends React.Component {
     }
     if (this.isThreeDimensionalView()) {
       sessionStorage.setItem(PENDING_WIDGET_ACTIVATION_KEY, 'swipe');
+      sessionStorage.setItem(PENDING_WIDGET_RETURN_KEY, 'swipe');
       this.props.mapViewer.switchViewMode('2d');
       return;
     }
     if (this.state.showMapMenu) {
+      const shouldReturnToThreeDimensionalView =
+        sessionStorage.getItem(PENDING_WIDGET_RETURN_KEY) === 'swipe';
+      if (shouldReturnToThreeDimensionalView) {
+        sessionStorage.removeItem(PENDING_WIDGET_RETURN_KEY);
+      }
       // CLOSE
       this.props.mapViewer.setActiveWidget();
       this.cleanupSwipeState();
       this.loadVisibleLayers();
       this.cleanupSwipeResource();
       this.setState({ showMapMenu: false });
+      if (shouldReturnToThreeDimensionalView) {
+        this.props.mapViewer.switchViewMode('3d');
+      }
     } else {
       // OPEN
       this.props.mapViewer.setActiveWidget(this);

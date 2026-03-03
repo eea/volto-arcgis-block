@@ -4,6 +4,7 @@ import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 var Print;
 const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
+const PENDING_WIDGET_RETURN_KEY = 'mapViewerPendingWidgetReturn';
 
 class PrintWidget extends React.Component {
   /**
@@ -45,11 +46,17 @@ class PrintWidget extends React.Component {
   openMenu() {
     if (this.isThreeDimensionalView()) {
       sessionStorage.setItem(PENDING_WIDGET_ACTIVATION_KEY, 'print');
+      sessionStorage.setItem(PENDING_WIDGET_RETURN_KEY, 'print');
       this.props.mapViewer.switchViewMode('2d');
       return;
     }
 
     if (this.state.showMapMenu) {
+      const shouldReturnToThreeDimensionalView =
+        sessionStorage.getItem(PENDING_WIDGET_RETURN_KEY) === 'print';
+      if (shouldReturnToThreeDimensionalView) {
+        sessionStorage.removeItem(PENDING_WIDGET_RETURN_KEY);
+      }
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -62,6 +69,9 @@ class PrintWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
+      if (shouldReturnToThreeDimensionalView) {
+        this.props.mapViewer.switchViewMode('3d');
+      }
     } else {
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
