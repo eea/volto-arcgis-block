@@ -382,6 +382,7 @@ class MapViewer extends React.Component {
     this.isViewSwitchInProgress = false;
     this.syncViewTask = null;
     this.viewUiOperationState = null;
+    this.shouldClearSessionOnUnmount = true;
   }
 
   normalizeViewMode(viewMode) {
@@ -858,6 +859,14 @@ class MapViewer extends React.Component {
       this.state.viewMode === '3d' &&
       this.props.requestViewRebuild
     ) {
+      const currentViewState = this.getViewStateSnapshot();
+      if (currentViewState && currentViewState.center) {
+        this.setCenterState(currentViewState.center);
+      }
+      if (currentViewState && typeof currentViewState.zoom === 'number') {
+        this.setZoomState(currentViewState.zoom);
+      }
+      this.shouldClearSessionOnUnmount = false;
       this.saveSessionToLocalStorage({ shouldClearSession: false });
       this.props.requestViewRebuild(normalizedNextMode);
       return;
@@ -1414,7 +1423,10 @@ class MapViewer extends React.Component {
     );
 
     // Save data using the extracted method
-    this.saveSessionToLocalStorage();
+    this.saveSessionToLocalStorage({
+      shouldClearSession: this.shouldClearSessionOnUnmount,
+    });
+    this.shouldClearSessionOnUnmount = true;
 
     this.reclaimWidgetNodesFromViewUi();
     this.disposeViewResource(true);

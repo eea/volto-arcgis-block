@@ -3860,6 +3860,30 @@ class MenuWidget extends React.Component {
       this.findCheckedDatasetNoServiceToVisualize(elem);
     }
     if (this.layers[elem.id] === undefined) return;
+    const layerViewService =
+      this.layers[elem.id]?.ViewService || this.layers[elem.id]?.url || '';
+    const isSceneViewActive = this.view && this.view.type === '3d';
+    const evaluateWmtsLayer =
+      this.layers[elem.id]?.type === 'wmts' ||
+      layerViewService.toLowerCase().includes('wmts');
+    if (elem.checked && isSceneViewActive && evaluateWmtsLayer) {
+      elem.checked = false;
+      this.layers[elem.id].visible = false;
+      this.deleteCheckedLayer(elem.id);
+      delete this.activeLayersJSON[elem.id];
+      if (this.visibleLayers) {
+        delete this.visibleLayers[elem.id];
+      }
+      if (this.timeLayers) {
+        delete this.timeLayers[elem.id];
+      }
+      if (!this.props.download && this.props.hotspotData) {
+        this.activeLayersToHotspotData(elem.id);
+      }
+      this.renderHotspot();
+      this.url = null;
+      return;
+    }
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = !userService ? elem.getAttribute('parentid') : null;
@@ -4077,9 +4101,16 @@ class MenuWidget extends React.Component {
   }
 
   getHotspotLayerIds() {
+    if (!this.props.hotspotData || typeof this.props.hotspotData !== 'object') {
+      this.hotspotLayersIds = [];
+      return;
+    }
     let hotspotLayersIds = [];
     Object.keys(this.props.hotspotData).forEach((key) => {
       let dataset = this.props.hotspotData[key];
+      if (!dataset || typeof dataset !== 'object') {
+        return;
+      }
       Object.keys(dataset).forEach((layerKey) => {
         hotspotLayersIds.push(layerKey);
       });
@@ -4088,10 +4119,23 @@ class MenuWidget extends React.Component {
   }
 
   activeLayersToHotspotData(layerId) {
+    if (
+      !layerId ||
+      !this.layers ||
+      !this.props.hotspotData ||
+      typeof this.props.hotspotData !== 'object'
+    ) {
+      return;
+    }
     let layer = Object.entries(this.layers).find(
       ([key, value]) => key === layerId,
     )?.[1];
-    let hotspotLayersIds = this.hotspotLayersIds;
+    if (!layer) {
+      return;
+    }
+    let hotspotLayersIds = Array.isArray(this.hotspotLayersIds)
+      ? this.hotspotLayersIds
+      : [];
     let updatedActiveLayers = this.props.hotspotData['activeLayers'] || {};
     let newHotspotData = this.props.hotspotData;
 
@@ -4125,6 +4169,7 @@ class MenuWidget extends React.Component {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
     if (
+      checkedLayers &&
       checkedLayers.length === 0 &&
       sessionStorage.getItem('hotspotFilterApplied')
     ) {
