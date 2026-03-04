@@ -439,6 +439,18 @@ class MapViewer extends React.Component {
     });
   }
 
+  resolveSceneSpatialReference() {
+    const mapSpatialReference = this.map?.spatialReference;
+    if (mapSpatialReference) {
+      return mapSpatialReference;
+    }
+    const viewSpatialReference = this.view?.spatialReference;
+    if (viewSpatialReference) {
+      return viewSpatialReference;
+    }
+    return { wkid: 3857 };
+  }
+
   getViewStateSnapshot() {
     if (!this.view) {
       return {
@@ -829,6 +841,7 @@ class MapViewer extends React.Component {
       if (normalizedViewMode === '3d') {
         this.view = new SceneView({
           ...baseViewProperties,
+          spatialReference: this.resolveSceneSpatialReference(),
           constraints: {
             minZoom: this.mapCfg.minZoom,
             maxZoom: this.mapCfg.maxZoom,
