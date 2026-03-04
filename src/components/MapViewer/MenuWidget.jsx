@@ -548,6 +548,7 @@ class MenuWidget extends React.Component {
     this.getTaxonomy = this.props.getTaxonomy;
     this.tax = this.props.tax;
     this.uploadedGraphics = {};
+    this.wmtsSettingsData = {};
   }
 
   loader() {
@@ -2088,6 +2089,7 @@ class MenuWidget extends React.Component {
           url: viewService?.includes('?')
             ? viewService + '&'
             : viewService + '?',
+          spatialReference: this.view?.spatialReference,
           //id: layer.LayerId,
           title: '',
           _wmtsTitle: layer.Title, // CLMS-1105
@@ -2419,6 +2421,250 @@ class MenuWidget extends React.Component {
     } catch (e) {
       return '';
     }
+  }
+
+  resolveWmtsLayerData(layerData, selectionData) {
+    if (!Array.isArray(layerData) || layerData.length === 0) {
+      return null;
+    }
+    const selectionKeys = Object.keys(selectionData || {}).filter(Boolean);
+    if (!selectionKeys.length) {
+      return layerData[0];
+    }
+    const selectedId = selectionKeys[0];
+    const selectedLayerData = layerData.find((item) => item.id === selectedId);
+    return selectedLayerData || layerData[0];
+  }
+
+  validateSceneWmtsData(layerData, tileMatrixSetId, isSceneViewActive) {
+    if (!isSceneViewActive) {
+      return true;
+    }
+    return Boolean(layerData && layerData.id);
+  }
+
+  resolveSpatialReferenceData(spatialReference) {
+    if (!spatialReference) {
+      return null;
+    }
+    const wkid = Number(
+      spatialReference.latestWkid || spatialReference.wkid || NaN,
+    );
+    if (isFinite(wkid) && wkid > 0) {
+      if (wkid === 102100 || wkid === 900913) {
+        return 3857;
+      }
+      return wkid;
+    }
+    if (spatialReference.isWGS84) {
+      return 4326;
+    }
+    if (spatialReference.isWebMercator) {
+      return 3857;
+    }
+    return null;
+  }
+
+  resolveSpatialReferenceFromData(spatialReferenceData) {
+    if (!spatialReferenceData || typeof spatialReferenceData !== 'string') {
+      return null;
+    }
+    const upperData = spatialReferenceData.toUpperCase();
+    if (upperData.includes('CRS84')) {
+      return 4326;
+    }
+    const epsgMatch = upperData.match(/EPSG(?:::|:)(\d{4,6})/i);
+    if (epsgMatch && epsgMatch[1]) {
+      const wkid = Number(epsgMatch[1]);
+      if (wkid === 102100 || wkid === 900913) {
+        return 3857;
+      }
+      return isFinite(wkid) ? wkid : null;
+    }
+    const tailMatch = upperData.match(/[:/](\d{4,6})$/);
+    if (tailMatch && tailMatch[1]) {
+      const wkid = Number(tailMatch[1]);
+      if (wkid === 102100 || wkid === 900913) {
+        return 3857;
+      }
+      return isFinite(wkid) ? wkid : null;
+    }
+    return null;
+  }
+
+  evaluateWmtsContextData(xml, layerId) {
+    let doc = xml;
+    try {
+      if (!doc) {
+        return { matrixData: {}, linkData: [] };
+      }
+      if (typeof doc === 'string') {
+        const parser = new DOMParser();
+        doc = parser.parseFromString(doc, 'text/xml');
+      }
+
+      const matrixData = {};
+      const matrixNodeList = doc.querySelectorAll(
+        'Contents > TileMatrixSet, wmts\\:Contents > wmts\\:TileMatrixSet, TileMatrixSet',
+      );
+      matrixNodeList.forEach((matrixNode) => {
+        if (!matrixNode) {
+          return;
+        }
+        const identifierNode =
+          matrixNode.querySelector('ows\\:Identifier') ||
+          matrixNode.querySelector('Identifier') ||
+          matrixNode.querySelector('identifier');
+        const supportedNode =
+          matrixNode.querySelector('ows\\:SupportedCRS') ||
+          matrixNode.querySelector('SupportedCRS') ||
+          matrixNode.querySelector('supportedcrs');
+        const matrixId = identifierNode
+          ? (identifierNode.textContent || '').trim()
+          : '';
+        const spatialReferenceData = supportedNode
+          ? (supportedNode.textContent || '').trim()
+          : '';
+        const wkid = this.resolveSpatialReferenceFromData(spatialReferenceData);
+        if (matrixId && wkid) {
+          matrixData[matrixId] = wkid;
+        }
+      });
+
+      let selectedLayerNode = null;
+      const layerNodeList = doc.querySelectorAll('Layer, wmts\\:Layer, layer');
+      layerNodeList.forEach((layerNode) => {
+        if (selectedLayerNode || !layerNode) {
+          return;
+        }
+        const identifierNode =
+          layerNode.querySelector('ows\\:Identifier') ||
+          layerNode.querySelector('Identifier') ||
+          layerNode.querySelector('identifier');
+        const identifierData = identifierNode
+          ? (identifierNode.textContent || '').trim()
+          : '';
+        if (identifierData && identifierData === layerId) {
+          selectedLayerNode = layerNode;
+        }
+      });
+
+      if (!selectedLayerNode) {
+        return { matrixData, linkData: [] };
+      }
+
+      const linkData = [];
+      const linkNodeList = selectedLayerNode.querySelectorAll(
+        'TileMatrixSetLink > TileMatrixSet, wmts\\:TileMatrixSetLink > wmts\\:TileMatrixSet, TileMatrixSetLink wmts\\:TileMatrixSet, wmts\\:TileMatrixSetLink wmts\\:TileMatrixSet',
+      );
+      linkNodeList.forEach((linkNode) => {
+        const linkId = linkNode ? (linkNode.textContent || '').trim() : '';
+        if (linkId) {
+          linkData.push(linkId);
+        }
+      });
+
+      return { matrixData, linkData };
+    } catch (e) {
+      return { matrixData: {}, linkData: [] };
+    }
+  }
+
+  resolveWmtsSettingsData(xml, layerId, spatialReference) {
+    if (!layerId) {
+      return null;
+    }
+    const targetWkid = this.resolveSpatialReferenceData(spatialReference);
+    if (!targetWkid) {
+      return null;
+    }
+    const wmtsContextData = this.evaluateWmtsContextData(xml, layerId);
+    if (!wmtsContextData || !Array.isArray(wmtsContextData.linkData)) {
+      return null;
+    }
+    const matrixData = wmtsContextData.matrixData || {};
+    const linkData = wmtsContextData.linkData;
+    for (let index = 0; index < linkData.length; index += 1) {
+      const matrixId = linkData[index];
+      const matrixWkid = matrixData[matrixId];
+      if (!matrixWkid) {
+        continue;
+      }
+      if (matrixWkid === targetWkid) {
+        return matrixId;
+      }
+      if (
+        (matrixWkid === 3857 && targetWkid === 102100) ||
+        (matrixWkid === 102100 && targetWkid === 3857)
+      ) {
+        return matrixId;
+      }
+      if (
+        (matrixWkid === 4326 && targetWkid === 84) ||
+        (matrixWkid === 84 && targetWkid === 4326)
+      ) {
+        return matrixId;
+      }
+    }
+    return null;
+  }
+
+  async applyWmtsSettingsData(layer, spatialReference, isSceneViewActive) {
+    if (!layer || layer.type !== 'wmts') {
+      return true;
+    }
+    const activeLayerData = layer.activeLayer || {};
+    const layerId = activeLayerData.id;
+    if (!layerId) {
+      return !isSceneViewActive;
+    }
+
+    if (isSceneViewActive) {
+      if (spatialReference) {
+        layer.spatialReference = spatialReference;
+      }
+      if (activeLayerData.tileMatrixSetId) {
+        const { tileMatrixSetId, ...sceneActiveLayerData } = activeLayerData;
+        layer.activeLayer = sceneActiveLayerData;
+      }
+      return true;
+    }
+
+    const serviceData = layer.ViewService || layer.url || '';
+    if (!serviceData) {
+      return !isSceneViewActive;
+    }
+    const cacheData = serviceData + '::' + layerId;
+    let settingsData = this.wmtsSettingsData[cacheData];
+
+    if (!settingsData) {
+      this.xml = null;
+      await this.getCapabilities(serviceData, 'WMTS');
+      if (!this.xml) {
+        return !isSceneViewActive;
+      }
+      const tileMatrixSetId = this.resolveWmtsSettingsData(
+        this.xml,
+        layerId,
+        spatialReference,
+      );
+      settingsData = { tileMatrixSetId };
+      this.wmtsSettingsData[cacheData] = settingsData;
+    }
+
+    if (spatialReference) {
+      layer.spatialReference = spatialReference;
+    }
+
+    if (settingsData && settingsData.tileMatrixSetId) {
+      layer.activeLayer = {
+        ...activeLayerData,
+        tileMatrixSetId: settingsData.tileMatrixSetId,
+      };
+      return true;
+    }
+
+    return !isSceneViewActive;
   }
 
   resolveRequestConfig(xml) {
@@ -3043,16 +3289,48 @@ class MenuWidget extends React.Component {
         /\/(ows|ogc)(\b|\/)/i.test(baseUrl);
 
       if (serviceType === 'WMTS') {
+        this.xml = null;
         await this.getCapabilities(viewService, 'WMTS');
+        if (!this.xml) {
+          throw new Error('Unable to load WMTS capabilities');
+        }
         const wmtsLayers = this.parseWMTSLayers(this.xml);
-        const active = wmtsLayers && wmtsLayers.length ? wmtsLayers[0] : null;
+        const active = this.resolveWmtsLayerData(wmtsLayers, serviceSelection);
         const serviceTitle = this.parseWMTSServiceTitle(this.xml);
+        const isSceneViewActive = this.view && this.view.type === '3d';
+        const tileMatrixSetId = isSceneViewActive
+          ? null
+          : this.resolveWmtsSettingsData(
+              this.xml,
+              active ? active.id : null,
+              this.view?.spatialReference,
+            );
+        const isValidSceneWmtsData = this.validateSceneWmtsData(
+          active,
+          tileMatrixSetId,
+          isSceneViewActive,
+        );
+        if (!isValidSceneWmtsData) {
+          throw new Error(
+            'WMTS layer is not compatible with current SceneView',
+          );
+        }
         resourceLayers = [
           new WMTSLayer({
             url: rawUrl,
             title: serviceTitle || (active && active.title ? active.title : ''),
+            spatialReference: this.view?.spatialReference,
+            serviceMode: 'KVP',
             activeLayer: active
-              ? { id: active.id, title: active.title || active.id }
+              ? {
+                  id: active.id,
+                  title: active.title || active.id,
+                  ...(isSceneViewActive
+                    ? {}
+                    : tileMatrixSetId
+                    ? { tileMatrixSetId: tileMatrixSetId }
+                    : {}),
+                }
               : undefined,
             ViewService: rawUrl,
           }),
@@ -3149,16 +3427,25 @@ class MenuWidget extends React.Component {
       return;
     }
 
-    for (const resourceLayer of resourceLayers) {
-      const isDuplicate = this.state.wmsUserServiceLayers.some(
-        (layer) =>
-          layer.id === resourceLayer.id ||
-          layer.LayerId === resourceLayer.LayerId,
-      );
-      if (isDuplicate) {
-        continue;
-      }
+    const existingLayerIdData = new Set(
+      (this.state.wmsUserServiceLayers || [])
+        .map((layer) => layer && (layer.LayerId || layer.id))
+        .filter(Boolean),
+    );
+    const existingLayerSignatureData = new Set(
+      (this.state.wmsUserServiceLayers || [])
+        .map((layer) => {
+          const layerId = layer && (layer.LayerId || layer.id);
+          const layerServiceData = layer && layer.ViewService;
+          if (!layerId) {
+            return null;
+          }
+          return `${(layerServiceData || '').trim()}::${layerId}`;
+        })
+        .filter(Boolean),
+    );
 
+    for (const resourceLayer of resourceLayers) {
       try {
         if (typeof resourceLayer.load === 'function' && serviceType === 'WFS') {
           try {
@@ -3190,10 +3477,27 @@ class MenuWidget extends React.Component {
           resourceLayer.ViewService = (viewService || '').trim();
         }
 
-        const key = resourceLayer.LayerId;
+        const layerSignatureData = `${(
+          resourceLayer.ViewService || ''
+        ).trim()}::${resourceLayer.LayerId}`;
+        if (existingLayerSignatureData.has(layerSignatureData)) {
+          continue;
+        }
+
+        let key = resourceLayer.LayerId;
+        let keyIndex = 1;
+        while (existingLayerIdData.has(key)) {
+          key = `${resourceLayer.LayerId}_${keyIndex}`;
+          keyIndex += 1;
+        }
+        resourceLayer.LayerId = key;
+        resourceLayer.id = key;
+
         if (!this.layers[key]) {
           this.layers[key] = resourceLayer;
         }
+        existingLayerIdData.add(key);
+        existingLayerSignatureData.add(layerSignatureData);
 
         this.saveCheckedLayer(key);
 
@@ -3359,9 +3663,11 @@ class MenuWidget extends React.Component {
       const checkboxId = LayerId;
       const displayTitle = processTitleData(title || `Layer ${index + 1}`);
 
+      const serviceLayerKey = `${LayerId}_${index}`;
+
       return (
         <div
-          key={LayerId}
+          key={serviceLayerKey}
           className="map-menu-dataset-dropdown"
           id={'my-service-' + LayerId}
         >
@@ -3860,6 +4166,45 @@ class MenuWidget extends React.Component {
       this.findCheckedDatasetNoServiceToVisualize(elem);
     }
     if (this.layers[elem.id] === undefined) return;
+    const layerViewService =
+      this.layers[elem.id]?.ViewService || this.layers[elem.id]?.url || '';
+    const isSceneViewActive = this.view && this.view.type === '3d';
+    const evaluateWmtsLayer =
+      this.layers[elem.id]?.type === 'wmts' ||
+      layerViewService.toLowerCase().includes('wmts');
+    if (elem.checked && evaluateWmtsLayer) {
+      const canApplyWmtsSettings = await this.applyWmtsSettingsData(
+        this.layers[elem.id],
+        this.view?.spatialReference,
+        isSceneViewActive,
+      );
+      if (!canApplyWmtsSettings) {
+        elem.checked = false;
+        this.layers[elem.id].visible = false;
+        this.deleteCheckedLayer(elem.id);
+        delete this.activeLayersJSON[elem.id];
+        if (this.visibleLayers) {
+          delete this.visibleLayers[elem.id];
+        }
+        if (this.timeLayers) {
+          delete this.timeLayers[elem.id];
+        }
+        if (!this.props.download && this.props.hotspotData) {
+          this.activeLayersToHotspotData(elem.id);
+        }
+        this.renderHotspot();
+        this.url = null;
+        return;
+      }
+      if (isSceneViewActive && this.layers[elem.id]?.load) {
+        try {
+          await this.layers[elem.id].load();
+        } catch (error) {
+          this.processUnsupportedWmtsLayer(elem);
+          return;
+        }
+      }
+    }
     if (!this.visibleLayers) this.visibleLayers = {};
     if (!this.timeLayers) this.timeLayers = {};
     let parentId = !userService ? elem.getAttribute('parentid') : null;
@@ -3947,6 +4292,14 @@ class MenuWidget extends React.Component {
       } else {
         this.layers[elem.id].visible = true; //layer id
         this.map.add(this.layers[elem.id]);
+      }
+      if (isSceneViewActive && evaluateWmtsLayer) {
+        try {
+          await this.view.whenLayerView(this.layers[elem.id]);
+        } catch (error) {
+          this.processUnsupportedWmtsLayer(elem);
+          return;
+        }
       }
       this.visibleLayers[elem.id] = ['fas', 'eye'];
       this.timeLayers[elem.id] = ['far', 'clock'];
@@ -4076,10 +4429,46 @@ class MenuWidget extends React.Component {
     this.url = null;
   }
 
+  processUnsupportedWmtsLayer(elem) {
+    if (!elem || !this.layers || !this.layers[elem.id]) {
+      return;
+    }
+    elem.checked = false;
+    this.layers[elem.id].visible = false;
+    this.deleteCheckedLayer(elem.id);
+    const mapLayer = this.map ? this.map.findLayerById(elem.id) : null;
+    if (mapLayer) {
+      try {
+        this.map.remove(mapLayer);
+      } catch (error) {}
+    }
+    if (this.activeLayersJSON && this.activeLayersJSON[elem.id]) {
+      delete this.activeLayersJSON[elem.id];
+    }
+    if (this.visibleLayers && this.visibleLayers[elem.id]) {
+      delete this.visibleLayers[elem.id];
+    }
+    if (this.timeLayers && this.timeLayers[elem.id]) {
+      delete this.timeLayers[elem.id];
+    }
+    if (!this.props.download && this.props.hotspotData) {
+      this.activeLayersToHotspotData(elem.id);
+    }
+    this.renderHotspot();
+    this.url = null;
+  }
+
   getHotspotLayerIds() {
+    if (!this.props.hotspotData || typeof this.props.hotspotData !== 'object') {
+      this.hotspotLayersIds = [];
+      return;
+    }
     let hotspotLayersIds = [];
     Object.keys(this.props.hotspotData).forEach((key) => {
       let dataset = this.props.hotspotData[key];
+      if (!dataset || typeof dataset !== 'object') {
+        return;
+      }
       Object.keys(dataset).forEach((layerKey) => {
         hotspotLayersIds.push(layerKey);
       });
@@ -4088,10 +4477,23 @@ class MenuWidget extends React.Component {
   }
 
   activeLayersToHotspotData(layerId) {
+    if (
+      !layerId ||
+      !this.layers ||
+      !this.props.hotspotData ||
+      typeof this.props.hotspotData !== 'object'
+    ) {
+      return;
+    }
     let layer = Object.entries(this.layers).find(
       ([key, value]) => key === layerId,
     )?.[1];
-    let hotspotLayersIds = this.hotspotLayersIds;
+    if (!layer) {
+      return;
+    }
+    let hotspotLayersIds = Array.isArray(this.hotspotLayersIds)
+      ? this.hotspotLayersIds
+      : [];
     let updatedActiveLayers = this.props.hotspotData['activeLayers'] || {};
     let newHotspotData = this.props.hotspotData;
 
@@ -4125,6 +4527,7 @@ class MenuWidget extends React.Component {
       checkedLayers = Object.keys(this.activeLayersJSON);
     }
     if (
+      checkedLayers &&
       checkedLayers.length === 0 &&
       sessionStorage.getItem('hotspotFilterApplied')
     ) {
@@ -4961,23 +5364,60 @@ class MenuWidget extends React.Component {
     return BBoxes;
   }
 
-  getCapabilities = (url, serviceType) => {
-    // Get the coordinates of the click on the view
+  getCapabilities = async (url, serviceType) => {
     const proxiedUrl = this.buildProxiedUrl(url);
-    return esriRequest(proxiedUrl, {
-      responseType: 'text',
-      sync: 'true',
-      query: {
-        request: 'GetCapabilities',
-        service: serviceType,
-      },
-    })
-      .then((response) => {
-        const xmlDoc = response.data;
-        const parser = new DOMParser();
-        this.xml = parser.parseFromString(xmlDoc, 'text/xml');
-      })
-      .catch(() => {});
+    const evaluateXmlResponse = (responseData) => {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(responseData, 'text/xml');
+      if (!xmlDoc || !xmlDoc.documentElement) {
+        return null;
+      }
+      const nodeName = (xmlDoc.documentElement.nodeName || '').toLowerCase();
+      if (nodeName.includes('parsererror')) {
+        return null;
+      }
+      return xmlDoc;
+    };
+
+    const loadCapabilitiesResponse = async (requestData) => {
+      try {
+        const response = await esriRequest(proxiedUrl, requestData);
+        const xmlData = evaluateXmlResponse(response.data);
+        if (xmlData) {
+          return xmlData;
+        }
+      } catch (error) {}
+      return null;
+    };
+
+    const hasCapabilitiesEndpoint =
+      typeof proxiedUrl === 'string' &&
+      /wmtscapabilities\.xml/i.test(proxiedUrl);
+    let xmlData = null;
+
+    if (
+      serviceType &&
+      serviceType.toUpperCase() === 'WMTS' &&
+      hasCapabilitiesEndpoint
+    ) {
+      xmlData = await loadCapabilitiesResponse({
+        responseType: 'text',
+        sync: 'true',
+      });
+    }
+
+    if (!xmlData) {
+      xmlData = await loadCapabilitiesResponse({
+        responseType: 'text',
+        sync: 'true',
+        query: {
+          request: 'GetCapabilities',
+          service: serviceType,
+        },
+      });
+    }
+
+    this.xml = xmlData;
   };
 
   findBBoxById(obj, id) {
@@ -6397,21 +6837,17 @@ class MenuWidget extends React.Component {
     const latestLayer = JSON.parse(sessionStorage.getItem('TMSLayerObj'));
 
     if (latestLayer && BaseTileLayer) {
-      this.view.when(() => {
-        if (this.view.stationary) {
-          const { layer, checkboxId, dataset } = latestLayer;
-          this.processTMSLayer(checkboxId, layer, dataset);
-        }
-      });
+      if (this.view && this.view.ready && this.view.stationary) {
+        const { layer, checkboxId, dataset } = latestLayer;
+        this.processTMSLayer(checkboxId, layer, dataset);
+      }
     } else if (latestLayer) {
       // If we have a layer but BaseTileLayer isn't loaded yet, wait for it
       this.loader().then(() => {
-        this.view.when(() => {
-          if (this.view.stationary) {
-            const { layer, checkboxId, dataset } = latestLayer;
-            this.processTMSLayer(checkboxId, layer, dataset);
-          }
-        });
+        if (this.view && this.view.ready && this.view.stationary) {
+          const { layer, checkboxId, dataset } = latestLayer;
+          this.processTMSLayer(checkboxId, layer, dataset);
+        }
       });
     }
     this.setLegendOpacity();

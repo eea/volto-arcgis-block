@@ -3,6 +3,8 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 var Print;
+const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
+const PENDING_WIDGET_RETURN_KEY = 'mapViewerPendingWidgetReturn';
 
 class PrintWidget extends React.Component {
   /**
@@ -26,6 +28,10 @@ class PrintWidget extends React.Component {
     this.scaleMax = 600000000;
   }
 
+  isThreeDimensionalView() {
+    return this.props.viewMode === '3d' || this.props.view?.type === '3d';
+  }
+
   loader() {
     return loadModules(['esri/widgets/Print']).then(([_Print]) => {
       Print = _Print;
@@ -38,7 +44,19 @@ class PrintWidget extends React.Component {
    * and close actions of the component
    */
   openMenu() {
+    if (this.isThreeDimensionalView()) {
+      sessionStorage.setItem(PENDING_WIDGET_ACTIVATION_KEY, 'print');
+      sessionStorage.setItem(PENDING_WIDGET_RETURN_KEY, 'print');
+      this.props.mapViewer.switchViewMode('2d');
+      return;
+    }
+
     if (this.state.showMapMenu) {
+      const shouldReturnToThreeDimensionalView =
+        sessionStorage.getItem(PENDING_WIDGET_RETURN_KEY) === 'print';
+      if (shouldReturnToThreeDimensionalView) {
+        sessionStorage.removeItem(PENDING_WIDGET_RETURN_KEY);
+      }
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -51,6 +69,9 @@ class PrintWidget extends React.Component {
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
+      if (shouldReturnToThreeDimensionalView) {
+        this.props.mapViewer.switchViewMode('3d');
+      }
     } else {
       this.props.mapViewer.setActiveWidget(this);
       this.container.current.querySelector('.right-panel').style.display =
@@ -83,14 +104,17 @@ class PrintWidget extends React.Component {
     if (!this.container.current) return;
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'top-right');
-      this.print = new Print({
-        view: this.props.view,
-        container: this.container.current.querySelector('.print-panel'),
-      });
+      if (!this.isThreeDimensionalView()) {
+        this.print = new Print({
+          view: this.props.view,
+          container: this.container.current.querySelector('.print-panel'),
+        });
+      }
     });
   }
 
   componentDidUpdate() {
+    if (this.isThreeDimensionalView()) return;
     this.setLayoutConstraints();
     this.setMapOnlyConstraints();
   }

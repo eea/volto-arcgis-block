@@ -2,7 +2,7 @@ import React, { createRef } from 'react';
 //import "@arcgis/core/assets/esri/css/main.css";
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
-var Measurement;
+var Measurement, AreaMeasurement3D, DirectLineMeasurement3D;
 
 class MeasurementWidget extends React.Component {
   /**
@@ -18,9 +18,26 @@ class MeasurementWidget extends React.Component {
     this.state = { showMapMenu: false };
     this.menuClass =
       'esri-icon-measure esri-widget--button esri-widget esri-interactive';
+    this.measurement = null;
+    this.areaMeasurementWidget = null;
+    this.distanceMeasurementWidget = null;
+  }
+
+  isThreeDimensionalView() {
+    return this.props.viewMode === '3d' || this.props.view?.type === '3d';
   }
 
   loader() {
+    if (this.isThreeDimensionalView()) {
+      return loadModules([
+        'esri/widgets/AreaMeasurement3D',
+        'esri/widgets/DirectLineMeasurement3D',
+      ]).then(([_AreaMeasurement3D, _DirectLineMeasurement3D]) => {
+        AreaMeasurement3D = _AreaMeasurement3D;
+        DirectLineMeasurement3D = _DirectLineMeasurement3D;
+      });
+    }
+
     return loadModules(['esri/widgets/Measurement']).then(([_Measurement]) => {
       Measurement = _Measurement;
     });
@@ -110,9 +127,11 @@ class MeasurementWidget extends React.Component {
   }
 
   areaMeasurementHandler(e) {
-    e.currentTarget.nextElementSibling.appendChild(
-      document.querySelector('.measurement-area'),
-    );
+    if (!this.isThreeDimensionalView()) {
+      e.currentTarget.nextElementSibling.appendChild(
+        document.querySelector('.measurement-area'),
+      );
+    }
     this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
@@ -122,9 +141,11 @@ class MeasurementWidget extends React.Component {
   }
 
   distanceMeasurementHandler(e) {
-    e.currentTarget.nextElementSibling.appendChild(
-      document.querySelector('.measurement-area'),
-    );
+    if (!this.isThreeDimensionalView()) {
+      e.currentTarget.nextElementSibling.appendChild(
+        document.querySelector('.measurement-area'),
+      );
+    }
     this.toggleDropdownContent(e);
     this.clearMeasurements();
     this.clearCoordinates();
@@ -149,15 +170,52 @@ class MeasurementWidget extends React.Component {
   }
 
   areaMeasurement() {
-    this.measurement.activeTool = 'area';
+    if (this.isThreeDimensionalView()) {
+      if (this.areaMeasurementWidget) {
+        this.areaMeasurementWidget.visible = true;
+      }
+      if (this.distanceMeasurementWidget) {
+        this.distanceMeasurementWidget.visible = false;
+      }
+      return;
+    }
+
+    if (this.measurement) {
+      this.measurement.activeTool = 'area';
+    }
   }
 
   distanceMeasurement() {
-    this.measurement.activeTool = 'distance';
+    if (this.isThreeDimensionalView()) {
+      if (this.distanceMeasurementWidget) {
+        this.distanceMeasurementWidget.visible = true;
+      }
+      if (this.areaMeasurementWidget) {
+        this.areaMeasurementWidget.visible = false;
+      }
+      return;
+    }
+
+    if (this.measurement) {
+      this.measurement.activeTool = 'distance';
+    }
   }
 
   clearMeasurements() {
-    this.measurement.clear();
+    if (this.measurement && this.measurement.clear) {
+      this.measurement.clear();
+    }
+    if (this.areaMeasurementWidget && this.areaMeasurementWidget.clear) {
+      this.areaMeasurementWidget.clear();
+      this.areaMeasurementWidget.visible = false;
+    }
+    if (
+      this.distanceMeasurementWidget &&
+      this.distanceMeasurementWidget.clear
+    ) {
+      this.distanceMeasurementWidget.clear();
+      this.distanceMeasurementWidget.visible = false;
+    }
   }
 
   showCoordinates(pt) {
@@ -183,11 +241,46 @@ class MeasurementWidget extends React.Component {
     if (!this.container.current) return;
     this.props.view.when(() => {
       this.props.view.ui.add(this.container.current, 'top-right');
+
+      if (this.isThreeDimensionalView()) {
+        this.areaMeasurementWidget = new AreaMeasurement3D({
+          view: this.props.view,
+          container: this.container.current.querySelector('.measurement-area'),
+        });
+        this.areaMeasurementWidget.visible = false;
+
+        this.distanceMeasurementWidget = new DirectLineMeasurement3D({
+          view: this.props.view,
+          container: this.container.current.querySelector(
+            '.measurement-distance',
+          ),
+        });
+        this.distanceMeasurementWidget.visible = false;
+      } else {
+        this.measurement = new Measurement({
+          view: this.props.view,
+          container: this.container.current.querySelector('.measurement-area'),
+        });
+      }
     });
-    this.measurement = new Measurement({
-      view: this.props.view,
-      container: this.container.current.querySelector('.measurement-area'),
-    });
+  }
+
+  componentWillUnmount() {
+    if (this.state.ShowCoords) {
+      this.state.ShowCoords.remove();
+    }
+    if (this.measurement && this.measurement.destroy) {
+      this.measurement.destroy();
+    }
+    if (this.areaMeasurementWidget && this.areaMeasurementWidget.destroy) {
+      this.areaMeasurementWidget.destroy();
+    }
+    if (
+      this.distanceMeasurementWidget &&
+      this.distanceMeasurementWidget.destroy
+    ) {
+      this.distanceMeasurementWidget.destroy();
+    }
   }
   /**
    * This method renders the component
@@ -273,7 +366,9 @@ class MeasurementWidget extends React.Component {
                     <span>Distance measurement</span>
                     <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
                   </div>
-                  <div className="measurement-dropdown-container"></div>
+                  <div className="measurement-dropdown-container">
+                    <div className="measurement-distance"></div>
+                  </div>
                 </div>
                 <div className="measurement-dropdown" id="measurement_distance">
                   <div

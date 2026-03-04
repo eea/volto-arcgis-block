@@ -42,6 +42,8 @@ class UploadWidget extends React.Component {
     this.handleDrop = this.handleDrop.bind(this);
     this.handleAddClick = this.handleAddClick.bind(this);
     this.clearSelectedFile = this.clearSelectedFile.bind(this);
+    this.isComponentMounted = false;
+    this.infoPopupTimeout = null;
   }
 
   loader() {
@@ -596,11 +598,20 @@ class UploadWidget extends React.Component {
   };
 
   errorPopup = (popupType = 'uploadError') => {
+    if (!this.isComponentMounted) {
+      return;
+    }
     this.setState({
       showInfoPopup: true,
       infoPopupType: popupType,
     });
-    setTimeout(() => {
+    if (this.infoPopupTimeout) {
+      clearTimeout(this.infoPopupTimeout);
+    }
+    this.infoPopupTimeout = setTimeout(() => {
+      if (!this.isComponentMounted) {
+        return;
+      }
       this.setState({
         showInfoPopup: false,
         infoPopupType: '',
@@ -612,10 +623,18 @@ class UploadWidget extends React.Component {
    * This method is executed after the render method is executed
    */
   async componentDidMount() {
+    this.isComponentMounted = true;
     await this.loader();
+    if (!this.props.view || !this.props.view.when) {
+      return;
+    }
     this.props.view.when(() => {
-      this.container.current !== null &&
+      if (!this.isComponentMounted || !this.props.view || !this.props.view.ui) {
+        return;
+      }
+      if (this.container.current) {
         this.props.view.ui.add(this.container.current, 'top-right');
+      }
       //load an empty wms layer to use the variable
       const wmsLayer = new WMSLayer({
         url: '',
@@ -629,6 +648,9 @@ class UploadWidget extends React.Component {
         url: '',
         title: 'WFS Layer',
       });
+      if (!this.isComponentMounted) {
+        return;
+      }
       this.setState({
         wmsLayer: wmsLayer,
         wmtsLayer: wmtsLayer,
@@ -668,10 +690,20 @@ class UploadWidget extends React.Component {
   }
 
   componentWillUnmount() {
+    this.isComponentMounted = false;
+    if (this.infoPopupTimeout) {
+      clearTimeout(this.infoPopupTimeout);
+      this.infoPopupTimeout = null;
+    }
     window.removeEventListener('dragenter', this.handleWindowDragEnter);
     window.removeEventListener('dragover', this.handleWindowDragOver);
     window.removeEventListener('dragleave', this.handleWindowDragLeave);
     window.removeEventListener('drop', this.handleWindowDrop);
+    if (this.props.view && this.props.view.ui && this.container.current) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -799,8 +831,7 @@ class UploadWidget extends React.Component {
                       <label>
                         Service type
                         <select
-                          value={this.state.selectedServiceType}
-                          onChangeCapture={this.handleServiceTypeChange}
+                          defaultValue=""
                           onBlur={this.handleServiceTypeChange}
                         >
                           <option value="">Select a service</option>

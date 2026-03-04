@@ -58,6 +58,14 @@ class LoadingSpinner extends React.Component {
     //this.waitForContainer(this.props.view);
     if (!this.container.current) return;
     this.props.view.when(() => {
+      if (
+        !this._isMounted ||
+        !this.container.current ||
+        !this.props.view ||
+        !this.props.view.ui
+      ) {
+        return;
+      }
       this.props.view.ui.add(this.container.current, 'manual');
       this.listenForLayerChanges();
     });
@@ -65,6 +73,11 @@ class LoadingSpinner extends React.Component {
 
   componentWillUnmount() {
     this._isMounted = false;
+    if (this.props.view && this.props.view.ui && this.container.current) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
     if (this.arcgisEventHandles) {
       this.arcgisEventHandles.forEach(
         (handle) => handle && handle.remove && handle.remove(),

@@ -27,6 +27,7 @@ class BasemapWidget extends React.Component {
       'esri-icon-basemap esri-widget--button esri-widget esri-interactive';
     this.loadFirst = true;
     this.urls = this.props.urls;
+    this.isComponentMounted = false;
   }
 
   loader() {
@@ -120,7 +121,9 @@ class BasemapWidget extends React.Component {
       this.setState({ showMapMenu: false });
     } else {
       this.props.mapViewer.setActiveWidget(this);
-      this.basemapGallery.domNode.classList.add('basemap-gallery-container');
+      if (this.basemapGallery && this.basemapGallery.domNode) {
+        this.basemapGallery.domNode.classList.add('basemap-gallery-container');
+      }
       this.container.current.querySelector('.right-panel').style.display =
         'flex';
       this.container.current
@@ -140,6 +143,7 @@ class BasemapWidget extends React.Component {
 
   layerArray = [];
   async componentDidMount() {
+    this.isComponentMounted = true;
     await this.loader();
     if (!this.container.current) return;
 
@@ -242,10 +246,37 @@ class BasemapWidget extends React.Component {
       });
     }
     this.props.view.when(() => {
+      if (
+        !this.isComponentMounted ||
+        !this.container.current ||
+        !this.props.view ||
+        !this.props.view.ui
+      ) {
+        return;
+      }
       this.props.view.ui.add(this.container.current, 'top-right');
     });
-    document.querySelector('.esri-attribution__powered-by').style.display =
-      'none';
+    const poweredByNode = document.querySelector(
+      '.esri-attribution__powered-by',
+    );
+    if (poweredByNode && poweredByNode.style) {
+      poweredByNode.style.display = 'none';
+    }
+  }
+
+  componentWillUnmount() {
+    this.isComponentMounted = false;
+    if (this.props.view && this.props.view.ui && this.container.current) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
+    if (this.basemapGallery && this.basemapGallery.destroy) {
+      try {
+        this.basemapGallery.destroy();
+      } catch (error) {}
+    }
+    this.basemapGallery = null;
   }
   /**
    * This method renders the component
