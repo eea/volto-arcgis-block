@@ -1,6 +1,7 @@
 const config = {
   Map: {
     div: 'mapDiv',
+    defaultViewMode: '2d',
     center: [-15, 35],
     zoom: 3,
     minZoom: 2,

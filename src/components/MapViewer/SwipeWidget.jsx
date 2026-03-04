@@ -3,6 +3,8 @@ import React, { createRef } from 'react';
 //import "./css/ArcgisMap.css";
 import { loadModules } from 'esri-loader';
 var Swipe;
+const PENDING_WIDGET_ACTIVATION_KEY = 'mapViewerPendingWidgetActivation';
+const PENDING_WIDGET_RETURN_KEY = 'mapViewerPendingWidgetReturn';
 
 class SwipeWidget extends React.Component {
   /**
@@ -30,6 +32,82 @@ class SwipeWidget extends React.Component {
     this.prevActiveLayers = this.props.mapViewer.activeLayers
       ? this.props.mapViewer.activeLayers
       : [];
+    this._isMounted = false;
+    this.layerChangeHandle = null;
+  }
+
+  attachLayerChangeListener() {
+    if (this.layerChangeHandle || !this.map || !this.map.layers) {
+      return;
+    }
+    this.layerChangeHandle = this.map.layers.on('change', () => {
+      if (!this._isMounted) {
+        return;
+      }
+      this.loadOptions();
+      if (this.hasSwipe && this.swipe) {
+        this.map.layers.removeAll();
+        if (this.swipe.leadingLayers && this.swipe.leadingLayers.items[0]) {
+          this.map.layers.add(this.swipe.leadingLayers.items[0]);
+        }
+        if (this.swipe.trailingLayers && this.swipe.trailingLayers.items[0]) {
+          this.map.layers.add(this.swipe.trailingLayers.items[0]);
+        }
+      }
+    });
+  }
+
+  removeLayerChangeListener() {
+    if (this.layerChangeHandle && this.layerChangeHandle.remove) {
+      this.layerChangeHandle.remove();
+    }
+    this.layerChangeHandle = null;
+  }
+
+  cleanupSwipeResource() {
+    if (!this.swipe) {
+      return;
+    }
+
+    try {
+      if (this.swipe.leadingLayers) {
+        this.swipe.leadingLayers.removeAll();
+      }
+      if (this.swipe.trailingLayers) {
+        this.swipe.trailingLayers.removeAll();
+      }
+      if (this.props.view && this.props.view.ui) {
+        this.props.view.ui.remove(this.swipe);
+      }
+      this.swipe.destroy();
+    } catch (error) {}
+
+    this.hasSwipe = false;
+  }
+
+  cleanupSwipeState() {
+    if (!this.container.current) {
+      return;
+    }
+
+    const panelNode = this.container.current.querySelector('.right-panel');
+    if (panelNode && panelNode.style) {
+      panelNode.style.display = 'none';
+    }
+
+    const buttonNode = this.container.current.querySelector(
+      '.esri-widget--button',
+    );
+    if (buttonNode && buttonNode.classList) {
+      buttonNode.classList.remove('active-widget');
+    }
+
+    const topRightCornerNode = document.querySelector(
+      '.esri-ui-top-right.esri-ui-corner',
+    );
+    if (topRightCornerNode && topRightCornerNode.classList) {
+      topRightCornerNode.classList.remove('show-panel');
+    }
   }
 
   loader() {
@@ -38,29 +116,48 @@ class SwipeWidget extends React.Component {
     });
   }
 
+  isThreeDimensionalView() {
+    return this.props.viewMode === '3d' || this.props.view?.type === '3d';
+  }
+
+  isSwipeResourceReady() {
+    return !!(
+      this.swipe &&
+      this.swipe.leadingLayers &&
+      this.swipe.trailingLayers
+    );
+  }
+
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
    * and close actions of the component
    */
   openMenu() {
+    if (!this._isMounted) {
+      return;
+    }
+    if (this.isThreeDimensionalView()) {
+      sessionStorage.setItem(PENDING_WIDGET_ACTIVATION_KEY, 'swipe');
+      sessionStorage.setItem(PENDING_WIDGET_RETURN_KEY, 'swipe');
+      this.props.mapViewer.switchViewMode('2d');
+      return;
+    }
     if (this.state.showMapMenu) {
+      const shouldReturnToThreeDimensionalView =
+        sessionStorage.getItem(PENDING_WIDGET_RETURN_KEY) === 'swipe';
+      if (shouldReturnToThreeDimensionalView) {
+        sessionStorage.removeItem(PENDING_WIDGET_RETURN_KEY);
+      }
       // CLOSE
       this.props.mapViewer.setActiveWidget();
-      this.container.current
-        .querySelector('.esri-widget--button')
-        .classList.remove('active-widget');
-      document
-        .querySelector('.esri-ui-top-right.esri-ui-corner')
-        .classList.remove('show-panel');
+      this.cleanupSwipeState();
       this.loadVisibleLayers();
-      this.swipe.leadingLayers.removeAll();
-      this.swipe.trailingLayers.removeAll();
-      this.props.view.ui.remove(this.swipe);
-      this.hasSwipe = false;
-      this.container.current.querySelector('.right-panel').style.display =
-        'none';
+      this.cleanupSwipeResource();
       this.setState({ showMapMenu: false });
+      if (shouldReturnToThreeDimensionalView) {
+        this.props.mapViewer.switchViewMode('3d');
+      }
     } else {
       // OPEN
       this.props.mapViewer.setActiveWidget(this);
@@ -74,19 +171,10 @@ class SwipeWidget extends React.Component {
         .classList.add('show-panel');
       // By invoking the setState, we notify the state we want to reach
       // and ensure that the component is rendered again
-      this.loadOptions();
-      this.map.layers.on('change', () => {
+      if (this.isSwipeResourceReady()) {
         this.loadOptions();
-        if (this.hasSwipe) {
-          this.map.layers.removeAll();
-          if (this.swipe.leadingLayers && this.swipe.leadingLayers.items[0]) {
-            this.map.layers.add(this.swipe.leadingLayers.items[0]);
-          }
-          if (this.swipe.trailingLayers && this.swipe.trailingLayers.items[0]) {
-            this.map.layers.add(this.swipe.trailingLayers.items[0]);
-          }
-        }
-      });
+      }
+      this.attachLayerChangeListener();
       this.setState({ showMapMenu: true });
     }
   }
@@ -94,15 +182,25 @@ class SwipeWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    this._isMounted = true;
     await this.loader();
     if (!this.container.current) return;
+    this.container.current.__mapViewerContainerParentNode = this.container.current.parentNode;
     this.props.view.when(() => {
+      if (!this._isMounted || !this.props.view || !this.props.view.ui) {
+        return;
+      }
       this.props.view.ui.add(this.container.current, 'top-right');
-      this.swipe = new Swipe({
-        view: this.props.view,
-        direction: 'horizontal',
-        position: 50,
-      });
+      if (!this.isThreeDimensionalView()) {
+        this.swipe = new Swipe({
+          view: this.props.view,
+          direction: 'horizontal',
+          position: 50,
+        });
+        if (this.state.showMapMenu) {
+          this.loadOptions();
+        }
+      }
     });
   }
 
@@ -115,7 +213,9 @@ class SwipeWidget extends React.Component {
       if (curr.length === 0) {
         sessionStorage.setItem('checkedLayers', JSON.stringify([]));
         this.map.layers.removeAll();
-        this.props.view.ui.remove(this.swipe);
+        if (this.swipe && this.props.view && this.props.view.ui) {
+          this.props.view.ui.remove(this.swipe);
+        }
         this.hasSwipe = false;
         this.resetSwipeWidgetToDefault();
         // this.openMenu(this);
@@ -125,6 +225,19 @@ class SwipeWidget extends React.Component {
       }
     }
     this.prevActiveLayers = curr;
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+    this.removeLayerChangeListener();
+    this.cleanupSwipeState();
+    this.cleanupSwipeResource();
+
+    if (this.props.view && this.props.view.ui && this.container.current) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
   }
 
   getLayerTitle(layer) {
@@ -144,6 +257,7 @@ class SwipeWidget extends React.Component {
   }
   loadOptions() {
     const layers = this.props.layers;
+    const isSwipeResourceReady = this.isSwipeResourceReady();
     var selectLeadingLayer = document.getElementById('select-leading-layer');
     if (selectLeadingLayer) {
       this.removeOptions(selectLeadingLayer);
@@ -217,7 +331,7 @@ class SwipeWidget extends React.Component {
           }
           if (selectLeadingLayer) {
             if (
-              this.swipe.leadingLayers &&
+              isSwipeResourceReady &&
               this.swipe.leadingLayers.items[0] &&
               this.swipe.leadingLayers.items[0].id === layerId
             ) {
@@ -237,7 +351,7 @@ class SwipeWidget extends React.Component {
           }
           if (selectTrailingLayer) {
             if (
-              this.swipe.trailingLayers &&
+              isSwipeResourceReady &&
               this.swipe.trailingLayers.items[0] &&
               this.swipe.trailingLayers.items[0].id === layerId
             ) {
@@ -296,6 +410,13 @@ class SwipeWidget extends React.Component {
     }
   }
   renderApplySwipeButton() {
+    if (
+      !this.isSwipeResourceReady() ||
+      !this.props.view ||
+      !this.props.view.ui
+    ) {
+      return;
+    }
     const layers = this.props.layers;
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);

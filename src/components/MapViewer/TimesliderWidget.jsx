@@ -58,6 +58,23 @@ class TimesliderWidget extends React.Component {
     this._watchHandles = [];
     this._isMounted = false;
     this._closeHandler = null;
+    this.containerParentNode = null;
+  }
+
+  restoreContainerContext() {
+    if (
+      !this.container ||
+      !this.container.current ||
+      !this.containerParentNode
+    ) {
+      return;
+    }
+    if (this.container.current.parentNode === this.containerParentNode) {
+      return;
+    }
+    try {
+      this.containerParentNode.appendChild(this.container.current);
+    } catch (e) {}
   }
 
   loader() {
@@ -348,6 +365,13 @@ class TimesliderWidget extends React.Component {
    */
   async componentDidMount() {
     this._isMounted = true;
+    this.containerParentNode =
+      this.container && this.container.current
+        ? this.container.current.parentNode
+        : null;
+    if (this.container && this.container.current) {
+      this.container.current.__mapViewerContainerParentNode = this.containerParentNode;
+    }
     await this.loader();
     let playRateValue =
       this.layer.ProductId === '8474c3b080fa42cc837f1d2338fcf096' ? 4000 : 1000;
@@ -678,6 +702,7 @@ class TimesliderWidget extends React.Component {
         this.props.view.ui.remove(this.container.current);
       }
     } catch (e) {}
+    this.restoreContainerContext();
     try {
       if (this.TimesliderWidget) {
         this.TimesliderWidget.stop();

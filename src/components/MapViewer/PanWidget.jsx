@@ -14,14 +14,25 @@ class PanWidget extends React.Component {
     this.state = {};
     this.PIXELS_TO_PAN = 50;
     this.props.mapViewer.pan_enabled = false;
+    this.isComponentMounted = false;
   }
 
   /**
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    this.isComponentMounted = true;
     if (!this.container.current) return;
+    if (!this.props.view || !this.props.view.when) return;
     this.props.view.when(() => {
+      if (
+        !this.isComponentMounted ||
+        !this.container.current ||
+        !this.props.view ||
+        !this.props.view.ui
+      ) {
+        return;
+      }
       this.props.view.ui.add({
         component: this.container.current,
         position: 'top-right',
@@ -30,11 +41,23 @@ class PanWidget extends React.Component {
     });
   }
 
+  componentWillUnmount() {
+    this.isComponentMounted = false;
+    if (this.props.view && this.props.view.ui && this.container.current) {
+      try {
+        this.props.view.ui.remove(this.container.current);
+      } catch (error) {}
+    }
+  }
+
   togglePan() {
     this.props.mapViewer.pan_enabled = !this.props.mapViewer.pan_enabled;
     let pan_toogle_button = window.document.querySelector(
       '#pan_toogle_button>span',
     );
+    if (!pan_toogle_button) {
+      return;
+    }
     if (this.props.mapViewer.pan_enabled) {
       pan_toogle_button.classList.add('active-widget');
     } else {
@@ -42,24 +65,28 @@ class PanWidget extends React.Component {
     }
   }
   async moveUp() {
+    if (!this.props.mapViewer.view) return;
     let center = this.props.mapViewer.view.center;
     let resolution = this.props.mapViewer.view.resolution;
     center.y += resolution * this.PIXELS_TO_PAN;
     await this.props.mapViewer.view.goTo({ target: center });
   }
   async moveDown() {
+    if (!this.props.mapViewer.view) return;
     let center = this.props.mapViewer.view.center;
     let resolution = this.props.mapViewer.view.resolution;
     center.y -= resolution * this.PIXELS_TO_PAN;
     await this.props.mapViewer.view.goTo({ target: center });
   }
   async moveLeft() {
+    if (!this.props.mapViewer.view) return;
     let center = this.props.mapViewer.view.center;
     let resolution = this.props.mapViewer.view.resolution;
     center.x -= resolution * this.PIXELS_TO_PAN;
     await this.props.mapViewer.view.goTo({ target: center });
   }
   async moveRight() {
+    if (!this.props.mapViewer.view) return;
     let center = this.props.mapViewer.view.center;
     let resolution = this.props.mapViewer.view.resolution;
     center.x += resolution * this.PIXELS_TO_PAN;
