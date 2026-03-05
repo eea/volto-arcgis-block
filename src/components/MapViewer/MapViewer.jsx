@@ -1876,20 +1876,18 @@ export const CheckUserID = ({ reference }) => {
       {reference.view && (
         <>
           {/* BookmarkWidget with user_id */}
-          {reference.view.type === '2d' && (
-            <BookmarkWidget
-              key={reference.getWidgetRenderKey('bookmark')}
-              view={reference.view}
-              map={reference.map}
-              layers={reference.state.layers}
-              mapViewer={reference}
-              userID={user_id}
-              hotspotData={reference.state.hotspotData}
-              bookmarkHandler={reference.bookmarkHandler}
-              bookmarkData={reference.state.bookmarkData}
-              isLoggedIn={isLoggedIn}
-            />
-          )}
+          <BookmarkWidget
+            key={reference.getWidgetRenderKey('bookmark')}
+            view={reference.view}
+            map={reference.map}
+            layers={reference.state.layers}
+            mapViewer={reference}
+            userID={user_id}
+            hotspotData={reference.state.hotspotData}
+            bookmarkHandler={reference.bookmarkHandler}
+            bookmarkData={reference.state.bookmarkData}
+            isLoggedIn={isLoggedIn}
+          />
 
           {/* MenuWidget with user_id */}
           <MenuWidget
