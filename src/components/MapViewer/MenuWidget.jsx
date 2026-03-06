@@ -2613,36 +2613,44 @@ class MenuWidget extends React.Component {
     if (!layer || layer.type !== 'wmts') {
       return true;
     }
-    const activeLayerData = layer.activeLayer || {};
-    const layerId = activeLayerData.id;
-    if (!layerId) {
+    const serviceData = layer.ViewService || layer.url || '';
+    if (!serviceData) {
       return !isSceneViewActive;
     }
+    const activeLayerData = layer.activeLayer || {};
+    let layerId = activeLayerData.id;
+
+    this.xml = null;
+    await this.getCapabilities(serviceData, 'WMTS');
+    if (!this.xml) {
+      return !isSceneViewActive;
+    }
+    const wmtsLayersData = this.parseWMTSLayers(this.xml);
+    const selectedWmtsLayerData = this.resolveWmtsLayerData(
+      wmtsLayersData,
+      layerId ? { [layerId]: true } : {},
+    );
+    if (!selectedWmtsLayerData || !selectedWmtsLayerData.id) {
+      return !isSceneViewActive;
+    }
+    layerId = selectedWmtsLayerData.id;
+    const reconciledActiveLayerData = {
+      id: selectedWmtsLayerData.id,
+      title: selectedWmtsLayerData.title || selectedWmtsLayerData.id,
+    };
 
     if (isSceneViewActive) {
       if (spatialReference) {
         layer.spatialReference = spatialReference;
       }
-      if (activeLayerData.tileMatrixSetId) {
-        const { tileMatrixSetId, ...sceneActiveLayerData } = activeLayerData;
-        layer.activeLayer = sceneActiveLayerData;
-      }
+      layer.activeLayer = reconciledActiveLayerData;
       return true;
     }
 
-    const serviceData = layer.ViewService || layer.url || '';
-    if (!serviceData) {
-      return !isSceneViewActive;
-    }
     const cacheData = serviceData + '::' + layerId;
     let settingsData = this.wmtsSettingsData[cacheData];
 
     if (!settingsData) {
-      this.xml = null;
-      await this.getCapabilities(serviceData, 'WMTS');
-      if (!this.xml) {
-        return !isSceneViewActive;
-      }
       const tileMatrixSetId = this.resolveWmtsSettingsData(
         this.xml,
         layerId,
@@ -2658,13 +2666,96 @@ class MenuWidget extends React.Component {
 
     if (settingsData && settingsData.tileMatrixSetId) {
       layer.activeLayer = {
-        ...activeLayerData,
+        ...reconciledActiveLayerData,
         tileMatrixSetId: settingsData.tileMatrixSetId,
       };
       return true;
     }
 
+    layer.activeLayer = reconciledActiveLayerData;
+
     return !isSceneViewActive;
+  }
+
+  resolveWmtsActiveLayerData(layerData) {
+    if (!layerData || typeof layerData !== 'object') {
+      return null;
+    }
+    const activeLayerData = layerData.activeLayer;
+    if (!activeLayerData || typeof activeLayerData !== 'object') {
+      return null;
+    }
+    const activeLayerId =
+      typeof activeLayerData.id === 'string' ? activeLayerData.id.trim() : '';
+    if (!activeLayerId) {
+      return null;
+    }
+    const activeLayerTitle =
+      typeof activeLayerData.title === 'string' && activeLayerData.title.trim()
+        ? activeLayerData.title.trim()
+        : activeLayerId;
+    return {
+      id: activeLayerId,
+      title: activeLayerTitle,
+    };
+  }
+
+  refreshWmtsLayerData(layerId) {
+    if (!layerId || !this.layers || !this.layers[layerId] || !WMTSLayer) {
+      return false;
+    }
+    const currentLayerData = this.layers[layerId];
+    if (currentLayerData.type !== 'wmts') {
+      return false;
+    }
+    const activeLayerData = this.resolveWmtsActiveLayerData(currentLayerData);
+    if (!activeLayerData) {
+      return false;
+    }
+
+    const nextLayerData = new WMTSLayer({
+      id: currentLayerData.id || layerId,
+      url: currentLayerData.url,
+      title: currentLayerData.title || '',
+      _wmtsTitle: currentLayerData._wmtsTitle,
+      serviceMode: currentLayerData.serviceMode || 'KVP',
+      spatialReference:
+        this.view?.spatialReference || currentLayerData.spatialReference,
+      activeLayer: activeLayerData,
+      ViewService: currentLayerData.ViewService || currentLayerData.url,
+      customLayerParameters: currentLayerData.customLayerParameters || {
+        SHOWLOGO: false,
+      },
+    });
+
+    const customKeys = [
+      'isTimeSeries',
+      'fields',
+      'DatasetId',
+      'DatasetTitle',
+      'ProductId',
+      'StaticImageLegend',
+      'LayerTitle',
+      'DatasetDownloadInformation',
+      'datasetDownloadInformation',
+      'ServiceDataUrl',
+      'LayerId',
+      'featureInfoUrl',
+    ];
+
+    customKeys.forEach((key) => {
+      if (currentLayerData[key] !== undefined) {
+        nextLayerData[key] = currentLayerData[key];
+      }
+    });
+
+    if (typeof currentLayerData.opacity === 'number') {
+      nextLayerData.opacity = currentLayerData.opacity;
+    }
+    nextLayerData.visible = Boolean(currentLayerData.visible);
+
+    this.layers[layerId] = nextLayerData;
+    return true;
   }
 
   resolveRequestConfig(xml) {
@@ -4173,6 +4264,7 @@ class MenuWidget extends React.Component {
       this.layers[elem.id]?.type === 'wmts' ||
       layerViewService.toLowerCase().includes('wmts');
     if (elem.checked && evaluateWmtsLayer) {
+      this.refreshWmtsLayerData(elem.id);
       const canApplyWmtsSettings = await this.applyWmtsSettingsData(
         this.layers[elem.id],
         this.view?.spatialReference,
@@ -4395,8 +4487,15 @@ class MenuWidget extends React.Component {
       let mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
         if (!userService) {
-          if (mapLayer.type && mapLayer.type !== 'base-tile') mapLayer.clear();
-          mapLayer.destroy();
+          if (
+            mapLayer.type &&
+            mapLayer.type !== 'base-tile' &&
+            mapLayer.type !== 'wmts'
+          )
+            mapLayer.clear();
+          if (mapLayer.type !== 'wmts') {
+            mapLayer.destroy();
+          }
           this.map.remove(this.layers[elem.id]);
         } else {
           this.map.remove(mapLayer);
