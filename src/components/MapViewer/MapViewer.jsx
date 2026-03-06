@@ -598,6 +598,7 @@ class MapViewer extends React.Component {
       { selector: '.hotspot-container', position: 'top-right' },
       { selector: '.bookmark-container', position: 'top-right' },
       { selector: '.upload-container', position: 'top-right' },
+      { selector: '.viewmode-container', position: 'top-right' },
       { selector: '.error-report-container', position: 'top-right' },
     ];
 
@@ -1771,28 +1772,21 @@ class MapViewer extends React.Component {
   renderViewModeSwitcher() {
     if (!this.view) return null;
 
+    const nextViewMode = this.state.viewMode === '3d' ? '2d' : '3d';
+    const viewModeLabel = this.state.viewMode === '3d' ? '2D' : '3D';
+    const viewModeAriaLabel =
+      this.state.viewMode === '3d' ? 'Switch to 2D view' : 'Switch to 3D view';
+
     return (
       <div className="viewmode-container esri-component esri-widget">
         <div className="viewmode-button-group">
           <button
-            className={classNames('viewmode-button', {
-              'active-widget': this.state.viewMode === '2d',
-            })}
-            onClick={() => this.switchViewMode('2d')}
+            className="viewmode-button viewmode-toggle-button"
+            onClick={() => this.switchViewMode(nextViewMode)}
             type="button"
-            aria-label="Switch to 2D view"
+            aria-label={viewModeAriaLabel}
           >
-            2D
-          </button>
-          <button
-            className={classNames('viewmode-button', {
-              'active-widget': this.state.viewMode === '3d',
-            })}
-            onClick={() => this.switchViewMode('3d')}
-            type="button"
-            aria-label="Switch to 3D view"
-          >
-            3D
+            {viewModeLabel}
           </button>
         </div>
       </div>

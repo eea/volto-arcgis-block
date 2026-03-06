@@ -103,7 +103,15 @@
 
 .viewmode-container {
   display: flex;
+  order: 9;
   padding: 0;
+}
+
+.viewmode-floating-container {
+  position: absolute;
+  z-index: 2;
+  right: 10px;
+  bottom: 20px;
 }
 
 .viewmode-button-group {
@@ -122,6 +130,31 @@
 
 .viewmode-button + .viewmode-button {
   border-left: 1px solid #dadada;
+}
+
+.viewmode-toggle-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none !important;
+  background-color: rgba(160, 177, 40, 0.8);
+  box-shadow: 0px 0px 4px 0px #dadada;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.1rem;
+  outline: none;
+}
+
+.viewmode-toggle-button:hover,
+.viewmode-toggle-button:focus {
+  background-color: #7c8921;
+}
+
+@media only screen and (max-width: 767px) {
+  .viewmode-floating-container {
+    right: 10px;
+    bottom: 14px;
+  }
 }
 
 /* Basemap */
