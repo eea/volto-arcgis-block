@@ -940,6 +940,7 @@ class AreaWidget extends React.Component {
     let origin = null;
     let originGraphic = null;
     let cursorGraphic = null;
+    let originTextSymbol = null;
     const drawGraphics = this.props.view.on('drag', (e) => {
       if (this.props.mapViewer.pan_enabled) return;
       e.stopPropagation();
@@ -953,10 +954,10 @@ class AreaWidget extends React.Component {
             originLon: origin.longitude.toFixed(3),
           },
         });
-        let originTextSymbol = new TextSymbol(
-          this.state.areaCoordinates.originLon +
-            ' , ' +
-            this.state.areaCoordinates.originLat,
+        originTextSymbol = new TextSymbol(
+          this.state.areaCoordinates.originLat +
+            ', ' +
+            this.state.areaCoordinates.originLon,
         );
         originTextSymbol.horizontalAlignment = 'right';
         originTextSymbol.verticalAlignment = 'bottom';
@@ -1003,6 +1004,7 @@ class AreaWidget extends React.Component {
       } else if (e.action === 'update') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         if (cursorGraphic) this.props.view.graphics.remove(cursorGraphic);
+        if (originGraphic) this.props.view.graphics.remove(originGraphic);
         let p = this.props.view.toMap(e);
         this.setState({
           areaCoordinates: {
@@ -1060,19 +1062,49 @@ class AreaWidget extends React.Component {
           end: { x: p.longitude, y: p.latitude },
         });
         this.props.view.graphics.add(extentGraphic);
-        let cursorTextSymbol = new TextSymbol(
-          this.state.areaCoordinates.cursorLon +
-            ' , ' +
-            this.state.areaCoordinates.cursorLat,
+        originTextSymbol = new TextSymbol(
+          this.state.areaCoordinates.originLat +
+            ', ' +
+            this.state.areaCoordinates.originLon,
         );
-        cursorTextSymbol.horizontalAlignment = 'left';
-        cursorTextSymbol.verticalAlignment = 'top';
-        cursorTextSymbol.font.size = 8;
+        let cursorTextSymbol = new TextSymbol(
+          this.state.areaCoordinates.cursorLat +
+            ', ' +
+            this.state.areaCoordinates.cursorLon,
+        );
+        if (
+          parseFloat(this.state.areaCoordinates.originLat) >
+          parseFloat(this.state.areaCoordinates.cursorLat)
+        ) {
+          originTextSymbol.verticalAlignment = 'bottom';
+          cursorTextSymbol.verticalAlignment = 'top';
+        } else {
+          originTextSymbol.verticalAlignment = 'top';
+          cursorTextSymbol.verticalAlignment = 'bottom';
+        }
+        if (
+          parseFloat(this.state.areaCoordinates.originLon) >
+          parseFloat(this.state.areaCoordinates.cursorLon)
+        ) {
+          originTextSymbol.horizontalAlignment = 'left';
+          cursorTextSymbol.horizontalAlignment = 'right';
+        } else {
+          originTextSymbol.horizontalAlignment = 'right';
+          cursorTextSymbol.horizontalAlignment = 'left';
+        }
+        originTextSymbol.font.size = 8;
         var point2 = new Point(
+          this.state.areaCoordinates.originLon,
+          this.state.areaCoordinates.originLat,
+        );
+        originGraphic = new Graphic(point2, originTextSymbol);
+        this.props.view.graphics.add(originGraphic);
+        cursorTextSymbol.font.size = 8;
+        var point3 = new Point(
           this.state.areaCoordinates.cursorLon,
           this.state.areaCoordinates.cursorLat,
         );
-        cursorGraphic = new Graphic(point2, cursorTextSymbol);
+        cursorGraphic = new Graphic(point3, cursorTextSymbol);
         this.props.view.graphics.add(cursorGraphic);
       }
     });
