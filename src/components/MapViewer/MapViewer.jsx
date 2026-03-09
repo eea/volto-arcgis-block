@@ -382,8 +382,13 @@ class MapViewer extends React.Component {
     this.viewTransitionTaskId = 0;
     this.isViewSwitchInProgress = false;
     this.syncViewTask = null;
+    this.viewModeButtonTimeout = null;
+    this.isViewModeButtonLoaded = false;
     this.viewUiOperationState = null;
     this.shouldClearSessionOnUnmount = true;
+    this.scheduleViewModeButtonLoad = this.scheduleViewModeButtonLoad.bind(
+      this,
+    );
     this.processPendingWidgetActivation = this.processPendingWidgetActivation.bind(
       this,
     );
@@ -424,6 +429,32 @@ class MapViewer extends React.Component {
 
   normalizeViewMode(viewMode) {
     return viewMode === '3d' ? '3d' : '2d';
+  }
+
+  scheduleViewModeButtonLoad() {
+    if (this.viewModeButtonTimeout) {
+      clearTimeout(this.viewModeButtonTimeout);
+      this.viewModeButtonTimeout = null;
+    }
+
+    if (this.state.viewMode !== '2d') {
+      if (!this.isViewModeButtonLoaded) {
+        this.isViewModeButtonLoaded = true;
+        this.scheduleViewSyncTask();
+      }
+      return;
+    }
+
+    this.isViewModeButtonLoaded = false;
+
+    this.viewModeButtonTimeout = setTimeout(() => {
+      if (!this.isComponentMounted) {
+        return;
+      }
+      this.isViewModeButtonLoaded = true;
+      this.scheduleViewSyncTask();
+      this.viewModeButtonTimeout = null;
+    }, 1000);
   }
 
   getViewConstraintExtent(useZoomInBounds) {
@@ -603,6 +634,14 @@ class MapViewer extends React.Component {
     ];
 
     uiContainerConfig.forEach(({ selector, position }) => {
+      if (
+        selector === '.viewmode-container' &&
+        this.state.viewMode === '2d' &&
+        !this.isViewModeButtonLoaded
+      ) {
+        return;
+      }
+
       const containerNodeList = document.querySelectorAll(selector);
       if (!containerNodeList || containerNodeList.length === 0) return;
       containerNodeList.forEach((containerNode) => {
@@ -1396,6 +1435,7 @@ class MapViewer extends React.Component {
       zoom: mapStatus.zoom,
       viewpoint: null,
     });
+    this.scheduleViewModeButtonLoad();
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
     // this.props.mapviewer_config
@@ -1456,6 +1496,7 @@ class MapViewer extends React.Component {
     }
 
     if (prevState.viewMode !== this.state.viewMode) {
+      this.scheduleViewModeButtonLoad();
       this.scheduleViewSyncTask();
     }
 
@@ -1470,6 +1511,11 @@ class MapViewer extends React.Component {
     if (this.syncViewTask) {
       cancelAnimationFrame(this.syncViewTask);
       this.syncViewTask = null;
+    }
+
+    if (this.viewModeButtonTimeout) {
+      clearTimeout(this.viewModeButtonTimeout);
+      this.viewModeButtonTimeout = null;
     }
 
     window.removeEventListener('beforeunload', this.handlePageUnload);
