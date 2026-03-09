@@ -2876,7 +2876,26 @@ class MenuWidget extends React.Component {
     );
   }
 
+  isSceneTilingError(error) {
+    const errorName = String((error && error.name) || '').toLowerCase();
+    const message = String((error && error.message) || '').toLowerCase();
+    return (
+      errorName.includes('layerview:no-compatible-tiling-scheme') ||
+      message.includes('no-compatible-tiling-scheme') ||
+      message.includes(
+        'none of the tiling schemes supported by the service are compatible with the scene',
+      ) ||
+      message.includes('wmts layer is not compatible with current sceneview')
+    );
+  }
+
   resolveUploadErrorType(error) {
+    if (this.isNoGeometryError(error)) {
+      return 'noGeometryError';
+    }
+    if (this.isSceneTilingError(error)) {
+      return 'sceneViewTilingError';
+    }
     const detailsFromRoot =
       error && error.details && Array.isArray(error.details)
         ? error.details
@@ -3510,11 +3529,7 @@ class MenuWidget extends React.Component {
         resourceLayers[0].fullExtent = bboxData;
       }
     } catch (error) {
-      if (this.isNoGeometryError(error)) {
-        this.props.uploadFileErrorHandler('noGeometryError');
-      } else {
-        this.props.uploadFileErrorHandler();
-      }
+      this.props.uploadFileErrorHandler(this.resolveUploadErrorType(error));
       return;
     }
 
@@ -3603,11 +3618,7 @@ class MenuWidget extends React.Component {
 
         this.props.onServiceChange();
       } catch (error) {
-        if (this.isNoGeometryError(error)) {
-          this.props.uploadFileErrorHandler('noGeometryError');
-        } else {
-          this.props.uploadFileErrorHandler();
-        }
+        this.props.uploadFileErrorHandler(this.resolveUploadErrorType(error));
         return;
       }
     }
@@ -4553,6 +4564,7 @@ class MenuWidget extends React.Component {
     if (!this.props.download && this.props.hotspotData) {
       this.activeLayersToHotspotData(elem.id);
     }
+    this.props.uploadFileErrorHandler('sceneViewTilingError');
     this.renderHotspot();
     this.url = null;
   }

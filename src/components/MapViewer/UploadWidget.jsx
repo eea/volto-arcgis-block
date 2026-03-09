@@ -526,15 +526,15 @@ class UploadWidget extends React.Component {
 
   handleSelectLayers = async () => {
     const { serviceUrl, selectedServiceType } = this.state;
+    const trimmedServiceUrl = (serviceUrl || '').trim();
     if (
       selectedServiceType === 'WFS' &&
-      serviceUrl &&
-      serviceUrl.trim() !== '' &&
-      this.isValidUrl(serviceUrl) &&
-      this.isServiceTypeMatchingUrl(serviceUrl, selectedServiceType)
+      trimmedServiceUrl !== '' &&
+      this.isValidUrl(trimmedServiceUrl) &&
+      this.isServiceTypeMatchingUrl(trimmedServiceUrl, selectedServiceType)
     ) {
       const normalizedUrl = this.getNormalizedUrlForType(
-        serviceUrl,
+        trimmedServiceUrl,
         selectedServiceType,
       );
       await this.getCapabilities(normalizedUrl, selectedServiceType);
@@ -549,17 +549,17 @@ class UploadWidget extends React.Component {
 
   handleUploadService = async () => {
     const serviceUrl = this.state.serviceUrl;
+    const trimmedServiceUrl = (serviceUrl || '').trim();
     const selectedServiceType = this.state.selectedServiceType;
     const selectedFeatures = this.state.selectedFeatures;
     if (
       selectedServiceType &&
-      serviceUrl &&
-      serviceUrl.trim() !== '' &&
-      this.isValidUrl(serviceUrl) &&
-      this.isServiceTypeMatchingUrl(serviceUrl, selectedServiceType)
+      trimmedServiceUrl !== '' &&
+      this.isValidUrl(trimmedServiceUrl) &&
+      this.isServiceTypeMatchingUrl(trimmedServiceUrl, selectedServiceType)
     ) {
       const normalizedUrl = this.getNormalizedUrlForType(
-        serviceUrl,
+        trimmedServiceUrl,
         selectedServiceType,
       );
       const proxiedUrl = this.buildProxiedUrl(normalizedUrl);
@@ -1003,6 +1003,17 @@ class UploadWidget extends React.Component {
                       <div className="drawRectanglePopup-text">
                         Selected service has no geometry data and cannot be
                         displayed on the map.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'sceneViewTilingError' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Incorrect tiling scheme for scene view. The service can
+                        still be used in 2D map view.
                       </div>
                     </>
                   )}
