@@ -3583,6 +3583,35 @@ class MenuWidget extends React.Component {
           resourceLayer.ViewService = (viewService || '').trim();
         }
 
+        const isSceneUploadValidation =
+          this.view &&
+          this.view.type === '3d' &&
+          (serviceType === 'WMS' || serviceType === 'WMTS');
+
+        if (isSceneUploadValidation) {
+          try {
+            this.map.add(resourceLayer);
+            await this.view.whenLayerView(resourceLayer);
+          } catch (error) {
+            try {
+              if (this.map.findLayerById(resourceLayer.id)) {
+                this.map.remove(resourceLayer);
+              }
+            } catch (e) {}
+            if (this.isSceneTilingError(error)) {
+              this.props.uploadFileErrorHandler('sceneViewTilingError');
+              continue;
+            }
+            throw error;
+          }
+
+          try {
+            if (this.map.findLayerById(resourceLayer.id)) {
+              this.map.remove(resourceLayer);
+            }
+          } catch (e) {}
+        }
+
         const layerSignatureData = `${(
           resourceLayer.ViewService || ''
         ).trim()}::${resourceLayer.LayerId}`;
