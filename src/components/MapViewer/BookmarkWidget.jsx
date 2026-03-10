@@ -1354,7 +1354,7 @@ class BookmarkWidget extends React.Component {
                 }}
                 type="submit"
               >
-                <span class="esri-bookmarks__add-bookmark-icon esri-icon-plus"></span>
+                <span className="esri-bookmarks__add-bookmark-icon esri-icon-plus"></span>
                 Upload a bookmark
               </button>
             </div>
