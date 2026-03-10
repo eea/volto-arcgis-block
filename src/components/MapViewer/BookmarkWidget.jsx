@@ -237,6 +237,9 @@ class BookmarkWidget extends React.Component {
       },
       container: document.querySelector('.bookmark-panel'),
       bookmarks: this.sessionBookmarks.map((bm) => {
+        if (bm && bm.viewpoint) {
+          return bm;
+        }
         if (bm.extent) {
           const { extent, ...rest } = bm;
           let geometry;
@@ -1075,8 +1078,15 @@ class BookmarkWidget extends React.Component {
           }
           if (name !== undefined) out.name = name;
           let g = null;
-          if (b && b.viewpoint && b.viewpoint.targetGeometry) {
-            g = b.viewpoint.targetGeometry;
+          let viewpointData;
+          if (b && b.viewpoint) {
+            viewpointData = b.viewpoint.toJSON
+              ? b.viewpoint.toJSON()
+              : b.viewpoint;
+            out.viewpoint = viewpointData;
+            if (b.viewpoint.targetGeometry) {
+              g = b.viewpoint.targetGeometry;
+            }
           } else if (b && b.extent) {
             g = b.extent;
           }
@@ -1246,6 +1256,9 @@ class BookmarkWidget extends React.Component {
         this.loadBookmarksToWidget();
         if (this.Bookmarks && this.Bookmarks.bookmarks) {
           const mapped = this.sessionBookmarks.map((bm) => {
+            if (bm && bm.viewpoint) {
+              return bm;
+            }
             if (bm && bm.extent) {
               const { extent, ...rest } = bm;
               let geometry;
