@@ -382,8 +382,13 @@ class MapViewer extends React.Component {
     this.viewTransitionTaskId = 0;
     this.isViewSwitchInProgress = false;
     this.syncViewTask = null;
+    this.viewModeButtonTimeout = null;
+    this.isViewModeButtonLoaded = false;
     this.viewUiOperationState = null;
     this.shouldClearSessionOnUnmount = true;
+    this.scheduleViewModeButtonLoad = this.scheduleViewModeButtonLoad.bind(
+      this,
+    );
     this.processPendingWidgetActivation = this.processPendingWidgetActivation.bind(
       this,
     );
@@ -424,6 +429,32 @@ class MapViewer extends React.Component {
 
   normalizeViewMode(viewMode) {
     return viewMode === '3d' ? '3d' : '2d';
+  }
+
+  scheduleViewModeButtonLoad() {
+    if (this.viewModeButtonTimeout) {
+      clearTimeout(this.viewModeButtonTimeout);
+      this.viewModeButtonTimeout = null;
+    }
+
+    if (this.state.viewMode !== '2d') {
+      if (!this.isViewModeButtonLoaded) {
+        this.isViewModeButtonLoaded = true;
+        this.scheduleViewSyncTask();
+      }
+      return;
+    }
+
+    this.isViewModeButtonLoaded = false;
+
+    this.viewModeButtonTimeout = setTimeout(() => {
+      if (!this.isComponentMounted) {
+        return;
+      }
+      this.isViewModeButtonLoaded = true;
+      this.scheduleViewSyncTask();
+      this.viewModeButtonTimeout = null;
+    }, 1000);
   }
 
   getViewConstraintExtent(useZoomInBounds) {
@@ -598,10 +629,19 @@ class MapViewer extends React.Component {
       { selector: '.hotspot-container', position: 'top-right' },
       { selector: '.bookmark-container', position: 'top-right' },
       { selector: '.upload-container', position: 'top-right' },
+      { selector: '.viewmode-container', position: 'top-right' },
       { selector: '.error-report-container', position: 'top-right' },
     ];
 
     uiContainerConfig.forEach(({ selector, position }) => {
+      if (
+        selector === '.viewmode-container' &&
+        this.state.viewMode === '2d' &&
+        !this.isViewModeButtonLoaded
+      ) {
+        return;
+      }
+
       const containerNodeList = document.querySelectorAll(selector);
       if (!containerNodeList || containerNodeList.length === 0) return;
       containerNodeList.forEach((containerNode) => {
@@ -1395,6 +1435,7 @@ class MapViewer extends React.Component {
       zoom: mapStatus.zoom,
       viewpoint: null,
     });
+    this.scheduleViewModeButtonLoad();
     // After launching the MapViewerConfig action
     // we will have stored the json response here:
     // this.props.mapviewer_config
@@ -1455,6 +1496,7 @@ class MapViewer extends React.Component {
     }
 
     if (prevState.viewMode !== this.state.viewMode) {
+      this.scheduleViewModeButtonLoad();
       this.scheduleViewSyncTask();
     }
 
@@ -1469,6 +1511,11 @@ class MapViewer extends React.Component {
     if (this.syncViewTask) {
       cancelAnimationFrame(this.syncViewTask);
       this.syncViewTask = null;
+    }
+
+    if (this.viewModeButtonTimeout) {
+      clearTimeout(this.viewModeButtonTimeout);
+      this.viewModeButtonTimeout = null;
     }
 
     window.removeEventListener('beforeunload', this.handlePageUnload);
@@ -1771,28 +1818,21 @@ class MapViewer extends React.Component {
   renderViewModeSwitcher() {
     if (!this.view) return null;
 
+    const nextViewMode = this.state.viewMode === '3d' ? '2d' : '3d';
+    const viewModeLabel = this.state.viewMode === '3d' ? '2D' : '3D';
+    const viewModeAriaLabel =
+      this.state.viewMode === '3d' ? 'Switch to 2D view' : 'Switch to 3D view';
+
     return (
       <div className="viewmode-container esri-component esri-widget">
         <div className="viewmode-button-group">
           <button
-            className={classNames('viewmode-button', {
-              'active-widget': this.state.viewMode === '2d',
-            })}
-            onClick={() => this.switchViewMode('2d')}
+            className="viewmode-button viewmode-toggle-button"
+            onClick={() => this.switchViewMode(nextViewMode)}
             type="button"
-            aria-label="Switch to 2D view"
+            aria-label={viewModeAriaLabel}
           >
-            2D
-          </button>
-          <button
-            className={classNames('viewmode-button', {
-              'active-widget': this.state.viewMode === '3d',
-            })}
-            onClick={() => this.switchViewMode('3d')}
-            type="button"
-            aria-label="Switch to 3D view"
-          >
-            3D
+            {viewModeLabel}
           </button>
         </div>
       </div>
@@ -1876,20 +1916,18 @@ export const CheckUserID = ({ reference }) => {
       {reference.view && (
         <>
           {/* BookmarkWidget with user_id */}
-          {reference.view.type === '2d' && (
-            <BookmarkWidget
-              key={reference.getWidgetRenderKey('bookmark')}
-              view={reference.view}
-              map={reference.map}
-              layers={reference.state.layers}
-              mapViewer={reference}
-              userID={user_id}
-              hotspotData={reference.state.hotspotData}
-              bookmarkHandler={reference.bookmarkHandler}
-              bookmarkData={reference.state.bookmarkData}
-              isLoggedIn={isLoggedIn}
-            />
-          )}
+          <BookmarkWidget
+            key={reference.getWidgetRenderKey('bookmark')}
+            view={reference.view}
+            map={reference.map}
+            layers={reference.state.layers}
+            mapViewer={reference}
+            userID={user_id}
+            hotspotData={reference.state.hotspotData}
+            bookmarkHandler={reference.bookmarkHandler}
+            bookmarkData={reference.state.bookmarkData}
+            isLoggedIn={isLoggedIn}
+          />
 
           {/* MenuWidget with user_id */}
           <MenuWidget
