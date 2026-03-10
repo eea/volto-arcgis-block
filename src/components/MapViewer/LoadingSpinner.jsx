@@ -37,11 +37,17 @@ class LoadingSpinner extends React.Component {
     });
     const handle3 = this.props.view.on('layerview-create-error', (event) => {
       if (!this._isMounted) return;
-      if (event.layer.loadError !== null && this.state.loading === true) {
+      if (this.state.loading === true) {
         this.setState({ loading: false }, this.showLoading);
       }
     });
-    this.arcgisEventHandles.push(handle1, handle2, handle3);
+    const handle4 = this.props.view.watch('updating', (isUpdating) => {
+      if (!this._isMounted) return;
+      if (!isUpdating && this.state.loading === true) {
+        this.setState({ loading: false }, this.showLoading);
+      }
+    });
+    this.arcgisEventHandles.push(handle1, handle2, handle3, handle4);
   }
 
   showLoading() {

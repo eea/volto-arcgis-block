@@ -386,6 +386,7 @@ class MapViewer extends React.Component {
     this.isViewModeButtonLoaded = false;
     this.viewUiOperationState = null;
     this.shouldClearSessionOnUnmount = true;
+    this.uploadErrorTimeoutTask = null;
     this.scheduleViewModeButtonLoad = this.scheduleViewModeButtonLoad.bind(
       this,
     );
@@ -1305,8 +1306,16 @@ class MapViewer extends React.Component {
 
   uploadFileErrorHandler = (errorType = 'uploadError') => {
     this.setState({ uploadError: true, uploadErrorType: errorType });
-    setTimeout(() => {
+    if (this.uploadErrorTimeoutTask) {
+      clearTimeout(this.uploadErrorTimeoutTask);
+      this.uploadErrorTimeoutTask = null;
+    }
+    this.uploadErrorTimeoutTask = setTimeout(() => {
+      if (!this.isComponentMounted) {
+        return;
+      }
       this.setState({ uploadError: false, uploadErrorType: 'uploadError' });
+      this.uploadErrorTimeoutTask = null;
     }, 3000);
   };
 
@@ -1516,6 +1525,11 @@ class MapViewer extends React.Component {
     if (this.viewModeButtonTimeout) {
       clearTimeout(this.viewModeButtonTimeout);
       this.viewModeButtonTimeout = null;
+    }
+
+    if (this.uploadErrorTimeoutTask) {
+      clearTimeout(this.uploadErrorTimeoutTask);
+      this.uploadErrorTimeoutTask = null;
     }
 
     window.removeEventListener('beforeunload', this.handlePageUnload);
