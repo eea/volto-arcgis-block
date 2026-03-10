@@ -3926,6 +3926,14 @@ class MenuWidget extends React.Component {
         const checkedLayers =
           JSON.parse(sessionStorage.getItem('checkedLayers')) || [];
         const isChecked = checkedLayers.includes(layer.LayerId);
+        const serviceType =
+          layer.type === 'wmts'
+            ? 'WMTS'
+            : layer.type === 'wms'
+            ? 'WMS'
+            : layer.type === 'geojson'
+            ? 'WFS'
+            : 'WMS';
 
         // Create a simplified object for storage
         return {
@@ -3947,9 +3955,18 @@ class MenuWidget extends React.Component {
           })),
           ViewService: layer.ViewService,
           LayerId: layer.LayerId,
+          serviceType: serviceType,
+          activeLayer:
+            serviceType === 'WMTS' && layer.activeLayer
+              ? {
+                  id: layer.activeLayer.id,
+                  title: layer.activeLayer.title,
+                  tileMatrixSetId: layer.activeLayer.tileMatrixSetId,
+                }
+              : null,
           visibility: layer.visible !== false,
           opacity: layer.opacity || 1,
-          checked: isChecked || layer.checked || false,
+          checked: isChecked,
         };
       });
 
@@ -3970,26 +3987,65 @@ class MenuWidget extends React.Component {
         if (savedServices && Array.isArray(savedServices)) {
           // Process saved services to recreate actual layer objects
           const recreatedLayers = await Promise.all(
-            savedServices.map(async (serviceData) => {
+            savedServices.map(async (serviceData, serviceIndex) => {
               try {
-                // Create a new WMSLayer with the saved properties
-                const newLayer = new WMSLayer(serviceData);
+                const resolveServiceType =
+                  serviceData.serviceType ||
+                  (typeof serviceData.ViewService === 'string' &&
+                  serviceData.ViewService.toLowerCase().includes('wmts')
+                    ? 'WMTS'
+                    : 'WMS');
+                const resolvedLayerId =
+                  serviceData.LayerId ||
+                  serviceData.id ||
+                  `user_service_${serviceIndex}`;
+                const newLayer =
+                  resolveServiceType === 'WMTS'
+                    ? new WMTSLayer({
+                        id: resolvedLayerId,
+                        url: serviceData.url || serviceData.ViewService,
+                        title: serviceData.title || '',
+                        spatialReference: this.view?.spatialReference,
+                        serviceMode: 'KVP',
+                        activeLayer: serviceData.activeLayer || undefined,
+                        ViewService:
+                          serviceData.ViewService || serviceData.url || '',
+                      })
+                    : new WMSLayer({
+                        id: resolvedLayerId,
+                        url: serviceData.url || serviceData.ViewService,
+                        featureInfoFormat:
+                          serviceData.featureInfoFormat || 'text/html',
+                        featureInfoUrl:
+                          serviceData.featureInfoUrl ||
+                          serviceData.url ||
+                          serviceData.ViewService,
+                        title: serviceData.title || '',
+                        legendEnabled: serviceData.legendEnabled,
+                        sublayers: serviceData.sublayers,
+                        ViewService:
+                          serviceData.ViewService || serviceData.url || '',
+                      });
 
                 // Set visibility property based on saved value
                 newLayer.visible = serviceData.visibility !== false;
+                newLayer.LayerId = resolvedLayerId;
+                if (serviceData.description) {
+                  newLayer.description = serviceData.description;
+                }
 
                 // Remember the original checked state and visibility
                 newLayer.checked = serviceData.checked;
 
                 // Initialize visibleLayers for this layer
                 if (!this.visibleLayers) this.visibleLayers = {};
-                this.visibleLayers[serviceData.LayerId] =
+                this.visibleLayers[resolvedLayerId] =
                   serviceData.visibility !== false
                     ? ['fas', 'eye']
                     : ['fas', 'eye-slash'];
 
                 // Add to this.layers
-                this.layers[serviceData.LayerId] = newLayer;
+                this.layers[resolvedLayerId] = newLayer;
                 return newLayer;
               } catch (error) {
                 return null;
@@ -4024,9 +4080,11 @@ class MenuWidget extends React.Component {
 
                     // Then check the checkbox and call toggleLayer with a flag to preserve visibility
                     node.checked = true;
+                    node.dataset.preserveCheckedLayerState = 'true';
 
                     // Custom addition to toggleLayer to bypass visibility override
                     this.toggleLayerWithoutVisibilityReset(node);
+                    delete node.dataset.preserveCheckedLayerState;
                   }
                 }
               });
@@ -4293,6 +4351,8 @@ class MenuWidget extends React.Component {
       this.state.wmsUserServiceLayers.find(
         (layer) => layer.LayerId === elem.id,
       ) || null;
+    const preserveCheckedLayerState =
+      elem.dataset && elem.dataset.preserveCheckedLayerState === 'true';
     if (elem.checked && !userService) {
       this.findCheckedDatasetNoServiceToVisualize(elem);
     }
@@ -4313,7 +4373,9 @@ class MenuWidget extends React.Component {
       if (!canApplyWmtsSettings) {
         elem.checked = false;
         this.layers[elem.id].visible = false;
-        this.deleteCheckedLayer(elem.id);
+        if (!preserveCheckedLayerState) {
+          this.deleteCheckedLayer(elem.id);
+        }
         delete this.activeLayersJSON[elem.id];
         if (this.visibleLayers) {
           delete this.visibleLayers[elem.id];
@@ -4332,7 +4394,9 @@ class MenuWidget extends React.Component {
         try {
           await this.layers[elem.id].load();
         } catch (error) {
-          this.processUnsupportedWmtsLayer(elem);
+          this.processUnsupportedWmtsLayer(elem, {
+            preserveCheckedLayerState,
+          });
           return;
         }
       }
@@ -4429,7 +4493,9 @@ class MenuWidget extends React.Component {
         try {
           await this.view.whenLayerView(this.layers[elem.id]);
         } catch (error) {
-          this.processUnsupportedWmtsLayer(elem);
+          this.processUnsupportedWmtsLayer(elem, {
+            preserveCheckedLayerState,
+          });
           return;
         }
       }
@@ -4568,13 +4634,16 @@ class MenuWidget extends React.Component {
     this.url = null;
   }
 
-  processUnsupportedWmtsLayer(elem) {
+  processUnsupportedWmtsLayer(elem, options = {}) {
+    const { preserveCheckedLayerState = false } = options;
     if (!elem || !this.layers || !this.layers[elem.id]) {
       return;
     }
     elem.checked = false;
     this.layers[elem.id].visible = false;
-    this.deleteCheckedLayer(elem.id);
+    if (!preserveCheckedLayerState) {
+      this.deleteCheckedLayer(elem.id);
+    }
     const mapLayer = this.map ? this.map.findLayerById(elem.id) : null;
     if (mapLayer) {
       try {
@@ -6935,7 +7004,9 @@ class MenuWidget extends React.Component {
             const node = document.getElementById(layer.LayerId);
             if (node) {
               node.checked = true;
+              node.dataset.preserveCheckedLayerState = 'true';
               this.toggleLayer(node);
+              delete node.dataset.preserveCheckedLayerState;
             }
           }
         });
@@ -7362,6 +7433,9 @@ class MenuWidget extends React.Component {
       for (var i = layers.length - 1; i >= 0; i--) {
         let layer = layers[i];
         let node = document.getElementById(layer);
+        const restoreLayerState = this.state.wmsUserServiceLayers.some(
+          (serviceLayer) => serviceLayer.LayerId === layer,
+        );
 
         if (node) {
           if (!node.checked) {
@@ -7369,7 +7443,13 @@ class MenuWidget extends React.Component {
             // click event fires toggleLayer()
             //node.dispatchEvent(event);
             node.checked = true;
+            if (restoreLayerState) {
+              node.dataset.preserveCheckedLayerState = 'true';
+            }
             this.toggleLayer(node);
+            if (restoreLayerState) {
+              delete node.dataset.preserveCheckedLayerState;
+            }
           }
 
           // set scroll position
