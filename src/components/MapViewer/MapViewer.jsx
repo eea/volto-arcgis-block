@@ -1468,6 +1468,7 @@ class MapViewer extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     // Handle Download/dataset URL changes (existing logic)
+    this.scheduleViewModeButtonLoad();
     if (
       this.props.Download ||
       (this.location &&
@@ -1862,13 +1863,25 @@ class MapViewer extends React.Component {
     // DOM element to be mounted (but not yet mounted)
     if ('loading' in this.props.mapviewer_config) {
       return (
-        <div ref={this.mapContainer} className={this.mapClass}>
+        <div
+          ref={this.mapContainer}
+          className={classNames(
+            this.mapClass,
+            `view-mode-${this.state.viewMode}`,
+          )}
+        >
           <div ref={this.mapdiv} className="map" />
         </div>
       );
     } else {
       return (
-        <div ref={this.mapContainer} className={this.mapClass}>
+        <div
+          ref={this.mapContainer}
+          className={classNames(
+            this.mapClass,
+            `view-mode-${this.state.viewMode}`,
+          )}
+        >
           <div ref={this.mapdiv} className="map" />
           {this.appLanguage()}
           {this.state.isWidgetRenderEnabled && (

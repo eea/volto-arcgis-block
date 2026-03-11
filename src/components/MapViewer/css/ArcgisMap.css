@@ -49,6 +49,14 @@
   z-index: 1;
 }
 
+.esri-ui-top-left.esri-ui-corner {
+  margin-top: 0.5rem !important;
+}
+
+.map-container.view-mode-3d .esri-ui-top-left.esri-ui-corner {
+  margin-top: 0 !important;
+}
+
 .esri-component.esri-zoom.esri-widget {
   background: none;
   box-shadow: none;

@@ -63,7 +63,7 @@ class MeasurementWidget extends React.Component {
       // and ensure that the component is rendered again
       this.setState({ showMapMenu: false });
       this.toggleDropdownContent();
-      this.clearMeasurements();
+      this.clearMeasurements(false);
       this.clearCoordinates();
     } else {
       this.props.mapViewer.setActiveWidget(this);
@@ -133,7 +133,7 @@ class MeasurementWidget extends React.Component {
       );
     }
     this.toggleDropdownContent(e);
-    this.clearMeasurements();
+    this.clearMeasurements(false);
     this.clearCoordinates();
     if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
       this.areaMeasurement();
@@ -147,7 +147,7 @@ class MeasurementWidget extends React.Component {
       );
     }
     this.toggleDropdownContent(e);
-    this.clearMeasurements();
+    this.clearMeasurements(false);
     this.clearCoordinates();
     if (e.currentTarget.getAttribute('aria-expanded') === 'true') {
       this.distanceMeasurement();
@@ -156,7 +156,7 @@ class MeasurementWidget extends React.Component {
 
   coordsMeasurementHandler(e) {
     this.toggleDropdownContent(e);
-    this.clearMeasurements();
+    this.clearMeasurements(false);
     //*** Add event to show mouse coordinates on click and move ***//
     var getCoordinates = this.props.view.on(
       ['pointer-down', 'pointer-move'],
@@ -171,6 +171,9 @@ class MeasurementWidget extends React.Component {
 
   areaMeasurement() {
     if (this.isThreeDimensionalView()) {
+      if (!this.areaMeasurementWidget || !this.distanceMeasurementWidget) {
+        this.initializeThreeDimensionalMeasurements();
+      }
       if (this.areaMeasurementWidget) {
         this.areaMeasurementWidget.visible = true;
       }
@@ -187,6 +190,9 @@ class MeasurementWidget extends React.Component {
 
   distanceMeasurement() {
     if (this.isThreeDimensionalView()) {
+      if (!this.areaMeasurementWidget || !this.distanceMeasurementWidget) {
+        this.initializeThreeDimensionalMeasurements();
+      }
       if (this.distanceMeasurementWidget) {
         this.distanceMeasurementWidget.visible = true;
       }
@@ -201,7 +207,7 @@ class MeasurementWidget extends React.Component {
     }
   }
 
-  clearMeasurements() {
+  clearMeasurements(shouldDestroyThreeDimensionalMeasurements = false) {
     if (this.measurement && this.measurement.clear) {
       this.measurement.clear();
     }
@@ -216,9 +222,91 @@ class MeasurementWidget extends React.Component {
       this.distanceMeasurementWidget.clear();
       this.distanceMeasurementWidget.visible = false;
     }
+    if (this.isThreeDimensionalView()) {
+      this.resetThreeDimensionalMeasurementState();
+    }
+    if (
+      this.isThreeDimensionalView() &&
+      shouldDestroyThreeDimensionalMeasurements
+    ) {
+      this.destroyThreeDimensionalMeasurements();
+    }
+  }
+
+  resetThreeDimensionalMeasurementState() {
+    const widgetList = [
+      this.areaMeasurementWidget,
+      this.distanceMeasurementWidget,
+    ];
+
+    widgetList.forEach((widget) => {
+      if (!widget) return;
+
+      if (widget.viewModel && widget.viewModel.newMeasurement) {
+        widget.viewModel.newMeasurement();
+      }
+      if (widget.viewModel && widget.viewModel.clear) {
+        widget.viewModel.clear();
+      }
+      if (widget.clear) {
+        widget.clear();
+      }
+      widget.visible = false;
+    });
+  }
+
+  initializeThreeDimensionalMeasurements() {
+    if (
+      !this.container.current ||
+      !this.props.view ||
+      !this.isThreeDimensionalView()
+    ) {
+      return;
+    }
+
+    if (!this.areaMeasurementWidget) {
+      this.areaMeasurementWidget = new AreaMeasurement3D({
+        view: this.props.view,
+        container: this.container.current.querySelector('.measurement-area'),
+      });
+      this.areaMeasurementWidget.visible = false;
+    }
+
+    if (!this.distanceMeasurementWidget) {
+      this.distanceMeasurementWidget = new DirectLineMeasurement3D({
+        view: this.props.view,
+        container: this.container.current.querySelector(
+          '.measurement-distance',
+        ),
+      });
+      this.distanceMeasurementWidget.visible = false;
+    }
+  }
+
+  destroyThreeDimensionalMeasurements() {
+    if (this.areaMeasurementWidget && this.areaMeasurementWidget.destroy) {
+      this.areaMeasurementWidget.destroy();
+      this.areaMeasurementWidget = null;
+    }
+    if (
+      this.distanceMeasurementWidget &&
+      this.distanceMeasurementWidget.destroy
+    ) {
+      this.distanceMeasurementWidget.destroy();
+      this.distanceMeasurementWidget = null;
+    }
   }
 
   showCoordinates(pt) {
+    if (
+      !pt ||
+      typeof pt.latitude !== 'number' ||
+      typeof pt.longitude !== 'number'
+    ) {
+      this.setState({ latlong: false });
+      return;
+    }
+
     this.setState({
       latlong: { x: pt.latitude.toFixed(4), y: pt.longitude.toFixed(4) },
     });
@@ -243,19 +331,7 @@ class MeasurementWidget extends React.Component {
       this.props.view.ui.add(this.container.current, 'top-right');
 
       if (this.isThreeDimensionalView()) {
-        this.areaMeasurementWidget = new AreaMeasurement3D({
-          view: this.props.view,
-          container: this.container.current.querySelector('.measurement-area'),
-        });
-        this.areaMeasurementWidget.visible = false;
-
-        this.distanceMeasurementWidget = new DirectLineMeasurement3D({
-          view: this.props.view,
-          container: this.container.current.querySelector(
-            '.measurement-distance',
-          ),
-        });
-        this.distanceMeasurementWidget.visible = false;
+        this.initializeThreeDimensionalMeasurements();
       } else {
         this.measurement = new Measurement({
           view: this.props.view,
@@ -272,15 +348,7 @@ class MeasurementWidget extends React.Component {
     if (this.measurement && this.measurement.destroy) {
       this.measurement.destroy();
     }
-    if (this.areaMeasurementWidget && this.areaMeasurementWidget.destroy) {
-      this.areaMeasurementWidget.destroy();
-    }
-    if (
-      this.distanceMeasurementWidget &&
-      this.distanceMeasurementWidget.destroy
-    ) {
-      this.distanceMeasurementWidget.destroy();
-    }
+    this.destroyThreeDimensionalMeasurements();
   }
   /**
    * This method renders the component
