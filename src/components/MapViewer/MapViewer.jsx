@@ -1468,6 +1468,7 @@ class MapViewer extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     // Handle Download/dataset URL changes (existing logic)
+    this.scheduleViewModeButtonLoad();
     if (
       this.props.Download ||
       (this.location &&
