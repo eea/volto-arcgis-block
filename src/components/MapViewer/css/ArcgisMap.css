@@ -50,11 +50,7 @@
 }
 
 .esri-ui-top-left.esri-ui-corner {
-  margin-top: 0.5rem !important;
-}
-
-.map-container.view-mode-3d .esri-ui-top-left.esri-ui-corner {
-  margin-top: 0 !important;
+  margin-top: 8px !important;
 }
 
 .esri-component.esri-zoom.esri-widget {
@@ -818,7 +814,7 @@ div.upload-container
 
 .esri-search {
   width: 30.3rem !important;
-  margin-top: 0.4rem;
+  margin-top: 6px;
   margin-left: 1rem;
 }
 

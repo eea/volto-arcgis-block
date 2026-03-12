@@ -62,7 +62,12 @@ class LoadingSpinner extends React.Component {
   async componentDidMount() {
     this._isMounted = true;
     //this.waitForContainer(this.props.view);
-    if (!this.container.current) return;
+    if (
+      !this.container.current ||
+      !this.props.view ||
+      typeof this.props.view.when !== 'function'
+    )
+      return;
     this.props.view.when(() => {
       if (
         !this._isMounted ||
@@ -72,18 +77,12 @@ class LoadingSpinner extends React.Component {
       ) {
         return;
       }
-      this.props.view.ui.add(this.container.current, 'manual');
       this.listenForLayerChanges();
     });
   }
 
   componentWillUnmount() {
     this._isMounted = false;
-    if (this.props.view && this.props.view.ui && this.container.current) {
-      try {
-        this.props.view.ui.remove(this.container.current);
-      } catch (error) {}
-    }
     if (this.arcgisEventHandles) {
       this.arcgisEventHandles.forEach(
         (handle) => handle && handle.remove && handle.remove(),
