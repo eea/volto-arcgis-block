@@ -646,7 +646,24 @@ class MapViewer extends React.Component {
       const containerNodeList = document.querySelectorAll(selector);
       if (!containerNodeList || containerNodeList.length === 0) return;
       containerNodeList.forEach((containerNode) => {
-        if (!containerNode) return;
+        if (!containerNode || !containerNode.isConnected) return;
+        if (!containerNode.__mapViewerContainerParentNode) {
+          const containerParentNode = containerNode.parentNode;
+          const isUiContainerParent =
+            containerParentNode &&
+            containerParentNode.classList &&
+            (containerParentNode.classList.contains(
+              'esri-ui-inner-container',
+            ) ||
+              containerParentNode.classList.contains('esri-ui-corner') ||
+              containerParentNode.classList.contains('esri-ui-top-left') ||
+              containerParentNode.classList.contains('esri-ui-top-right') ||
+              containerParentNode.classList.contains('esri-ui-bottom-left') ||
+              containerParentNode.classList.contains('esri-ui-bottom-right'));
+          containerNode.__mapViewerContainerParentNode = isUiContainerParent
+            ? this.mapContainer.current
+            : containerParentNode;
+        }
         try {
           this.view.ui.add(containerNode, position);
         } catch (error) {}
@@ -674,6 +691,7 @@ class MapViewer extends React.Component {
         this.isViewSwitchInProgress ||
         !this.state.isWidgetRenderEnabled
       ) {
+        this.syncViewTask = null;
         return;
       }
       this.syncViewWidgetContainers();
@@ -714,7 +732,8 @@ class MapViewer extends React.Component {
     const resolveWidgetParentNode = (widgetNode) => {
       if (
         widgetNode &&
-        widgetNode.__mapViewerContainerParentNode instanceof Node
+        widgetNode.__mapViewerContainerParentNode instanceof Node &&
+        widgetNode.__mapViewerContainerParentNode.isConnected
       ) {
         return widgetNode.__mapViewerContainerParentNode;
       }
