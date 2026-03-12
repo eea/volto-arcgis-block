@@ -1812,6 +1812,7 @@ class MapViewer extends React.Component {
   }
 
   renderLoadingSpinner() {
+    if (!this.view) return null;
     return (
       <LoadingSpinner
         key={this.getWidgetRenderKey('loading')}
