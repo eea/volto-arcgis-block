@@ -65,6 +65,9 @@ class AreaWidget extends React.Component {
     this.addFeatureCollectionToMap = this.addFeatureCollectionToMap.bind(this);
     this.checkFeatureCount = this.checkFeatureCount.bind(this);
     this.prepackage = false;
+    this.isComponentMounted = false;
+    this.clickEventHandle = null;
+    this.dragEventContext = null;
   }
 
   loader() {
@@ -1348,6 +1351,7 @@ class AreaWidget extends React.Component {
    * This method is executed after the rener method is executed
    */
   async componentDidMount() {
+    this.isComponentMounted = true;
     await this.loader();
     await this.initFMI();
     this.nutsGroupLayer = new GroupLayer({
@@ -1355,7 +1359,10 @@ class AreaWidget extends React.Component {
       //opacity: 0.5,
     });
     this.props.map.add(this.nutsGroupLayer);
-    this.props.view.on('click', (event) => {
+    this.clickEventHandle = this.props.view.on('click', (event) => {
+      if (!this.isComponentMounted) {
+        return;
+      }
       if (
         (this.props.mapViewer.activeWidget === this || this.props.download) &&
         (this.props.mapViewer.activeWidget
@@ -1397,9 +1404,12 @@ class AreaWidget extends React.Component {
                 });
                 this.props.uploadFileHandler(true);
                 if (this.props.download) {
-                  document.querySelector(
+                  let popupNode = document.querySelector(
                     '.drawRectanglePopup-block',
-                  ).style.display = 'none';
+                  );
+                  if (popupNode) {
+                    popupNode.style.display = 'none';
+                  }
                 }
               }
             }
@@ -1408,21 +1418,45 @@ class AreaWidget extends React.Component {
       }
     });
     this.props.view.when(() => {
+      if (!this.isComponentMounted || !this.props.view || !this.props.view.ui) {
+        return;
+      }
       this.props.download
         ? this.container !== null && this.props.view.ui.add(this.container)
         : this.container.current !== null &&
           this.props.view.ui.add(this.container.current, 'top-right');
 
-      var popup = document.createElement('div');
-      popup.className = 'drawRectanglePopup-block';
-      popup.innerHTML =
-        '<div className="drawRectanglePopup-content">' +
-        '<span className="drawRectanglePopup-icon"><span className="esri-icon-cursor-marquee"></span></span>' +
-        '<div className="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
-        '</div>';
+      let popup = document.querySelector('.drawRectanglePopup-block');
+      if (!popup) {
+        popup = document.createElement('div');
+        popup.className = 'drawRectanglePopup-block';
+        popup.innerHTML =
+          '<div className="drawRectanglePopup-content">' +
+          '<span className="drawRectanglePopup-icon"><span className="esri-icon-cursor-marquee"></span></span>' +
+          '<div className="drawRectanglePopup-text">Select or draw an area of interest in the map to continue</div>' +
+          '</div>';
+      }
       this.props.download && this.props.view.ui.add(popup, 'top-right');
     });
     this.dragElement(document.querySelector('.coordinateWindow'));
+  }
+
+  componentWillUnmount() {
+    this.isComponentMounted = false;
+    if (this.clickEventHandle && this.clickEventHandle.remove) {
+      this.clickEventHandle.remove();
+      this.clickEventHandle = null;
+    }
+    if (this.dragEventContext && this.dragEventContext.handleTarget) {
+      this.dragEventContext.handleTarget.removeEventListener(
+        'mousedown',
+        this.dragEventContext.handleEvent,
+      );
+      this.dragEventContext = null;
+    }
+    if (this.state.ShowGraphics && this.state.ShowGraphics.remove) {
+      this.state.ShowGraphics.remove();
+    }
   }
 
   async initFMI() {
@@ -1445,6 +1479,9 @@ class AreaWidget extends React.Component {
     }
   }
   dragElement(elmnt) {
+    if (!elmnt) {
+      return;
+    }
     var pos1 = 0,
       pos2 = 0,
       pos3 = 0,
@@ -1470,10 +1507,25 @@ class AreaWidget extends React.Component {
       document.onmouseup = null;
       document.onmousemove = null;
     };
+    if (this.dragEventContext && this.dragEventContext.handleTarget) {
+      this.dragEventContext.handleTarget.removeEventListener(
+        'mousedown',
+        this.dragEventContext.handleEvent,
+      );
+      this.dragEventContext = null;
+    }
     if (header) {
       header.addEventListener('mousedown', dragMouseDown);
+      this.dragEventContext = {
+        handleTarget: header,
+        handleEvent: dragMouseDown,
+      };
     } else {
       elmnt.addEventListener('mousedown', dragMouseDown);
+      this.dragEventContext = {
+        handleTarget: elmnt,
+        handleEvent: dragMouseDown,
+      };
     }
   }
   /**
