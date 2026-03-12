@@ -950,7 +950,11 @@ class AreaWidget extends React.Component {
       if (e.action === 'start') {
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         if (originGraphic) this.props.view.graphics.remove(originGraphic);
-        origin = this.props.view.toMap(e);
+        const resolveOriginLocation = this.props.view.toMap(e);
+        if (!resolveOriginLocation) {
+          return;
+        }
+        origin = resolveOriginLocation;
         this.setState({
           areaCoordinates: {
             originLat: origin.latitude.toFixed(3),
@@ -1005,10 +1009,14 @@ class AreaWidget extends React.Component {
           }
         }
       } else if (e.action === 'update') {
+        const resolveCursorLocation = this.props.view.toMap(e);
+        if (!origin || !resolveCursorLocation) {
+          return;
+        }
         if (extentGraphic) this.props.view.graphics.remove(extentGraphic);
         if (cursorGraphic) this.props.view.graphics.remove(cursorGraphic);
         if (originGraphic) this.props.view.graphics.remove(originGraphic);
-        let p = this.props.view.toMap(e);
+        let p = resolveCursorLocation;
         this.setState({
           areaCoordinates: {
             originLat: this.state.areaCoordinates.originLat,
