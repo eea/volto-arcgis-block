@@ -384,6 +384,7 @@ class MapViewer extends React.Component {
     this.syncViewTask = null;
     this.viewModeButtonTimeout = null;
     this.isViewModeButtonLoaded = false;
+    this.hasInitialViewModeSyncCompleted = false;
     this.viewUiOperationState = null;
     this.shouldClearSessionOnUnmount = true;
     this.uploadErrorTimeoutTask = null;
@@ -436,6 +437,20 @@ class MapViewer extends React.Component {
     if (this.viewModeButtonTimeout) {
       clearTimeout(this.viewModeButtonTimeout);
       this.viewModeButtonTimeout = null;
+    }
+
+    if (!this.hasInitialViewModeSyncCompleted) {
+      this.isViewModeButtonLoaded = false;
+      this.viewModeButtonTimeout = setTimeout(() => {
+        if (!this.isComponentMounted) {
+          return;
+        }
+        this.isViewModeButtonLoaded = true;
+        this.hasInitialViewModeSyncCompleted = true;
+        this.scheduleViewSyncTask();
+        this.viewModeButtonTimeout = null;
+      }, 1000);
+      return;
     }
 
     if (this.state.viewMode !== '2d') {
@@ -2030,7 +2045,14 @@ const MapViewerWithProvider = (props) => {
   const mapViewerRef = useRef(null);
   const cartState = useCartState();
   const [mapViewerInstanceRevision, setMapViewerInstanceRevision] = useState(0);
-  const [initialViewMode, setInitialViewMode] = useState(null);
+  const [initialViewMode, setInitialViewMode] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const query = new URLSearchParams(window.location.search);
+    return query.get('embed') === 'true' ? '3d' : null;
+  });
 
   // Get initial user state
   const initialUserState = {
