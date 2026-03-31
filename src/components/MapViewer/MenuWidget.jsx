@@ -5426,8 +5426,10 @@ class MenuWidget extends React.Component {
       }
       const nameNode = child.querySelector('Name');
       const key =
-        nameNode && typeof nameNode.innerText === 'string'
-          ? nameNode.innerText
+        nameNode &&
+        typeof nameNode.textContent === 'string' &&
+        nameNode.textContent
+          ? nameNode.textContent.trim()
           : '';
       if (!layerGeographicNode || !key) continue;
       const westNode = layerGeographicNode.querySelector('westBoundLongitude');
@@ -5435,10 +5437,10 @@ class MenuWidget extends React.Component {
       const eastNode = layerGeographicNode.querySelector('eastBoundLongitude');
       const northNode = layerGeographicNode.querySelector('northBoundLatitude');
       if (!westNode || !southNode || !eastNode || !northNode) continue;
-      const xmin = Number(westNode.innerText);
-      const ymin = Number(southNode.innerText);
-      const xmax = Number(eastNode.innerText);
-      const ymax = Number(northNode.innerText);
+      const xmin = Number(westNode.textContent);
+      const ymin = Number(southNode.textContent);
+      const xmax = Number(eastNode.textContent);
+      const ymax = Number(northNode.textContent);
       if (
         !isFinite(xmin) ||
         !isFinite(ymin) ||
@@ -5990,14 +5992,27 @@ class MenuWidget extends React.Component {
           },
         };
       }
-    } else if (this.url?.toLowerCase().endsWith('mapserver')) {
-      BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
-    } else if (this.url?.toLowerCase().includes('wms')) {
-      await this.getCapabilities(this.url, 'wms');
-      BBoxes = this.parseBBOXWMS(this.xml);
-    } else if (this.url?.toLowerCase().includes('wmts')) {
-      await this.getCapabilities(this.url, 'wmts');
-      BBoxes = this.parseBBOXWMTS(this.xml);
+    }
+    if (
+      (!BBoxes || Object.keys(BBoxes).length === 0) &&
+      this.uploadedGraphics &&
+      this.uploadedGraphics[elem.id] &&
+      this.uploadedGraphics[elem.id].length > 0
+    ) {
+      this.view.goTo(this.uploadedGraphics[elem.id]);
+      this.url = null;
+      return;
+    }
+    if (!BBoxes || Object.keys(BBoxes).length === 0) {
+      if (this.url?.toLowerCase().endsWith('mapserver')) {
+        BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
+      } else if (this.url?.toLowerCase().includes('wms')) {
+        await this.getCapabilities(this.url, 'wms');
+        BBoxes = this.parseBBOXWMS(this.xml);
+      } else if (this.url?.toLowerCase().includes('wmts')) {
+        await this.getCapabilities(this.url, 'wmts');
+        BBoxes = this.parseBBOXWMTS(this.xml);
+      }
     }
     if (
       BBoxes &&
@@ -6094,9 +6109,17 @@ class MenuWidget extends React.Component {
       ) {
         firstLayer = BBoxes['all_present_lc_a_pol'];
       } else if (serviceLayer) {
-        firstLayer = BBoxes['dataset'];
+        firstLayer = BBoxes['dataset'] || BBoxes[Object.keys(BBoxes)[0]];
       } else {
-        firstLayer = BBoxes[elem.attributes.layerid.value];
+        const layerId = elem?.attributes?.layerid?.value;
+        firstLayer =
+          (layerId && BBoxes[layerId]) ||
+          BBoxes['dataset'] ||
+          BBoxes[Object.keys(BBoxes)[0]];
+      }
+      if (!firstLayer) {
+        this.url = null;
+        return;
       }
       myExtent = new Extent({
         xmin: firstLayer.xmin,
