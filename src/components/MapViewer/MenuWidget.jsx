@@ -5857,12 +5857,80 @@ class MenuWidget extends React.Component {
     const serviceLayer = this.state.wmsUserServiceLayers.find(
       (layer) => layer.LayerId === elem.id,
     );
+    const resolveLayerExtent = async () => {
+      const activeLayer = this.layers[elem.id] || serviceLayer;
+      if (!activeLayer) {
+        return null;
+      }
+      let targetExtent =
+        activeLayer.fullExtent ||
+        (activeLayer.fullExtents && activeLayer.fullExtents[0]
+          ? activeLayer.fullExtents[0]
+          : null);
+      if (!targetExtent && typeof activeLayer.queryExtent === 'function') {
+        try {
+          const queryResult = await activeLayer.queryExtent();
+          targetExtent = queryResult?.extent || null;
+        } catch (error) {}
+      }
+      if (!targetExtent) {
+        return null;
+      }
+      if (!(targetExtent instanceof Extent)) {
+        targetExtent = new Extent({
+          xmin: targetExtent.xmin,
+          ymin: targetExtent.ymin,
+          xmax: targetExtent.xmax,
+          ymax: targetExtent.ymax,
+          spatialReference:
+            targetExtent.spatialReference || this.view?.spatialReference,
+        });
+      }
+      if (
+        targetExtent?.spatialReference &&
+        this.view?.spatialReference &&
+        targetExtent.spatialReference.wkid !== this.view.spatialReference.wkid
+      ) {
+        try {
+          await projection.load();
+          const projectedExtent = projection.project(
+            targetExtent,
+            this.view.spatialReference,
+          );
+          if (projectedExtent) {
+            targetExtent = projectedExtent;
+          }
+        } catch (error) {}
+      }
+      return targetExtent;
+    };
 
     if (!serviceLayer) {
       this.findCheckedDataset(elem);
     } else {
       this.productId = null;
       this.url = serviceLayer.ViewService;
+    }
+    const isUploadedServiceLayer =
+      !!serviceLayer &&
+      (this.layers[elem.id]?.type === 'feature' ||
+        serviceLayer.type === 'feature');
+    if (isUploadedServiceLayer) {
+      const targetExtent = await resolveLayerExtent();
+      if (targetExtent) {
+        this.view.goTo(targetExtent);
+        this.url = null;
+        return;
+      }
+      if (
+        this.uploadedGraphics &&
+        this.uploadedGraphics[elem.id] &&
+        this.uploadedGraphics[elem.id].length > 0
+      ) {
+        this.view.goTo(this.uploadedGraphics[elem.id]);
+        this.url = null;
+        return;
+      }
     }
     let BBoxes = {};
     let firstLayer;
