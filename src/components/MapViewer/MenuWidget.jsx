@@ -4428,6 +4428,57 @@ class MenuWidget extends React.Component {
           // }, 2000);
         }
       }
+      try {
+        const isCDSE =
+          !!this.url &&
+          ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
+        if (isCDSE) {
+          const d =
+            this.layers[elem.id]?.DatasetDownloadInformation ||
+            this.layers[elem.id]?.datasetDownloadInformation ||
+            {};
+          const byoc =
+            d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+          if (byoc && this.props.fetchCatalogApiDates) {
+            let payload =
+              this.props.catalogapi &&
+              this.props.catalogapi.byoc &&
+              this.props.catalogapi.byoc[byoc]
+                ? this.props.catalogapi.byoc[byoc].data
+                : null;
+            if (!payload) {
+              payload = await this.props.fetchCatalogApiDates(byoc, false);
+            }
+            if (payload) {
+              if (
+                this.layers[elem.id].ViewService.toLowerCase().includes('wmts')
+              ) {
+                this.layers[elem.id] = new WMTSLayer({
+                  url: this.layers[elem.id].url,
+                  spatialReference: this.layers[elem.id].spatialReference,
+                  title: this.layers[elem.id].title,
+                  _wmtsTitle: this.layers[elem.id]._wmtsTitle,
+                  activeLayer: this.layers[elem.id].activeLayer,
+                  isTimeSeries: this.layers[elem.id].isTimeSeries,
+                  fields: this.layers[elem.id].fields,
+                  DatasetId: this.layers[elem.id].DatasetId,
+                  DatasetTitle: this.layers[elem.id].DatasetTitle,
+                  ProductId: this.layers[elem.id].ProductId,
+                  ViewService: this.layers[elem.id].ViewService,
+                  StaticImageLegend: this.layers[elem.id].StaticImageLegend,
+                  LayerTitle: this.layers[elem.id].LayerTitle,
+                  DatasetDownloadInformation: this.layers[elem.id]
+                    .DatasetDownloadInformation,
+                  customLayerParameters: {
+                    SHOWLOGO: false,
+                    TIME: payload.dates[payload.dates.length - 1] || '',
+                  },
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {}
       if (
         this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
         this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df'
