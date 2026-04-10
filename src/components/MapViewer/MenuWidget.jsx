@@ -8565,4 +8565,5 @@ class MenuWidget extends React.Component {
     );
   }
 }
+/*comment*/
 export default MenuWidget;
