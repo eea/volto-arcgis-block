@@ -347,6 +347,8 @@ class TimesliderWidget extends React.Component {
               SHOWLOGO: false,
             };
             this.layer.customLayerParameters['TIME'] =
+              timeDict[this.TimesliderWidget.timeExtent.end] +
+              '/' +
               timeDict[this.TimesliderWidget.timeExtent.end];
           } else {
             this.layer.customLayerParameters = {};
@@ -636,6 +638,8 @@ class TimesliderWidget extends React.Component {
                       if (this.layer.type === 'wmts') {
                         this.layer.customLayerParameters = {};
                         this.layer.customLayerParameters['TIME'] =
+                          timeDict[this.TimesliderWidget.timeExtent.end] +
+                          '/' +
                           timeDict[this.TimesliderWidget.timeExtent.end];
                       } else {
                         this.layer.customLayerParameters = {};
