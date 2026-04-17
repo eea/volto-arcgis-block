@@ -4471,7 +4471,10 @@ class MenuWidget extends React.Component {
                     .DatasetDownloadInformation,
                   customLayerParameters: {
                     SHOWLOGO: false,
-                    TIME: payload.dates[payload.dates.length - 1] || '',
+                    TIME:
+                      payload.dates[payload.dates.length - 1] +
+                        '/' +
+                        payload.dates[payload.dates.length - 1] || '',
                   },
                 });
               }
