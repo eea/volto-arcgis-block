@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class ErrorReport extends React.Component {
   constructor(props) {
@@ -14,7 +15,7 @@ class ErrorReport extends React.Component {
       instructionsText: 'First select a pixel in the data viewer',
     };
     this.menuClass =
-      'esri-icon-notice-round esri-widget--button esri-widget esri-interactive';
+      'errorreport esri-widget--button esri-widget esri-interactive';
     this.helpdeskUrl = 'https://land.copernicus.eu/en/contact-service-helpdesk';
   }
 
@@ -251,27 +252,31 @@ class ErrorReport extends React.Component {
     return (
       <>
         <div ref={this.container} className="error-report-container">
-          <div tooltip="Report an issue" direction="left" type="widget">
-            <div
-              className={this.menuClass}
-              id="map_error_report_button"
-              aria-label="Report an issue"
-              onClick={this.openMenu.bind(this)}
-              onKeyDown={(e) => {
-                if (
-                  !e.altKey &&
-                  e.code !== 'Tab' &&
-                  !e.ctrlKey &&
-                  e.code !== 'Delete' &&
-                  !e.shiftKey &&
-                  !e.code.startsWith('F')
-                ) {
-                  this.openMenu(this);
-                }
-              }}
-              tabIndex="0"
-              role="button"
-            ></div>
+          <div className="tools-group">
+            <div tooltip="Report an issue" direction="left" type="widget">
+              <div
+                className={this.menuClass}
+                id="map_error_report_button"
+                aria-label="Report an issue"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (
+                    !e.altKey &&
+                    e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
+                    !e.shiftKey &&
+                    !e.code.startsWith('F')
+                  ) {
+                    this.openMenu(this);
+                  }
+                }}
+                tabIndex="0"
+                role="button"
+              >
+                <FontAwesomeIcon icon={['fa', 'comment-dots']} />
+              </div>
+            </div>
           </div>
           <div className="right-panel">
             <div className="right-panel-header">

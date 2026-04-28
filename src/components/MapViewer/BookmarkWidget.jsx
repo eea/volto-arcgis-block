@@ -1291,27 +1291,29 @@ class BookmarkWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="bookmark-container">
-          <div tooltip="Bookmark" direction="left" type="widget">
-            <div
-              className={this.menuClass}
-              id="bookmark_button"
-              aria-label="Bookmark"
-              onClick={this.openMenu.bind(this)}
-              onKeyDown={(e) => {
-                if (
-                  !e.altKey &&
-                  e.code !== 'Tab' &&
-                  !e.ctrlKey &&
-                  e.code !== 'Delete' &&
-                  !e.shiftKey &&
-                  !e.code.startsWith('F')
-                ) {
-                  this.openMenu(this);
-                }
-              }}
-              tabIndex="0"
-              role="button"
-            ></div>
+          <div className="tools-group">
+            <div tooltip="Bookmark" direction="left" type="widget">
+              <div
+                className={this.menuClass}
+                id="bookmark_button"
+                aria-label="Bookmark"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (
+                    !e.altKey &&
+                    e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
+                    !e.shiftKey &&
+                    !e.code.startsWith('F')
+                  ) {
+                    this.openMenu(this);
+                  }
+                }}
+                tabIndex="0"
+                role="button"
+              ></div>
+            </div>
           </div>
           <div className="right-panel">
             <div className="right-panel-header">

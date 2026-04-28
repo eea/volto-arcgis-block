@@ -252,27 +252,29 @@ class PrintWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="print-container">
-          <div tooltip="Print" direction="left" type="widget">
-            <div
-              className={this.menuClass}
-              id="map_print_button"
-              aria-label="Print"
-              onClick={this.openMenu.bind(this)}
-              onKeyDown={(e) => {
-                if (
-                  !e.altKey &&
-                  e.code !== 'Tab' &&
-                  !e.ctrlKey &&
-                  e.code !== 'Delete' &&
-                  !e.shiftKey &&
-                  !e.code.startsWith('F')
-                ) {
-                  this.openMenu(this);
-                }
-              }}
-              tabIndex="0"
-              role="button"
-            ></div>
+          <div className="tools-group">
+            <div tooltip="Print" direction="left" type="widget">
+              <div
+                className={this.menuClass}
+                id="map_print_button"
+                aria-label="Print"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (
+                    !e.altKey &&
+                    e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
+                    !e.shiftKey &&
+                    !e.code.startsWith('F')
+                  ) {
+                    this.openMenu(this);
+                  }
+                }}
+                tabIndex="0"
+                role="button"
+              ></div>
+            </div>
           </div>
           <div className="right-panel">
             <div className="right-panel-header">

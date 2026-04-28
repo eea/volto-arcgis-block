@@ -35,6 +35,7 @@ import ErrorReportWidget from './ErrorReportWidget';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 import { fetchCatalogApiDates } from '../../actions';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 //import "isomorphic-fetch";  <-- Necessary to use fetch?
 var Map, MapView, SceneView, Zoom, intl, Basemap, WebTileLayer, Extent;
@@ -647,6 +648,8 @@ class MapViewer extends React.Component {
       { selector: '.upload-container', position: 'top-right' },
       { selector: '.viewmode-container', position: 'top-right' },
       { selector: '.error-report-container', position: 'top-right' },
+      { selector: '.analysis-container', position: 'top-right' },
+      { selector: '.tools-container', position: 'top-right' },
     ];
 
     uiContainerConfig.forEach(({ selector, position }) => {
@@ -774,6 +777,8 @@ class MapViewer extends React.Component {
       '.esri-swipe',
       '.viewmode-container',
       '#loader',
+      '.analysis-container',
+      '.tools-container',
     ];
 
     widgetSelectorList.forEach((selector) => {
@@ -1594,6 +1599,20 @@ class MapViewer extends React.Component {
       this.activeWidget = null;
       return;
     }
+    if (
+      !widget.menuClass?.includes('measure') &&
+      !widget.menuClass?.includes('basemap') &&
+      !widget.menuClass?.includes('swap')
+    ) {
+      this.closeAnalysis();
+    }
+    if (
+      !widget.menuClass?.includes('bookmark') &&
+      !widget.menuClass?.includes('errorreport') &&
+      !widget.menuClass?.includes('printer')
+    ) {
+      this.closeTools();
+    }
     if (this.activeWidget === widget) return;
     this.closeActiveWidget();
     this.activeWidget = widget;
@@ -1865,6 +1884,130 @@ class MapViewer extends React.Component {
       );
   }
 
+  renderAnalysis() {
+    if (this.view)
+      return (
+        <div className="analysis-container">
+          <div tooltip="Analysis" direction="left" type="widget">
+            <div
+              tabIndex="0"
+              role="button"
+              className="analysis-widget-button esri-widget--button esri-widget esri-interactive"
+              onClick={this.openAnalysis.bind(this)}
+              onKeyDown={(e) => {
+                if (
+                  !e.altKey &&
+                  e.code !== 'Tab' &&
+                  !e.ctrlKey &&
+                  e.code !== 'Delete' &&
+                  !e.shiftKey &&
+                  !e.code.startsWith('F')
+                ) {
+                  this.openAnalysis(this);
+                }
+              }}
+            >
+              <FontAwesomeIcon icon={['fas', 'vial']} />
+            </div>
+          </div>
+        </div>
+      );
+  }
+
+  openAnalysis() {
+    let analysisIcon = document.querySelector('.analysis-widget-button');
+    if (analysisIcon.classList.contains('active-widget')) {
+      this.closeAnalysis();
+    } else {
+      document.querySelector('#map_basemap_button').click();
+      analysisIcon.classList.add('active-widget');
+      document.querySelectorAll('.analysis-group').forEach((widget) => {
+        widget.style.display = 'block';
+      });
+      if (
+        document
+          .querySelector('.tools-widget-button')
+          .classList.contains('active-widget')
+      ) {
+        this.closeTools();
+      }
+    }
+  }
+
+  closeAnalysis() {
+    let analysisIcon = document.querySelector('.analysis-widget-button');
+    analysisIcon.classList.remove('active-widget');
+    document.querySelectorAll('.analysis-group').forEach((widget) => {
+      widget.style.display = 'none';
+    });
+    let button = document.querySelector('#map_basemap_button');
+    if (button.classList.contains('active-widget')) {
+      button.click();
+    }
+  }
+
+  renderTools() {
+    if (this.view)
+      return (
+        <div className="tools-container">
+          <div tooltip="Tools" direction="left" type="widget">
+            <div
+              tabIndex="0"
+              role="button"
+              className="tools-widget-button esri-widget--button esri-widget esri-interactive"
+              onClick={this.openTools.bind(this)}
+              onKeyDown={(e) => {
+                if (
+                  !e.altKey &&
+                  e.code !== 'Tab' &&
+                  !e.ctrlKey &&
+                  e.code !== 'Delete' &&
+                  !e.shiftKey &&
+                  !e.code.startsWith('F')
+                ) {
+                  this.openTools(this);
+                }
+              }}
+            >
+              <FontAwesomeIcon icon={['fa', 'toolbox']} />
+            </div>
+          </div>
+        </div>
+      );
+  }
+
+  openTools() {
+    let toolsIcon = document.querySelector('.tools-widget-button');
+    if (toolsIcon.classList.contains('active-widget')) {
+      this.closeTools();
+    } else {
+      document.querySelector('#bookmark_button').click();
+      toolsIcon.classList.add('active-widget');
+      document.querySelectorAll('.tools-group').forEach((widget) => {
+        widget.style.display = 'block';
+      });
+      if (
+        document
+          .querySelector('.analysis-widget-button')
+          .classList.contains('active-widget')
+      ) {
+        this.closeAnalysis();
+      }
+    }
+  }
+
+  closeTools() {
+    let toolsIcon = document.querySelector('.tools-widget-button');
+    toolsIcon.classList.remove('active-widget');
+    document.querySelectorAll('.tools-group').forEach((widget) => {
+      widget.style.display = 'none';
+    });
+    let button = document.querySelector('#bookmark_button');
+    if (button.classList.contains('active-widget')) {
+      button.click();
+    }
+  }
+
   renderViewModeSwitcher() {
     if (!this.view) return null;
 
@@ -1937,6 +2080,8 @@ class MapViewer extends React.Component {
               <CheckUserID reference={this} />
               {this.renderUploadService()}
               {this.renderErrorReport()}
+              {this.renderAnalysis()}
+              {this.renderTools()}
             </>
           )}
         </div>
