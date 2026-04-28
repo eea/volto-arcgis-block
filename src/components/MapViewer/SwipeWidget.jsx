@@ -512,27 +512,29 @@ class SwipeWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="swipe-container">
-          <div tooltip="Swipe" direction="left" type="widget">
-            <div
-              className={this.menuClass}
-              id="map_swipe_button"
-              aria-label="Swipe"
-              onClick={this.openMenu.bind(this)} //aqui deberían ir ocultar panel y mas abajo cerrar (pasar a 3d)
-              onKeyDown={(e) => {
-                if (
-                  !e.altKey &&
-                  e.code !== 'Tab' &&
-                  !e.ctrlKey &&
-                  e.code !== 'Delete' &&
-                  !e.shiftKey &&
-                  !e.code.startsWith('F')
-                ) {
-                  this.openMenu(this);
-                }
-              }}
-              tabIndex="0"
-              role="button"
-            ></div>
+          <div className="analysis-group">
+            <div tooltip="Swipe" direction="left" type="widget">
+              <div
+                className={this.menuClass}
+                id="map_swipe_button"
+                aria-label="Swipe"
+                onClick={this.openMenu.bind(this)} //aqui deberían ir ocultar panel y mas abajo cerrar (pasar a 3d)
+                onKeyDown={(e) => {
+                  if (
+                    !e.altKey &&
+                    e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
+                    !e.shiftKey &&
+                    !e.code.startsWith('F')
+                  ) {
+                    this.openMenu(this);
+                  }
+                }}
+                tabIndex="0"
+                role="button"
+              ></div>
+            </div>
           </div>
           {/* Al final el IF lo añadiremos aqui en estos OpenMenu */}
           <div className="right-panel">

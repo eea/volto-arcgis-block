@@ -81,34 +81,56 @@
   order: 2;
 }
 
-.measurement-container {
+.viewmode-container {
+  display: flex;
   order: 3;
-}
-
-.print-container {
-  order: 4;
-}
-
-.basemap-container {
-  order: 5;
-}
-
-.info-container {
-  order: 6;
-}
-
-.bookmark-container {
-  order: 7;
+  padding: 0;
 }
 
 .upload-container {
+  order: 4;
+}
+
+.info-container {
+  order: 5;
+}
+
+.hotspot-container {
+  order: 6;
+}
+
+.analysis-container {
+  order: 7;
+}
+
+.tools-container {
   order: 8;
 }
 
-.viewmode-container {
-  display: flex;
+.basemap-container {
   order: 9;
-  padding: 0;
+}
+
+.measurement-container {
+  order: 10;
+}
+
+.swipe-container {
+  order: 11;
+}
+
+.bookmark-container {
+  order: 12;
+  box-shadow: none !important;
+}
+
+.print-container {
+  order: 13;
+}
+
+.error-report-container {
+  order: 14;
+  box-shadow: none !important;
 }
 
 .viewmode-floating-container {
@@ -173,6 +195,20 @@
 
 .esri-basemap-gallery__item {
   margin: 0;
+}
+
+.analysis-group {
+  position: relative;
+  right: 3rem !important;
+  bottom: 8.6rem !important;
+  display: none;
+}
+
+.tools-group {
+  position: relative;
+  right: 3rem !important;
+  bottom: 10.5rem !important;
+  display: none;
 }
 
 /* Measure */
@@ -1940,6 +1976,9 @@ div.map-container.popup-block {
 */
 
 /*Swipe*/
+.swipe-container {
+  box-shadow: none !important;
+}
 
 .swipe-container .esri-button {
   border: none;

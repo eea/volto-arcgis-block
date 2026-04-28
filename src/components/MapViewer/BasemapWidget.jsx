@@ -286,28 +286,30 @@ class BasemapWidget extends React.Component {
     return (
       <>
         <div ref={this.container} className="basemap-container">
-          <div tooltip="Basemap gallery" direction="left" type="widget">
-            <div
-              // ref={this.basemaps}
-              className={this.menuClass}
-              id="map_basemap_button"
-              aria-label="Basemap gallery"
-              onClick={this.openMenu.bind(this)}
-              onKeyDown={(e) => {
-                if (
-                  !e.altKey &&
-                  e.code !== 'Tab' &&
-                  !e.ctrlKey &&
-                  e.code !== 'Delete' &&
-                  !e.shiftKey &&
-                  !e.code.startsWith('F')
-                ) {
-                  this.openMenu(this);
-                }
-              }}
-              tabIndex="0"
-              role="button"
-            ></div>
+          <div className="analysis-group">
+            <div tooltip="Basemap gallery" direction="left" type="widget">
+              <div
+                // ref={this.basemaps}
+                className={this.menuClass}
+                id="map_basemap_button"
+                aria-label="Basemap gallery"
+                onClick={this.openMenu.bind(this)}
+                onKeyDown={(e) => {
+                  if (
+                    !e.altKey &&
+                    e.code !== 'Tab' &&
+                    !e.ctrlKey &&
+                    e.code !== 'Delete' &&
+                    !e.shiftKey &&
+                    !e.code.startsWith('F')
+                  ) {
+                    this.openMenu(this);
+                  }
+                }}
+                tabIndex="0"
+                role="button"
+              ></div>
+            </div>
           </div>
           <div className="right-panel">
             <div className="right-panel-header">
