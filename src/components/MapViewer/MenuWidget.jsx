@@ -2306,9 +2306,12 @@ class MenuWidget extends React.Component {
     return (url || '').replace(/^https?:\/\//i, '');
   }
 
-  getProxyBase() {
-    return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
-  }
+  getProxyBase = () => {
+    const href = window.location.href || '';
+    return href.replace('/en/map-viewer', '/ogcproxy/');
+    // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
+    // return 'https://land.copernicus.eu/ogcproxy/';
+  };
 
   buildProxiedUrl(url) {
     if (!url) return url;

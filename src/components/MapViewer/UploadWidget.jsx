@@ -310,9 +310,10 @@ class UploadWidget extends React.Component {
   };
 
   getProxyBase = () => {
-    // const href = window.location.href || '';
-    // return href.replace('/en/map-viewer', '/ogcproxy/');
-    return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
+    const href = window.location.href || '';
+    return href.replace('/en/map-viewer', '/ogcproxy/');
+    // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
+    // return 'https://land.copernicus.eu/ogcproxy/';
   };
 
   buildProxiedUrl = (url) => {
