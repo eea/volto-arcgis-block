@@ -2307,10 +2307,10 @@ class MenuWidget extends React.Component {
   }
 
   getProxyBase = () => {
-    // const origin = window?.location?.origin || '';
-    // return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
+    const origin = window?.location?.origin || '';
+    return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
     // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
-    return 'https://land.copernicus.eu/ogcproxy/';
+    // return 'https://land.copernicus.eu/ogcproxy/';
   };
 
   buildProxiedUrl(url) {
