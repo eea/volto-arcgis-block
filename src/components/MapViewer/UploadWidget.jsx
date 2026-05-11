@@ -284,17 +284,31 @@ class UploadWidget extends React.Component {
         return queryService;
       }
       const pathName = (parsedUrl.pathname || '').toLowerCase();
-      const pathSegments = pathName.split('/').filter(Boolean);
-      const serviceMatch = pathSegments.find((segment) =>
-        /^(wmts|wms|wfs)$/i.test(segment),
-      );
-      if (serviceMatch) {
-        return serviceMatch.toUpperCase();
+      const pathServiceType = this.resolveServiceTypeFromPath(pathName);
+      if (pathServiceType) {
+        return pathServiceType;
       }
       return null;
     } catch (e) {
       return null;
     }
+  };
+
+  resolveServiceTypeFromPath = (pathName) => {
+    const value = (pathName || '').toLowerCase();
+    if (!value) {
+      return null;
+    }
+    if (/\bwmts\b|\/wmts(?:[/._-]|$)/i.test(value)) {
+      return 'WMTS';
+    }
+    if (/\bwfs\b|\/wfs(?:[/._-]|$)/i.test(value)) {
+      return 'WFS';
+    }
+    if (/\bwms\b|\/wms(?:[/._-]|$)/i.test(value)) {
+      return 'WMS';
+    }
+    return null;
   };
 
   isServiceTypeMatchingUrl = (serviceUrl, selectedServiceType) => {
@@ -305,15 +319,30 @@ class UploadWidget extends React.Component {
     return encodedServiceType === selectedServiceType;
   };
 
+  clearUploadForm = (clearServiceType = false) => {
+    this.setState({
+      ...this.buildUploadResetState(),
+      ...(clearServiceType ? { selectedServiceType: '' } : {}),
+    });
+    if (this.fileInput && this.fileInput.current) {
+      this.fileInput.current.value = null;
+    }
+  };
+
+  handleServiceTypeMismatch = () => {
+    this.errorPopup('serviceTypeMismatch');
+    this.clearUploadForm(true);
+  };
+
   stripProtocol = (url) => {
     return (url || '').replace(/^https?:\/\//i, '');
   };
 
   getProxyBase = () => {
-    // const origin = window?.location?.origin || '';
-    // return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
+    const origin = window?.location?.origin || '';
+    return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
     // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
-    return 'https://land.copernicus.eu/ogcproxy/';
+    // return 'https://land.copernicus.eu/ogcproxy/';
   };
 
   buildProxiedUrl = (url) => {
@@ -536,6 +565,15 @@ class UploadWidget extends React.Component {
     const { serviceUrl, selectedServiceType } = this.state;
     const trimmedServiceUrl = (serviceUrl || '').trim();
     if (
+      selectedServiceType &&
+      trimmedServiceUrl !== '' &&
+      this.isValidUrl(trimmedServiceUrl) &&
+      !this.isServiceTypeMatchingUrl(trimmedServiceUrl, selectedServiceType)
+    ) {
+      this.handleServiceTypeMismatch();
+      return;
+    }
+    if (
       selectedServiceType === 'WFS' &&
       trimmedServiceUrl !== '' &&
       this.isValidUrl(trimmedServiceUrl) &&
@@ -560,6 +598,15 @@ class UploadWidget extends React.Component {
     const trimmedServiceUrl = (serviceUrl || '').trim();
     const selectedServiceType = this.state.selectedServiceType;
     const selectedFeatures = this.state.selectedFeatures;
+    if (
+      selectedServiceType &&
+      trimmedServiceUrl !== '' &&
+      this.isValidUrl(trimmedServiceUrl) &&
+      !this.isServiceTypeMatchingUrl(trimmedServiceUrl, selectedServiceType)
+    ) {
+      this.handleServiceTypeMismatch();
+      return;
+    }
     if (
       selectedServiceType &&
       trimmedServiceUrl !== '' &&
@@ -1022,6 +1069,16 @@ class UploadWidget extends React.Component {
                       <div className="drawRectanglePopup-text">
                         Incorrect tiling scheme for scene view. The service can
                         still be used in 2D map view.
+                      </div>
+                    </>
+                  )}
+                  {this.state.infoPopupType === 'serviceTypeMismatch' && (
+                    <>
+                      <span className="drawRectanglePopup-icon">
+                        <FontAwesomeIcon icon={['fas', 'info-circle']} />
+                      </span>
+                      <div className="drawRectanglePopup-text">
+                        Selected service type does not match the provided URL.
                       </div>
                     </>
                   )}
