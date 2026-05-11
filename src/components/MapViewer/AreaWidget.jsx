@@ -358,7 +358,18 @@ class AreaWidget extends React.Component {
     });
   }
 
+  resolveNutsGroupLayerState() {
+    if (!this.nutsGroupLayer || !this.props.map || !this.props.map.layers) {
+      return;
+    }
+
+    if (!this.props.map.layers.includes(this.nutsGroupLayer)) {
+      this.props.map.add(this.nutsGroupLayer);
+    }
+  }
+
   loadNutsService(id, levels) {
+    this.resolveNutsGroupLayerState();
     this.clearWidget();
     document.querySelector('.esri-attribution__powered-by').style.display =
       'flex';
@@ -374,6 +385,7 @@ class AreaWidget extends React.Component {
   }
 
   loadCountriesService(id) {
+    this.resolveNutsGroupLayerState();
     document.querySelector('.esri-attribution__powered-by').style.display =
       'flex';
     var layer = new FeatureLayer({
