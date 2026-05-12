@@ -714,6 +714,7 @@ class MapViewer extends React.Component {
       }
       this.syncViewWidgetContainers();
       this.syncViewTask = null;
+      this.restorePanelScroll(true);
     });
   }
 
@@ -1552,6 +1553,33 @@ class MapViewer extends React.Component {
     this.processPendingWidgetActivation();
   }
 
+  restorePanelScroll(skipTimeout) {
+    let paneles = document.querySelector('div#paneles.panels');
+    var selected_tab = document.querySelector('.tab-selected');
+
+    if (!paneles || !selected_tab) {
+      return;
+    }
+
+    let toc_panel_scrolls =
+      JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) ?? {};
+    let scroll = toc_panel_scrolls[selected_tab.id];
+    if (scroll !== undefined) {
+      scroll = parseInt(scroll);
+      if (skipTimeout) {
+        if (paneles) {
+          paneles.scrollTop = scroll;
+        }
+      } else {
+        setTimeout(() => {
+          if (paneles) {
+            paneles.scrollTop = scroll;
+          }
+        }, 1000);
+      }
+    }
+  }
+
   componentWillUnmount() {
     this.isComponentMounted = false;
     this.viewTransitionTaskId += 1;
@@ -2173,6 +2201,7 @@ export const CheckUserID = ({ reference }) => {
             tax={reference.tax}
             catalogapi={reference.props.catalogapi}
             fetchCatalogApiDates={reference.props.fetchCatalogApiDates}
+            restorePanelScroll={reference.restorePanelScroll}
           />
         </>
       )}
