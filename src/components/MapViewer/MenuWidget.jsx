@@ -762,23 +762,6 @@ class MenuWidget extends React.Component {
     }
   }
 
-  restorePanelScroll() {
-    let paneles = document.querySelector('#paneles');
-    var selected_tab = document.querySelector('.tab-selected');
-
-    if (!paneles || !selected_tab) {
-      return;
-    }
-
-    let toc_panel_scrolls =
-      JSON.parse(sessionStorage.getItem('toc_panel_scrolls')) ?? {};
-    let scroll = toc_panel_scrolls[selected_tab.id];
-    if (scroll !== undefined) {
-      scroll = parseInt(scroll);
-      paneles.scrollTop = scroll;
-    }
-  }
-
   /**
    * Method that will be invoked when the
    * button is clicked. It controls the open
@@ -841,7 +824,7 @@ class MenuWidget extends React.Component {
           timeSliderContainer.style.display = 'block';
         }
 
-        this.restorePanelScroll();
+        this.props.restorePanelScroll();
       }
 
       this.setState({ showMapMenu: true });
@@ -7653,7 +7636,7 @@ class MenuWidget extends React.Component {
       if (document.querySelector('.opacity-panel').style.display === 'block') {
         this.closeOpacity();
       }
-      this.restorePanelScroll();
+      this.props.restorePanelScroll();
     }
   }
 
