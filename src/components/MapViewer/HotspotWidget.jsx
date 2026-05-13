@@ -596,9 +596,9 @@ class HotspotWidget extends React.Component {
     if (lcContainer === null || lccContainer === null) return;
     if (
       (lcContainer.style.display === 'block' &&
-        lcTimeSelect.value === 'default') ||
+        (lcTimeSelect.value === 'default' || lcTimeSelect.value === '')) ||
       (lccContainer.style.display === 'block' &&
-        lccTimeSelect.value === 'default') ||
+        (lccTimeSelect.value === 'default' || lccTimeSelect.value === '')) ||
       klcSelect.value === 'default'
     ) {
       document.querySelector('#applyFilterButton').disabled = true;
@@ -759,10 +759,20 @@ class HotspotWidget extends React.Component {
             } else {
               selectBox.value = this.state.selectedArea;
               if (this.state.lcYear !== null) {
-                selectBoxLcTime.value = this.state.lcYear;
+                const hasLcYearOption = Array.from(
+                  selectBoxLcTime.options,
+                ).some((option) => option.value === this.state.lcYear);
+                selectBoxLcTime.value = hasLcYearOption
+                  ? this.state.lcYear
+                  : 'default';
               }
               if (this.state.lccYear !== null) {
-                selectBoxLccTime.value = this.state.lccYear;
+                const hasLccYearOption = Array.from(
+                  selectBoxLccTime.options,
+                ).some((option) => option.value === this.state.lccYear);
+                selectBoxLccTime.value = hasLccYearOption
+                  ? this.state.lccYear
+                  : 'default';
               }
               break; // move break statement inside the if block
             }
@@ -783,10 +793,20 @@ class HotspotWidget extends React.Component {
             } else {
               selectBox.value = this.state.selectedArea;
               if (this.state.lcYear !== null) {
-                selectBoxLcTime.value = this.state.lcYear;
+                const hasLcYearOption = Array.from(
+                  selectBoxLcTime.options,
+                ).some((option) => option.value === this.state.lcYear);
+                selectBoxLcTime.value = hasLcYearOption
+                  ? this.state.lcYear
+                  : 'default';
               }
               if (this.state.lccYear !== null) {
-                selectBoxLccTime.value = this.state.lccYear;
+                const hasLccYearOption = Array.from(
+                  selectBoxLccTime.options,
+                ).some((option) => option.value === this.state.lccYear);
+                selectBoxLccTime.value = hasLccYearOption
+                  ? this.state.lccYear
+                  : 'default';
               }
               break;
             }
