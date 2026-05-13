@@ -152,8 +152,9 @@ class SwipeWidget extends React.Component {
       // CLOSE
       this.props.mapViewer.setActiveWidget();
       this.cleanupSwipeState();
-      this.loadVisibleLayers();
+      this.removeLayerChangeListener();
       this.cleanupSwipeResource();
+      this.loadVisibleLayers();
       this.setState({ showMapMenu: false });
       if (shouldReturnToThreeDimensionalView) {
         this.props.mapViewer.switchViewMode('3d');
@@ -434,11 +435,15 @@ class SwipeWidget extends React.Component {
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (cl) {
       cl.forEach((layer) => {
-        if (layers[layer].id === selectedLeadingLayer) {
-          this.swipe.leadingLayers.add(layers[layer]);
+        const selectedLayer = layers[layer];
+        if (!selectedLayer) {
+          return;
         }
-        if (layers[layer].id === selectedTrailingLayer) {
-          this.swipe.trailingLayers.add(layers[layer]);
+        if (selectedLayer.id === selectedLeadingLayer) {
+          this.swipe.leadingLayers.add(selectedLayer);
+        }
+        if (selectedLayer.id === selectedTrailingLayer) {
+          this.swipe.trailingLayers.add(selectedLayer);
         }
       });
     }
@@ -488,7 +493,9 @@ class SwipeWidget extends React.Component {
     let cl = JSON.parse(sessionStorage.getItem('checkedLayers'));
     if (cl) {
       cl.forEach((layer) => {
-        this.map.layers.add(layers[layer]);
+        if (layers[layer]) {
+          this.map.layers.add(layers[layer]);
+        }
       });
     }
     if (layers['lcc_filter']) {
