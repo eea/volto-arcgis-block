@@ -2068,10 +2068,14 @@ class MenuWidget extends React.Component {
           ViewService: viewService,
         });
       } else if (viewService?.toLowerCase().includes('wmts')) {
+        const resolveSentinelLayer = /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
+          viewService || '',
+        );
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
           url: viewService?.includes('?')
             ? viewService + '&'
             : viewService + '?',
+          serviceMode: 'KVP',
           spatialReference: this.view?.spatialReference,
           //id: layer.LayerId,
           title: '',
@@ -2092,6 +2096,7 @@ class MenuWidget extends React.Component {
           DatasetDownloadInformation: dataset_download_information || {},
           customLayerParameters: {
             SHOWLOGO: false,
+            ...(resolveSentinelLayer ? { PREVIEW: 2 } : {}),
           },
         });
       } else {
@@ -2703,6 +2708,18 @@ class MenuWidget extends React.Component {
     if (!activeLayerData) {
       return false;
     }
+    const resolveSentinelLayer = /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
+      (
+        currentLayerData.ViewService ||
+        currentLayerData.url ||
+        ''
+      ).toLowerCase(),
+    );
+    const nextCustomLayerParameters = {
+      ...(currentLayerData.customLayerParameters || {}),
+      SHOWLOGO: false,
+      ...(resolveSentinelLayer ? { PREVIEW: 2 } : {}),
+    };
 
     const nextLayerData = new WMTSLayer({
       id: currentLayerData.id || layerId,
@@ -2714,9 +2731,7 @@ class MenuWidget extends React.Component {
         this.view?.spatialReference || currentLayerData.spatialReference,
       activeLayer: activeLayerData,
       ViewService: currentLayerData.ViewService || currentLayerData.url,
-      customLayerParameters: currentLayerData.customLayerParameters || {
-        SHOWLOGO: false,
-      },
+      customLayerParameters: nextCustomLayerParameters,
     });
 
     const customKeys = [
@@ -4444,8 +4459,23 @@ class MenuWidget extends React.Component {
               if (
                 this.layers[elem.id].ViewService.toLowerCase().includes('wmts')
               ) {
+                const resolveSentinelLayer = /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
+                  this.layers[elem.id].ViewService ||
+                    this.layers[elem.id].url ||
+                    '',
+                );
+                const nextCustomLayerParameters = {
+                  ...(this.layers[elem.id].customLayerParameters || {}),
+                  SHOWLOGO: false,
+                  ...(resolveSentinelLayer ? { PREVIEW: 2 } : {}),
+                  TIME:
+                    payload.dates[payload.dates.length - 1] +
+                      '/' +
+                      payload.dates[payload.dates.length - 1] || '',
+                };
                 this.layers[elem.id] = new WMTSLayer({
                   url: this.layers[elem.id].url,
+                  serviceMode: this.layers[elem.id].serviceMode || 'KVP',
                   spatialReference: this.layers[elem.id].spatialReference,
                   title: this.layers[elem.id].title,
                   _wmtsTitle: this.layers[elem.id]._wmtsTitle,
@@ -4460,13 +4490,7 @@ class MenuWidget extends React.Component {
                   LayerTitle: this.layers[elem.id].LayerTitle,
                   DatasetDownloadInformation: this.layers[elem.id]
                     .DatasetDownloadInformation,
-                  customLayerParameters: {
-                    SHOWLOGO: false,
-                    TIME:
-                      payload.dates[payload.dates.length - 1] +
-                        '/' +
-                        payload.dates[payload.dates.length - 1] || '',
-                  },
+                  customLayerParameters: nextCustomLayerParameters,
                 });
               }
             }
@@ -4632,26 +4656,97 @@ class MenuWidget extends React.Component {
       sessionStorage.removeItem('downloadButtonClicked');
       sessionStorage.removeItem('timeSliderTag');
       this.deleteCheckedLayer(elem.id);
-      this.layers[elem.id].opacity = 1;
-      this.layers[elem.id].visible = false;
+      const currentLayerData = this.layers[elem.id];
+      currentLayerData.opacity = 1;
+      currentLayerData.visible = false;
       if (!userService) this.deleteFilteredLayer(elem.id);
-      let mapLayer = this.map.findLayerById(elem.id);
+      const mapLayersToRemove = [];
+      const mapLayer = this.map.findLayerById(elem.id);
       if (mapLayer) {
+        mapLayersToRemove.push(mapLayer);
+      }
+      if (
+        currentLayerData &&
+        this.map &&
+        this.map.layers &&
+        typeof this.map.layers.includes === 'function' &&
+        this.map.layers.includes(currentLayerData)
+      ) {
+        mapLayersToRemove.push(currentLayerData);
+      }
+      const currentLayerService = String(
+        currentLayerData?.ViewService || currentLayerData?.url || '',
+      ).toLowerCase();
+      const currentLayerActive = currentLayerData?.activeLayer?.id || null;
+      const currentLayerDataset = currentLayerData?.DatasetId || null;
+      const mapLayerItems = this.map?.layers?.items || [];
+      mapLayerItems.forEach((candidateLayer) => {
+        if (!candidateLayer) {
+          return;
+        }
+        if (candidateLayer === currentLayerData) {
+          mapLayersToRemove.push(candidateLayer);
+          return;
+        }
+        if (
+          candidateLayer.LayerId === elem.id ||
+          candidateLayer.id === elem.id
+        ) {
+          mapLayersToRemove.push(candidateLayer);
+          return;
+        }
+        const candidateService = String(
+          candidateLayer.ViewService || candidateLayer.url || '',
+        ).toLowerCase();
+        if (!currentLayerService || currentLayerService !== candidateService) {
+          return;
+        }
+        if (
+          currentLayerActive &&
+          candidateLayer.activeLayer &&
+          candidateLayer.activeLayer.id === currentLayerActive
+        ) {
+          mapLayersToRemove.push(candidateLayer);
+          return;
+        }
+        if (
+          currentLayerDataset &&
+          candidateLayer.DatasetId &&
+          candidateLayer.DatasetId === currentLayerDataset
+        ) {
+          mapLayersToRemove.push(candidateLayer);
+        }
+      });
+      const removedLayerIds = new Set();
+      mapLayersToRemove.forEach((layerToRemove) => {
+        if (!layerToRemove) {
+          return;
+        }
+        const layerIdentity = layerToRemove.uid || layerToRemove.id;
+        if (layerIdentity && removedLayerIds.has(layerIdentity)) {
+          return;
+        }
         if (!userService) {
           if (
-            mapLayer.type &&
-            mapLayer.type !== 'base-tile' &&
-            mapLayer.type !== 'wmts'
-          )
-            mapLayer.clear();
-          if (mapLayer.type !== 'wmts') {
-            mapLayer.destroy();
+            layerToRemove.type &&
+            layerToRemove.type !== 'base-tile' &&
+            layerToRemove.type !== 'wmts' &&
+            typeof layerToRemove.clear === 'function'
+          ) {
+            layerToRemove.clear();
           }
-          this.map.remove(this.layers[elem.id]);
-        } else {
-          this.map.remove(mapLayer);
+          if (
+            layerToRemove.type !== 'wmts' &&
+            typeof layerToRemove.destroy === 'function'
+          ) {
+            layerToRemove.destroy();
+          }
         }
-      }
+        this.map.remove(layerToRemove);
+        if (layerIdentity) {
+          removedLayerIds.add(layerIdentity);
+        }
+      });
       if (this.uploadedGraphics && this.uploadedGraphics[elem.id]) {
         try {
           this.view.graphics.removeMany(this.uploadedGraphics[elem.id]);
