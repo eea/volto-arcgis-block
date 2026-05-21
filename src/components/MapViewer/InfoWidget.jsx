@@ -155,9 +155,10 @@ class InfoWidget extends React.Component {
                 fields: layer.fields,
               });
               promises.push(
-                this.cdseCapabilities(layer.ViewService, layer).then((xml) =>
-                  this.identifyCDSE(xml, layer),
-                ),
+                // this.cdseCapabilities(layer.ViewService, layer).then((xml) =>
+                //   this.identifyCDSE(xml, layer),
+                // ),
+                this.identifyWMTS(layer, e),
               );
             } else if (layer.url.toLowerCase().includes('wms')) {
               layerTypes.push({
@@ -540,7 +541,73 @@ class InfoWidget extends React.Component {
           QUERY_LAYERS: layerId,
           LAYERS: layerId,
           INFO_FORMAT: format,
-          TIME: times ? times[0] + '/' + times[nTimes - 1] : '',
+          TIME:
+            layer.customLayerParameters && layer.customLayerParameters['TIME']
+              ? layer.customLayerParameters['TIME']
+              : times
+              ? times[nTimes - 1] + '/' + times[nTimes - 1]
+              : '',
+          FEATURE_COUNT: '' + nTimes,
+        },
+      })
+        .then((response) => {
+          let format = response.requestOptions.query.INFO_FORMAT;
+          let data;
+          if (format.includes('text')) {
+            data = new window.DOMParser().parseFromString(
+              response.data,
+              'text/html',
+            );
+          } else if (format.includes('json')) {
+            data = JSON.parse(response.data);
+          }
+          return data; // Added return statement
+        })
+        .then((data) => {
+          return data;
+        });
+    });
+  }
+
+  identifyWMTS(layer, event) {
+    let layerId = this.getLayerName(layer);
+    let url = layer.featureInfoUrl ? layer.featureInfoUrl : layer.url;
+    return this.wmsCapabilities(url).then((xml) => {
+      let version = layer.version;
+      let format = this.parseFormat(xml, layerId);
+      let times = '';
+      let nTimes = 1;
+      return esriRequest(url, {
+        responseType: 'html',
+        sync: 'true',
+        query: {
+          request: 'GetFeatureInfo',
+          service: 'WMS',
+          version: version,
+          SRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
+          CRS: 'EPSG:' + this.props.view.spatialReference.latestWkid,
+          BBOX:
+            '' +
+            this.props.view.extent.xmin +
+            ', ' +
+            this.props.view.extent.ymin +
+            ', ' +
+            this.props.view.extent.xmax +
+            ', ' +
+            this.props.view.extent.ymax,
+          HEIGHT: this.props.view.height,
+          WIDTH: this.props.view.width,
+          X: Math.round(event.screenPoint.x),
+          Y: Math.round(event.screenPoint.y),
+          QUERY_LAYERS: layerId,
+          LAYERS: layerId,
+          INFO_FORMAT: format,
+          TIME:
+            layer.customLayerParameters && layer.customLayerParameters['TIME']
+              ? layer.customLayerParameters['TIME']
+              : times
+              ? times[nTimes - 1] + '/' + times[nTimes - 1]
+              : '',
           FEATURE_COUNT: '' + nTimes,
         },
       })
