@@ -5156,13 +5156,17 @@ class MenuWidget extends React.Component {
     datasetChecks.forEach((element) => {
       if (element) {
         element.checked = value;
-        this.toggleDataset(value, element.id, element);
+        if (element.id.includes('family')) {
+          this.toggleFamily(value, element.id, element);
+        } else {
+          this.toggleDataset(value, element.id, element);
+        }
       }
     });
   }
 
   toggleFamily(value, id, element) {
-    let familyDefCheck = element.target.getAttribute('defcheck');
+    let familyDefCheck = element.getAttribute('defcheck');
     let splitdefCheck = familyDefCheck.split(',');
 
     let datasetChecks = [];
