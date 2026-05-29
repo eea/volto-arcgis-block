@@ -3278,6 +3278,22 @@ class MenuWidget extends React.Component {
     try {
       const rawUrl = (proxiedUrl || '').trim();
       const baseUrl = rawUrl.split('?')[0];
+      const resolveCapabilitiesText = (xmlData) => {
+        if (!xmlData) {
+          return '';
+        }
+        if (typeof xmlData === 'string') {
+          return xmlData;
+        }
+        try {
+          return new XMLSerializer().serializeToString(xmlData);
+        } catch (e) {
+          return '';
+        }
+      };
+      const isInvalidCapabilitiesData = (xmlData) => {
+        return !xmlData || !xmlData.documentElement;
+      };
       const processBboxData = (xml) => {
         const buildExtentResult = (xmin, ymin, xmax, ymax) => {
           const numericValues = [xmin, ymin, xmax, ymax].map((value) =>
@@ -3436,10 +3452,21 @@ class MenuWidget extends React.Component {
       if (serviceType === 'WMTS') {
         this.xml = null;
         await this.getCapabilities(viewService, 'WMTS');
-        if (!this.xml) {
+        if (isInvalidCapabilitiesData(this.xml)) {
           throw new Error('Unable to load WMTS capabilities');
         }
+        const wmtsCapabilitiesText = resolveCapabilitiesText(this.xml);
+        if (this.hasExceptionResponse(wmtsCapabilitiesText)) {
+          const exceptionMessage =
+            this.resolveExceptionMessage(wmtsCapabilitiesText);
+          throw new Error(exceptionMessage || 'Unable to load WMTS service');
+        }
         const wmtsLayers = this.parseWMTSLayers(this.xml);
+        if (!Array.isArray(wmtsLayers) || wmtsLayers.length === 0) {
+          throw new Error(
+            'Selected service has no geometry data and cannot be displayed on map',
+          );
+        }
         const active = this.resolveWmtsLayerData(wmtsLayers, serviceSelection);
         const serviceTitle = this.parseWMTSServiceTitle(this.xml);
         const isSceneViewActive = this.view && this.view.type === '3d';
@@ -3482,8 +3509,22 @@ class MenuWidget extends React.Component {
         ];
       } else if (isWFS) {
         await this.getCapabilities(viewService, 'WFS');
+        if (isInvalidCapabilitiesData(this.xml)) {
+          throw new Error('Unable to load WFS capabilities');
+        }
+        const wfsCapabilitiesText = resolveCapabilitiesText(this.xml);
+        if (this.hasExceptionResponse(wfsCapabilitiesText)) {
+          const exceptionMessage =
+            this.resolveExceptionMessage(wfsCapabilitiesText);
+          throw new Error(exceptionMessage || 'Unable to load WFS service');
+        }
         const requestConfig = this.resolveRequestConfig(this.xml);
         const serviceEntries = Object.entries(serviceSelection || {});
+        if (!serviceEntries.length) {
+          throw new Error(
+            'Selected service has no geometry data and cannot be displayed on map',
+          );
+        }
         const layerResults = await Promise.all(
           serviceEntries.map(async ([name, title]) => {
             if (!name) return null;
@@ -3532,7 +3573,21 @@ class MenuWidget extends React.Component {
         resourceLayers = layerResults.filter(Boolean);
       } else {
         await this.getCapabilities(viewService, 'WMS');
+        if (isInvalidCapabilitiesData(this.xml)) {
+          throw new Error('Unable to load WMS capabilities');
+        }
+        const wmsCapabilitiesText = resolveCapabilitiesText(this.xml);
+        if (this.hasExceptionResponse(wmsCapabilitiesText)) {
+          const exceptionMessage =
+            this.resolveExceptionMessage(wmsCapabilitiesText);
+          throw new Error(exceptionMessage || 'Unable to load WMS service');
+        }
         const wmsLayers = this.parseWMSLayers(this.xml);
+        if (!Array.isArray(wmsLayers) || wmsLayers.length === 0) {
+          throw new Error(
+            'Selected service has no geometry data and cannot be displayed on map',
+          );
+        }
         const serviceTitle = this.parseWMSServiceTitle(this.xml);
         const legendRequest =
           'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
