@@ -196,8 +196,9 @@ class TimesliderWidget extends React.Component {
       } else {
         if (xml.querySelector('Dimension') !== null) {
           // There is a common time dimension to all layers
-          dimension = xml.querySelector('Dimension').querySelector('Extent')
-            .innerText;
+          dimension = xml
+            .querySelector('Dimension')
+            .querySelector('Extent').innerText;
         } else {
           dimension = false;
         }
@@ -275,7 +276,8 @@ class TimesliderWidget extends React.Component {
   }
 
   parserPeriod(iso8601Duration) {
-    var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T?(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+    var iso8601DurationRegex =
+      /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T?(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
     var matches = iso8601Duration.match(iso8601DurationRegex);
     return {
       sign: matches[1] === undefined ? '+' : '-',
@@ -372,7 +374,8 @@ class TimesliderWidget extends React.Component {
         ? this.container.current.parentNode
         : null;
     if (this.container && this.container.current) {
-      this.container.current.__mapViewerContainerParentNode = this.containerParentNode;
+      this.container.current.__mapViewerContainerParentNode =
+        this.containerParentNode;
     }
     await this.loader();
     let playRateValue =
@@ -478,7 +481,8 @@ class TimesliderWidget extends React.Component {
           const isCDSE =
             urlNorm.includes('/ogc/') || urlNorm.includes('/cdse/');
           if (this.layer.type === 'feature') {
-            this.TimesliderWidget.fullTimeExtent = this.layer.timeInfo.fullTimeExtent;
+            this.TimesliderWidget.fullTimeExtent =
+              this.layer.timeInfo.fullTimeExtent;
             this.TimesliderWidget.stops = {
               interval: this.layer.timeInfo.interval,
             };

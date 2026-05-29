@@ -186,9 +186,8 @@ export const AddCartItem = ({
             });
           }
           if ((check === 'area' || fileUpload) && isMapServer) {
-            const transformedLayerExtent = WebMercatorUtils.webMercatorToGeographic(
-              layerExtent,
-            );
+            const transformedLayerExtent =
+              WebMercatorUtils.webMercatorToGeographic(layerExtent);
             if (transformedLayerExtent.intersects(areaExtent)) {
               intersection = true;
             }
@@ -2017,6 +2016,14 @@ class MenuWidget extends React.Component {
     //For Legend request
     const legendRequest =
       'request=GetLegendGraphic&version=1.0.0&format=image/png&layer=';
+    const isCdseService =
+      !!viewService &&
+      ['/ogc/', '/cdse/'].some((segment) =>
+        viewService.toLowerCase().includes(segment),
+      );
+    const cdseLegendUrl = isCdseService
+      ? this.buildCdseLegendUrl(viewService, layer.Title || layer.LayerId)
+      : null;
     //For each layer
     let inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
     let style = this.props.download ? { paddingLeft: '4rem' } : {};
@@ -2025,16 +2032,15 @@ class MenuWidget extends React.Component {
       !this.layers.hasOwnProperty(layer.LayerId + '_' + inheritedIndexLayer)
     ) {
       if (viewService?.toLowerCase().endsWith('mapserver')) {
-        this.layers[
-          layer.LayerId + '_' + inheritedIndexLayer
-        ] = new MapImageLayer({
-          url: viewService,
-          title: layer.Title,
-          DatasetId: DatasetId,
-          DatasetTitle: DatasetTitle,
-          ProductId: ProductId,
-          LayerTitle: layer.Title,
-        });
+        this.layers[layer.LayerId + '_' + inheritedIndexLayer] =
+          new MapImageLayer({
+            url: viewService,
+            title: layer.Title,
+            DatasetId: DatasetId,
+            DatasetTitle: DatasetTitle,
+            ProductId: ProductId,
+            LayerTitle: layer.Title,
+          });
         //iterate sublayers fetching all sublayer data
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
@@ -2056,6 +2062,8 @@ class MenuWidget extends React.Component {
               legendEnabled: true,
               legendUrl: layer.StaticImageLegend
                 ? layer.StaticImageLegend
+                : cdseLegendUrl
+                ? cdseLegendUrl
                 : viewService + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
             },
@@ -2068,9 +2076,10 @@ class MenuWidget extends React.Component {
           ViewService: viewService,
         });
       } else if (viewService?.toLowerCase().includes('wmts')) {
-        const resolveSentinelLayer = /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
-          viewService || '',
-        );
+        const resolveSentinelLayer =
+          /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
+            viewService || '',
+          );
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new WMTSLayer({
           url: viewService?.includes('?')
             ? viewService + '&'
@@ -2091,7 +2100,7 @@ class MenuWidget extends React.Component {
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
           ViewService: viewService,
-          StaticImageLegend: layer.StaticImageLegend,
+          StaticImageLegend: layer.StaticImageLegend || cdseLegendUrl,
           LayerTitle: layer.Title,
           DatasetDownloadInformation: dataset_download_information || {},
           customLayerParameters: {
@@ -2100,24 +2109,23 @@ class MenuWidget extends React.Component {
           },
         });
       } else {
-        this.layers[
-          layer.LayerId + '_' + inheritedIndexLayer
-        ] = new FeatureLayer({
-          url:
-            viewService +
-            (viewService?.endsWith('/') ? '' : '/') +
-            layer.LayerId,
-          id: layer.LayerId,
-          title: layer.Title,
-          featureInfoUrl: featureInfoUrl,
-          popupEnabled: true,
-          isTimeSeries: isTimeSeries,
-          fields: layer.Fields,
-          DatasetId: DatasetId,
-          DatasetTitle: DatasetTitle,
-          ProductId: ProductId,
-          ViewService: viewService,
-        });
+        this.layers[layer.LayerId + '_' + inheritedIndexLayer] =
+          new FeatureLayer({
+            url:
+              viewService +
+              (viewService?.endsWith('/') ? '' : '/') +
+              layer.LayerId,
+            id: layer.LayerId,
+            title: layer.Title,
+            featureInfoUrl: featureInfoUrl,
+            popupEnabled: true,
+            isTimeSeries: isTimeSeries,
+            fields: layer.Fields,
+            DatasetId: DatasetId,
+            DatasetTitle: DatasetTitle,
+            ProductId: ProductId,
+            ViewService: viewService,
+          });
       }
     }
     // const isCDSE = !!this.url && this.url.toLowerCase().includes('/ogc/');
@@ -2310,6 +2318,26 @@ class MenuWidget extends React.Component {
       return this.getProxyBase() + proxyPath.replace(/^\/+/, '');
     }
     return this.getProxyBase() + this.stripProtocol(url);
+  }
+
+  buildCdseLegendUrl(serviceUrl, layerTitle) {
+    if (!serviceUrl || !layerTitle) return null;
+    const collectionMatch =
+      /\/cdse\/([^/?#]+)/i.exec(serviceUrl) ||
+      /\/ogc\/(?:wmts|wms)\/([^/?#]+)/i.exec(serviceUrl);
+    if (!collectionMatch || !collectionMatch[1]) return null;
+    const legendParams = new URLSearchParams({
+      service: 'WMS',
+      request: 'GetLegendGraphic',
+      version: '1.3.0',
+      format: 'image/png',
+      layer: layerTitle,
+      style: 'default',
+    });
+    return (
+      this.getProxyBase() +
+      `land.copernicus.eu/cdse/${collectionMatch[1]}?${legendParams.toString()}`
+    );
   }
 
   parseWMSLayers(xml) {
@@ -2708,13 +2736,14 @@ class MenuWidget extends React.Component {
     if (!activeLayerData) {
       return false;
     }
-    const resolveSentinelLayer = /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
-      (
-        currentLayerData.ViewService ||
-        currentLayerData.url ||
-        ''
-      ).toLowerCase(),
-    );
+    const resolveSentinelLayer =
+      /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
+        (
+          currentLayerData.ViewService ||
+          currentLayerData.url ||
+          ''
+        ).toLowerCase(),
+      );
     const nextCustomLayerParameters = {
       ...(currentLayerData.customLayerParameters || {}),
       SHOWLOGO: false,
@@ -4210,9 +4239,8 @@ class MenuWidget extends React.Component {
       for (let g = 1; g < dataSetContents.length; g++) {
         if (dataSetContents[g].checked) {
           currentDataSetLayer = dataSetContents[g];
-          currentDataSetLayerSpan = currentDataSetLayer.nextSibling?.querySelector(
-            'span',
-          );
+          currentDataSetLayerSpan =
+            currentDataSetLayer.nextSibling?.querySelector('span');
           currentElemContainerSpan = elemContainer.querySelector('span');
 
           if (
@@ -4459,11 +4487,12 @@ class MenuWidget extends React.Component {
               if (
                 this.layers[elem.id].ViewService.toLowerCase().includes('wmts')
               ) {
-                const resolveSentinelLayer = /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
-                  this.layers[elem.id].ViewService ||
-                    this.layers[elem.id].url ||
-                    '',
-                );
+                const resolveSentinelLayer =
+                  /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
+                    this.layers[elem.id].ViewService ||
+                      this.layers[elem.id].url ||
+                      '',
+                  );
                 const nextCustomLayerParameters = {
                   ...(this.layers[elem.id].customLayerParameters || {}),
                   SHOWLOGO: false,
@@ -4488,8 +4517,8 @@ class MenuWidget extends React.Component {
                   ViewService: this.layers[elem.id].ViewService,
                   StaticImageLegend: this.layers[elem.id].StaticImageLegend,
                   LayerTitle: this.layers[elem.id].LayerTitle,
-                  DatasetDownloadInformation: this.layers[elem.id]
-                    .DatasetDownloadInformation,
+                  DatasetDownloadInformation:
+                    this.layers[elem.id].DatasetDownloadInformation,
                   customLayerParameters: nextCustomLayerParameters,
                 });
               }
@@ -7201,11 +7230,8 @@ class MenuWidget extends React.Component {
     if (this.props.download) return;
 
     if (prevProps.userServiceUrl !== this.props.userServiceUrl) {
-      const {
-        userServiceUrl,
-        userServiceType,
-        userServiceSelection,
-      } = this.props;
+      const { userServiceUrl, userServiceType, userServiceSelection } =
+        this.props;
       if (
         userServiceUrl &&
         typeof userServiceUrl === 'string' &&

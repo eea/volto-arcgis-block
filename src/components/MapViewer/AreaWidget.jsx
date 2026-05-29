@@ -924,8 +924,9 @@ class AreaWidget extends React.Component {
   }
 
   checkExtent(extent) {
-    const areaLimit = this.mapviewer_config.Components[0].Products[0]
-      .Datasets[0].DownloadLimitAreaExtent;
+    const areaLimit =
+      this.mapviewer_config.Components[0].Products[0].Datasets[0]
+        .DownloadLimitAreaExtent;
     if (
       extent.width * extent.height > areaLimit ||
       extent.width * extent.height === 0
