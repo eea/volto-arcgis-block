@@ -196,8 +196,9 @@ class TimesliderWidget extends React.Component {
       } else {
         if (xml.querySelector('Dimension') !== null) {
           // There is a common time dimension to all layers
-          dimension = xml.querySelector('Dimension').querySelector('Extent')
-            .innerText;
+          dimension = xml
+            .querySelector('Dimension')
+            .querySelector('Extent').innerText;
         } else {
           dimension = false;
         }
@@ -275,7 +276,8 @@ class TimesliderWidget extends React.Component {
   }
 
   parserPeriod(iso8601Duration) {
-    var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T?(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+    var iso8601DurationRegex =
+      /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T?(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
     var matches = iso8601Duration.match(iso8601DurationRegex);
     return {
       sign: matches[1] === undefined ? '+' : '-',
@@ -372,7 +374,8 @@ class TimesliderWidget extends React.Component {
         ? this.container.current.parentNode
         : null;
     if (this.container && this.container.current) {
-      this.container.current.__mapViewerContainerParentNode = this.containerParentNode;
+      this.container.current.__mapViewerContainerParentNode =
+        this.containerParentNode;
     }
     await this.loader();
     let playRateValue =
@@ -394,42 +397,40 @@ class TimesliderWidget extends React.Component {
           }
           if (value) {
             const normal = new Intl.DateTimeFormat('en-gb');
+            const timeSelectedValuesC = Array.isArray(
+              this.state.timeSelectedValuesC,
+            )
+              ? [...this.state.timeSelectedValuesC]
+              : [];
+            let timeSelectedValues = this.state.timeSelectedValues;
             switch (type) {
               case 'min':
-                if (this.state.timeSelectedValuesC == null)
+                if (timeSelectedValuesC[0] == null)
                   // In case of first iteration
-                  this.state.timeSelectedValuesC[0] = value;
+                  timeSelectedValuesC[0] = value;
                 element.innerText = normal.format(value).replaceAll('/', '.');
                 break;
               case 'max':
-                if (this.state.timeSelectedValuesC == null)
+                if (timeSelectedValuesC[1] == null)
                   // In case of first iteration
-                  this.state.timeSelectedValuesC[1] = value;
+                  timeSelectedValuesC[1] = value;
                 element.innerText = normal.format(value).replaceAll('/', '.');
                 break;
               case 'extent':
-                this.state.timeSelectedValues = value;
+                timeSelectedValues = value;
                 if (
-                  normal
-                    .format(this.state.timeSelectedValues[0])
-                    .replaceAll('/', '.') !==
-                  normal
-                    .format(this.state.timeSelectedValuesC[0])
-                    .replaceAll('/', '.')
+                  normal.format(timeSelectedValues[0]).replaceAll('/', '.') !==
+                  normal.format(timeSelectedValuesC[0]).replaceAll('/', '.')
                 ) {
-                  this.state.timeSelectedValuesC[0] = value[0];
+                  timeSelectedValuesC[0] = value[0];
                   element.innerText = normal
                     .format(value[0])
                     .replaceAll('/', '.');
                 } else if (
-                  normal
-                    .format(this.state.timeSelectedValues[1])
-                    .replaceAll('/', '.') !==
-                  normal
-                    .format(this.state.timeSelectedValuesC[1])
-                    .replaceAll('/', '.')
+                  normal.format(timeSelectedValues[1]).replaceAll('/', '.') !==
+                  normal.format(timeSelectedValuesC[1]).replaceAll('/', '.')
                 ) {
-                  this.state.timeSelectedValuesC[1] = value[1];
+                  timeSelectedValuesC[1] = value[1];
                   element.innerText = normal
                     .format(value[1])
                     .replaceAll('/', '.');
@@ -440,6 +441,8 @@ class TimesliderWidget extends React.Component {
                 break;
             }
             this.setState({
+              timeSelectedValues: timeSelectedValues,
+              timeSelectedValuesC: timeSelectedValuesC,
               lockDatePanel: false,
             });
           }
@@ -478,7 +481,8 @@ class TimesliderWidget extends React.Component {
           const isCDSE =
             urlNorm.includes('/ogc/') || urlNorm.includes('/cdse/');
           if (this.layer.type === 'feature') {
-            this.TimesliderWidget.fullTimeExtent = this.layer.timeInfo.fullTimeExtent;
+            this.TimesliderWidget.fullTimeExtent =
+              this.layer.timeInfo.fullTimeExtent;
             this.TimesliderWidget.stops = {
               interval: this.layer.timeInfo.interval,
             };
