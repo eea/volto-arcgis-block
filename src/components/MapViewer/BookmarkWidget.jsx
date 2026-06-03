@@ -433,11 +433,10 @@ class BookmarkWidget extends React.Component {
             ) {
               Object.keys(this.props.hotspotData.filteredLayers).forEach(
                 (key) => {
-                  hotspotFilters.filteredLayers[
-                    key
-                  ] = this.props.hotspotData.filteredLayers[
-                    key
-                  ].customLayerParameters['CQL_FILTER'];
+                  hotspotFilters.filteredLayers[key] =
+                    this.props.hotspotData.filteredLayers[
+                      key
+                    ].customLayerParameters['CQL_FILTER'];
                 },
               );
             }
@@ -619,11 +618,10 @@ class BookmarkWidget extends React.Component {
           ) {
             Object.keys(this.props.hotspotData.filteredLayers).forEach(
               (key) => {
-                hotspotFilters.filteredLayers[
-                  key
-                ] = this.props.hotspotData.filteredLayers[
-                  key
-                ].customLayerParameters['CQL_FILTER'];
+                hotspotFilters.filteredLayers[key] =
+                  this.props.hotspotData.filteredLayers[
+                    key
+                  ].customLayerParameters['CQL_FILTER'];
               },
             );
           }

@@ -389,12 +389,10 @@ class MapViewer extends React.Component {
     this.viewUiOperationState = null;
     this.shouldClearSessionOnUnmount = true;
     this.uploadErrorTimeoutTask = null;
-    this.scheduleViewModeButtonLoad = this.scheduleViewModeButtonLoad.bind(
-      this,
-    );
-    this.processPendingWidgetActivation = this.processPendingWidgetActivation.bind(
-      this,
-    );
+    this.scheduleViewModeButtonLoad =
+      this.scheduleViewModeButtonLoad.bind(this);
+    this.processPendingWidgetActivation =
+      this.processPendingWidgetActivation.bind(this);
   }
 
   processPendingWidgetActivation() {
@@ -1051,9 +1049,8 @@ class MapViewer extends React.Component {
         this.isComponentMounted &&
         transitionTaskId === this.viewTransitionTaskId
       ) {
-        const fallbackViewState = this.buildFallbackViewState(
-          normalizedNextMode,
-        );
+        const fallbackViewState =
+          this.buildFallbackViewState(normalizedNextMode);
         isViewCreated = await this.createView(
           normalizedNextMode,
           fallbackViewState,
@@ -1158,10 +1155,8 @@ class MapViewer extends React.Component {
   // Method to handle session state updates when user authentication changes
   handleSessionStateUpdate(newUserState, previousUserState) {
     const { user_id: newUserId, isLoggedIn: newIsLoggedIn } = newUserState;
-    const {
-      user_id: prevUserId,
-      isLoggedIn: prevIsLoggedIn,
-    } = previousUserState;
+    const { user_id: prevUserId, isLoggedIn: prevIsLoggedIn } =
+      previousUserState;
 
     // Handle login/logout transitions
     if (prevIsLoggedIn !== newIsLoggedIn) {
@@ -1293,9 +1288,8 @@ class MapViewer extends React.Component {
 
   activeLayersHandler(newActiveLayers) {
     try {
-      const layersWithoutCircularReferences = this.removeCircularReferences(
-        newActiveLayers,
-      );
+      const layersWithoutCircularReferences =
+        this.removeCircularReferences(newActiveLayers);
       this.activeLayers = layersWithoutCircularReferences;
       mapStatus.activeLayers = layersWithoutCircularReferences;
       sessionStorage.setItem('mapStatus', JSON.stringify(mapStatus));
@@ -1523,10 +1517,8 @@ class MapViewer extends React.Component {
     }
 
     // Handle user state changes from context
-    const {
-      user_id: currentUserId,
-      isLoggedIn: currentIsLoggedIn,
-    } = this.context;
+    const { user_id: currentUserId, isLoggedIn: currentIsLoggedIn } =
+      this.context;
     const { currentUserState: prevUserState } = prevState;
 
     // Compare current context values with previous state

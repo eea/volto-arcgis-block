@@ -169,21 +169,23 @@ class BasemapWidget extends React.Component {
           }
           url = this.parseCapabilities(layers[i], 'ResourceURL')[0].attributes
             .template.textContent;
-          let basemapCode = `
-            let basemap${i} = new Basemap({
-              title: this.parseCapabilities(layers[${i}], 'ows:title')[0].innerText,
-              thumbnailUrl: ${url}.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/${proj}/0/0/0'),
-              baseLayers: [
-                new WebTileLayer({
-                  urlTemplate: ${url}.replace('{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}', '/${proj}/{z}/{x}/{y}'),
-                  copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
-                })
-              ]
-            });
-            this.layerArray.push(basemap${i});
-          `;
-
-          Function.apply(null, [basemapCode]).call(this);
+          const basemap = new Basemap({
+            title: this.parseCapabilities(layers[i], 'ows:title')[0].innerText,
+            thumbnailUrl: url.replace(
+              '{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}',
+              `/${proj}/0/0/0`,
+            ),
+            baseLayers: [
+              new WebTileLayer({
+                urlTemplate: url.replace(
+                  '{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}',
+                  `/${proj}/{z}/{x}/{y}`,
+                ),
+                copyright: '© OpenStreetMap (and) contributors, CC-BY-SA',
+              }),
+            ],
+          });
+          this.layerArray.push(basemap);
         }
         this.basemapGallery = new BasemapGallery({
           view: this.props.view,

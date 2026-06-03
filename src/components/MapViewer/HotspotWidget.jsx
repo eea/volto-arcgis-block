@@ -44,9 +44,8 @@ class HotspotWidget extends React.Component {
     this.layerModelInit = this.layerModelInit.bind(this);
     this.getBBoxData = this.getBBoxData.bind(this);
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
-    this.filteredLayersToHotspotData = this.filteredLayersToHotspotData.bind(
-      this,
-    );
+    this.filteredLayersToHotspotData =
+      this.filteredLayersToHotspotData.bind(this);
     this.mapCfg = this.props.mapCfg;
     this.selectedArea = null;
     this.lcYear = null;
@@ -268,8 +267,8 @@ class HotspotWidget extends React.Component {
       let filterLayer;
 
       if (type === 'lcc') {
-        let selectLccBoxTime = document.getElementById('select-klc-lccTime')
-          .value;
+        let selectLccBoxTime =
+          document.getElementById('select-klc-lccTime').value;
         //this.lccYear = selectLccBoxTime;
         this.setState({ lccYear: selectLccBoxTime });
         if (document.getElementById('select-klc-lccTime').value.match(/\d+/g)) {
@@ -300,9 +299,8 @@ class HotspotWidget extends React.Component {
         filterLayer = this.esriLayer_lcc;
 
         filterLayer.sublayers.items[0].name = this.addLegendName(typeLegend);
-        filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
-          typeLegend,
-        );
+        filterLayer.sublayers.items[0].legendUrl =
+          this.addLegendNameToUrl(typeLegend);
         filterLayer.sublayers.items[0].title = title;
         if (
           bookmarkHotspotFilter !== null &&
@@ -334,8 +332,8 @@ class HotspotWidget extends React.Component {
           }
         }
 
-        let selectLcBoxTime = document.getElementById('select-klc-lcTime')
-          .value;
+        let selectLcBoxTime =
+          document.getElementById('select-klc-lcTime').value;
 
         this.addFilteredLayersData(
           filteredLayersData,
@@ -356,9 +354,8 @@ class HotspotWidget extends React.Component {
         filterLayer = this.esriLayer_lc;
 
         filterLayer.sublayers.items[0].name = this.addLegendName(typeLegend);
-        filterLayer.sublayers.items[0].legendUrl = this.addLegendNameToUrl(
-          typeLegend,
-        );
+        filterLayer.sublayers.items[0].legendUrl =
+          this.addLegendNameToUrl(typeLegend);
         filterLayer.sublayers.items[0].title = title;
         if (
           bookmarkHotspotFilter !== null &&

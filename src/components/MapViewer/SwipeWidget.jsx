@@ -186,7 +186,8 @@ class SwipeWidget extends React.Component {
     this._isMounted = true;
     await this.loader();
     if (!this.container.current) return;
-    this.container.current.__mapViewerContainerParentNode = this.container.current.parentNode;
+    this.container.current.__mapViewerContainerParentNode =
+      this.container.current.parentNode;
     this.props.view.when(() => {
       if (!this._isMounted || !this.props.view || !this.props.view.ui) {
         return;
@@ -422,10 +423,12 @@ class SwipeWidget extends React.Component {
     this.props.view.ui.remove(this.swipe);
     this.props.view.ui.add(this.swipe);
     this.hasSwipe = true;
-    let selectedLeadingLayer = document.getElementById('select-leading-layer')
-      .value;
-    let selectedTrailingLayer = document.getElementById('select-trailing-layer')
-      .value;
+    let selectedLeadingLayer = document.getElementById(
+      'select-leading-layer',
+    ).value;
+    let selectedTrailingLayer = document.getElementById(
+      'select-trailing-layer',
+    ).value;
     let selectedSwipeDirection = document.getElementById(
       'select-swipe-direction',
     ).value;

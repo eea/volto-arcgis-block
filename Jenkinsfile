@@ -10,7 +10,7 @@ pipeline {
         DEPENDENCIES = ""
         BACKEND_PROFILES = "eea.kitkat:testing"
         BACKEND_ADDONS = "clms.addon,clms.types,clms.downloadtool,clms.statstool"
-        VOLTO = "16.31.1"
+        VOLTO = "17"
         IMAGE_NAME = BUILD_TAG.toLowerCase().replaceAll('[^a-z0-9]', '-')
         NODEJS_VERSION = "22"
     }
