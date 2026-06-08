@@ -537,6 +537,24 @@ class MenuWidget extends React.Component {
             });
           }
         }
+        let zoomInMessageContainers = document.getElementsByClassName(
+          'zoom-in-message-container',
+        );
+        let zoomInMessageContainersList = [...zoomInMessageContainers];
+        zoomInMessageContainersList.forEach((container) => {
+          if (container && container !== null) {
+            let nodes = [
+              ...document.getElementsByClassName('zoom-in-message-dataset'),
+            ];
+            nodes.forEach((node) => {
+              if (node && node !== null) {
+                if (node.innerText === 'Zoom in') {
+                  node.style.display = zoom > 6 ? 'none' : 'block';
+                }
+              }
+            });
+          }
+        });
         if (!this.visibleLayers) this.visibleLayers = {};
         this.handleRasterVectorLegend();
         this.setState({});
