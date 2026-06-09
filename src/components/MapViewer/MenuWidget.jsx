@@ -7898,13 +7898,61 @@ class MenuWidget extends React.Component {
 
   renderTimeslider(elem, layer, fromDownload, hideCalendar) {
     if (this.props.view && layer) {
-      let elemId;
-      if (elem.id.includes('.')) {
-        elemId = elem.id.replaceAll('.', '\\.');
-      } else {
-        elemId = elem.id;
+      let activeLayer = document.getElementById('active_' + elem.id);
+      if (!activeLayer) {
+        if (!this._pendingTimesliderRender) {
+          this._pendingTimesliderRender = {};
+        }
+        if (!this._pendingTimesliderRenderCount) {
+          this._pendingTimesliderRenderCount = {};
+        }
+        if (!this._pendingTimesliderRender[elem.id]) {
+          this._pendingTimesliderRender[elem.id] = true;
+          setTimeout(() => {
+            if (this._pendingTimesliderRender) {
+              this._pendingTimesliderRender[elem.id] = false;
+            }
+            if (!this._pendingTimesliderRenderCount[elem.id]) {
+              this._pendingTimesliderRenderCount[elem.id] = 0;
+            }
+            this._pendingTimesliderRenderCount[elem.id] += 1;
+            if (
+              this.timeLayers &&
+              this.timeLayers[elem.id] &&
+              this.timeLayers[elem.id][1] === 'stop' &&
+              this._pendingTimesliderRenderCount[elem.id] < 6
+            ) {
+              let sourceElem = document.getElementById(elem.id) || elem;
+              let order =
+                this.activeLayersJSON && this.activeLayersJSON[elem.id]
+                  ? this.activeLayersJSON[elem.id].props['layer-order']
+                  : 0;
+              if (sourceElem && this.activeLayersJSON) {
+                this.activeLayersJSON[elem.id] = this.addActiveLayer(
+                  sourceElem,
+                  order,
+                  fromDownload,
+                  hideCalendar,
+                );
+              }
+              this.setState({});
+            }
+          }, 0);
+        }
+        return null;
       }
-      let activeLayer = document.querySelector('#active_' + elemId);
+      if (
+        this._pendingTimesliderRender &&
+        this._pendingTimesliderRender[elem.id]
+      ) {
+        this._pendingTimesliderRender[elem.id] = false;
+      }
+      if (
+        this._pendingTimesliderRenderCount &&
+        this._pendingTimesliderRenderCount[elem.id]
+      ) {
+        this._pendingTimesliderRenderCount[elem.id] = 0;
+      }
       let time = { elem: activeLayer };
       if (this.props.download) {
         let dataset = document.querySelector('.map-dataset-checkbox input');
