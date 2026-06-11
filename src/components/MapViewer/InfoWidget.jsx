@@ -311,15 +311,22 @@ class InfoWidget extends React.Component {
                         };
                         break;
                       case 'wmts':
-                        if (
-                          layers[index]?.ViewService &&
-                          layers[index].ViewService.toLowerCase().includes(
-                            'cdse',
-                          )
-                        ) {
-                          properties = data;
+                        // if (
+                        //   layers[index]?.ViewService &&
+                        //   layers[index].ViewService.toLowerCase().includes(
+                        //     'cdse',
+                        //   )
+                        // ) {
+                        //   properties = data;
+                        // }
+                        if (data.type === 'FeatureCollection') {
+                          if (data.features.length) {
+                            let obj = data.features.map((a) => {
+                              return a.properties;
+                            });
+                            properties = this.transformWmtsData(obj);
+                          }
                         }
-                        properties = data;
                         this.infoData[index] = {
                           title: layer.title,
                           data: properties,
@@ -570,14 +577,15 @@ class InfoWidget extends React.Component {
   }
 
   identifyWMTS(layer, event) {
-    let layerId = this.getLayerName(layer);
+    let layerId = layer.activeLayer.id;
     let url = layer.featureInfoUrl ? layer.featureInfoUrl : layer.url;
+    let featureInfoUrl = url.replace('/cdse/', '/cdse/wms/');
     return this.wmsCapabilities(url).then((xml) => {
       let version = layer.version;
       let format = this.parseFormat(xml, layerId);
       let times = '';
       let nTimes = 1;
-      return esriRequest(url, {
+      return esriRequest(featureInfoUrl, {
         responseType: 'html',
         sync: 'true',
         query: {
@@ -797,6 +805,49 @@ class InfoWidget extends React.Component {
   }
 
   transformWmsData(obj) {
+    let values = { timeFields: {}, data: {}, variables: {}, tableData: {} };
+    let startField = Object.keys(obj[0]).find(
+      (a, i) =>
+        a.toUpperCase().includes('DATE') &&
+        !isNaN(parseInt(Object.values(obj[0])[i])),
+    );
+    values.timeFields['start'] = startField;
+    values.tableData['fields'] = Object.keys(obj[0]);
+    values.tableData['values'] = obj.map((a) => {
+      return Object.entries(a);
+    });
+    let fields = Object.keys(obj[0]).filter((a, i) => {
+      return (
+        !isNaN(parseInt(Object.values(obj[0])[i])) &&
+        a.toUpperCase() !== 'OBJECTID' &&
+        !a.toUpperCase().includes('DATE')
+      );
+    });
+    let field = fields[0];
+    values.variables = { options: fields, selected: field };
+    values.timeFields['values'] = obj.map((a, i) => {
+      let date = {};
+      Object.entries(obj[i]).forEach(([key, value]) => {
+        if (key === startField) {
+          date[key] = value;
+        }
+      });
+      return date;
+    });
+    values.data['outFields'] = field;
+    values.data['values'] = obj.map((a, i) => {
+      let x = {};
+      Object.entries(obj[i]).forEach(([key, value]) => {
+        if (fields.includes(key)) {
+          x[key] = parseFloat(value);
+        }
+      });
+      return x;
+    });
+    return values;
+  }
+
+  transformWmtsData(obj) {
     let values = { timeFields: {}, data: {}, variables: {}, tableData: {} };
     let startField = Object.keys(obj[0]).find(
       (a, i) =>
@@ -1367,14 +1418,14 @@ class InfoWidget extends React.Component {
                     )}
                     {this.state.pixelInfo && !noData && (
                       <>
-                        {this.loadVariableSelector(this.state.layerIndex)}
+                        {/* {this.loadVariableSelector(this.state.layerIndex)}
                         {this.Highcharts && (
                           <HighchartsReact
                             highcharts={this.Highcharts}
                             options={this.loadInfoChart(this.state.layerIndex)}
                           />
                         )}
-                        {this.loadStatisticsSelector(this.state.layerIndex)}
+                        {this.loadStatisticsSelector(this.state.layerIndex)} */}
                         {this.loadTimeInfoTable(this.state.layerIndex)}
                       </>
                     )}
