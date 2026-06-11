@@ -10,7 +10,7 @@ var GeometryEngine, Graphic, esriRequest;
 
 // import Highcharts from 'highcharts';
 
-const HighchartsReact = loadable(() => import('highcharts-react-official'));
+//const HighchartsReact = loadable(() => import('highcharts-react-official'));
 class InfoWidget extends React.Component {
   /**
    * Creator of the InfoWidget widget class
