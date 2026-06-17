@@ -2040,7 +2040,7 @@ class MenuWidget extends React.Component {
         viewService.toLowerCase().includes(segment),
       );
     const cdseLegendUrl = isCdseService
-      ? this.buildCdseLegendUrl(viewService, layer.Title || layer.LayerId)
+      ? this.buildCdseLegendUrl(viewService, layer.LayerId || layer.Title)
       : null;
     //For each layer
     let inheritedIndexLayer = inheritedIndex + '_' + layerIndex;
@@ -2078,10 +2078,10 @@ class MenuWidget extends React.Component {
               queryable: true,
               visible: true,
               legendEnabled: true,
-              legendUrl: layer.StaticImageLegend
-                ? layer.StaticImageLegend
-                : cdseLegendUrl
+              legendUrl: cdseLegendUrl
                 ? cdseLegendUrl
+                : layer.StaticImageLegend
+                ? layer.StaticImageLegend
                 : viewService + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
             },
@@ -2118,7 +2118,7 @@ class MenuWidget extends React.Component {
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
           ViewService: viewService,
-          StaticImageLegend: layer.StaticImageLegend || cdseLegendUrl,
+          StaticImageLegend: cdseLegendUrl || layer.StaticImageLegend,
           LayerTitle: layer.Title,
           DatasetDownloadInformation: dataset_download_information || {},
           customLayerParameters: {
@@ -2352,10 +2352,9 @@ class MenuWidget extends React.Component {
       layer: layerTitle,
       style: 'default',
     });
-    return (
-      this.getProxyBase() +
-      `land.copernicus.eu/cdse/${collectionMatch[1]}?${legendParams.toString()}`
-    );
+    return `https://land.copernicus.eu/cdse/wms/${
+      collectionMatch[1]
+    }?${legendParams.toString()}`;
   }
 
   parseWMSLayers(xml) {
