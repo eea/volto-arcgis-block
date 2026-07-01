@@ -924,6 +924,16 @@ div.upload-container
   }
 }
 
+@media only screen and (max-width: 400px) {
+  .map-menu.tab-container {
+    width: 170px !important;
+  }
+
+  .esri-search {
+    width: 205px !important;
+  }
+}
+
 /* Login */
 .login-panel {
   position: absolute;
