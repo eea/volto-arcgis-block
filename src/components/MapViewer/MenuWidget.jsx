@@ -2078,10 +2078,10 @@ class MenuWidget extends React.Component {
               queryable: true,
               visible: true,
               legendEnabled: true,
-              legendUrl: cdseLegendUrl
-                ? cdseLegendUrl
-                : layer.StaticImageLegend
+              legendUrl: layer.StaticImageLegend
                 ? layer.StaticImageLegend
+                : cdseLegendUrl
+                ? cdseLegendUrl
                 : viewService + legendRequest + layer.LayerId,
               featureInfoUrl: featureInfoUrl,
             },
@@ -2118,7 +2118,7 @@ class MenuWidget extends React.Component {
           DatasetTitle: DatasetTitle,
           ProductId: ProductId,
           ViewService: viewService,
-          StaticImageLegend: cdseLegendUrl || layer.StaticImageLegend,
+          StaticImageLegend: layer.StaticImageLegend || cdseLegendUrl,
           LayerTitle: layer.Title,
           DatasetDownloadInformation: dataset_download_information || {},
           customLayerParameters: {
