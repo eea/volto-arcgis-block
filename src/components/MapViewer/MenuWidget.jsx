@@ -852,7 +852,7 @@ class MenuWidget extends React.Component {
     this.zoomTooltips();
     // }
 
-    let authToken = this.getAuthToken();
+    let authToken = this.getAuthToken(); //betterleaks:allow
     let timeSliderTag = sessionStorage.getItem('timeSliderTag');
     let downloadTag = sessionStorage.getItem('downloadButtonClicked');
     let checkedLayers = JSON.parse(sessionStorage.getItem('checkedLayers'));
@@ -2354,7 +2354,7 @@ class MenuWidget extends React.Component {
     });
     return `https://land.copernicus.eu/cdse/wms/${
       collectionMatch[1]
-    }?${legendParams.toString()}`;
+    }?${legendParams.toString()}&WIDTH=500&HEIGHT=400`;
   }
 
   parseWMSLayers(xml) {
