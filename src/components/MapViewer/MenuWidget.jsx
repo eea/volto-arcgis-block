@@ -2354,7 +2354,7 @@ class MenuWidget extends React.Component {
     });
     return `https://land.copernicus.eu/cdse/wms/${
       collectionMatch[1]
-    }?${legendParams.toString()}`;
+    }?${legendParams.toString()}&WIDTH=500&HEIGHT=400`;
   }
 
   parseWMSLayers(xml) {
