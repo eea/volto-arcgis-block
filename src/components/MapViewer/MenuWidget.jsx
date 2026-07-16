@@ -2625,8 +2625,24 @@ class MenuWidget extends React.Component {
     }
     const matrixData = wmtsContextData.matrixData || {};
     const linkData = wmtsContextData.linkData;
-    for (let index = 0; index < linkData.length; index += 1) {
-      const matrixId = linkData[index];
+    const preferredMatrixData = [
+      'PopularWebMercator512',
+      'popularwebmercator512',
+      'PopularWebMercator256',
+      'popularwebmercator256',
+    ];
+    const orderedLinkData = [
+      ...linkData
+        .filter((matrixId) => preferredMatrixData.includes(matrixId))
+        .sort(
+          (firstData, secondData) =>
+            preferredMatrixData.indexOf(firstData) -
+            preferredMatrixData.indexOf(secondData),
+        ),
+      ...linkData.filter((matrixId) => !preferredMatrixData.includes(matrixId)),
+    ];
+    for (let index = 0; index < orderedLinkData.length; index += 1) {
+      const matrixId = orderedLinkData[index];
       const matrixWkid = matrixData[matrixId];
       if (!matrixWkid) {
         continue;
