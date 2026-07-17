@@ -584,7 +584,7 @@ class MenuWidget extends React.Component {
       'esri/geometry/projection',
       'esri/geometry/SpatialReference',
       'esri/geometry/support/webMercatorUtils',
-      "esri/layers/GroupLayer",
+      'esri/layers/GroupLayer',
     ]).then(
       ([
         _WMSLayer,
@@ -848,7 +848,7 @@ class MenuWidget extends React.Component {
 
         this.props.restorePanelScroll();
       }
-      this.pruebasLayer()
+      this.pruebasLayer();
       this.setState({ showMapMenu: true });
     }
     // if (this.loadFirst && this.container.current) {
@@ -973,14 +973,14 @@ function evaluatePixel(sample) {
 `;
     const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
       properties: {
-        clientId: "",
-        clientSecret: "",
+        clientId: '',
+        clientSecret: '',
         token: null,
         tokenExpiration: null,
         collectionId: null,
-        processUrl: "https://sh.dataspace.copernicus.eu/api/v1/process",
+        processUrl: 'https://sh.dataspace.copernicus.eu/api/v1/process',
         tokenUrl:
-          "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token",
+          'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token',
       },
 
       // Gets or refreshes the OAuth2 token
@@ -989,10 +989,10 @@ function evaluatePixel(sample) {
           return this.token;
         }
         const response = await fetch(this.tokenUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
-            grant_type: "client_credentials",
+            grant_type: 'client_credentials',
             client_id: this.clientId,
             client_secret: this.clientSecret,
           }),
@@ -1045,7 +1045,7 @@ function evaluatePixel(sample) {
                 bbox3857.north,
               ],
               properties: {
-                crs: "http://www.opengis.net/def/crs/EPSG/0/3857",
+                crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
               },
             },
             data: [
@@ -1053,8 +1053,8 @@ function evaluatePixel(sample) {
                 type: this.collectionId,
                 dataFilter: {
                   timeRange: {
-                    from: "2020-01-01T00:00:00Z",
-                    to: "2020-12-31T23:59:59Z",
+                    from: '2020-01-01T00:00:00Z',
+                    to: '2020-12-31T23:59:59Z',
                   },
                 },
               },
@@ -1065,8 +1065,8 @@ function evaluatePixel(sample) {
             height: height,
             responses: [
               {
-                identifier: "default",
-                format: { type: "image/png" },
+                identifier: 'default',
+                format: { type: 'image/png' },
               },
             ],
           },
@@ -1076,11 +1076,11 @@ function evaluatePixel(sample) {
         return this._getToken()
           .then((token) => {
             return fetch(this.processUrl, {
-              method: "POST",
+              method: 'POST',
               headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
-                Accept: "image/png",
+                Accept: 'image/png',
               },
               body: JSON.stringify(payload),
               signal: options && options.signal,
@@ -1099,10 +1099,10 @@ function evaluatePixel(sample) {
               const url = URL.createObjectURL(blob);
               const img = new Image();
               img.onload = () => {
-                const canvas = document.createElement("canvas");
+                const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
-                const ctx = canvas.getContext("2d");
+                const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 URL.revokeObjectURL(url);
                 resolve(canvas);
@@ -1116,61 +1116,61 @@ function evaluatePixel(sample) {
           });
       },
     });
-        this.props.view.when(() => {
-          const tileInfo = {
-            size: [512, 512],
-            origin: { x: -20037508.342787, y: 20037508.342787 },
-            spatialReference: { wkid: 3857 },
-            lods: Array.from({ length: 21 }, (_, i) => ({
-              level: i,
-              resolution: 156543.033928 / Math.pow(2, i),
-              scale: 591657527.591555 / Math.pow(2, i),
-            })),
-          };
+    this.props.view.when(() => {
+      const tileInfo = {
+        size: [512, 512],
+        origin: { x: -20037508.342787, y: 20037508.342787 },
+        spatialReference: { wkid: 3857 },
+        lods: Array.from({ length: 21 }, (_, i) => ({
+          level: i,
+          resolution: 156543.033928 / Math.pow(2, i),
+          scale: 591657527.591555 / Math.pow(2, i),
+        })),
+      };
 
-          const fullExtent = new Extent({
-            xmin: -20037508.342787,
-            ymin: -20037508.342787,
-            xmax: 20037508.342787,
-            ymax: 20037508.342787,
-            spatialReference: { wkid: 3857 },
-          });
+      const fullExtent = new Extent({
+        xmin: -20037508.342787,
+        ymin: -20037508.342787,
+        xmax: 20037508.342787,
+        ymax: 20037508.342787,
+        spatialReference: { wkid: 3857 },
+      });
 
-          const sharedLayerProps = {
-            clientId: "",
-            clientSecret: "",
-            tms: false,
-            tileInfo: tileInfo,
-            fullExtent: fullExtent,
-          };
+      const sharedLayerProps = {
+        clientId: '',
+        clientSecret: '',
+        tms: false,
+        tileInfo: tileInfo,
+        fullExtent: fullExtent,
+      };
 
-          const lowResolutionScaleLimit = 9240000;
+      const lowResolutionScaleLimit = 9240000;
 
-          // Low-resolution collection used when map resolution is coarser than ~2300 m/px.
-          const landCoverLayerLowRes = new CDSEProcessTileLayer({
-            ...sharedLayerProps,
-            collectionId: "byoc-e74fe5ba-1886-4732-a8eb-f8f05b021432",
-            minScale: 0,
-            maxScale: lowResolutionScaleLimit,
-            title: "Dynamic Land Cover - low resolution (auto zoom out)",
-          });
+      // Low-resolution collection used when map resolution is coarser than ~2300 m/px.
+      const landCoverLayerLowRes = new CDSEProcessTileLayer({
+        ...sharedLayerProps,
+        collectionId: 'byoc-e74fe5ba-1886-4732-a8eb-f8f05b021432',
+        minScale: 0,
+        maxScale: lowResolutionScaleLimit,
+        title: 'Dynamic Land Cover - low resolution (auto zoom out)',
+      });
 
-          // High-resolution collection used once the map is zoomed in past the switch threshold.
-          const landCoverLayerHighRes = new CDSEProcessTileLayer({
-            ...sharedLayerProps,
-            collectionId: "byoc-828f6b20-8ffd-48f8-a1da-fefd271456db",
-            minScale: lowResolutionScaleLimit + 1,
-            maxScale: 0,
-            title: "Dynamic Land Cover - high resolution (auto zoom in)",
-          });
+      // High-resolution collection used once the map is zoomed in past the switch threshold.
+      const landCoverLayerHighRes = new CDSEProcessTileLayer({
+        ...sharedLayerProps,
+        collectionId: 'byoc-828f6b20-8ffd-48f8-a1da-fefd271456db',
+        minScale: lowResolutionScaleLimit + 1,
+        maxScale: 0,
+        title: 'Dynamic Land Cover - high resolution (auto zoom in)',
+      });
 
-          const landCoverGroupLayer = new GroupLayer({
-            title: "CDSE Dynamic Land Cover (auto-switch by zoom)",
-            visibilityMode: "independent",
-            layers: [landCoverLayerLowRes, landCoverLayerHighRes],
-          });
-     this.map.add(landCoverGroupLayer);
-    })
+      const landCoverGroupLayer = new GroupLayer({
+        title: 'CDSE Dynamic Land Cover (auto-switch by zoom)',
+        visibilityMode: 'independent',
+        layers: [landCoverLayerLowRes, landCoverLayerHighRes],
+      });
+      this.map.add(landCoverGroupLayer);
+    });
   }
   /**
    * This method is executed after the render method is executed
