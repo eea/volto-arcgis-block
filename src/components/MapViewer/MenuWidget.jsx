@@ -22,7 +22,8 @@ var WMSLayer,
   MapImageLayer,
   projection,
   SpatialReference,
-  WebMercatorUtils;
+  WebMercatorUtils,
+  GroupLayer;
 
 const popupSettings = {
   basic: true,
@@ -583,6 +584,7 @@ class MenuWidget extends React.Component {
       'esri/geometry/projection',
       'esri/geometry/SpatialReference',
       'esri/geometry/support/webMercatorUtils',
+      "esri/layers/GroupLayer",
     ]).then(
       ([
         _WMSLayer,
@@ -598,6 +600,7 @@ class MenuWidget extends React.Component {
         _projection,
         _SpatialReference,
         _WebMercatorUtils,
+        _GroupLayer,
       ]) => {
         [
           WMSLayer,
@@ -613,6 +616,7 @@ class MenuWidget extends React.Component {
           projection,
           SpatialReference,
           WebMercatorUtils,
+          GroupLayer,
         ] = [
           _WMSLayer,
           _WMTSLayer,
@@ -627,6 +631,7 @@ class MenuWidget extends React.Component {
           _projection,
           _SpatialReference,
           _WebMercatorUtils,
+          _GroupLayer,
         ];
       },
     );
@@ -843,7 +848,7 @@ class MenuWidget extends React.Component {
 
         this.props.restorePanelScroll();
       }
-
+      this.pruebasLayer()
       this.setState({ showMapMenu: true });
     }
     // if (this.loadFirst && this.container.current) {
@@ -947,6 +952,226 @@ class MenuWidget extends React.Component {
     }
   }
 
+  pruebasLayer() {
+    const evalscript = `
+//VERSION=3
+function setup() {
+  return {
+    input: ["LCM10", "dataMask"],
+    output: { bands: 3, sampleType: "AUTO" }
+  };
+}
+const map = [
+  [10, 0x006400], [20, 0xffbb22], [30, 0xffff4c], [40, 0xf096ff],
+  [50, 0x0096a0], [60, 0x00cf75], [70, 0xfae6a0], [80, 0xb4b4b4],
+  [90, 0xfa0000], [100, 0x0064c8], [110, 0xf0f0f0], [254, 0x0a0a0a]
+];
+const visualizer = new ColorMapVisualizer(map);
+function evaluatePixel(sample) {
+   return visualizer.process(sample.LCM10).concat(sample.dataMask);
+}
+`;
+    const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
+      properties: {
+        clientId: "",
+        clientSecret: "",
+        token: null,
+        tokenExpiration: null,
+        collectionId: null,
+        processUrl: "https://sh.dataspace.copernicus.eu/api/v1/process",
+        tokenUrl:
+          "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token",
+      },
+
+      // Gets or refreshes the OAuth2 token
+      _getToken: async function () {
+        if (this.token && this.tokenExpiration > Date.now()) {
+          return this.token;
+        }
+        const response = await fetch(this.tokenUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            grant_type: "client_credentials",
+            client_id: this.clientId,
+            client_secret: this.clientSecret,
+          }),
+        });
+        const data = await response.json();
+        this.token = data.access_token;
+        this.tokenExpiration = Date.now() + data.expires_in * 1000;
+        return this.token;
+      },
+
+      // Computes the tile bounding box in EPSG:3857 (without projections)
+      _tileToBBox3857: function (level, row, col) {
+        const tileInfo = this.tileInfo;
+        const origin = tileInfo.origin;
+        const res = tileInfo.lods[level].resolution;
+        const size = tileInfo.size[0];
+
+        const xmin = origin.x + col * size * res;
+        const ymax = origin.y - row * size * res;
+        const xmax = xmin + size * res;
+        const ymin = ymax - size * res;
+
+        return {
+          west: xmin,
+          south: ymin,
+          east: xmax,
+          north: ymax,
+        };
+      },
+
+      // Main method that renders each tile
+      fetchTile: function (level, row, col, options) {
+        // Invert row if it is TMS (south origin)
+        if (this.tms) {
+          var rowmax = 1 << level;
+          row = rowmax - row - 1;
+        }
+
+        const bbox3857 = this._tileToBBox3857(level, row, col);
+        const width = this.tileInfo.size[0];
+        const height = this.tileInfo.size[1];
+
+        const payload = {
+          input: {
+            bounds: {
+              bbox: [
+                bbox3857.west,
+                bbox3857.south,
+                bbox3857.east,
+                bbox3857.north,
+              ],
+              properties: {
+                crs: "http://www.opengis.net/def/crs/EPSG/0/3857",
+              },
+            },
+            data: [
+              {
+                type: this.collectionId,
+                dataFilter: {
+                  timeRange: {
+                    from: "2020-01-01T00:00:00Z",
+                    to: "2020-12-31T23:59:59Z",
+                  },
+                },
+              },
+            ],
+          },
+          output: {
+            width: width,
+            height: height,
+            responses: [
+              {
+                identifier: "default",
+                format: { type: "image/png" },
+              },
+            ],
+          },
+          evalscript: evalscript,
+        };
+
+        return this._getToken()
+          .then((token) => {
+            return fetch(this.processUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+                Accept: "image/png",
+              },
+              body: JSON.stringify(payload),
+              signal: options && options.signal,
+            });
+          })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Process API error ${response.status}: ${response.statusText}`,
+              );
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            return new Promise((resolve, reject) => {
+              const url = URL.createObjectURL(blob);
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                resolve(canvas);
+              };
+              img.onerror = (err) => {
+                URL.revokeObjectURL(url);
+                reject(err);
+              };
+              img.src = url;
+            });
+          });
+      },
+    });
+        this.props.view.when(() => {
+          const tileInfo = {
+            size: [512, 512],
+            origin: { x: -20037508.342787, y: 20037508.342787 },
+            spatialReference: { wkid: 3857 },
+            lods: Array.from({ length: 21 }, (_, i) => ({
+              level: i,
+              resolution: 156543.033928 / Math.pow(2, i),
+              scale: 591657527.591555 / Math.pow(2, i),
+            })),
+          };
+
+          const fullExtent = new Extent({
+            xmin: -20037508.342787,
+            ymin: -20037508.342787,
+            xmax: 20037508.342787,
+            ymax: 20037508.342787,
+            spatialReference: { wkid: 3857 },
+          });
+
+          const sharedLayerProps = {
+            clientId: "",
+            clientSecret: "",
+            tms: false,
+            tileInfo: tileInfo,
+            fullExtent: fullExtent,
+          };
+
+          const lowResolutionScaleLimit = 9240000;
+
+          // Low-resolution collection used when map resolution is coarser than ~2300 m/px.
+          const landCoverLayerLowRes = new CDSEProcessTileLayer({
+            ...sharedLayerProps,
+            collectionId: "byoc-e74fe5ba-1886-4732-a8eb-f8f05b021432",
+            minScale: 0,
+            maxScale: lowResolutionScaleLimit,
+            title: "Dynamic Land Cover - low resolution (auto zoom out)",
+          });
+
+          // High-resolution collection used once the map is zoomed in past the switch threshold.
+          const landCoverLayerHighRes = new CDSEProcessTileLayer({
+            ...sharedLayerProps,
+            collectionId: "byoc-828f6b20-8ffd-48f8-a1da-fefd271456db",
+            minScale: lowResolutionScaleLimit + 1,
+            maxScale: 0,
+            title: "Dynamic Land Cover - high resolution (auto zoom in)",
+          });
+
+          const landCoverGroupLayer = new GroupLayer({
+            title: "CDSE Dynamic Land Cover (auto-switch by zoom)",
+            visibilityMode: "independent",
+            layers: [landCoverLayerLowRes, landCoverLayerHighRes],
+          });
+     this.map.add(landCoverGroupLayer);
+    })
+  }
   /**
    * This method is executed after the render method is executed
    */
