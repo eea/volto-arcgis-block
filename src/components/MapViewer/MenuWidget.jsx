@@ -6798,7 +6798,8 @@ class MenuWidget extends React.Component {
         !this.visibleLayers[selectedLayerId] ||
         this.visibleLayers[selectedLayerId][1] === 'eye-slash'
       ) {
-        if (this.layers[selectedLayerId]) this.layers[selectedLayerId].visible = true;
+        if (this.layers[selectedLayerId])
+          this.layers[selectedLayerId].visible = true;
         this.visibleLayers[selectedLayerId] = ['fas', 'eye'];
       }
       document
@@ -6850,7 +6851,10 @@ class MenuWidget extends React.Component {
         });
       let hasActiveTimeSlider = false;
       Object.keys(this.timeLayers).forEach((layerId) => {
-        if (this.timeLayers[layerId] && this.timeLayers[layerId][1] === 'stop') {
+        if (
+          this.timeLayers[layerId] &&
+          this.timeLayers[layerId][1] === 'stop'
+        ) {
           hasActiveTimeSlider = true;
         }
       });
