@@ -6763,155 +6763,137 @@ class MenuWidget extends React.Component {
     )
       this.setSliderTag(false);
     else this.setSliderTag(true);
-    let activeLayers = document.querySelectorAll('.active-layer');
-    let group = this.getGroup(elem);
-    let groupLayers = this.getGroupLayers(group);
-    if (this.timeLayers[elem.id][1] === 'clock') {
-      activeLayers.forEach((layer) => {
-        let layerId = layer.getAttribute('layer-id');
-        let order = this.activeLayersJSON[elem.id]?.props?.['layer-order'] || 0;
-        if (groupLayers && groupLayers.includes(layerId)) {
-          elem = document.getElementById(layerId);
-        }
-        if (elem && elem.id === layerId) {
-          this.timeLayers[elem.id] = ['fas', 'stop'];
-          if (
-            !this.visibleLayers[elem.id] ||
-            this.visibleLayers[elem.id][1] === 'eye-slash'
-          ) {
-            if (this.layers[elem.id]) this.layers[elem.id].visible = true;
-            this.visibleLayers[elem.id] = ['fas', 'eye'];
-          }
-          document
-            .querySelectorAll(
-              '.active-layer[layer-id="' +
-                elem.id +
-                '"] .map-menu-icon:not(.active-layer-time)',
-            )
-            .forEach((item) => {
-              item.classList.add('locked');
-            });
-          if (document.querySelector('#products_label'))
-            document.querySelector('#products_label').classList.add('locked');
-          if (document.querySelector('#map_remove_layers')) {
-            const mapRemoveBtn = document.querySelector('#map_remove_layers');
-            if (mapRemoveBtn) mapRemoveBtn.classList.add('locked');
-          }
-          if (this.props.download && document.querySelector('#download_label'))
-            document.querySelector('#download_label').classList.add('locked');
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(
-            elem,
-            order,
-            fromDownload,
-            hideCalendar,
-          );
-        } else {
-          const node = document.getElementById(layerId);
-          if (
-            node &&
-            node.parentElement &&
-            node.parentElement.dataset &&
-            node.parentElement.dataset.timeseries === 'true'
-          ) {
-            if (!this.visibleLayers[layerId]) {
-              this.visibleLayers[layerId] = ['fas', 'eye'];
-            }
-            if (this.visibleLayers[layerId][1] === 'eye') {
-              if (this.layers[layerId]) this.layers[layerId].visible = false;
-              this.visibleLayers[layerId] = ['fas', 'eye-slash'];
-            }
-            const activeNode = document.querySelector(
-              '.active-layer[layer-id="' + layerId + '"]',
-            );
-            if (activeNode) activeNode.classList.add('locked');
-          }
-          this.activeLayersJSON[layerId] = this.addActiveLayer(
-            document.getElementById(layerId),
-            order,
+    const selectedLayerId = elem.id;
+    let activeTimeLayerId = null;
+    Object.keys(this.timeLayers).forEach((layerId) => {
+      if (this.timeLayers[layerId] && this.timeLayers[layerId][1] === 'stop') {
+        activeTimeLayerId = layerId;
+      }
+    });
+    if (this.timeLayers[selectedLayerId][1] === 'clock') {
+      if (activeTimeLayerId && activeTimeLayerId !== selectedLayerId) {
+        this.timeLayers[activeTimeLayerId] = ['far', 'clock'];
+        const previousLayerNode = document.getElementById(activeTimeLayerId);
+        const previousOrder =
+          this.activeLayersJSON[activeTimeLayerId]?.props?.['layer-order'] || 0;
+        if (previousLayerNode) {
+          this.activeLayersJSON[activeTimeLayerId] = this.addActiveLayer(
+            previousLayerNode,
+            previousOrder,
             fromDownload,
           );
         }
-      });
+        document
+          .querySelectorAll(
+            '.active-layer[layer-id="' +
+              activeTimeLayerId +
+              '"] .map-menu-icon:not(.active-layer-time)',
+          )
+          .forEach((item) => {
+            item.classList.remove('locked');
+          });
+      }
+      this.timeLayers[selectedLayerId] = ['fas', 'stop'];
+      if (
+        !this.visibleLayers[selectedLayerId] ||
+        this.visibleLayers[selectedLayerId][1] === 'eye-slash'
+      ) {
+        if (this.layers[selectedLayerId])
+          this.layers[selectedLayerId].visible = true;
+        this.visibleLayers[selectedLayerId] = ['fas', 'eye'];
+      }
+      document
+        .querySelectorAll(
+          '.active-layer[layer-id="' +
+            selectedLayerId +
+            '"] .map-menu-icon:not(.active-layer-time)',
+        )
+        .forEach((item) => {
+          item.classList.add('locked');
+        });
+      if (document.querySelector('#products_label'))
+        document.querySelector('#products_label').classList.add('locked');
+      if (document.querySelector('#map_remove_layers')) {
+        const mapRemoveBtn = document.querySelector('#map_remove_layers');
+        if (mapRemoveBtn) mapRemoveBtn.classList.add('locked');
+      }
+      if (this.props.download && document.querySelector('#download_label'))
+        document.querySelector('#download_label').classList.add('locked');
+      const selectedOrder =
+        this.activeLayersJSON[selectedLayerId]?.props?.['layer-order'] || 0;
+      this.activeLayersJSON[selectedLayerId] = this.addActiveLayer(
+        elem,
+        selectedOrder,
+        fromDownload,
+        hideCalendar,
+      );
       const op = document.querySelector('.opacity-panel');
       if (op && op.style.display === 'block') {
         this.closeOpacity();
       }
     } else {
-      activeLayers.forEach((layer) => {
-        let layerId = layer.getAttribute('layer-id');
-        let order = this.activeLayersJSON[elem.id]?.props?.['layer-order'] || 0;
-        if (groupLayers && groupLayers.includes(layerId)) {
-          elem = document.getElementById(layerId);
-        }
-        if (elem && elem.id === layerId) {
-          this.timeLayers[elem.id] = ['far', 'clock'];
-          this.activeLayersJSON[elem.id] = this.addActiveLayer(
-            elem,
-            order,
-            fromDownload,
-          );
-          document
-            .querySelectorAll(
-              '.active-layer[layer-id="' +
-                elem.id +
-                '"] .map-menu-icon:not(.active-layer-time)',
-            )
-            .forEach((item) => {
-              item.classList.remove('locked');
-            });
-          const productsLabel = document.querySelector('#products_label');
-          if (productsLabel) productsLabel.classList.remove('locked');
-          const removeBtn = document.querySelector('#map_remove_layers');
-          if (removeBtn) removeBtn.classList.remove('locked');
-          if (this.props.download) {
-            const dl = document.querySelector('#download_label');
-            if (dl) dl.classList.remove('locked');
-            const timeIcon = document.querySelector(
-              '.active-layer[layer-id="' +
-                elem.id +
-                '"] .map-menu-icon.active-layer-time',
-            );
-            if (timeIcon && timeIcon.dataset.download === 'true') {
-              const dlBtn = document.getElementById('download_label');
-              if (dlBtn) dlBtn.click();
-            }
-          } else {
-            const timeIcon = document.querySelector(
-              '.active-layer[layer-id="' +
-                elem.id +
-                '"] .map-menu-icon.active-layer-time',
-            );
-            if (timeIcon && timeIcon.dataset.download === 'true') {
-              const prBtn = document.getElementById('products_label');
-              if (prBtn) prBtn.click();
-            }
-          }
-          const ts = document.querySelector('.timeslider-container');
-          if (ts && document.contains(ts))
-            ReactDOM.unmountComponentAtNode(
-              document.querySelector('.esri-ui-bottom-right'),
-            );
-          const warn = document.querySelector('.drawRectanglePopup-block');
-          if (warn) warn.style.display = 'block';
-        } else {
-          if (!this.visibleLayers[layerId]) {
-            this.visibleLayers[layerId] = ['fas', 'eye'];
-          }
-          if (this.visibleLayers[layerId][1] === 'eye-slash') {
-            if (this.layers[layerId]) this.layers[layerId].visible = true;
-            this.visibleLayers[layerId] = ['fas', 'eye'];
-            this.activeLayersJSON[layerId] = this.addActiveLayer(
-              document.getElementById(layerId),
-              order,
-              fromDownload,
-            );
-          }
-          const activeNode = document.querySelector(
-            '.active-layer[layer-id="' + layerId + '"]',
-          );
-          if (activeNode) activeNode.classList.remove('locked');
+      this.timeLayers[selectedLayerId] = ['far', 'clock'];
+      const selectedOrder =
+        this.activeLayersJSON[selectedLayerId]?.props?.['layer-order'] || 0;
+      this.activeLayersJSON[selectedLayerId] = this.addActiveLayer(
+        elem,
+        selectedOrder,
+        fromDownload,
+      );
+      document
+        .querySelectorAll(
+          '.active-layer[layer-id="' +
+            selectedLayerId +
+            '"] .map-menu-icon:not(.active-layer-time)',
+        )
+        .forEach((item) => {
+          item.classList.remove('locked');
+        });
+      let hasActiveTimeSlider = false;
+      Object.keys(this.timeLayers).forEach((layerId) => {
+        if (
+          this.timeLayers[layerId] &&
+          this.timeLayers[layerId][1] === 'stop'
+        ) {
+          hasActiveTimeSlider = true;
         }
       });
+      if (!hasActiveTimeSlider) {
+        const productsLabel = document.querySelector('#products_label');
+        if (productsLabel) productsLabel.classList.remove('locked');
+        const removeBtn = document.querySelector('#map_remove_layers');
+        if (removeBtn) removeBtn.classList.remove('locked');
+        if (this.props.download) {
+          const dl = document.querySelector('#download_label');
+          if (dl) dl.classList.remove('locked');
+          const timeIcon = document.querySelector(
+            '.active-layer[layer-id="' +
+              selectedLayerId +
+              '"] .map-menu-icon.active-layer-time',
+          );
+          if (timeIcon && timeIcon.dataset.download === 'true') {
+            const dlBtn = document.getElementById('download_label');
+            if (dlBtn) dlBtn.click();
+          }
+        } else {
+          const timeIcon = document.querySelector(
+            '.active-layer[layer-id="' +
+              selectedLayerId +
+              '"] .map-menu-icon.active-layer-time',
+          );
+          if (timeIcon && timeIcon.dataset.download === 'true') {
+            const prBtn = document.getElementById('products_label');
+            if (prBtn) prBtn.click();
+          }
+        }
+        const ts = document.querySelector('.timeslider-container');
+        if (ts && document.contains(ts))
+          ReactDOM.unmountComponentAtNode(
+            document.querySelector('.esri-ui-bottom-right'),
+          );
+        const warn = document.querySelector('.drawRectanglePopup-block');
+        if (warn) warn.style.display = 'block';
+      }
     }
     this.setState({});
   }
