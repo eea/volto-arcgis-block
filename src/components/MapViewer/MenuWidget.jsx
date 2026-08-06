@@ -988,7 +988,7 @@ class MenuWidget extends React.Component {
     }
     this.openMenu();
     this.loadComponentFilters();
-    this.expandDropdowns();
+    //this.expandDropdowns();
     // Add "My Services" component to the UI
     const myServicesComponent = this.createMyServicesComponent();
     const myServicesContainer = document.createElement('div');
@@ -1117,27 +1117,27 @@ class MenuWidget extends React.Component {
     let dataset = url.searchParams.get('dataset');
     if (product || dataset) {
       // CLMS-1261 - clear any previously checked layers when navigating using 'view in the map viewer'
-      let expandedDropdowns = sessionStorage.getItem('expandedDropdowns');
-      let checkedLayers = sessionStorage.getItem('checkedLayers');
-      if (expandedDropdowns) {
-        sessionStorage.setItem('expandedDropdowns', JSON.stringify([]));
-        const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
-        const existing = localStorage.getItem(userKey);
-        let storeObj = {};
-        if (existing) {
-          try {
-            storeObj = JSON.parse(existing) || {};
-          } catch (e) {
-            storeObj = {};
-          }
-        }
-        storeObj.expandedDropdowns = [];
-        localStorage.setItem(userKey, JSON.stringify(storeObj));
-      }
-      if (checkedLayers) {
-        sessionStorage.setItem('checkedLayers', JSON.stringify([]));
-        window.dispatchEvent(new Event('storage'));
-      }
+      //let expandedDropdowns = sessionStorage.getItem('expandedDropdowns');
+      //let checkedLayers = sessionStorage.getItem('checkedLayers');
+      // if (expandedDropdowns) {
+      //   sessionStorage.setItem('expandedDropdowns', JSON.stringify([]));
+      //   const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+      //   const existing = localStorage.getItem(userKey);
+      //   let storeObj = {};
+      //   if (existing) {
+      //     try {
+      //       storeObj = JSON.parse(existing) || {};
+      //     } catch (e) {
+      //       storeObj = {};
+      //     }
+      //   }
+      //   storeObj.expandedDropdowns = [];
+      //   localStorage.setItem(userKey, JSON.stringify(storeObj));
+      // }
+      // if (checkedLayers) {
+      //   sessionStorage.setItem('checkedLayers', JSON.stringify([]));
+      //   window.dispatchEvent(new Event('storage'));
+      // }
       let event = new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -7760,7 +7760,31 @@ class MenuWidget extends React.Component {
    */
   loadLayers() {
     let layers = JSON.parse(sessionStorage.getItem('checkedLayers'));
-    if (layers && !this.props.download) {
+    let expandedDropdowns = null;
+    const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
+    const existing = localStorage.getItem(userKey);
+    if (existing) {
+      try {
+        const storeObj = JSON.parse(existing) || {};
+        const stored = storeObj ? storeObj.expandedDropdowns : null;
+        if (Array.isArray(stored)) {
+          expandedDropdowns = stored;
+        } else if (typeof stored === 'string') {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) expandedDropdowns = parsed;
+        }
+      } catch (e) {}
+    }
+    if (!Array.isArray(expandedDropdowns)) {
+      try {
+        const fromSession = sessionStorage.getItem('expandedDropdowns');
+        if (fromSession) {
+          const parsed = JSON.parse(fromSession);
+          if (Array.isArray(parsed)) expandedDropdowns = parsed;
+        }
+      } catch (e) {}
+    }
+    if (layers && !this.props.download && Array.isArray(expandedDropdowns)) {
       for (var i = layers.length - 1; i >= 0; i--) {
         let layer = layers[i];
         let node = document.getElementById(layer);
@@ -7782,10 +7806,37 @@ class MenuWidget extends React.Component {
               delete node.dataset.preserveCheckedLayerState;
             }
           }
-
-          // set scroll position
           let dropdown = node.closest('.map-menu-dropdown');
+          if (dropdown) {
+            let button = dropdown.querySelector('.ccl-expandable__button');
+            if (button && expandedDropdowns.includes(button.id)) {
+              button.setAttribute('aria-expanded', 'true');
+            }
+          }
           let productDropdown = node.closest('.map-menu-product-dropdown');
+          if (productDropdown) {
+            let familyDropdown = node.closest('.map-menu-family-dropdown');
+            if (familyDropdown) {
+              let button = familyDropdown.querySelector(
+                '.ccl-expandable__button',
+              );
+              if (button && expandedDropdowns.includes(button.id)) {
+                button.setAttribute('aria-expanded', 'true');
+              }
+            }
+            let datasetDropdown = node.closest('.map-menu-product-dropdown');
+            if (datasetDropdown) {
+              let button = datasetDropdown.querySelector(
+                '.ccl-expandable__button',
+              );
+              if (button && expandedDropdowns.includes(button.id)) {
+                button.setAttribute('aria-expanded', 'true');
+              }
+            }
+          }
+          // set scroll position
+          dropdown = node.closest('.map-menu-dropdown');
+          productDropdown = node.closest('.map-menu-product-dropdown');
           let scrollPosition = productDropdown
             ? productDropdown.offsetTop
             : dropdown.offsetTop;
