@@ -669,7 +669,17 @@ class HotspotWidget extends React.Component {
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
 
-      let keyMapInfoObj = JSON.parse(data[i].node.keymap_info) || {};
+      let rawKeymapInfo = data[i].node.keymap_info;
+      let keyMapInfoObj = {};
+      if (typeof rawKeymapInfo === 'string') {
+        try {
+          keyMapInfoObj = JSON.parse(rawKeymapInfo) || {};
+        } catch (e) {
+          keyMapInfoObj = {};
+        }
+      } else if (rawKeymapInfo && typeof rawKeymapInfo === 'object') {
+        keyMapInfoObj = rawKeymapInfo;
+      }
 
       if (keyMapInfoObj.b_classes === true) {
         modularKLCAreas.push(option);
@@ -695,25 +705,36 @@ class HotspotWidget extends React.Component {
           selectBoxLccTime.options[0].disabled = true;
         }
 
-        if (
-          data[i].node.keymap_info
-            .toLowerCase()
-            .includes('multiple_dates":true')
-        ) {
-          //new select year options values
-          var optionLcTime = data[i].node.present_lc_year;
-          var indexStart = data[i].node.keymap_info
-            .toLowerCase()
-            .indexOf('"dates":[ {');
-          var indexEnd = data[i].node.keymap_info.toLowerCase().indexOf(' }],');
-          var strOut = data[i].node.keymap_info.substring(indexStart, indexEnd);
-          var numbers = strOut.match(/\d+/g).map(Number);
-          numbers.forEach((element) => {
+        if (keyMapInfoObj.multiple_dates === true) {
+          let lccDateList = [];
+          let lcDateList = [];
+          if (Array.isArray(keyMapInfoObj.dates)) {
+            lccDateList = keyMapInfoObj.dates
+              .map((entry) => Number(entry?.date))
+              .filter((year) => Number.isFinite(year));
+            lcDateList = keyMapInfoObj.dates
+              .map((entry) => Number(entry?.lc_date))
+              .filter((year) => Number.isFinite(year));
+          }
+          if (Array.isArray(keyMapInfoObj.multiple_lc_dates)) {
+            lcDateList = keyMapInfoObj.multiple_lc_dates
+              .map((year) => Number(year))
+              .filter((year) => Number.isFinite(year));
+          }
+          if (!lccDateList.length && Number.isFinite(Number(data[i].node.lcc_year))) {
+            lccDateList = [Number(data[i].node.lcc_year)];
+          }
+          if (!lcDateList.length && Number.isFinite(Number(data[i].node.present_lc_year))) {
+            lcDateList = [Number(data[i].node.present_lc_year)];
+          }
+          lccDateList = Array.from(new Set(lccDateList));
+          lcDateList = Array.from(new Set(lcDateList));
+          lccDateList.forEach((element) => {
             selectBoxLccTime.options.add(new Option(element, element, element));
           });
-          selectBoxLcTime.options.add(
-            new Option(optionLcTime, optionLcTime, optionLcTime),
-          );
+          lcDateList.forEach((element) => {
+            selectBoxLcTime.options.add(new Option(element, element, element));
+          });
         } else {
           //new select year options values
           var optionLccTime = data[i].node.lcc_year;
