@@ -8021,6 +8021,7 @@ class MenuWidget extends React.Component {
       } catch (e) {}
       ReactDOM.render(
         <TimesliderWidget
+          key={elem.id}
           view={this.props.view}
           map={this.map}
           mapViewer={this.props.mapViewer}
