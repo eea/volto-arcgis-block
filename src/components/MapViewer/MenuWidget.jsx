@@ -953,8 +953,41 @@ class MenuWidget extends React.Component {
   }
 
   runTestDualLayer(layer, inheritedIndexLayer) {
-      
-        const evalscript = layer.lowRes.evalscript;
+        const resolutionData = layer.resolution_data || {};
+        const thresholdScale = Number(resolutionData.thresholdScale);
+        const normalizeScaleValue = (scaleValue, fallbackValue = 0) => {
+          const normalizedValue = Number(scaleValue);
+          return Number.isFinite(normalizedValue) ? normalizedValue : fallbackValue;
+        };
+        const lowResSourceData = resolutionData.lowRes || layer.lowRes || {};
+        const highResSourceData = resolutionData.highRes || layer.highRes || {};
+        const baseLayerTitle = layer.Title || layer.LayerId || '';
+        const lowResLayerTitle = lowResSourceData.title || baseLayerTitle;
+        const highResLayerTitle = highResSourceData.title || baseLayerTitle;
+        const lowResLayerData = {
+          collectionId: lowResSourceData.collectionId,
+          evalscript: lowResSourceData.evalscript,
+          minScale: normalizeScaleValue(lowResSourceData.minScale, 0),
+          maxScale: normalizeScaleValue(
+            lowResSourceData.maxScale,
+            Number.isFinite(thresholdScale) ? thresholdScale : 0,
+          ),
+        };
+        const highResLayerData = {
+          collectionId: highResSourceData.collectionId,
+          evalscript: highResSourceData.evalscript,
+          minScale: normalizeScaleValue(
+            highResSourceData.minScale,
+            Number.isFinite(thresholdScale) ? thresholdScale + 1 : 0,
+          ),
+          maxScale: normalizeScaleValue(highResSourceData.maxScale, 0),
+        };
+        if (
+          !lowResLayerData.collectionId &&
+          !highResLayerData.collectionId
+        ) {
+          return;
+        }
         const clientId = process.env.CLIENT_ID || "";
         const clientSecret = process.env.CLIENT_SECRET || "";
         const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
@@ -964,6 +997,7 @@ class MenuWidget extends React.Component {
             token: null,
             tokenExpiration: null,
             collectionId: null,
+            evalscript: null,
             processUrl: "https://sh.dataspace.copernicus.eu/api/v1/process", //api to proxy clmsurl.eu/en/++api++/@proxyrunprocessapi
             tokenUrl:
               "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token",
@@ -1056,7 +1090,7 @@ class MenuWidget extends React.Component {
                   },
                 ],
               },
-              evalscript: evalscript,
+              evalscript: this.evalscript,
             };
 
             return this._getToken()
@@ -1129,28 +1163,39 @@ class MenuWidget extends React.Component {
 
         //const lowResolutionScaleLimit = layer.thresholdScale;
 
-        // Low-resolution collection used when map resolution is coarser than ~2300 m/px.
-        const landCoverLayerLowRes = new CDSEProcessTileLayer({
-          ...sharedLayerProps,
-          collectionId: layer.lowRes.collectionId,
-          minScale: layer.lowRes.minScale,
-          maxScale: layer.lowRes.minScale,
-          title: "Dynamic Land Cover - low resolution (auto zoom out)",
-        });
-
-        // High-resolution collection used once the map is zoomed in past the switch threshold.
-        const landCoverLayerHighRes = new CDSEProcessTileLayer({
-          ...sharedLayerProps,
-          collectionId: layer.highRes.collectionId,
-          minScale: layer.highRes.minScale,
-          maxScale: layer.highRes.maxScale,
-          title: "Dynamic Land Cover - high resolution (auto zoom in)",
-        });
+        const dualResolutionLayers = [];
+        if (lowResLayerData.collectionId && lowResLayerData.evalscript) {
+          dualResolutionLayers.push(
+            new CDSEProcessTileLayer({
+              ...sharedLayerProps,
+              collectionId: lowResLayerData.collectionId,
+              evalscript: lowResLayerData.evalscript,
+              minScale: lowResLayerData.minScale,
+              maxScale: lowResLayerData.maxScale,
+              title: lowResLayerTitle,
+            }),
+          );
+        }
+        if (highResLayerData.collectionId && highResLayerData.evalscript) {
+          dualResolutionLayers.push(
+            new CDSEProcessTileLayer({
+              ...sharedLayerProps,
+              collectionId: highResLayerData.collectionId,
+              evalscript: highResLayerData.evalscript,
+              minScale: highResLayerData.minScale,
+              maxScale: highResLayerData.maxScale,
+              title: highResLayerTitle,
+            }),
+          );
+        }
+        if (!dualResolutionLayers.length) {
+          return;
+        }
 
         this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new GroupLayer({
-          title: "CDSE Dynamic Land Cover (auto-switch by zoom)",
+          title: baseLayerTitle,
           visibilityMode: "independent",
-          layers: [landCoverLayerLowRes, landCoverLayerHighRes],
+          layers: dualResolutionLayers,
         });
   }
 
@@ -2267,8 +2312,11 @@ class MenuWidget extends React.Component {
             LayerTitle: layer.Title,
           });
         //iterate sublayers fetching all sublayer data
-      } else if (layer.type == 'dual') {
-      this.runTestDualLayer(layer, inheritedIndexLayer);
+      } else if (
+        layer.hasLowRes === true ||
+        (layer.resolution_data?.lowRes && layer.resolution_data?.highRes)
+      ) {
+        this.runTestDualLayer(layer, inheritedIndexLayer);
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
