@@ -22,7 +22,8 @@ var WMSLayer,
   MapImageLayer,
   projection,
   SpatialReference,
-  WebMercatorUtils;
+  WebMercatorUtils,
+  GroupLayer;
 
 const popupSettings = {
   basic: true,
@@ -583,6 +584,7 @@ class MenuWidget extends React.Component {
       'esri/geometry/projection',
       'esri/geometry/SpatialReference',
       'esri/geometry/support/webMercatorUtils',
+      'esri/layers/GroupLayer',
     ]).then(
       ([
         _WMSLayer,
@@ -598,6 +600,7 @@ class MenuWidget extends React.Component {
         _projection,
         _SpatialReference,
         _WebMercatorUtils,
+        _GroupLayer,
       ]) => {
         [
           WMSLayer,
@@ -613,6 +616,7 @@ class MenuWidget extends React.Component {
           projection,
           SpatialReference,
           WebMercatorUtils,
+          GroupLayer,
         ] = [
           _WMSLayer,
           _WMTSLayer,
@@ -627,6 +631,7 @@ class MenuWidget extends React.Component {
           _projection,
           _SpatialReference,
           _WebMercatorUtils,
+          _GroupLayer,
         ];
       },
     );
@@ -843,7 +848,7 @@ class MenuWidget extends React.Component {
 
         this.props.restorePanelScroll();
       }
-
+      //this.pruebasLayer()
       this.setState({ showMapMenu: true });
     }
     // if (this.loadFirst && this.container.current) {
@@ -945,6 +950,216 @@ class MenuWidget extends React.Component {
         }
       }
     }
+  }
+
+  supportDualLayers(layer, inheritedIndexLayer) {
+    const resolutionData = layer.resolution_data || {};
+    const thresholdScale = Number(resolutionData.thresholdScale);
+    const normalizeScaleValue = (scaleValue, fallbackValue = 0) => {
+      const normalizedValue = Number(scaleValue);
+      return Number.isFinite(normalizedValue) ? normalizedValue : fallbackValue;
+    };
+    const lowResSourceData = resolutionData.lowRes || layer.lowRes || {};
+    const highResSourceData = resolutionData.highRes || layer.highRes || {};
+    const baseLayerTitle = layer.Title || layer.LayerId || '';
+    const lowResLayerTitle = lowResSourceData.title || baseLayerTitle;
+    const highResLayerTitle = highResSourceData.title || baseLayerTitle;
+    const lowResLayerData = {
+      collectionId: lowResSourceData.collectionId,
+      evalscript: lowResSourceData.evalscript,
+      minScale: normalizeScaleValue(lowResSourceData.minScale, 0),
+      maxScale: normalizeScaleValue(
+        lowResSourceData.maxScale,
+        Number.isFinite(thresholdScale) ? thresholdScale : 0,
+      ),
+    };
+    const highResLayerData = {
+      collectionId: highResSourceData.collectionId,
+      evalscript: highResSourceData.evalscript,
+      minScale: normalizeScaleValue(
+        highResSourceData.minScale,
+        Number.isFinite(thresholdScale) ? thresholdScale + 1 : 0,
+      ),
+      maxScale: normalizeScaleValue(highResSourceData.maxScale, 0),
+    };
+    if (!lowResLayerData.collectionId && !highResLayerData.collectionId) {
+      return;
+    }
+    const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
+      properties: {
+        collectionId: null,
+        evalscript: null,
+        processUrl: '/++api++/@proxyrunprocessapi',
+      },
+
+      // Computes the tile bounding box in EPSG:3857 (without projections)
+      _tileToBBox3857: function (level, row, col) {
+        const tileInfo = this.tileInfo;
+        const origin = tileInfo.origin;
+        const res = tileInfo.lods[level].resolution;
+        const size = tileInfo.size[0];
+
+        const xmin = origin.x + col * size * res;
+        const ymax = origin.y - row * size * res;
+        const xmax = xmin + size * res;
+        const ymin = ymax - size * res;
+
+        return {
+          west: xmin,
+          south: ymin,
+          east: xmax,
+          north: ymax,
+        };
+      },
+
+      // Main method that renders each tile
+      fetchTile: function (level, row, col, options) {
+        // Invert row if it is TMS (south origin)
+        if (this.tms) {
+          var rowmax = 1 << level;
+          row = rowmax - row - 1;
+        }
+
+        const bbox3857 = this._tileToBBox3857(level, row, col);
+        const width = this.tileInfo.size[0];
+        const height = this.tileInfo.size[1];
+
+        const payload = {
+          input: {
+            bounds: {
+              bbox: [
+                bbox3857.west,
+                bbox3857.south,
+                bbox3857.east,
+                bbox3857.north,
+              ],
+              properties: {
+                crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
+              },
+            },
+            data: [
+              {
+                type: this.collectionId,
+                dataFilter: {
+                  timeRange: {
+                    from: '2021-01-01T00:00:00Z',
+                    to: '2022-01-01T23:59:59Z',
+                  },
+                },
+              },
+            ],
+          },
+          output: {
+            width: width,
+            height: height,
+            responses: [
+              {
+                identifier: 'default',
+                format: { type: 'image/png' },
+              },
+            ],
+          },
+          evalscript: this.evalscript,
+        };
+
+        return fetch(this.processUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'image/png',
+          },
+          body: JSON.stringify(payload),
+          signal: options && options.signal,
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Process API error ${response.status}: ${response.statusText}`,
+              );
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            return new Promise((resolve, reject) => {
+              const url = URL.createObjectURL(blob);
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                resolve(canvas);
+              };
+              img.onerror = (err) => {
+                URL.revokeObjectURL(url);
+                reject(err);
+              };
+              img.src = url;
+            });
+          });
+      },
+    });
+    const tileInfo = {
+      size: [512, 512],
+      origin: { x: -20037508.342787, y: 20037508.342787 },
+      spatialReference: { wkid: 3857 },
+      lods: Array.from({ length: 21 }, (_, i) => ({
+        level: i,
+        resolution: 156543.033928 / Math.pow(2, i),
+        scale: 591657527.591555 / Math.pow(2, i),
+      })),
+    };
+    const fullExtent = new Extent({
+      xmin: -20037508.342787,
+      ymin: -20037508.342787,
+      xmax: 20037508.342787,
+      ymax: 20037508.342787,
+      spatialReference: { wkid: 3857 },
+    });
+    const sharedLayerProps = {
+      tms: false,
+      tileInfo: tileInfo,
+      fullExtent: fullExtent,
+    };
+
+    //const lowResolutionScaleLimit = layer.thresholdScale;
+
+    const dualResolutionLayers = [];
+    if (lowResLayerData.collectionId && lowResLayerData.evalscript) {
+      dualResolutionLayers.push(
+        new CDSEProcessTileLayer({
+          ...sharedLayerProps,
+          collectionId: lowResLayerData.collectionId,
+          evalscript: lowResLayerData.evalscript,
+          minScale: lowResLayerData.minScale,
+          maxScale: lowResLayerData.maxScale,
+          title: lowResLayerTitle,
+        }),
+      );
+    }
+    if (highResLayerData.collectionId && highResLayerData.evalscript) {
+      dualResolutionLayers.push(
+        new CDSEProcessTileLayer({
+          ...sharedLayerProps,
+          collectionId: highResLayerData.collectionId,
+          evalscript: highResLayerData.evalscript,
+          minScale: highResLayerData.minScale,
+          maxScale: highResLayerData.maxScale,
+          title: highResLayerTitle,
+        }),
+      );
+    }
+    if (!dualResolutionLayers.length) {
+      return;
+    }
+
+    this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new GroupLayer({
+      title: baseLayerTitle,
+      visibilityMode: 'independent',
+      layers: dualResolutionLayers,
+    });
   }
 
   /**
@@ -2060,6 +2275,11 @@ class MenuWidget extends React.Component {
             LayerTitle: layer.Title,
           });
         //iterate sublayers fetching all sublayer data
+      } else if (
+        layer.hasLowRes === true ||
+        (layer.resolution_data?.lowRes && layer.resolution_data?.highRes)
+      ) {
+        this.supportDualLayers(layer, inheritedIndexLayer);
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
@@ -6950,7 +7170,7 @@ class MenuWidget extends React.Component {
 
   getLayerTitle(layer) {
     let title;
-    if (layer.url.toLowerCase().includes('wmts')) {
+    if (layer.url?.toLowerCase().includes('wmts')) {
       // CLMS-1105
       title = layer._wmtsTitle;
     } else {
