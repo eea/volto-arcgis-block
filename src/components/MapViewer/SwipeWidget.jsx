@@ -79,7 +79,7 @@ class SwipeWidget extends React.Component {
       if (this.props.view && this.props.view.ui) {
         this.props.view.ui.remove(this.swipe);
       }
-      this.swipe.destroy();
+      //this.swipe.destroy();
     } catch (error) {}
 
     this.hasSwipe = false;
