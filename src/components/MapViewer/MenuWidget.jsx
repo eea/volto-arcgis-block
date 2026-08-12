@@ -985,39 +985,11 @@ class MenuWidget extends React.Component {
     if (!lowResLayerData.collectionId && !highResLayerData.collectionId) {
       return;
     }
-    const clientId = process.env.CLIENT_ID || '';
-    const clientSecret = process.env.CLIENT_SECRET || '';
     const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
       properties: {
-        clientId: clientId,
-        clientSecret: clientSecret,
-        token: null,
-        tokenExpiration: null,
         collectionId: null,
         evalscript: null,
-        processUrl: 'https://sh.dataspace.copernicus.eu/api/v1/process', //api to proxy clmsurl.eu/en/++api++/@proxyrunprocessapi
-        tokenUrl:
-          'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token',
-      },
-
-      // Gets or refreshes the OAuth2 token
-      _getToken: async function () {
-        if (this.token && this.tokenExpiration > Date.now()) {
-          return this.token;
-        }
-        const response = await fetch(this.tokenUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'client_credentials',
-            client_id: this.clientId,
-            client_secret: this.clientSecret,
-          }),
-        });
-        const data = await response.json();
-        this.token = data.access_token;
-        this.tokenExpiration = Date.now() + data.expires_in * 1000;
-        return this.token;
+        processUrl: '/++api++/@proxyrunprocessapi',
       },
 
       // Computes the tile bounding box in EPSG:3857 (without projections)
@@ -1070,8 +1042,8 @@ class MenuWidget extends React.Component {
                 type: this.collectionId,
                 dataFilter: {
                   timeRange: {
-                    from: '2020-01-01T00:00:00Z',
-                    to: '2020-12-31T23:59:59Z',
+                    from: '2021-01-01T00:00:00Z',
+                    to: '2022-01-01T23:59:59Z',
                   },
                 },
               },
@@ -1090,19 +1062,15 @@ class MenuWidget extends React.Component {
           evalscript: this.evalscript,
         };
 
-        return this._getToken()
-          .then((token) => {
-            return fetch(this.processUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-                Accept: 'image/png',
-              },
-              body: JSON.stringify(payload),
-              signal: options && options.signal,
-            });
-          })
+        return fetch(this.processUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'image/png',
+          },
+          body: JSON.stringify(payload),
+          signal: options && options.signal,
+        })
           .then((response) => {
             if (!response.ok) {
               throw new Error(
@@ -1151,8 +1119,6 @@ class MenuWidget extends React.Component {
       spatialReference: { wkid: 3857 },
     });
     const sharedLayerProps = {
-      clientId: clientId,
-      clientSecret: clientSecret,
       tms: false,
       tileInfo: tileInfo,
       fullExtent: fullExtent,
