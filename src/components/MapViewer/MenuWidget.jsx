@@ -952,7 +952,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  supportDualLayer(layer, inheritedIndexLayer) {
+  supportDualLayers(layer, inheritedIndexLayer) {
     const resolutionData = layer.resolution_data || {};
     const thresholdScale = Number(resolutionData.thresholdScale);
     const normalizeScaleValue = (scaleValue, fallbackValue = 0) => {
@@ -2279,7 +2279,7 @@ class MenuWidget extends React.Component {
         layer.hasLowRes === true ||
         (layer.resolution_data?.lowRes && layer.resolution_data?.highRes)
       ) {
-        this.supportDualLayer(layer, inheritedIndexLayer);
+        this.supportDualLayers(layer, inheritedIndexLayer);
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
