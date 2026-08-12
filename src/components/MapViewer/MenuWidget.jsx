@@ -952,7 +952,7 @@ class MenuWidget extends React.Component {
     }
   }
 
-  supportDualLayers(layer, inheritedIndexLayer) {
+  supportDualLayers(layer, inheritedIndexLayer, datasetCollectionId) {
     const resolutionData = layer.resolution_data || {};
     const thresholdScale = Number(resolutionData.thresholdScale);
     const normalizeScaleValue = (scaleValue, fallbackValue = 0) => {
@@ -988,8 +988,71 @@ class MenuWidget extends React.Component {
     const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
       properties: {
         collectionId: null,
+        catalogByoc: null,
         evalscript: null,
         processUrl: '/++api++/@proxyrunprocessapi',
+      },
+
+      _resolveCatalogDateRange: function (options) {
+        const rawCollectionId = this.catalogByoc || '';
+        const normalizedCollectionId = String(rawCollectionId).replace(
+          /^byoc-/i,
+          '',
+        );
+        if (!normalizedCollectionId) {
+          return Promise.resolve(null);
+        }
+
+        const cacheByCollection =
+          this.constructor._catalogDateRangeCache ||
+          (this.constructor._catalogDateRangeCache = {});
+        const pendingByCollection =
+          this.constructor._catalogDateRangePending ||
+          (this.constructor._catalogDateRangePending = {});
+
+        if (cacheByCollection[normalizedCollectionId]) {
+          return Promise.resolve(cacheByCollection[normalizedCollectionId]);
+        }
+        if (pendingByCollection[normalizedCollectionId]) {
+          return pendingByCollection[normalizedCollectionId];
+        }
+
+        const requestUrl =
+          '/++api++/@get_catalogapi_dates?byoc=' +
+          encodeURIComponent(normalizedCollectionId) +
+          '&force_refresh=false';
+
+        pendingByCollection[normalizedCollectionId] = fetch(requestUrl, {
+          headers: {
+            Accept: 'application/json',
+          },
+          signal: options && options.signal,
+        })
+          .then((response) => {
+            if (!response.ok) {
+              return null;
+            }
+            return response.json();
+          })
+          .then((payload) => {
+            const dates = Array.isArray(payload?.dates) ? payload.dates : [];
+            const resolvedDateRange =
+              dates.length > 0
+                ? {
+                    from: dates[0],
+                    to: dates[dates.length - 1],
+                  }
+                : null;
+            cacheByCollection[normalizedCollectionId] = resolvedDateRange;
+            delete pendingByCollection[normalizedCollectionId];
+            return resolvedDateRange;
+          })
+          .catch(() => {
+            delete pendingByCollection[normalizedCollectionId];
+            return null;
+          });
+
+        return pendingByCollection[normalizedCollectionId];
       },
 
       // Computes the tile bounding box in EPSG:3857 (without projections)
@@ -1024,81 +1087,92 @@ class MenuWidget extends React.Component {
         const width = this.tileInfo.size[0];
         const height = this.tileInfo.size[1];
 
-        const payload = {
-          input: {
-            bounds: {
-              bbox: [
-                bbox3857.west,
-                bbox3857.south,
-                bbox3857.east,
-                bbox3857.north,
-              ],
-              properties: {
-                crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
-              },
-            },
-            data: [
-              {
-                type: this.collectionId,
-                dataFilter: {
-                  timeRange: {
-                    from: '2021-01-01T00:00:00Z',
-                    to: '2022-01-01T23:59:59Z',
-                  },
+        return this._resolveCatalogDateRange(options).then((catalogDateRange) => {
+          const resolvedTimeRangeFrom = catalogDateRange?.from || null;
+          const resolvedTimeRangeTo = catalogDateRange?.to || null;
+          const timeRange = {};
+          if (resolvedTimeRangeFrom) {
+            timeRange.from = resolvedTimeRangeFrom;
+          }
+          if (resolvedTimeRangeTo) {
+            timeRange.to = resolvedTimeRangeTo;
+          }
+          const dataFilter = {};
+          if (Object.keys(timeRange).length) {
+            dataFilter.timeRange = timeRange;
+          }
+
+          const payload = {
+            input: {
+              bounds: {
+                bbox: [
+                  bbox3857.west,
+                  bbox3857.south,
+                  bbox3857.east,
+                  bbox3857.north,
+                ],
+                properties: {
+                  crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
                 },
               },
-            ],
-          },
-          output: {
-            width: width,
-            height: height,
-            responses: [
-              {
-                identifier: 'default',
-                format: { type: 'image/png' },
-              },
-            ],
-          },
-          evalscript: this.evalscript,
-        };
+              data: [
+                {
+                  type: this.collectionId,
+                  ...(Object.keys(dataFilter).length ? { dataFilter } : {}),
+                },
+              ],
+            },
+            output: {
+              width: width,
+              height: height,
+              responses: [
+                {
+                  identifier: 'default',
+                  format: { type: 'image/png' },
+                },
+              ],
+            },
+            evalscript: this.evalscript,
+          };
 
-        return fetch(this.processUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'image/png',
-          },
-          body: JSON.stringify(payload),
-          signal: options && options.signal,
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(
-                `Process API error ${response.status}: ${response.statusText}`,
-              );
-            }
-            return response.blob();
+          return fetch(this.processUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'image/png',
+            },
+            body: JSON.stringify(payload),
+            signal: options && options.signal,
           })
-          .then((blob) => {
-            return new Promise((resolve, reject) => {
-              const url = URL.createObjectURL(blob);
-              const img = new Image();
-              img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                URL.revokeObjectURL(url);
-                resolve(canvas);
-              };
-              img.onerror = (err) => {
-                URL.revokeObjectURL(url);
-                reject(err);
-              };
-              img.src = url;
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  `Process API error ${response.status}: ${response.statusText}`,
+                );
+              }
+              return response.blob();
+            })
+            .then((blob) => {
+              return new Promise((resolve, reject) => {
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = width;
+                  canvas.height = height;
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(img, 0, 0, width, height);
+                  URL.revokeObjectURL(url);
+                  resolve(canvas);
+                };
+                img.onerror = (err) => {
+                  URL.revokeObjectURL(url);
+                  reject(err);
+                };
+                img.src = url;
+              });
             });
-          });
+        });
       },
     });
     const tileInfo = {
@@ -1132,6 +1206,7 @@ class MenuWidget extends React.Component {
         new CDSEProcessTileLayer({
           ...sharedLayerProps,
           collectionId: lowResLayerData.collectionId,
+          catalogByoc: datasetCollectionId || null,
           evalscript: lowResLayerData.evalscript,
           minScale: lowResLayerData.minScale,
           maxScale: lowResLayerData.maxScale,
@@ -1144,6 +1219,7 @@ class MenuWidget extends React.Component {
         new CDSEProcessTileLayer({
           ...sharedLayerProps,
           collectionId: highResLayerData.collectionId,
+          catalogByoc: datasetCollectionId || null,
           evalscript: highResLayerData.evalscript,
           minScale: highResLayerData.minScale,
           maxScale: highResLayerData.maxScale,
@@ -2279,7 +2355,13 @@ class MenuWidget extends React.Component {
         layer.hasLowRes === true ||
         (layer.resolution_data?.lowRes && layer.resolution_data?.highRes)
       ) {
-        this.supportDualLayers(layer, inheritedIndexLayer);
+        const datasetCollectionId =
+          dataset_download_information?.items?.[0]?.byoc_collection || null;
+        this.supportDualLayers(
+          layer,
+          inheritedIndexLayer,
+          datasetCollectionId,
+        );
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
