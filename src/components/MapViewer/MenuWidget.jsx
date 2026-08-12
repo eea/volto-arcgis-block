@@ -1087,92 +1087,94 @@ class MenuWidget extends React.Component {
         const width = this.tileInfo.size[0];
         const height = this.tileInfo.size[1];
 
-        return this._resolveCatalogDateRange(options).then((catalogDateRange) => {
-          const resolvedTimeRangeFrom = catalogDateRange?.from || null;
-          const resolvedTimeRangeTo = catalogDateRange?.to || null;
-          const timeRange = {};
-          if (resolvedTimeRangeFrom) {
-            timeRange.from = resolvedTimeRangeFrom;
-          }
-          if (resolvedTimeRangeTo) {
-            timeRange.to = resolvedTimeRangeTo;
-          }
-          const dataFilter = {};
-          if (Object.keys(timeRange).length) {
-            dataFilter.timeRange = timeRange;
-          }
+        return this._resolveCatalogDateRange(options).then(
+          (catalogDateRange) => {
+            const resolvedTimeRangeFrom = catalogDateRange?.from || null;
+            const resolvedTimeRangeTo = catalogDateRange?.to || null;
+            const timeRange = {};
+            if (resolvedTimeRangeFrom) {
+              timeRange.from = resolvedTimeRangeFrom;
+            }
+            if (resolvedTimeRangeTo) {
+              timeRange.to = resolvedTimeRangeTo;
+            }
+            const dataFilter = {};
+            if (Object.keys(timeRange).length) {
+              dataFilter.timeRange = timeRange;
+            }
 
-          const payload = {
-            input: {
-              bounds: {
-                bbox: [
-                  bbox3857.west,
-                  bbox3857.south,
-                  bbox3857.east,
-                  bbox3857.north,
+            const payload = {
+              input: {
+                bounds: {
+                  bbox: [
+                    bbox3857.west,
+                    bbox3857.south,
+                    bbox3857.east,
+                    bbox3857.north,
+                  ],
+                  properties: {
+                    crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
+                  },
+                },
+                data: [
+                  {
+                    type: this.collectionId,
+                    ...(Object.keys(dataFilter).length ? { dataFilter } : {}),
+                  },
                 ],
-                properties: {
-                  crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
-                },
               },
-              data: [
-                {
-                  type: this.collectionId,
-                  ...(Object.keys(dataFilter).length ? { dataFilter } : {}),
-                },
-              ],
-            },
-            output: {
-              width: width,
-              height: height,
-              responses: [
-                {
-                  identifier: 'default',
-                  format: { type: 'image/png' },
-                },
-              ],
-            },
-            evalscript: this.evalscript,
-          };
+              output: {
+                width: width,
+                height: height,
+                responses: [
+                  {
+                    identifier: 'default',
+                    format: { type: 'image/png' },
+                  },
+                ],
+              },
+              evalscript: this.evalscript,
+            };
 
-          return fetch(this.processUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'image/png',
-            },
-            body: JSON.stringify(payload),
-            signal: options && options.signal,
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(
-                  `Process API error ${response.status}: ${response.statusText}`,
-                );
-              }
-              return response.blob();
+            return fetch(this.processUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'image/png',
+              },
+              body: JSON.stringify(payload),
+              signal: options && options.signal,
             })
-            .then((blob) => {
-              return new Promise((resolve, reject) => {
-                const url = URL.createObjectURL(blob);
-                const img = new Image();
-                img.onload = () => {
-                  const canvas = document.createElement('canvas');
-                  canvas.width = width;
-                  canvas.height = height;
-                  const ctx = canvas.getContext('2d');
-                  ctx.drawImage(img, 0, 0, width, height);
-                  URL.revokeObjectURL(url);
-                  resolve(canvas);
-                };
-                img.onerror = (err) => {
-                  URL.revokeObjectURL(url);
-                  reject(err);
-                };
-                img.src = url;
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(
+                    `Process API error ${response.status}: ${response.statusText}`,
+                  );
+                }
+                return response.blob();
+              })
+              .then((blob) => {
+                return new Promise((resolve, reject) => {
+                  const url = URL.createObjectURL(blob);
+                  const img = new Image();
+                  img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    URL.revokeObjectURL(url);
+                    resolve(canvas);
+                  };
+                  img.onerror = (err) => {
+                    URL.revokeObjectURL(url);
+                    reject(err);
+                  };
+                  img.src = url;
+                });
               });
-            });
-        });
+          },
+        );
       },
     });
     const tileInfo = {
@@ -2357,11 +2359,7 @@ class MenuWidget extends React.Component {
       ) {
         const datasetCollectionId =
           dataset_download_information?.items?.[0]?.byoc_collection || null;
-        this.supportDualLayers(
-          layer,
-          inheritedIndexLayer,
-          datasetCollectionId,
-        );
+        this.supportDualLayers(layer, inheritedIndexLayer, datasetCollectionId);
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
