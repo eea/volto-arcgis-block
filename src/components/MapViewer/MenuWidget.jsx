@@ -952,7 +952,17 @@ class MenuWidget extends React.Component {
     }
   }
 
-  supportDualLayers(layer, inheritedIndexLayer, datasetCollectionId) {
+  supportDualLayers(
+    layer,
+    inheritedIndexLayer,
+    datasetCollectionId,
+    isTimeSeries,
+    datasetDownloadInformation,
+    viewService,
+    datasetId,
+    datasetTitle,
+    productId,
+  ) {
     const resolutionData = layer.resolution_data || {};
     const thresholdScale = Number(resolutionData.thresholdScale);
     const normalizeScaleValue = (scaleValue, fallbackValue = 0) => {
@@ -991,6 +1001,7 @@ class MenuWidget extends React.Component {
         catalogByoc: null,
         evalscript: null,
         processUrl: '/++api++/@proxyrunprocessapi',
+        selectedTimeRange: null,
       },
 
       _resolveCatalogDateRange: function (options) {
@@ -1099,7 +1110,12 @@ class MenuWidget extends React.Component {
         const width = this.tileInfo.size[0];
         const height = this.tileInfo.size[1];
 
-        return this._resolveCatalogDateRange(options).then(
+        const selectedTimeRange = this.selectedTimeRange || null;
+        const resolveTimeRange = selectedTimeRange
+          ? Promise.resolve(selectedTimeRange)
+          : this._resolveCatalogDateRange(options);
+
+        return resolveTimeRange.then(
           (catalogDateRange) => {
             const resolvedTimeRangeFrom = catalogDateRange?.from || null;
             const resolvedTimeRangeTo = catalogDateRange?.to || null;
@@ -1249,6 +1265,15 @@ class MenuWidget extends React.Component {
       title: baseLayerTitle,
       visibilityMode: 'independent',
       layers: dualResolutionLayers,
+      isTimeSeries: isTimeSeries,
+      DatasetDownloadInformation: datasetDownloadInformation || {},
+      datasetDownloadInformation: datasetDownloadInformation || {},
+      ViewService: viewService,
+      url: viewService,
+      DatasetId: datasetId,
+      DatasetTitle: datasetTitle,
+      ProductId: productId,
+      LayerTitle: baseLayerTitle,
     });
   }
 
@@ -2371,7 +2396,17 @@ class MenuWidget extends React.Component {
       ) {
         const datasetCollectionId =
           dataset_download_information?.items?.[0]?.byoc_collection || null;
-        this.supportDualLayers(layer, inheritedIndexLayer, datasetCollectionId);
+        this.supportDualLayers(
+          layer,
+          inheritedIndexLayer,
+          datasetCollectionId,
+          isTimeSeries,
+          dataset_download_information,
+          viewService,
+          DatasetId,
+          DatasetTitle,
+          ProductId,
+        );
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
