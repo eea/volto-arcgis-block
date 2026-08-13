@@ -1036,11 +1036,23 @@ class MenuWidget extends React.Component {
           })
           .then((payload) => {
             const dates = Array.isArray(payload?.dates) ? payload.dates : [];
+            const resolveTimeValue = (value, isStart) => {
+              if (!value) {
+                return null;
+              }
+              const stringValue = String(value);
+              if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+                return isStart
+                  ? `${stringValue}T00:00:00Z`
+                  : `${stringValue}T23:59:59Z`;
+              }
+              return stringValue;
+            };
             const resolvedDateRange =
               dates.length > 0
                 ? {
-                    from: dates[0],
-                    to: dates[dates.length - 1],
+                    from: resolveTimeValue(dates[0], true),
+                    to: resolveTimeValue(dates[dates.length - 1], false),
                   }
                 : null;
             cacheByCollection[normalizedCollectionId] = resolvedDateRange;
