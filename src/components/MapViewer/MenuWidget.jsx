@@ -1267,7 +1267,6 @@ class MenuWidget extends React.Component {
       DatasetDownloadInformation: datasetDownloadInformation || {},
       datasetDownloadInformation: datasetDownloadInformation || {},
       ViewService: viewService,
-      url: viewService,
       DatasetId: datasetId,
       DatasetTitle: datasetTitle,
       ProductId: productId,
@@ -4824,12 +4823,8 @@ class MenuWidget extends React.Component {
       this.findCheckedDatasetNoServiceToVisualize(elem);
     }
     if (this.layers[elem.id] === undefined) return;
-    const layerViewService =
-      this.layers[elem.id]?.ViewService || this.layers[elem.id]?.url || '';
     const isSceneViewActive = this.view && this.view.type === '3d';
-    const evaluateWmtsLayer =
-      this.layers[elem.id]?.type === 'wmts' ||
-      layerViewService.toLowerCase().includes('wmts');
+    const evaluateWmtsLayer = this.layers[elem.id]?.type === 'wmts';
     if (elem.checked && evaluateWmtsLayer) {
       this.refreshWmtsLayerData(elem.id);
       const canApplyWmtsSettings = await this.applyWmtsSettingsData(
@@ -4917,9 +4912,7 @@ class MenuWidget extends React.Component {
               payload = await this.props.fetchCatalogApiDates(byoc, false);
             }
             if (payload) {
-              if (
-                this.layers[elem.id].ViewService.toLowerCase().includes('wmts')
-              ) {
+              if (this.layers[elem.id].type === 'wmts') {
                 const resolveSentinelLayer =
                   /(?:sh\.dataspace\.copernicus\.eu|services\.sentinel-hub\.com)\/ogc\/wmts/i.test(
                     this.layers[elem.id].ViewService ||
@@ -7295,7 +7288,7 @@ class MenuWidget extends React.Component {
 
   getLayerTitle(layer) {
     let title;
-    if (layer.url?.toLowerCase().includes('wmts')) {
+    if (layer.type === 'wmts') {
       // CLMS-1105
       title = layer._wmtsTitle;
     } else {
