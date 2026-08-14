@@ -45,6 +45,8 @@ class TimesliderWidget extends React.Component {
       this.layerName = this.layer.sublayers.items[0].name;
     } else if (this.layer.type === 'wmts') {
       this.layerName = this.layer.activeLayer.id; //WMTS
+    } else if (this.layer.type === 'group') {
+      this.layerName = this.layer.name || this.layer.title || this.layer.id;
     }
     this.drag = {};
     if (
@@ -59,6 +61,54 @@ class TimesliderWidget extends React.Component {
     this._isMounted = false;
     this._closeHandler = null;
     this.containerParentNode = null;
+  }
+
+  resolveLayerServiceUrl() {
+    return (
+      this.layer?.ViewService ||
+      this.layer?.viewService ||
+      this.layer?.url ||
+      null
+    );
+  }
+
+  applyLayerTimeSelection(timeValue) {
+    if (!timeValue) return;
+    if (this.layer.type === 'wmts') {
+      this.layer.customLayerParameters = {
+        SHOWLOGO: false,
+      };
+      this.layer.customLayerParameters['TIME'] = timeValue + '/' + timeValue;
+      this.layer.refresh();
+      return;
+    }
+    if (this.layer.type === 'group') {
+      const selectedTimeText = String(timeValue);
+      const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(selectedTimeText);
+      const selectedTimeRange = isDateOnly
+        ? {
+            from: `${selectedTimeText}T00:00:00Z`,
+            to: `${selectedTimeText}T23:59:59Z`,
+          }
+        : {
+            from: selectedTimeText,
+            to: selectedTimeText,
+          };
+      const childLayers = this.layer?.layers?.items || [];
+      childLayers.forEach((childLayer) => {
+        childLayer.selectedTimeRange = selectedTimeRange;
+        if (typeof childLayer.refresh === 'function') {
+          childLayer.refresh();
+        }
+      });
+      if (typeof this.layer.refresh === 'function') {
+        this.layer.refresh();
+      }
+      return;
+    }
+    this.layer.customLayerParameters = {};
+    this.layer.customLayerParameters['TIME'] = timeValue;
+    this.layer.refresh();
   }
 
   restoreContainerContext() {
@@ -344,20 +394,9 @@ class TimesliderWidget extends React.Component {
           if (!this.container.current ? true : false) {
             this.TimesliderWidget.stop();
           }
-          if (this.layer.type === 'wmts') {
-            this.layer.customLayerParameters = {
-              SHOWLOGO: false,
-            };
-            this.layer.customLayerParameters['TIME'] =
-              timeDict[this.TimesliderWidget.timeExtent.end] +
-              '/' +
-              timeDict[this.TimesliderWidget.timeExtent.end];
-          } else {
-            this.layer.customLayerParameters = {};
-            this.layer.customLayerParameters['TIME'] =
-              timeDict[this.TimesliderWidget.timeExtent.end];
-          }
-          this.layer.refresh();
+          this.applyLayerTimeSelection(
+            timeDict[this.TimesliderWidget.timeExtent.end],
+          );
         },
       );
       this._watchHandles.push(watchHandle);
@@ -473,7 +512,8 @@ class TimesliderWidget extends React.Component {
         .whenLayerView(this.layer, this.TimesliderWidget)
         .then(async (lv) => {
           if (!this._isMounted) return;
-          this.url = lv?.layer?.viewService ?? this.layer?.url ?? null;
+          this.url =
+            lv?.layer?.viewService ?? this.resolveLayerServiceUrl() ?? null;
           const urlNorm =
             typeof this.url === 'string'
               ? this.url.replace(/%2F/gi, '/').toLowerCase()
@@ -537,6 +577,10 @@ class TimesliderWidget extends React.Component {
                   times = this.parseTimeWMS(xml);
                 } else if (this.layer.type === 'wmts') {
                   times = this.parseTimeWMTS(xml);
+                }
+                if (!this.layerName || !times[this.layerName]) {
+                  this.TimesliderWidget.disabled = true;
+                  return;
                 }
                 // Capabilities have time enabled
                 if (
@@ -639,32 +683,24 @@ class TimesliderWidget extends React.Component {
                       // }
                       // this.props.time.dataset.setAttribute('time-start', start);
                       // this.props.time.dataset.setAttribute('time-end', end);
-                      if (this.layer.type === 'wmts') {
-                        this.layer.customLayerParameters = {};
-                        this.layer.customLayerParameters['TIME'] =
-                          timeDict[this.TimesliderWidget.timeExtent.end] +
-                          '/' +
-                          timeDict[this.TimesliderWidget.timeExtent.end];
+                      if (times[this.layerName].hasOwnProperty('array')) {
+                        this.applyLayerTimeSelection(
+                          timeDict[this.TimesliderWidget.timeExtent.end],
+                        );
                       } else {
-                        this.layer.customLayerParameters = {};
-                        if (times[this.layerName].hasOwnProperty('array')) {
-                          this.layer.customLayerParameters['TIME'] =
-                            timeDict[this.TimesliderWidget.timeExtent.end];
-                        } else {
-                          const newDateTimeObject = new Date(
-                            this.TimesliderWidget.timeExtent.start.toISOString(),
-                          );
-                          newDateTimeObject.setMinutes(
-                            this.TimesliderWidget.timeExtent.start.getMinutes() +
-                              this.TimesliderWidget.stops['interval'].value,
-                          );
-                          this.layer.customLayerParameters['TIME'] =
-                            this.TimesliderWidget.timeExtent.start.toISOString() +
+                        const newDateTimeObject = new Date(
+                          this.TimesliderWidget.timeExtent.start.toISOString(),
+                        );
+                        newDateTimeObject.setMinutes(
+                          this.TimesliderWidget.timeExtent.start.getMinutes() +
+                            this.TimesliderWidget.stops['interval'].value,
+                        );
+                        this.applyLayerTimeSelection(
+                          this.TimesliderWidget.timeExtent.start.toISOString() +
                             '/' +
-                            newDateTimeObject.toISOString(); //OK
-                        }
+                            newDateTimeObject.toISOString(),
+                        );
                       }
-                      this.layer.refresh();
                     },
                   );
                   this._watchHandles.push(watchHandle);
@@ -721,7 +757,7 @@ class TimesliderWidget extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (!this.TimesliderWidget) return;
-    const url = this.layer?.url || '';
+    const url = this.resolveLayerServiceUrl() || '';
     const urlNorm =
       typeof url === 'string' ? url.replace(/%2F/gi, '/').toLowerCase() : '';
     const isCDSE = urlNorm.includes('/ogc/') || urlNorm.includes('/cdse/');
