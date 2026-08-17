@@ -5133,8 +5133,9 @@ class MenuWidget extends React.Component {
       const shouldMatchServiceData = currentLayerData?.type === 'wmts';
       const currentLayerService = shouldMatchServiceData
         ? String(
-          currentLayerData?.ViewService || currentLayerData?.url || ''
-        ).toLowerCase() : '';
+            currentLayerData?.ViewService || currentLayerData?.url || '',
+          ).toLowerCase()
+        : '';
       const currentLayerActive = shouldMatchServiceData
         ? currentLayerData?.activeLayer?.id || null
         : null;
