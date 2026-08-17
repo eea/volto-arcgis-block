@@ -1260,6 +1260,7 @@ class MenuWidget extends React.Component {
     }
 
     this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new GroupLayer({
+      id: layer.LayerId + '_' + inheritedIndexLayer,
       title: baseLayerTitle,
       visibilityMode: 'independent',
       layers: dualResolutionLayers,
@@ -5129,11 +5130,18 @@ class MenuWidget extends React.Component {
       ) {
         mapLayersToRemove.push(currentLayerData);
       }
-      const currentLayerService = String(
-        currentLayerData?.ViewService || currentLayerData?.url || '',
-      ).toLowerCase();
-      const currentLayerActive = currentLayerData?.activeLayer?.id || null;
-      const currentLayerDataset = currentLayerData?.DatasetId || null;
+      const shouldMatchServiceData = currentLayerData?.type === 'wmts';
+      const currentLayerService = shouldMatchServiceData
+        ? String(
+            currentLayerData?.ViewService || currentLayerData?.url || '',
+          ).toLowerCase()
+        : '';
+      const currentLayerActive = shouldMatchServiceData
+        ? currentLayerData?.activeLayer?.id || null
+        : null;
+      const currentLayerDataset = shouldMatchServiceData
+        ? currentLayerData?.DatasetId || null
+        : null;
       const mapLayerItems = this.map?.layers?.items || [];
       mapLayerItems.forEach((candidateLayer) => {
         if (!candidateLayer) {
@@ -5148,6 +5156,9 @@ class MenuWidget extends React.Component {
           candidateLayer.id === elem.id
         ) {
           mapLayersToRemove.push(candidateLayer);
+          return;
+        }
+        if (!shouldMatchServiceData) {
           return;
         }
         const candidateService = String(
