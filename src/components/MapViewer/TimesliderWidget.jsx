@@ -556,13 +556,52 @@ class TimesliderWidget extends React.Component {
             let periodicity;
             if (isCDSE) {
               const byoc = this.props.catalogApiByoc;
-              const payload =
-                this.props.catalogapi &&
-                this.props.catalogapi.byoc &&
-                byoc &&
-                this.props.catalogapi.byoc[byoc]
-                  ? this.props.catalogapi.byoc[byoc].data
+              const catalogByocState =
+                this.props.catalogapi && this.props.catalogapi.byoc && byoc
+                  ? this.props.catalogapi.byoc[byoc]
                   : null;
+              let payload =
+                catalogByocState && catalogByocState.data
+                  ? catalogByocState.data
+                  : null;
+              const hasCatalogFailure =
+                catalogByocState && catalogByocState.error ? true : false;
+              const isCatalogLoading =
+                catalogByocState && catalogByocState.loading ? true : false;
+              if (
+                (!payload || !Array.isArray(payload.dates)) &&
+                byoc &&
+                this.props.fetchCatalogApiDates &&
+                !hasCatalogFailure &&
+                !isCatalogLoading
+              ) {
+                payload = await this.props.fetchCatalogApiDates(byoc, false);
+              }
+              if (!payload || !Array.isArray(payload.dates)) {
+                const times = await this.getCDSEWFSTemporalData(
+                  this.url,
+                  this.layer,
+                );
+                const layerTimeData =
+                  (this.layerName && times && times[this.layerName]) ||
+                  (times && Object.keys(times).length
+                    ? times[Object.keys(times)[0]]
+                    : null);
+                const wfsDatesRaw =
+                  layerTimeData && Array.isArray(layerTimeData.array)
+                    ? layerTimeData.array
+                    : [];
+                const wfsDates = Array.from(new Set(wfsDatesRaw))
+                  .filter((value) => !!value)
+                  .sort(
+                    (leftValue, rightValue) =>
+                      new Date(leftValue).getTime() -
+                      new Date(rightValue).getTime(),
+                  );
+                if (wfsDates.length) {
+                  payload = { dates: wfsDates };
+                }
+              }
               if (payload) {
                 this.applyCDSETemporalData(payload);
                 this._cdseApplied = true;
@@ -779,7 +818,12 @@ class TimesliderWidget extends React.Component {
       this.props.catalogapi.byoc[byoc]
         ? this.props.catalogapi.byoc[byoc].data
         : null;
-    if (!this._cdseApplied && currData && currData !== prevData) {
+    if (
+      !this._cdseApplied &&
+      currData &&
+      currData !== prevData &&
+      Array.isArray(currData.dates)
+    ) {
       this.TimesliderWidget.disabled = false;
       this.applyCDSETemporalData(currData);
       this._cdseApplied = true;

@@ -952,6 +952,276 @@ class MenuWidget extends React.Component {
     }
   }
 
+  runTestDualLayer(
+    layer,
+    inheritedIndexLayer,
+    datasetCollectionId,
+    isTimeSeries,
+    datasetDownloadInformation,
+    viewService,
+    datasetId,
+    datasetTitle,
+    productId,
+  ) {
+    const resolutionData = layer.resolution_data || {};
+    const thresholdScale = Number(resolutionData.thresholdScale);
+    const normalizeScaleValue = (scaleValue, fallbackValue = 0) => {
+      const normalizedValue = Number(scaleValue);
+      return Number.isFinite(normalizedValue) ? normalizedValue : fallbackValue;
+    };
+    const lowResSourceData = resolutionData.lowRes || layer.lowRes || {};
+    const highResSourceData = resolutionData.highRes || layer.highRes || {};
+    const baseLayerTitle = layer.Title || layer.LayerId || '';
+    const lowResLayerTitle =
+      lowResSourceData.title || `${baseLayerTitle} - low resolution`;
+    const highResLayerTitle =
+      highResSourceData.title || `${baseLayerTitle} - high resolution`;
+    const lowResLayerData = {
+      collectionId: lowResSourceData.collectionId,
+      evalscript: lowResSourceData.evalscript,
+      minScale: normalizeScaleValue(lowResSourceData.minScale, 0),
+      maxScale: normalizeScaleValue(
+        lowResSourceData.maxScale,
+        Number.isFinite(thresholdScale) ? thresholdScale : 0,
+      ),
+    };
+    const highResLayerData = {
+      collectionId: highResSourceData.collectionId,
+      evalscript: highResSourceData.evalscript,
+      minScale: normalizeScaleValue(
+        highResSourceData.minScale,
+        Number.isFinite(thresholdScale) ? thresholdScale + 1 : 0,
+      ),
+      maxScale: normalizeScaleValue(highResSourceData.maxScale, 0),
+    };
+    if (!lowResLayerData.collectionId && !highResLayerData.collectionId) {
+      return;
+    }
+
+    const clientId = 'sh-df6d3ec6-4590-4abf-9234-d8af40fcb92e';
+    const clientSecret = 'KDluQ47jIy3p6pzdV50rkc8R1udgQMJ9';
+    const processUrl = 'https://sh.dataspace.copernicus.eu/api/v1/process';
+    const tokenUrl =
+      process.env.RAZZLE_CDSE_TOKEN_URL ||
+      process.env.CDSE_TOKEN_URL ||
+      'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token';
+
+    const CDSEProcessTileLayer = BaseTileLayer.createSubclass({
+      properties: {
+        clientId: clientId,
+        clientSecret: clientSecret,
+        token: null,
+        tokenExpiration: null,
+        collectionId: null,
+        evalscript: null,
+        processUrl: processUrl,
+        tokenUrl: tokenUrl,
+        selectedTimeRange: null,
+      },
+
+      _getToken: async function () {
+        if (this.token && this.tokenExpiration > Date.now()) {
+          return this.token;
+        }
+        const response = await fetch(this.tokenUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'client_credentials',
+            client_id: this.clientId,
+            client_secret: this.clientSecret,
+          }),
+        });
+        const data = await response.json();
+        this.token = data.access_token;
+        this.tokenExpiration = Date.now() + data.expires_in * 1000;
+        return this.token;
+      },
+
+      _tileToBBox3857: function (level, row, col) {
+        const tileInfo = this.tileInfo;
+        const origin = tileInfo.origin;
+        const res = tileInfo.lods[level].resolution;
+        const size = tileInfo.size[0];
+
+        const xmin = origin.x + col * size * res;
+        const ymax = origin.y - row * size * res;
+        const xmax = xmin + size * res;
+        const ymin = ymax - size * res;
+
+        return {
+          west: xmin,
+          south: ymin,
+          east: xmax,
+          north: ymax,
+        };
+      },
+
+      fetchTile: function (level, row, col, options) {
+        if (this.tms) {
+          var rowmax = 1 << level;
+          row = rowmax - row - 1;
+        }
+
+        const bbox3857 = this._tileToBBox3857(level, row, col);
+        const width = this.tileInfo.size[0];
+        const height = this.tileInfo.size[1];
+        const selectedTimeRange = this.selectedTimeRange || null;
+        const dataFilter =
+          selectedTimeRange && selectedTimeRange.from && selectedTimeRange.to
+            ? { timeRange: selectedTimeRange }
+            : {};
+
+        const payload = {
+          input: {
+            bounds: {
+              bbox: [
+                bbox3857.west,
+                bbox3857.south,
+                bbox3857.east,
+                bbox3857.north,
+              ],
+              properties: {
+                crs: 'http://www.opengis.net/def/crs/EPSG/0/3857',
+              },
+            },
+            data: [
+              {
+                type: this.collectionId,
+                ...(Object.keys(dataFilter).length ? { dataFilter } : {}),
+              },
+            ],
+          },
+          output: {
+            width: width,
+            height: height,
+            responses: [
+              {
+                identifier: 'default',
+                format: { type: 'image/png' },
+              },
+            ],
+          },
+          evalscript: this.evalscript,
+        };
+
+        return this._getToken()
+          .then((token) => {
+            return fetch(this.processUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                Accept: 'image/png',
+              },
+              body: JSON.stringify(payload),
+              signal: options && options.signal,
+            });
+          })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Process API error ${response.status}: ${response.statusText}`,
+              );
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            return new Promise((resolve, reject) => {
+              const url = URL.createObjectURL(blob);
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                resolve(canvas);
+              };
+              img.onerror = (err) => {
+                URL.revokeObjectURL(url);
+                reject(err);
+              };
+              img.src = url;
+            });
+          });
+      },
+    });
+
+    const tileInfo = {
+      size: [512, 512],
+      origin: { x: -20037508.342787, y: 20037508.342787 },
+      spatialReference: { wkid: 3857 },
+      lods: Array.from({ length: 21 }, (_, i) => ({
+        level: i,
+        resolution: 156543.033928 / Math.pow(2, i),
+        scale: 591657527.591555 / Math.pow(2, i),
+      })),
+    };
+    const fullExtent = new Extent({
+      xmin: -20037508.342787,
+      ymin: -20037508.342787,
+      xmax: 20037508.342787,
+      ymax: 20037508.342787,
+      spatialReference: { wkid: 3857 },
+    });
+    const sharedLayerProps = {
+      clientId: clientId,
+      clientSecret: clientSecret,
+      tms: false,
+      tileInfo: tileInfo,
+      fullExtent: fullExtent,
+    };
+
+    const dualResolutionLayers = [];
+    if (lowResLayerData.collectionId && lowResLayerData.evalscript) {
+      dualResolutionLayers.push(
+        new CDSEProcessTileLayer({
+          ...sharedLayerProps,
+          collectionId: lowResLayerData.collectionId,
+          evalscript: lowResLayerData.evalscript,
+          minScale: lowResLayerData.minScale,
+          maxScale: lowResLayerData.maxScale,
+          title: lowResLayerTitle,
+        }),
+      );
+    }
+    if (highResLayerData.collectionId && highResLayerData.evalscript) {
+      dualResolutionLayers.push(
+        new CDSEProcessTileLayer({
+          ...sharedLayerProps,
+          collectionId: highResLayerData.collectionId,
+          evalscript: highResLayerData.evalscript,
+          minScale: highResLayerData.minScale,
+          maxScale: highResLayerData.maxScale,
+          title: highResLayerTitle,
+        }),
+      );
+    }
+
+    if (!dualResolutionLayers.length) {
+      return;
+    }
+
+    const dualLayerGroupId = layer.LayerId + '_' + inheritedIndexLayer;
+    this.layers[dualLayerGroupId] = new GroupLayer({
+      id: dualLayerGroupId,
+      title: baseLayerTitle,
+      visibilityMode: 'independent',
+      layers: dualResolutionLayers,
+      isTimeSeries: isTimeSeries,
+      DatasetDownloadInformation: datasetDownloadInformation || {},
+      datasetDownloadInformation: datasetDownloadInformation || {},
+      ViewService: viewService,
+      DatasetId: datasetId,
+      DatasetTitle: datasetTitle,
+      ProductId: productId,
+      LayerTitle: baseLayerTitle,
+      catalogByoc: datasetCollectionId || null,
+    });
+  }
+
   supportDualLayers(
     layer,
     inheritedIndexLayer,
@@ -1261,7 +1531,9 @@ class MenuWidget extends React.Component {
       return;
     }
 
-    this.layers[layer.LayerId + '_' + inheritedIndexLayer] = new GroupLayer({
+    const dualLayerGroupId = layer.LayerId + '_' + inheritedIndexLayer;
+    this.layers[dualLayerGroupId] = new GroupLayer({
+      id: dualLayerGroupId,
       title: baseLayerTitle,
       visibilityMode: 'independent',
       layers: dualResolutionLayers,
@@ -2395,7 +2667,8 @@ class MenuWidget extends React.Component {
       ) {
         const datasetCollectionId =
           dataset_download_information?.items?.[0]?.byoc_collection || null;
-        this.supportDualLayers(
+
+        this.runTestDualLayer(
           layer,
           inheritedIndexLayer,
           datasetCollectionId,
@@ -2406,6 +2679,17 @@ class MenuWidget extends React.Component {
           DatasetTitle,
           ProductId,
         );
+        // this.supportDualLayers(
+          // layer,
+          // inheritedIndexLayer,
+          // datasetCollectionId,
+          // isTimeSeries,
+          // dataset_download_information,
+          // viewService,
+          // DatasetId,
+          // DatasetTitle,
+          // ProductId,
+        // );
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
@@ -2668,8 +2952,8 @@ class MenuWidget extends React.Component {
 
   getProxyBase = () => {
     const origin = window?.location?.origin || '';
-    return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
-    // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
+    // return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
+    return 'https://clms-staging.eea.europa.eu/ogcproxy/';
     // return 'https://land.copernicus.eu/ogcproxy/';
   };
 
@@ -4595,11 +4879,18 @@ class MenuWidget extends React.Component {
     this.checkInfoWidget();
 
     // Toggle custom legend
-    if (
-      this.layers[elem.id].ViewService?.toLowerCase().includes('wmts') ||
-      this.layers[elem.id].ViewService?.toLowerCase().endsWith('file')
-    ) {
-      this.toggleCustomLegendItem(this.layers[elem.id]);
+    const activeLayerData = this.layers[elem.id];
+    const staticLegendUrl =
+      typeof activeLayerData?.StaticImageLegend === 'string'
+        ? activeLayerData.StaticImageLegend.trim()
+        : '';
+    const canToggleCustomLegend =
+      (activeLayerData?.type === 'wmts' ||
+        activeLayerData?.ViewService?.toLowerCase().endsWith('file')) &&
+      staticLegendUrl !== '' &&
+      staticLegendUrl.toLowerCase() !== 'undefined';
+    if (canToggleCustomLegend) {
+      this.toggleCustomLegendItem(activeLayerData);
     }
 
     if (!this.props.download && this.props.hotspotData) {
@@ -4897,20 +5188,28 @@ class MenuWidget extends React.Component {
           !!this.url &&
           ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
         if (isCDSE) {
-          const d =
-            this.layers[elem.id]?.DatasetDownloadInformation ||
-            this.layers[elem.id]?.datasetDownloadInformation ||
-            {};
-          const byoc =
-            d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+          const byoc = this.resolveDatasetByocCollection(
+            this.layers[elem.id],
+            elem,
+          );
           if (byoc && this.props.fetchCatalogApiDates) {
-            let payload =
-              this.props.catalogapi &&
-              this.props.catalogapi.byoc &&
-              this.props.catalogapi.byoc[byoc]
-                ? this.props.catalogapi.byoc[byoc].data
+            const catalogByocState =
+              this.props.catalogapi && this.props.catalogapi.byoc
+                ? this.props.catalogapi.byoc[byoc]
                 : null;
-            if (!payload) {
+            let payload =
+              catalogByocState && catalogByocState.data
+                ? catalogByocState.data
+                : null;
+            const hasCatalogFailure =
+              catalogByocState && catalogByocState.error ? true : false;
+            const isCatalogLoading =
+              catalogByocState && catalogByocState.loading ? true : false;
+            if (
+              (!payload || !Array.isArray(payload.dates)) &&
+              !hasCatalogFailure &&
+              !isCatalogLoading
+            ) {
               payload = await this.props.fetchCatalogApiDates(byoc, false);
             }
             if (payload) {
@@ -5067,20 +5366,28 @@ class MenuWidget extends React.Component {
           !!this.url &&
           ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
         if (isCDSE) {
-          const d =
-            this.layers[elem.id]?.DatasetDownloadInformation ||
-            this.layers[elem.id]?.datasetDownloadInformation ||
-            {};
-          const byoc =
-            d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+          const byoc = this.resolveDatasetByocCollection(
+            this.layers[elem.id],
+            elem,
+          );
           if (byoc && this.props.fetchCatalogApiDates) {
-            let payload =
-              this.props.catalogapi &&
-              this.props.catalogapi.byoc &&
-              this.props.catalogapi.byoc[byoc]
-                ? this.props.catalogapi.byoc[byoc].data
+            const catalogByocState =
+              this.props.catalogapi && this.props.catalogapi.byoc
+                ? this.props.catalogapi.byoc[byoc]
                 : null;
-            if (!payload) {
+            let payload =
+              catalogByocState && catalogByocState.data
+                ? catalogByocState.data
+                : null;
+            const hasCatalogFailure =
+              catalogByocState && catalogByocState.error ? true : false;
+            const isCatalogLoading =
+              catalogByocState && catalogByocState.loading ? true : false;
+            if (
+              (!payload || !Array.isArray(payload.dates)) &&
+              !hasCatalogFailure &&
+              !isCatalogLoading
+            ) {
               payload = await this.props.fetchCatalogApiDates(byoc, false);
             }
             if (payload) {
@@ -5188,12 +5495,14 @@ class MenuWidget extends React.Component {
             layerToRemove.type &&
             layerToRemove.type !== 'base-tile' &&
             layerToRemove.type !== 'wmts' &&
+            layerToRemove.type !== 'group' &&
             typeof layerToRemove.clear === 'function'
           ) {
             layerToRemove.clear();
           }
           if (
             layerToRemove.type !== 'wmts' &&
+            layerToRemove.type !== 'group' &&
             typeof layerToRemove.destroy === 'function'
           ) {
             layerToRemove.destroy();
@@ -5218,11 +5527,18 @@ class MenuWidget extends React.Component {
     this.layersReorder();
     this.checkInfoWidget();
     // toggle custom legend for WMTS and TMS
-    if (
-      this.layers[elem.id].ViewService?.toLowerCase().includes('wmts') ||
-      this.layers[elem.id].ViewService?.toLowerCase().endsWith('file')
-    ) {
-      this.toggleCustomLegendItem(this.layers[elem.id]);
+    const layerData = this.layers[elem.id];
+    const layerLegendUrl =
+      typeof layerData?.StaticImageLegend === 'string'
+        ? layerData.StaticImageLegend.trim()
+        : '';
+    const canRenderCustomLegend =
+      (layerData?.type === 'wmts' ||
+        layerData?.ViewService?.toLowerCase().endsWith('file')) &&
+      layerLegendUrl !== '' &&
+      layerLegendUrl.toLowerCase() !== 'undefined';
+    if (canRenderCustomLegend) {
+      this.toggleCustomLegendItem(layerData);
     }
     if (!this.props.download && this.props.hotspotData) {
       this.activeLayersToHotspotData(elem.id);
@@ -5358,6 +5674,12 @@ class MenuWidget extends React.Component {
    * @param Layer
    */
   toggleCustomLegendItem(layer) {
+    if (!layer || !layer.id) return;
+    const legendUrl =
+      typeof layer.StaticImageLegend === 'string'
+        ? layer.StaticImageLegend.trim()
+        : '';
+    if (!legendUrl || legendUrl.toLowerCase() === 'undefined') return;
     // check for existing legend item
     let existingItem = document.getElementById(
       'custom-legend-item-' + layer.id,
@@ -5391,6 +5713,11 @@ class MenuWidget extends React.Component {
     // Find legend widget node
     const legendDiv = document.querySelectorAll('.esri-widget.esri-legend')[0];
     if (!legendDiv) return;
+    const legendUrl =
+      typeof layer?.StaticImageLegend === 'string'
+        ? layer.StaticImageLegend.trim()
+        : '';
+    if (!legendUrl || legendUrl.toLowerCase() === 'undefined') return;
     let childDiv = legendDiv.firstChild;
     if (!childDiv) return;
     // create legend element
@@ -5398,7 +5725,7 @@ class MenuWidget extends React.Component {
       let legendItem = this.createStaticLegendImageNode(
         layer.id,
         layer.LayerTitle,
-        layer.StaticImageLegend,
+        legendUrl,
       );
       // append to Legend widet
       childDiv.appendChild(legendItem);
@@ -6257,6 +6584,64 @@ class MenuWidget extends React.Component {
     return newBBox;
   }
 
+  resolveDatasetByocCollection(layerData, elem = null) {
+    const resolveByocFromInfo = (downloadInfo) => {
+      if (!downloadInfo || !Array.isArray(downloadInfo.items)) return null;
+      if (!downloadInfo.items[0]) return null;
+      return downloadInfo.items[0].byoc_collection || null;
+    };
+
+    const layerDownloadInfo =
+      layerData?.DatasetDownloadInformation ||
+      layerData?.datasetDownloadInformation ||
+      layerData?.dataset_download_information ||
+      null;
+    const layerByoc = resolveByocFromInfo(layerDownloadInfo);
+    if (layerByoc) {
+      return layerByoc;
+    }
+
+    if (!elem) {
+      return null;
+    }
+
+    const parentId = elem.getAttribute('parentid');
+    const datasetInput = parentId ? document.getElementById(parentId) : null;
+    const datasetContainer = datasetInput
+      ? datasetInput.closest('.map-menu-dataset-dropdown')
+      : null;
+    const datasetId = datasetContainer
+      ? datasetContainer.getAttribute('datasetid')
+      : null;
+
+    if (!datasetId || !Array.isArray(this.compCfg)) {
+      return null;
+    }
+
+    for (let i = 0; i < this.compCfg.length; i++) {
+      const componentData = this.compCfg[i];
+      if (!componentData || !Array.isArray(componentData.Products)) continue;
+      for (let j = 0; j < componentData.Products.length; j++) {
+        const productData = componentData.Products[j];
+        if (!productData || !Array.isArray(productData.Datasets)) continue;
+        for (let k = 0; k < productData.Datasets.length; k++) {
+          const datasetData = productData.Datasets[k];
+          if (!datasetData || datasetData.DatasetId !== datasetId) continue;
+          const datasetDownloadInfo =
+            datasetData.dataset_download_information ||
+            datasetData.DatasetDownloadInformation ||
+            null;
+          const datasetByoc = resolveByocFromInfo(datasetDownloadInfo);
+          if (datasetByoc) {
+            return datasetByoc;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   async datasetFullExtentFromPayload(payload) {
     if (!payload) return null;
     if (
@@ -6335,46 +6720,7 @@ class MenuWidget extends React.Component {
       ['/ogc/', '/cdse/'].some((s) => this.url.toLowerCase().includes(s));
     let BBoxes = {};
     if (isCDSE) {
-      let d =
-        this.layers[elem.id]?.DatasetDownloadInformation ||
-        this.layers[elem.id]?.datasetDownloadInformation ||
-        this.layers[elem.id]?.dataset_download_information ||
-        {};
-      let byoc = d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
-
-      if (!byoc) {
-        let parentId = elem.getAttribute('parentid');
-        let datasetInput = document.getElementById(parentId);
-        let datasetContainer = datasetInput
-          ? datasetInput.closest('.map-menu-dataset-dropdown')
-          : null;
-        let datasetId = datasetContainer
-          ? datasetContainer.getAttribute('datasetid')
-          : null;
-        if (datasetId && this.compCfg && Array.isArray(this.compCfg)) {
-          for (let i = 0; i < this.compCfg.length; i++) {
-            const comp = this.compCfg[i];
-            if (!comp || !comp.Products) continue;
-            for (let j = 0; j < comp.Products.length; j++) {
-              const prod = comp.Products[j];
-              if (!prod || !prod.Datasets) continue;
-              for (let k = 0; k < prod.Datasets.length; k++) {
-                const ds = prod.Datasets[k];
-                if (ds && ds.DatasetId === datasetId) {
-                  const info =
-                    ds.dataset_download_information ||
-                    ds.DatasetDownloadInformation ||
-                    {};
-                  if (info && info.items && info.items[0]) {
-                    byoc = info.items[0].byoc_collection || byoc;
-                  }
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
+      let byoc = this.resolveDatasetByocCollection(this.layers[elem.id], elem);
 
       if (byoc && this.props.fetchCatalogApiDates) {
         let payload =
@@ -6553,46 +6899,7 @@ class MenuWidget extends React.Component {
       });
     }
     if (isCDSE) {
-      let d =
-        this.layers[elem.id]?.DatasetDownloadInformation ||
-        this.layers[elem.id]?.datasetDownloadInformation ||
-        this.layers[elem.id]?.dataset_download_information ||
-        {};
-      let byoc = d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
-
-      if (!byoc) {
-        let parentId = elem.getAttribute('parentid');
-        let datasetInput = document.getElementById(parentId);
-        let datasetContainer = datasetInput
-          ? datasetInput.closest('.map-menu-dataset-dropdown')
-          : null;
-        let datasetId = datasetContainer
-          ? datasetContainer.getAttribute('datasetid')
-          : null;
-        if (datasetId && this.compCfg && Array.isArray(this.compCfg)) {
-          for (let i = 0; i < this.compCfg.length; i++) {
-            const comp = this.compCfg[i];
-            if (!comp || !comp.Products) continue;
-            for (let j = 0; j < comp.Products.length; j++) {
-              const prod = comp.Products[j];
-              if (!prod || !prod.Datasets) continue;
-              for (let k = 0; k < prod.Datasets.length; k++) {
-                const ds = prod.Datasets[k];
-                if (ds && ds.DatasetId === datasetId) {
-                  const info =
-                    ds.dataset_download_information ||
-                    ds.DatasetDownloadInformation ||
-                    {};
-                  if (info && info.items && info.items[0]) {
-                    byoc = info.items[0].byoc_collection || byoc;
-                  }
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
+      let byoc = this.resolveDatasetByocCollection(this.layers[elem.id], elem);
 
       if (byoc && this.props.fetchCatalogApiDates) {
         let payload =
@@ -8353,11 +8660,7 @@ class MenuWidget extends React.Component {
       let isLoggedIn = document.querySelector('.map-menu-icon-login.logged');
       let byoc = null;
       try {
-        const d =
-          layer?.DatasetDownloadInformation ||
-          layer?.datasetDownloadInformation ||
-          {};
-        byoc = d && d.items && d.items[0] ? d.items[0].byoc_collection : null;
+        byoc = this.resolveDatasetByocCollection(layer, elem);
       } catch (e) {}
       ReactDOM.render(
         <TimesliderWidget
@@ -8374,6 +8677,7 @@ class MenuWidget extends React.Component {
           hideCalendar={hideCalendar}
           catalogapi={this.props.catalogapi}
           catalogApiByoc={byoc}
+          fetchCatalogApiDates={this.props.fetchCatalogApiDates}
         />,
         document.querySelector('.esri-ui-bottom-right'),
       );
@@ -8407,7 +8711,25 @@ class MenuWidget extends React.Component {
           ? info.items[0].byoc_collection
           : null;
       if (byoc && this.props.fetchCatalogApiDates) {
-        await this.props.fetchCatalogApiDates(byoc, false);
+        const catalogByocState =
+          this.props.catalogapi && this.props.catalogapi.byoc
+            ? this.props.catalogapi.byoc[byoc]
+            : null;
+        const payload =
+          catalogByocState && catalogByocState.data
+            ? catalogByocState.data
+            : null;
+        const hasCatalogFailure =
+          catalogByocState && catalogByocState.error ? true : false;
+        const isCatalogLoading =
+          catalogByocState && catalogByocState.loading ? true : false;
+        if (
+          (!payload || !Array.isArray(payload.dates)) &&
+          !hasCatalogFailure &&
+          !isCatalogLoading
+        ) {
+          await this.props.fetchCatalogApiDates(byoc, false);
+        }
       }
     } catch (e) {}
     document.getElementById('active_label').click();
