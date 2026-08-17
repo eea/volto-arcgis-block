@@ -5185,12 +5185,14 @@ class MenuWidget extends React.Component {
           if (
             layerToRemove.type &&
             layerToRemove.type !== 'base-tile' &&
+            layerToRemove.type !== 'group' &&
             layerToRemove.type !== 'wmts' &&
             typeof layerToRemove.clear === 'function'
           ) {
             layerToRemove.clear();
           }
           if (
+            layerToRemove.type !== 'group' &&
             layerToRemove.type !== 'wmts' &&
             typeof layerToRemove.destroy === 'function'
           ) {
