@@ -66,7 +66,9 @@ function buildCatalogPayloadFromFeatures(features = []) {
     const featureData = features[i] || {};
     const properties = featureData.properties || {};
     const dateValue =
-      properties.datetime || properties.start_datetime || properties.end_datetime;
+      properties.datetime ||
+      properties.start_datetime ||
+      properties.end_datetime;
 
     if (dateValue) {
       const normalizedDate = String(dateValue);
@@ -199,7 +201,9 @@ export function fetchCatalogApiDates(byoc, force_refresh = false) {
       return null;
     }
 
-    const url = `/++api++/@get_catalogapi_dates?byoc=${encodeURIComponent(byoc)}&force_refresh=${force_refresh ? 'true' : 'false'}`;
+    const url = `/++api++/@get_catalogapi_dates?byoc=${encodeURIComponent(
+      byoc,
+    )}&force_refresh=${force_refresh ? 'true' : 'false'}`;
 
     try {
       const res = await fetch(url, { headers: { Accept: 'application/json' } });
