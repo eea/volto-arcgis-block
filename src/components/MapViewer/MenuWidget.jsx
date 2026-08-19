@@ -1935,7 +1935,7 @@ class MenuWidget extends React.Component {
                   key={'h' + familyId}
                   defcheck={familyDatasetDef}
                   onChange={(e) =>
-                    this.toggleFamily(e.target.checked, checkFamily, e)
+                    this.toggleFamily(e.target.checked, checkFamily, e.target)
                   }
                 ></input>
                 <label
@@ -8135,7 +8135,7 @@ class MenuWidget extends React.Component {
         }
       } catch (e) {}
     }
-    if (layers && !this.props.download && Array.isArray(expandedDropdowns)) {
+    if (layers && !this.props.download) {
       for (var i = layers.length - 1; i >= 0; i--) {
         let layer = layers[i];
         let node = document.getElementById(layer);
@@ -8157,43 +8157,45 @@ class MenuWidget extends React.Component {
               delete node.dataset.preserveCheckedLayerState;
             }
           }
-          let dropdown = node.closest('.map-menu-dropdown');
-          if (dropdown) {
-            let button = dropdown.querySelector('.ccl-expandable__button');
-            if (button && expandedDropdowns.includes(button.id)) {
-              button.setAttribute('aria-expanded', 'true');
-            }
-          }
-          let productDropdown = node.closest('.map-menu-product-dropdown');
-          if (productDropdown) {
-            let familyDropdown = node.closest('.map-menu-family-dropdown');
-            if (familyDropdown) {
-              let button = familyDropdown.querySelector(
-                '.ccl-expandable__button',
-              );
+          if (Array.isArray(expandedDropdowns)) {
+            let dropdown = node.closest('.map-menu-dropdown');
+            if (dropdown) {
+              let button = dropdown.querySelector('.ccl-expandable__button');
               if (button && expandedDropdowns.includes(button.id)) {
                 button.setAttribute('aria-expanded', 'true');
               }
             }
-            let datasetDropdown = node.closest('.map-menu-product-dropdown');
-            if (datasetDropdown) {
-              let button = datasetDropdown.querySelector(
-                '.ccl-expandable__button',
-              );
-              if (button && expandedDropdowns.includes(button.id)) {
-                button.setAttribute('aria-expanded', 'true');
+            let productDropdown = node.closest('.map-menu-product-dropdown');
+            if (productDropdown) {
+              let familyDropdown = node.closest('.map-menu-family-dropdown');
+              if (familyDropdown) {
+                let button = familyDropdown.querySelector(
+                  '.ccl-expandable__button',
+                );
+                if (button && expandedDropdowns.includes(button.id)) {
+                  button.setAttribute('aria-expanded', 'true');
+                }
+              }
+              let datasetDropdown = node.closest('.map-menu-product-dropdown');
+              if (datasetDropdown) {
+                let button = datasetDropdown.querySelector(
+                  '.ccl-expandable__button',
+                );
+                if (button && expandedDropdowns.includes(button.id)) {
+                  button.setAttribute('aria-expanded', 'true');
+                }
               }
             }
-          }
-          // set scroll position
-          dropdown = node.closest('.map-menu-dropdown');
-          productDropdown = node.closest('.map-menu-product-dropdown');
-          let scrollPosition = productDropdown
-            ? productDropdown.offsetTop
-            : dropdown.offsetTop;
-          let panelsElem = document.querySelector('.panels');
-          if (panelsElem) {
-            panelsElem.scrollTop = scrollPosition;
+            // set scroll position
+            dropdown = node.closest('.map-menu-dropdown');
+            productDropdown = node.closest('.map-menu-product-dropdown');
+            let scrollPosition = productDropdown
+              ? productDropdown.offsetTop
+              : dropdown.offsetTop;
+            let panelsElem = document.querySelector('.panels');
+            if (panelsElem) {
+              panelsElem.scrollTop = scrollPosition;
+            }
           }
         }
       }
