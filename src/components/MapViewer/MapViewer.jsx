@@ -1512,7 +1512,7 @@ class MapViewer extends React.Component {
       let toc_panel_scrolls = sessionStorage.getItem('toc_panel_scrolls');
       let checkedLayers = sessionStorage.getItem('checkedLayers');
       if (!sessionStorage.getItem('TMSLayerObj')) {
-        sessionStorage.clear();
+        //sessionStorage.clear();
       }
       sessionStorage.setItem('toc_panel_scrolls', toc_panel_scrolls);
       sessionStorage.setItem('checkedLayers', checkedLayers);
