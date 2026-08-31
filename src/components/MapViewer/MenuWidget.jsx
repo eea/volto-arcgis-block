@@ -5738,18 +5738,25 @@ class MenuWidget extends React.Component {
           'expandedDropdowns',
           JSON.stringify(expandedDropdowns),
         );
-        const userKey = this.userID ? 'user_' + this.userID : 'user_anonymous';
-        const existing = localStorage.getItem(userKey);
-        let storeObj = {};
-        if (existing) {
-          try {
-            storeObj = JSON.parse(existing) || {};
-          } catch (e) {
-            storeObj = {};
+        if (
+          !this.location.search.includes('product=') &&
+          !this.location.search.includes('dataset=')
+        ) {
+          const userKey = this.userID
+            ? 'user_' + this.userID
+            : 'user_anonymous';
+          const existing = localStorage.getItem(userKey);
+          let storeObj = {};
+          if (existing) {
+            try {
+              storeObj = JSON.parse(existing) || {};
+            } catch (e) {
+              storeObj = {};
+            }
           }
+          storeObj.expandedDropdowns = expandedDropdowns;
+          localStorage.setItem(userKey, JSON.stringify(storeObj));
         }
-        storeObj.expandedDropdowns = expandedDropdowns;
-        localStorage.setItem(userKey, JSON.stringify(storeObj));
       }
     } catch (e) {}
   }
