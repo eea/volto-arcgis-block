@@ -7009,7 +7009,8 @@ class MenuWidget extends React.Component {
     let counter = activeLayers.length - 1;
     const hotspotData = this.props.hotspotData || {};
     const hotspotFilteredLayers =
-      hotspotData.filteredLayers && typeof hotspotData.filteredLayers === 'object'
+      hotspotData.filteredLayers &&
+      typeof hotspotData.filteredLayers === 'object'
         ? hotspotData.filteredLayers
         : null;
     const hotspotActiveLayers =

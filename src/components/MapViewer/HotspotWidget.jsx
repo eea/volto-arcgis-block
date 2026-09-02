@@ -763,10 +763,16 @@ class HotspotWidget extends React.Component {
           lcDateList.push(presentLcYearFromKeymap);
         }
 
-        if (!lccDateList.length && Number.isFinite(Number(data[i].node.lcc_year))) {
+        if (
+          !lccDateList.length &&
+          Number.isFinite(Number(data[i].node.lcc_year))
+        ) {
           lccDateList = [Number(data[i].node.lcc_year)];
         }
-        if (!lcDateList.length && Number.isFinite(Number(data[i].node.present_lc_year))) {
+        if (
+          !lcDateList.length &&
+          Number.isFinite(Number(data[i].node.present_lc_year))
+        ) {
           lcDateList = [Number(data[i].node.present_lc_year)];
         }
 
@@ -787,7 +793,9 @@ class HotspotWidget extends React.Component {
           const hasLcYearOption = Array.from(selectBoxLcTime.options).some(
             (option) => option.value === this.state.lcYear,
           );
-          selectBoxLcTime.value = hasLcYearOption ? this.state.lcYear : 'default';
+          selectBoxLcTime.value = hasLcYearOption
+            ? this.state.lcYear
+            : 'default';
         }
 
         const selectedLcYear = Number(this.state.lcYear);
@@ -900,7 +908,9 @@ class HotspotWidget extends React.Component {
         const hasSelectedOption = Array.from(selectBox.options).some(
           (option) => option.value === this.state.selectedArea,
         );
-        selectBox.value = hasSelectedOption ? this.state.selectedArea : 'default';
+        selectBox.value = hasSelectedOption
+          ? this.state.selectedArea
+          : 'default';
       }
     }
     if (selectBox.value === 'default') {
@@ -933,7 +943,11 @@ class HotspotWidget extends React.Component {
 
   updateLccOptionsForSelectedLc() {
     const selectBoxLccTime = document.getElementById('select-klc-lccTime');
-    if (!selectBoxLccTime || !this.state.selectedArea || !Array.isArray(this.dataJSONNames)) {
+    if (
+      !selectBoxLccTime ||
+      !this.state.selectedArea ||
+      !Array.isArray(this.dataJSONNames)
+    ) {
       return;
     }
 
