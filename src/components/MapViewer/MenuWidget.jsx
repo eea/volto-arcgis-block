@@ -7007,14 +7007,25 @@ class MenuWidget extends React.Component {
   layersReorder() {
     let activeLayers = document.querySelectorAll('.active-layer');
     let counter = activeLayers.length - 1;
-    let filterLayer;
+    const hotspotData = this.props.hotspotData || {};
+    const hotspotFilteredLayers =
+      hotspotData.filteredLayers &&
+      typeof hotspotData.filteredLayers === 'object'
+        ? hotspotData.filteredLayers
+        : null;
+    const hotspotActiveLayers =
+      hotspotData.activeLayers && typeof hotspotData.activeLayers === 'object'
+        ? hotspotData.activeLayers
+        : null;
+
     activeLayers.forEach((item, index) => {
+      let filterLayer;
       if (
-        this.props.hotspotData &&
-        this.props.hotspotData.filteredLayers &&
-        Object.keys(this.props.hotspotData.filteredLayers).length > 0
+        hotspotFilteredLayers &&
+        Object.keys(hotspotFilteredLayers).length > 0 &&
+        hotspotActiveLayers
       ) {
-        Object.keys(this.props.hotspotData.activeLayers).forEach((key) => {
+        Object.keys(hotspotActiveLayers).forEach((key) => {
           if (item.id.includes(key)) {
             if (key.includes('all_lcc')) {
               filterLayer = this.layers['lcc_filter'];
@@ -7022,12 +7033,11 @@ class MenuWidget extends React.Component {
               filterLayer = this.layers['lc_filter'];
             }
           }
-          this.map.reorder(filterLayer, index);
         });
       }
       let order = counter - index;
       item.setAttribute('layer-order', order);
-      if (filterLayer === undefined) {
+      if (filterLayer === undefined || filterLayer === null) {
         this.layerReorder(this.layers[item.getAttribute('layer-id')], order);
       } else {
         this.layerReorder(filterLayer, order);
@@ -7056,6 +7066,7 @@ class MenuWidget extends React.Component {
    * @param {*} index
    */
   layerReorder(layer, index) {
+    if (!layer || !this.map) return;
     this.map.reorder(layer, index);
   }
 
