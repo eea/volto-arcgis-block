@@ -185,7 +185,8 @@ class HotspotWidget extends React.Component {
   }
 
   buildCqlFilter(klcCode, date) {
-    const baseFilter = "klc_code LIKE '" + klcCode + "' AND in_pa LIKE 'not_defined'";
+    const baseFilter =
+      "klc_code LIKE '" + klcCode + "' AND in_pa LIKE 'not_defined'";
     if (!Number.isFinite(Number(date))) {
       return baseFilter;
     }
@@ -207,7 +208,12 @@ class HotspotWidget extends React.Component {
     };
   }
 
-  resolveLccDateOptions(klcCode, selectedLcYear, lccDatesByLcYear, lccDateList) {
+  resolveLccDateOptions(
+    klcCode,
+    selectedLcYear,
+    lccDatesByLcYear,
+    lccDateList,
+  ) {
     const klcLcDateMap = {
       CAF_02: {
         2016: [2000, 2019],
@@ -384,8 +390,7 @@ class HotspotWidget extends React.Component {
             .map(Number)[0];
         }
         const layerVariant = this.resolveLayerVariant(activeLayers, 'lcc');
-        typeLegend =
-          layerVariant === 'a' ? 'all_lcc_a_pol' : 'all_lcc_b_pol';
+        typeLegend = layerVariant === 'a' ? 'all_lcc_a_pol' : 'all_lcc_b_pol';
         title =
           layerVariant === 'a'
             ? 'Dichotomous Land Cover Change in selected Hot Spots'
@@ -411,13 +416,15 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter.filteredLayers &&
           bookmarkHotspotFilter.filteredLayers['lcc_filter'] !== undefined
         ) {
-          filterLayer.customLayerParameters = this.buildWmsCustomLayerParameters(
-            bookmarkHotspotFilter.filteredLayers['lcc_filter'],
-          );
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              bookmarkHotspotFilter.filteredLayers['lcc_filter'],
+            );
         } else {
-          filterLayer.customLayerParameters = this.buildWmsCustomLayerParameters(
-            this.buildCqlFilter(this.dataKlc_code, selectBoxHighlightsLcc),
-          );
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              this.buildCqlFilter(this.dataKlc_code, selectBoxHighlightsLcc),
+            );
         }
       }
       if (type === 'lc') {
@@ -463,13 +470,15 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter.filteredLayers &&
           bookmarkHotspotFilter.filteredLayers['lc_filter'] !== undefined
         ) {
-          filterLayer.customLayerParameters = this.buildWmsCustomLayerParameters(
-            bookmarkHotspotFilter.filteredLayers['lc_filter'],
-          );
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              bookmarkHotspotFilter.filteredLayers['lc_filter'],
+            );
         } else {
-          filterLayer.customLayerParameters = this.buildWmsCustomLayerParameters(
-            this.buildCqlFilter(this.dataKlc_code, selectBoxHighlightsLc),
-          );
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              this.buildCqlFilter(this.dataKlc_code, selectBoxHighlightsLc),
+            );
         }
       }
       if (type === 'klc') {
