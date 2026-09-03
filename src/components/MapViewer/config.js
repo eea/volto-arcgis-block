@@ -234,6 +234,22 @@ const config = {
       '/products/lclcc-hot-spots/json-files/all_geo_klc.json/@@download/file',
     legendLinkUrl:
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=',
+    hotspotWmsEndpoint:
+      'https://geospatial.jrc.ec.europa.eu/geoserver/hsm/wms',
+    hotspotWmsVersion: '1.1.0',
+    hotspotWmsSrs: 'EPSG:3857',
+    hotspotWmsLayerNames: {
+      lcc: {
+        a: 'hsm:lcc_a_pols',
+        b: 'hsm:lcc_b_pols',
+      },
+      lc: {
+        a: 'hsm:present_lc_a_pols',
+        b: 'hsm:present_lc_b_pols',
+      },
+      klc: 'hsm:cop_klc',
+      pa: 'hsm:protected_areas',
+    },
     serviceUrl: 'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/wms',
     positronCompositeThumbnail:
       'https://gisco-services.ec.europa.eu/maps/wmts/OSMPositronComposite/EPSG3857/0/0/0.png',
