@@ -8017,6 +8017,7 @@ class MenuWidget extends React.Component {
   }
 
   deleteFilteredLayer(layer) {
+    if (!layer || !this.props || !this.props.map) return;
     if (
       !(
         layer.includes('all_lcc') ||
@@ -8027,9 +8028,13 @@ class MenuWidget extends React.Component {
     )
       return;
     let filterLayer;
-    //let temp;
-    let updatedHotspotData = this.props.hotspotData;
-    let updatedFilteredLayers = this.props.hotspotData['filteredLayers'];
+    let updatedHotspotData = this.props.hotspotData || {};
+    let updatedFilteredLayers =
+      updatedHotspotData &&
+      updatedHotspotData['filteredLayers'] &&
+      typeof updatedHotspotData['filteredLayers'] === 'object'
+        ? updatedHotspotData['filteredLayers']
+        : {};
     if (this.layers['lcc_filter'] && layer.includes('all_lcc')) {
       this.layers['lcc_filter'].visible = false;
       filterLayer = this.props.map.findLayerById('lcc_filter');
@@ -8055,7 +8060,9 @@ class MenuWidget extends React.Component {
       layer.includes('cop_klc')
     ) {
       this.layers['klc_filter'].visible = false;
-      this.layers[layer].visible = false;
+      if (this.layers[layer]) {
+        this.layers[layer].visible = false;
+      }
       filterLayer = this.props.map.findLayerById('klc_filter');
       if (filterLayer !== undefined) {
         //  temp = filterLayer;
@@ -8070,7 +8077,9 @@ class MenuWidget extends React.Component {
       layer.includes('protected_areas')
     ) {
       this.layers['pa_filter'].visible = false;
-      this.layers[layer].visible = false;
+      if (this.layers[layer]) {
+        this.layers[layer].visible = false;
+      }
       filterLayer = this.props.map.findLayerById('pa_filter');
       if (filterLayer !== undefined) {
         //  temp = filterLayer;
@@ -8081,8 +8090,10 @@ class MenuWidget extends React.Component {
       delete updatedFilteredLayers['pa_filter'];
     }
     this.props.mapLayersHandler(this.layers);
-    updatedHotspotData['filteredLayers'] = updatedFilteredLayers;
-    this.props.hotspotDataHandler(updatedHotspotData);
+    if (this.props.hotspotDataHandler) {
+      updatedHotspotData['filteredLayers'] = updatedFilteredLayers;
+      this.props.hotspotDataHandler(updatedHotspotData);
+    }
   }
 
   /**

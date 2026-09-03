@@ -137,80 +137,192 @@ class HotspotWidget extends React.Component {
     return legendLinkUrl + legend;
   }
 
+  getHotspotWmsConfig() {
+    return {
+      endpoint:
+        this.urls.hotspotWmsEndpoint ||
+        'https://geospatial.jrc.ec.europa.eu/geoserver/hsm/wms',
+      version: this.urls.hotspotWmsVersion || '1.1.0',
+      srs: this.urls.hotspotWmsSrs || 'EPSG:3857',
+      layerNames: this.urls.hotspotWmsLayerNames || {
+        lcc: {
+          a: 'hsm:lcc_a_pols',
+          b: 'hsm:lcc_b_pols',
+        },
+        lc: {
+          a: 'hsm:present_lc_a_pols',
+          b: 'hsm:present_lc_b_pols',
+        },
+        klc: 'hsm:cop_klc',
+        pa: 'hsm:protected_areas',
+      },
+    };
+  }
+
+  resolveLayerVariant(activeLayers, type) {
+    if (!Array.isArray(activeLayers) || !activeLayers.length) return 'b';
+    const hasVariantA = activeLayers.some((layer) =>
+      layer.includes(type === 'lcc' ? 'all_lcc_a_pol' : 'all_present_lc_a_pol'),
+    );
+    return hasVariantA ? 'a' : 'b';
+  }
+
+  resolveWmsLayerName(type, variant) {
+    const config = this.getHotspotWmsConfig();
+    if (type === 'lcc') {
+      return config.layerNames.lcc[variant] || config.layerNames.lcc.b;
+    }
+    if (type === 'lc') {
+      return config.layerNames.lc[variant] || config.layerNames.lc.b;
+    }
+    if (type === 'klc') {
+      return config.layerNames.klc;
+    }
+    if (type === 'pa') {
+      return config.layerNames.pa;
+    }
+    return null;
+  }
+
+  buildCqlFilter(klcCode, date) {
+    const baseFilter =
+      "klc_code LIKE '" + klcCode + "' AND in_pa LIKE 'not_defined'";
+    if (!Number.isFinite(Number(date))) {
+      return baseFilter;
+    }
+    return baseFilter + ' AND date=' + Number(date);
+  }
+
+  buildWmsCustomLayerParameters(cqlFilter) {
+    const config = this.getHotspotWmsConfig();
+    return {
+      SERVICE: 'WMS',
+      REQUEST: 'GetMap',
+      FORMAT: 'image/png',
+      TRANSPARENT: 'true',
+      tiled: 'true',
+      STYLES: '',
+      VERSION: config.version,
+      SRS: config.srs,
+      CQL_FILTER: cqlFilter,
+    };
+  }
+
+  resolveLccDateOptions(
+    klcCode,
+    selectedLcYear,
+    lccDatesByLcYear,
+    lccDateList,
+  ) {
+    const klcLcDateMap = {
+      CAF_02: {
+        2016: [2000, 2019],
+        2019: [2024],
+      },
+      CAF_05: {
+        2015: [2000, 2019],
+        2019: [2024],
+      },
+    };
+
+    const mappedByKlc = klcLcDateMap[klcCode] || null;
+    if (mappedByKlc && Number.isFinite(Number(selectedLcYear))) {
+      const mapped = mappedByKlc[Number(selectedLcYear)];
+      if (Array.isArray(mapped) && mapped.length) {
+        return Array.from(new Set(mapped)).sort((a, b) => a - b);
+      }
+    }
+
+    const mappedByData = Number.isFinite(Number(selectedLcYear))
+      ? lccDatesByLcYear[Number(selectedLcYear)]
+      : null;
+    if (Array.isArray(mappedByData) && mappedByData.length) {
+      return mappedByData;
+    }
+
+    return lccDateList;
+  }
+
   layerModelInit() {
-    const serviceUrl = this.urls.serviceUrl;
+    const serviceUrl = this.getHotspotWmsConfig().endpoint;
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
+      version: this.getHotspotWmsConfig().version,
       title: '',
       //featureInfoFormat: "application/json",
-      customLayerParameters: {},
+      customLayerParameters: this.buildWmsCustomLayerParameters(''),
       sublayers: [
         // LAND COVER CHANGE DATASET ________________________________________________________________________________________________________________
         {
-          name: this.addLegendName('all_lcc_a_pol'),
+          name: this.addLegendName(this.resolveWmsLayerName('lcc', 'a')),
           legendUrl: this.addLegendNameToUrl('all_lcc_a_pol'),
         },
       ],
     });
     this.esriLayer_lcc = new WMSLayer({
       url: serviceUrl,
+      version: this.getHotspotWmsConfig().version,
       title: '',
       //featureInfoFormat: "application/json",
-      customLayerParameters: {},
+      customLayerParameters: this.buildWmsCustomLayerParameters(''),
       sublayers: [
         // LAND COVER CHANGE DATASET ________________________________________________________________________________________________________________
         {
-          name: this.addLegendName('all_lcc_b_pol'),
+          name: this.addLegendName(this.resolveWmsLayerName('lcc', 'b')),
           legendUrl: this.addLegendNameToUrl('all_lcc_b_pol'),
         },
       ],
     });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
+      version: this.getHotspotWmsConfig().version,
       title: '',
       //featureInfoFormat: "application/json",
-      customLayerParameters: {},
+      customLayerParameters: this.buildWmsCustomLayerParameters(''),
       sublayers: [
         // PRESENT LAND COVER DATASET ________________________________________________________________________________________________________________
         {
-          name: this.addLegendName('all_present_lc_a_pol'),
+          name: this.addLegendName(this.resolveWmsLayerName('lc', 'a')),
           legendUrl: this.addLegendNameToUrl('all_present_lc_a_pol'),
         },
       ],
     });
     this.esriLayer_lc = new WMSLayer({
       url: serviceUrl,
+      version: this.getHotspotWmsConfig().version,
       title: '',
       //featureInfoFormat: "application/json",
-      customLayerParameters: {},
+      customLayerParameters: this.buildWmsCustomLayerParameters(''),
       sublayers: [
         // PRESENT LAND COVER DATASET ________________________________________________________________________________________________________________
         {
-          name: this.addLegendName('all_present_lc_b_pol'),
+          name: this.addLegendName(this.resolveWmsLayerName('lc', 'b')),
           legendUrl: this.addLegendNameToUrl('all_present_lc_b_pol'),
         },
       ],
     });
     this.esriLayer_klc = new WMSLayer({
       url: serviceUrl,
+      version: this.getHotspotWmsConfig().version,
       title: '',
       //featureInfoFormat: "application/json",
-      customLayerParameters: {},
+      customLayerParameters: this.buildWmsCustomLayerParameters(''),
       sublayers: [
         {
-          name: this.addLegendName('cop_klc'),
+          name: this.addLegendName(this.resolveWmsLayerName('klc')),
           legendUrl: this.addLegendNameToUrl('cop_klc'),
         },
       ],
     });
     this.esriLayer_pa = new WMSLayer({
       url: serviceUrl,
+      version: this.getHotspotWmsConfig().version,
       title: '',
       //featureInfoFormat: "application/json",
-      customLayerParameters: {},
+      customLayerParameters: this.buildWmsCustomLayerParameters(''),
       sublayers: [
         {
-          name: this.addLegendName('protected_areas'),
+          name: this.addLegendName(this.resolveWmsLayerName('pa')),
           legendUrl: this.addLegendNameToUrl('protected_areas'),
         },
       ],
@@ -277,17 +389,12 @@ class HotspotWidget extends React.Component {
             .value.match(/\d+/g)
             .map(Number)[0];
         }
-        for (let i = 0; activeLayers[i]; i++) {
-          let layer = activeLayers[i];
-          if (layer.includes('all_lcc_a_pol')) {
-            typeLegend = 'all_lcc_a_pol';
-            title = 'Dichotomous Land Cover Change in selected Hot Spots';
-            break;
-          } else {
-            typeLegend = 'all_lcc_b_pol';
-            title = 'Modular Land Cover Change in selected Hot Spots';
-          }
-        }
+        const layerVariant = this.resolveLayerVariant(activeLayers, 'lcc');
+        typeLegend = layerVariant === 'a' ? 'all_lcc_a_pol' : 'all_lcc_b_pol';
+        title =
+          layerVariant === 'a'
+            ? 'Dichotomous Land Cover Change in selected Hot Spots'
+            : 'Modular Land Cover Change in selected Hot Spots';
 
         this.addFilteredLayersData(
           filteredLayersData,
@@ -298,7 +405,9 @@ class HotspotWidget extends React.Component {
 
         filterLayer = this.esriLayer_lcc;
 
-        filterLayer.sublayers.items[0].name = this.addLegendName(typeLegend);
+        filterLayer.sublayers.items[0].name = this.addLegendName(
+          this.resolveWmsLayerName('lcc', layerVariant),
+        );
         filterLayer.sublayers.items[0].legendUrl =
           this.addLegendNameToUrl(typeLegend);
         filterLayer.sublayers.items[0].title = title;
@@ -307,30 +416,27 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter.filteredLayers &&
           bookmarkHotspotFilter.filteredLayers['lcc_filter'] !== undefined
         ) {
-          filterLayer.customLayerParameters['CQL_FILTER'] =
-            bookmarkHotspotFilter.filteredLayers['lcc_filter'];
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              bookmarkHotspotFilter.filteredLayers['lcc_filter'],
+            );
         } else {
-          filterLayer.customLayerParameters['CQL_FILTER'] =
-            'klc_code LIKE ' +
-            "'" +
-            this.dataKlc_code +
-            "'" +
-            " AND in_pa = 'not_defined' AND date = " +
-            selectBoxHighlightsLcc;
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              this.buildCqlFilter(this.dataKlc_code, selectBoxHighlightsLcc),
+            );
         }
       }
       if (type === 'lc') {
-        for (let i = 0; i < activeLayers.length; i++) {
-          let layer = activeLayers[i];
-          if (layer.includes('all_present_lc_a_pol')) {
-            typeLegend = 'all_present_lc_a_pol';
-            title = 'Dichotomous Present Land Cover in selected Hot Spots';
-            break;
-          } else {
-            typeLegend = 'all_present_lc_b_pol';
-            title = 'Modular Present Land Cover in selected Hot Spots';
-          }
-        }
+        const layerVariant = this.resolveLayerVariant(activeLayers, 'lc');
+        typeLegend =
+          layerVariant === 'a'
+            ? 'all_present_lc_a_pol'
+            : 'all_present_lc_b_pol';
+        title =
+          layerVariant === 'a'
+            ? 'Dichotomous Present Land Cover in selected Hot Spots'
+            : 'Modular Present Land Cover in selected Hot Spots';
 
         let selectLcBoxTime =
           document.getElementById('select-klc-lcTime').value;
@@ -353,7 +459,9 @@ class HotspotWidget extends React.Component {
 
         filterLayer = this.esriLayer_lc;
 
-        filterLayer.sublayers.items[0].name = this.addLegendName(typeLegend);
+        filterLayer.sublayers.items[0].name = this.addLegendName(
+          this.resolveWmsLayerName('lc', layerVariant),
+        );
         filterLayer.sublayers.items[0].legendUrl =
           this.addLegendNameToUrl(typeLegend);
         filterLayer.sublayers.items[0].title = title;
@@ -362,16 +470,15 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter.filteredLayers &&
           bookmarkHotspotFilter.filteredLayers['lc_filter'] !== undefined
         ) {
-          filterLayer.customLayerParameters['CQL_FILTER'] =
-            bookmarkHotspotFilter.filteredLayers['lc_filter'];
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              bookmarkHotspotFilter.filteredLayers['lc_filter'],
+            );
         } else {
-          filterLayer.customLayerParameters['CQL_FILTER'] =
-            'klc_code LIKE ' +
-            "'" +
-            this.dataKlc_code +
-            "'" +
-            " AND in_pa = 'not_defined' AND date = " +
-            selectBoxHighlightsLc;
+          filterLayer.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              this.buildCqlFilter(this.dataKlc_code, selectBoxHighlightsLc),
+            );
         }
       }
       if (type === 'klc') {
@@ -381,13 +488,20 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter.filteredLayers &&
           bookmarkHotspotFilter.filteredLayers['klc_filter'] !== undefined
         ) {
-          this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
-            bookmarkHotspotFilter.filteredLayers['klc_filter'];
+          this.esriLayer_klc.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              bookmarkHotspotFilter.filteredLayers['klc_filter'],
+            );
         } else {
-          this.esriLayer_klc.customLayerParameters['CQL_FILTER'] =
-            "klc_code LIKE '" + this.dataKlc_code + "'";
+          this.esriLayer_klc.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              "klc_code LIKE '" + this.dataKlc_code + "'",
+            );
         }
         filterLayer = this.esriLayer_klc;
+        filterLayer.sublayers.items[0].name = this.addLegendName(
+          this.resolveWmsLayerName('klc'),
+        );
         filterLayer.sublayers.items[0].title = title;
       }
       if (type === 'pa') {
@@ -398,13 +512,20 @@ class HotspotWidget extends React.Component {
           bookmarkHotspotFilter.filteredLayers &&
           bookmarkHotspotFilter.filteredLayers['pa_filter'] !== undefined
         ) {
-          this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
-            bookmarkHotspotFilter.filteredLayers['pa_filter'];
+          this.esriLayer_pa.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              bookmarkHotspotFilter.filteredLayers['pa_filter'],
+            );
         } else {
-          this.esriLayer_pa.customLayerParameters['CQL_FILTER'] =
-            "klc_code LIKE '" + this.dataKlc_code + "'";
+          this.esriLayer_pa.customLayerParameters =
+            this.buildWmsCustomLayerParameters(
+              "klc_code LIKE '" + this.dataKlc_code + "'",
+            );
         }
         filterLayer = this.esriLayer_pa;
+        filterLayer.sublayers.items[0].name = this.addLegendName(
+          this.resolveWmsLayerName('pa'),
+        );
         filterLayer.sublayers.items[0].title = title;
       }
       layersToAdd[type + '_filter'] = filterLayer;
@@ -799,13 +920,12 @@ class HotspotWidget extends React.Component {
         }
 
         const selectedLcYear = Number(this.state.lcYear);
-        const mappedLccDateList = Number.isFinite(selectedLcYear)
-          ? lccDatesByLcYear[selectedLcYear]
-          : null;
-        const lccOptionsToUse =
-          mappedLccDateList && mappedLccDateList.length
-            ? mappedLccDateList
-            : lccDateList;
+        const lccOptionsToUse = this.resolveLccDateOptions(
+          data[i].node.klc_code,
+          selectedLcYear,
+          lccDatesByLcYear,
+          lccDateList,
+        );
 
         lccOptionsToUse.forEach((element) => {
           selectBoxLccTime.options.add(new Option(element, element, element));
@@ -1016,13 +1136,12 @@ class HotspotWidget extends React.Component {
     });
 
     const selectedLcYear = Number(this.state.lcYear);
-    const mappedLccDateList = Number.isFinite(selectedLcYear)
-      ? lccDatesByLcYear[selectedLcYear]
-      : null;
-    const lccOptionsToUse =
-      mappedLccDateList && mappedLccDateList.length
-        ? mappedLccDateList
-        : lccDateList;
+    const lccOptionsToUse = this.resolveLccDateOptions(
+      selectedNode.klc_code,
+      selectedLcYear,
+      lccDatesByLcYear,
+      lccDateList,
+    );
 
     this.removeOptions(selectBoxLccTime);
     selectBoxLccTime.options.add(
