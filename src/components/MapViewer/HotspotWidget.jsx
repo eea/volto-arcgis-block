@@ -185,7 +185,7 @@ class HotspotWidget extends React.Component {
   }
 
   buildCqlFilter(klcCode, date) {
-    const baseFilter = "klc_code LIKE '" + klcCode + "' AND in_pa LIKE 'not_defined'";
+    const baseFilter = "klc_code='" + klcCode + "' AND in_pa='not_defined'";
     if (!Number.isFinite(Number(date))) {
       return baseFilter;
     }
@@ -486,7 +486,7 @@ class HotspotWidget extends React.Component {
         } else {
           this.esriLayer_klc.customLayerParameters =
             this.buildWmsCustomLayerParameters(
-              "klc_code LIKE '" + this.dataKlc_code + "'",
+              "klc_code='" + this.dataKlc_code + "'",
             );
         }
         filterLayer = this.esriLayer_klc;
@@ -510,7 +510,7 @@ class HotspotWidget extends React.Component {
         } else {
           this.esriLayer_pa.customLayerParameters =
             this.buildWmsCustomLayerParameters(
-              "klc_code LIKE '" + this.dataKlc_code + "'",
+              "klc_code='" + this.dataKlc_code + "'",
             );
         }
         filterLayer = this.esriLayer_pa;
