@@ -1975,6 +1975,30 @@ div.map-container.popup-block {
   cursor: not-allowed;
 }
 
+.hotspot-reference-selection {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: rgba(160, 177, 40, 0.15);
+}
+
+.hotspot-reference-selection .esri-print__form-section-container > div {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.hotspot-reference-selection .esri-button {
+  min-width: 48px;
+}
+
+.hotspot-reference-selection .esri-button.is-selected,
+.hotspot-reference-selection .esri-button[aria-pressed='true'] {
+  border: 1px solid #a0b128;
+  background-color: #ffffff;
+  color: #a0b128;
+}
+
 /*.hotspot-container .esri-select{
   font-family:Helvetica, sans-serif;
   font-size:20px;
