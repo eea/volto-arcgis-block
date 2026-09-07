@@ -18,6 +18,7 @@ class HotspotWidget extends React.Component {
       showMapMenu: false,
       activeLayers: {},
       selectedArea: null,
+      referenceLcYear: null,
       lcYear: null,
       lccYear: null,
       hasMultipleLcDates: false,
@@ -47,8 +48,10 @@ class HotspotWidget extends React.Component {
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
     this.filteredLayersToHotspotData =
       this.filteredLayersToHotspotData.bind(this);
+    this.resetHotspotWidgetFilters = this.resetHotspotWidgetFilters.bind(this);
     this.mapCfg = this.props.mapCfg;
     this.selectedArea = null;
+    this.referenceLcYear = null;
     this.lcYear = null;
     this.lccYear = null;
     this.urls = this.props.urls;
@@ -151,6 +154,36 @@ class HotspotWidget extends React.Component {
     };
   }
 
+  getSelectedNodeByArea(selectedArea) {
+    if (!selectedArea || !Array.isArray(this.dataJSONNames)) {
+      return null;
+    }
+
+    return this.dataJSONNames.find(
+      (entry) => entry?.node?.klc_name === selectedArea,
+    )?.node;
+  }
+
+  isReferenceSelectionKlcCode(klcCode) {
+    return klcCode === 'CAF_02' || klcCode === 'CAF_05';
+  }
+
+  getReferenceLcYearSelection(lcDateList) {
+    const selectedReferenceLcYear = Number(this.state.referenceLcYear);
+    if (
+      Number.isFinite(selectedReferenceLcYear) &&
+      lcDateList.includes(selectedReferenceLcYear)
+    ) {
+      return selectedReferenceLcYear;
+    }
+
+    if (lcDateList.length > 0) {
+      return Number(lcDateList[0]);
+    }
+
+    return null;
+  }
+
   setPresentLandCoverVisibility(shouldShow) {
     const presentLandCoverContainer = this.container.current?.querySelector(
       '.presentLandCoverContainer',
@@ -218,6 +251,47 @@ class HotspotWidget extends React.Component {
     if (this.props.view && this.props.view.graphics) {
       this.props.view.graphics.removeAll();
     }
+  }
+
+  resetHotspotWidgetFilters() {
+    const selectBox = document.getElementById('select-klc-area');
+    const selectBoxLcTime = document.getElementById('select-klc-lcTime');
+    const selectBoxLccTime = document.getElementById('select-klc-lccTime');
+
+    if (selectBox) {
+      selectBox.value = 'default';
+    }
+
+    if (selectBoxLcTime) {
+      this.removeOptions(selectBoxLcTime);
+      selectBoxLcTime.options.add(
+        new Option('Select a region first', 'default', true, true),
+      );
+      selectBoxLcTime.options[0].disabled = true;
+    }
+
+    if (selectBoxLccTime) {
+      this.removeOptions(selectBoxLccTime);
+      selectBoxLccTime.options.add(
+        new Option('Select a region first', 'default', true, true),
+      );
+      selectBoxLccTime.options[0].disabled = true;
+    }
+
+    this.setPresentLandCoverVisibility(false);
+
+    this.selectedArea = null;
+    this.referenceLcYear = null;
+    this.lcYear = null;
+    this.lccYear = null;
+
+    this.setState({
+      selectedArea: null,
+      referenceLcYear: null,
+      lcYear: null,
+      lccYear: null,
+      hasMultipleLcDates: false,
+    });
   }
 
   loader() {
@@ -767,6 +841,7 @@ class HotspotWidget extends React.Component {
 
   openMenu() {
     if (this.state.showMapMenu) {
+      this.resetHotspotWidgetFilters();
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -975,15 +1050,38 @@ class HotspotWidget extends React.Component {
           lccDatesByLcYear,
         } = this.getDateOptionsForNode(data[i].node);
 
+        const isReferenceSelectionArea = this.isReferenceSelectionKlcCode(
+          data[i].node.klc_code,
+        );
+        const selectedReferenceLcYear = isReferenceSelectionArea
+          ? this.getReferenceLcYearSelection(lcDateList)
+          : null;
+
         hasMultipleLcDatesForSelection = lcDateList.length > 1;
         hasSelectedAreaOption = true;
 
-        lcDateList.forEach((element) => {
+        const lcDateOptionsToUse =
+          isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
+            ? [selectedReferenceLcYear]
+            : lcDateList;
+
+        lcDateOptionsToUse.forEach((element) => {
           selectBoxLcTime.options.add(new Option(element, element, element));
         });
 
-        if (lcDateList.length === 1) {
-          selectBoxLcTime.value = String(lcDateList[0]);
+        if (
+          isReferenceSelectionArea &&
+          Number.isFinite(selectedReferenceLcYear) &&
+          this.state.referenceLcYear !== String(selectedReferenceLcYear)
+        ) {
+          this.setState({
+            referenceLcYear: String(selectedReferenceLcYear),
+            lcYear: String(selectedReferenceLcYear),
+          });
+        }
+
+        if (lcDateOptionsToUse.length === 1) {
+          selectBoxLcTime.value = String(lcDateOptionsToUse[0]);
         }
 
         if (this.state.lcYear !== null) {
@@ -995,7 +1093,10 @@ class HotspotWidget extends React.Component {
             : 'default';
         }
 
-        const selectedLcYear = Number(selectBoxLcTime.value);
+        const selectedLcYear =
+          isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
+            ? selectedReferenceLcYear
+            : Number(selectBoxLcTime.value);
         const lccOptionsToUse = hasMultipleLcDatesForSelection
           ? Number.isFinite(selectedLcYear)
             ? this.getLccDateOptionsFromData(
@@ -1158,8 +1259,7 @@ class HotspotWidget extends React.Component {
     );
 
     const shouldShowPresentLandCoverDropdown =
-      hasSelectedAreaOption &&
-      (hasActivePresentLcLayer || hasMultipleLcDatesForSelection);
+      hasSelectedAreaOption && hasActivePresentLcLayer;
     this.setPresentLandCoverVisibility(shouldShowPresentLandCoverDropdown);
     if (this.state.hasMultipleLcDates !== hasMultipleLcDatesForSelection) {
       this.setState({ hasMultipleLcDates: hasMultipleLcDatesForSelection });
@@ -1194,10 +1294,12 @@ class HotspotWidget extends React.Component {
       return;
     }
 
-    const { lccDateList, lccDatesByLcYear } =
+    const { lccDateList, lcDateList, lccDatesByLcYear } =
       this.getDateOptionsForNode(selectedNode);
 
-    const selectedLcYear = Number(this.state.lcYear);
+    const selectedLcYear = this.isReferenceSelectionKlcCode(selectedNode?.klc_code)
+      ? this.getReferenceLcYearSelection(lcDateList)
+      : Number(this.state.lcYear);
     const lccOptionsToUse = this.getLccDateOptionsFromData(
       selectedLcYear,
       lccDatesByLcYear,
@@ -1243,6 +1345,62 @@ class HotspotWidget extends React.Component {
                 }}
               ></select>
             </label>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  renderReferenceLandCoverSelection() {
+    const selectedNode = this.getSelectedNodeByArea(this.state.selectedArea);
+    if (!selectedNode || !this.isReferenceSelectionKlcCode(selectedNode.klc_code)) {
+      return null;
+    }
+
+    const { lcDateList } = this.getDateOptionsForNode(selectedNode);
+    if (!lcDateList.length) {
+      return null;
+    }
+
+    const selectedReferenceLcYear = String(
+      this.getReferenceLcYearSelection(lcDateList),
+    );
+
+    return (
+      <div className="measurement-dropdown-container hotspot-reference-selection">
+        <div className="esri-print__form-section-container">
+          <span>
+            Select first the reference landcover date you want to visualize
+          </span>
+          <div>
+            {lcDateList.map((year) => (
+              <button
+                key={year}
+                type="button"
+                className={
+                  selectedReferenceLcYear === String(year)
+                    ? 'esri-button is-selected'
+                    : 'esri-button'
+                }
+                aria-pressed={selectedReferenceLcYear === String(year)}
+                onClick={() => {
+                  this.setState(
+                    {
+                      referenceLcYear: String(year),
+                      lcYear: String(year),
+                      lccYear: null,
+                    },
+                    () => {
+                      this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
+                      this.updateLccOptionsForSelectedLc();
+                      this.disableButton();
+                    },
+                  );
+                }}
+              >
+                {year}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -1331,6 +1489,7 @@ class HotspotWidget extends React.Component {
                         onChange={(e) => {
                           this.setState({
                             selectedArea: e.target.value,
+                            referenceLcYear: null,
                             lcYear: null,
                             lccYear: null,
                           });
@@ -1341,6 +1500,7 @@ class HotspotWidget extends React.Component {
                     </label>
                   </div>
                 </div>
+                {this.renderReferenceLandCoverSelection()}
                 <div>
                   {divs.map((div, i) => (
                     <div key={i} className={div.className}>
@@ -1422,7 +1582,12 @@ class HotspotWidget extends React.Component {
           this.lccYear = null;
           this.selectedArea = null;
           if (this._isMounted) {
-            this.setState({ lcYear: null, lccYear: null, selectedArea: null });
+            this.setState({
+              lcYear: null,
+              lccYear: null,
+              selectedArea: null,
+              referenceLcYear: null,
+            });
           }
           shouldUpdate = true;
         }
@@ -1474,12 +1639,7 @@ class HotspotWidget extends React.Component {
       this.props.hotspotData,
     );
 
-    if (
-      prevHotspotLayerSignature !== nextHotspotLayerSignature &&
-      (this.state.selectedArea !== null ||
-        this.state.lcYear !== null ||
-        this.state.lccYear !== null)
-    ) {
+    if (prevHotspotLayerSignature !== nextHotspotLayerSignature) {
       this.clearHotspotLayersFromMap();
       this.resetHotspotViewState();
       const newHotspotData = {
@@ -1488,12 +1648,7 @@ class HotspotWidget extends React.Component {
         filteredLayersData: {},
       };
       this.props.hotspotDataHandler(newHotspotData);
-      this.setState({
-        selectedArea: null,
-        lcYear: null,
-        lccYear: null,
-        hasMultipleLcDates: false,
-      });
+      this.resetHotspotWidgetFilters();
       return;
     }
 
@@ -1505,6 +1660,9 @@ class HotspotWidget extends React.Component {
       this.disableButton();
     }
     if (prevState.lcYear !== this.state.lcYear) {
+      this.disableButton();
+    }
+    if (prevState.referenceLcYear !== this.state.referenceLcYear) {
       this.disableButton();
     }
   }
