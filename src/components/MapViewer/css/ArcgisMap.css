@@ -1982,21 +1982,8 @@ div.map-container.popup-block {
   background: rgba(160, 177, 40, 0.15);
 }
 
-.hotspot-reference-selection .esri-print__form-section-container > div {
+.hotspot-reference-selection .esri-select {
   margin-top: 8px;
-  display: flex;
-  gap: 8px;
-}
-
-.hotspot-reference-selection .esri-button {
-  min-width: 48px;
-}
-
-.hotspot-reference-selection .esri-button.is-selected,
-.hotspot-reference-selection .esri-button[aria-pressed='true'] {
-  border: 1px solid #a0b128;
-  background-color: #ffffff;
-  color: #a0b128;
 }
 
 /*.hotspot-container .esri-select{

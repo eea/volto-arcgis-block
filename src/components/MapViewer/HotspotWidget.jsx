@@ -956,7 +956,7 @@ class HotspotWidget extends React.Component {
           onClick={this.dropdownAnimation.bind(this)}
           onKeyDown={this.dropdownAnimation.bind(this)}
         >
-          <span>Present Land Cover</span>
+          <span>Reference Land Cover</span>
           <span className="dropdown-icon ccl-icon-chevron-thin-down"></span>
         </div>
         <div className="measurement-dropdown-container">
@@ -1238,6 +1238,20 @@ class HotspotWidget extends React.Component {
         );
         selectBoxLccTime.options[0].disabled = true;
       }
+
+      if (
+        this.state.selectedArea !== null ||
+        this.state.referenceLcYear !== null ||
+        this.state.lcYear !== null ||
+        this.state.lccYear !== null
+      ) {
+        this.setState({
+          selectedArea: null,
+          referenceLcYear: null,
+          lcYear: null,
+          lccYear: null,
+        });
+      }
     }
 
     if (
@@ -1369,39 +1383,36 @@ class HotspotWidget extends React.Component {
     return (
       <div className="measurement-dropdown-container hotspot-reference-selection">
         <div className="esri-print__form-section-container">
-          <span>
+          <label>
             Select first the reference landcover date you want to visualize
-          </span>
-          <div>
-            {lcDateList.map((year) => (
-              <button
-                key={year}
-                type="button"
-                className={
-                  selectedReferenceLcYear === String(year)
-                    ? 'esri-button is-selected'
-                    : 'esri-button'
-                }
-                aria-pressed={selectedReferenceLcYear === String(year)}
-                onClick={() => {
-                  this.setState(
-                    {
-                      referenceLcYear: String(year),
-                      lcYear: String(year),
-                      lccYear: null,
-                    },
-                    () => {
-                      this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
-                      this.updateLccOptionsForSelectedLc();
-                      this.disableButton();
-                    },
-                  );
-                }}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
+            <select
+              id="select-klc-reference-lc-time"
+              className="esri-select"
+              value={selectedReferenceLcYear}
+              onBlur={() => {}}
+              onChange={(e) => {
+                const nextReferenceLcYear = e.target.value;
+                this.setState(
+                  {
+                    referenceLcYear: nextReferenceLcYear,
+                    lcYear: nextReferenceLcYear,
+                    lccYear: null,
+                  },
+                  () => {
+                    this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
+                    this.updateLccOptionsForSelectedLc();
+                    this.disableButton();
+                  },
+                );
+              }}
+            >
+              {lcDateList.map((year) => (
+                <option key={year} value={String(year)}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
     );
