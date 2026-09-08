@@ -1056,8 +1056,8 @@ class HotspotWidget extends React.Component {
           isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
             ? [selectedReferenceLcYear]
             : isReferenceSelectionArea
-              ? []
-              : lcDateList;
+            ? []
+            : lcDateList;
 
         lcDateOptionsToUse.forEach((element) => {
           selectBoxLcTime.options.add(new Option(element, element, element));
