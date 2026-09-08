@@ -176,11 +176,6 @@ class HotspotWidget extends React.Component {
     ) {
       return selectedReferenceLcYear;
     }
-
-    if (lcDateList.length > 0) {
-      return Number(lcDateList[0]);
-    }
-
     return null;
   }
 
@@ -265,7 +260,7 @@ class HotspotWidget extends React.Component {
     if (selectBoxLcTime) {
       this.removeOptions(selectBoxLcTime);
       selectBoxLcTime.options.add(
-        new Option('Select a region first', 'default', true, true),
+        new Option('Select a year', 'default', true, true),
       );
       selectBoxLcTime.options[0].disabled = true;
     }
@@ -273,7 +268,7 @@ class HotspotWidget extends React.Component {
     if (selectBoxLccTime) {
       this.removeOptions(selectBoxLccTime);
       selectBoxLccTime.options.add(
-        new Option('Select a region first', 'default', true, true),
+        new Option('Select a year', 'default', true, true),
       );
       selectBoxLccTime.options[0].disabled = true;
     }
@@ -1063,35 +1058,13 @@ class HotspotWidget extends React.Component {
         const lcDateOptionsToUse =
           isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
             ? [selectedReferenceLcYear]
-            : lcDateList;
+            : isReferenceSelectionArea
+              ? []
+              : lcDateList;
 
         lcDateOptionsToUse.forEach((element) => {
           selectBoxLcTime.options.add(new Option(element, element, element));
         });
-
-        if (
-          isReferenceSelectionArea &&
-          Number.isFinite(selectedReferenceLcYear) &&
-          this.state.referenceLcYear !== String(selectedReferenceLcYear)
-        ) {
-          this.setState({
-            referenceLcYear: String(selectedReferenceLcYear),
-            lcYear: String(selectedReferenceLcYear),
-          });
-        }
-
-        if (lcDateOptionsToUse.length === 1) {
-          selectBoxLcTime.value = String(lcDateOptionsToUse[0]);
-        }
-
-        if (this.state.lcYear !== null) {
-          const hasLcYearOption = Array.from(selectBoxLcTime.options).some(
-            (option) => option.value === this.state.lcYear,
-          );
-          selectBoxLcTime.value = hasLcYearOption
-            ? this.state.lcYear
-            : 'default';
-        }
 
         const selectedLcYear =
           isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
@@ -1146,22 +1119,6 @@ class HotspotWidget extends React.Component {
               continue;
             } else {
               selectBox.value = this.state.selectedArea;
-              if (this.state.lcYear !== null) {
-                const hasLcYearOption = Array.from(
-                  selectBoxLcTime.options,
-                ).some((option) => option.value === this.state.lcYear);
-                selectBoxLcTime.value = hasLcYearOption
-                  ? this.state.lcYear
-                  : 'default';
-              }
-              if (this.state.lccYear !== null) {
-                const hasLccYearOption = Array.from(
-                  selectBoxLccTime.options,
-                ).some((option) => option.value === this.state.lccYear);
-                selectBoxLccTime.value = hasLccYearOption
-                  ? this.state.lccYear
-                  : 'default';
-              }
               break; // move break statement inside the if block
             }
           }
@@ -1181,22 +1138,6 @@ class HotspotWidget extends React.Component {
               continue;
             } else {
               selectBox.value = this.state.selectedArea;
-              if (this.state.lcYear !== null) {
-                const hasLcYearOption = Array.from(
-                  selectBoxLcTime.options,
-                ).some((option) => option.value === this.state.lcYear);
-                selectBoxLcTime.value = hasLcYearOption
-                  ? this.state.lcYear
-                  : 'default';
-              }
-              if (this.state.lccYear !== null) {
-                const hasLccYearOption = Array.from(
-                  selectBoxLccTime.options,
-                ).some((option) => option.value === this.state.lccYear);
-                selectBoxLccTime.value = hasLccYearOption
-                  ? this.state.lccYear
-                  : 'default';
-              }
               break;
             }
           }
@@ -1227,14 +1168,14 @@ class HotspotWidget extends React.Component {
       if (selectBoxLcTime) {
         this.removeOptions(selectBoxLcTime);
         selectBoxLcTime.options.add(
-          new Option('Select a region first', 'default', true, true),
+          new Option('Select a year', 'default', true, true),
         );
         selectBoxLcTime.options[0].disabled = true;
       }
       if (selectBoxLccTime) {
         this.removeOptions(selectBoxLccTime);
         selectBoxLccTime.options.add(
-          new Option('Select a region first', 'default', true, true),
+          new Option('Select a year', 'default', true, true),
         );
         selectBoxLccTime.options[0].disabled = true;
       }
@@ -1314,11 +1255,13 @@ class HotspotWidget extends React.Component {
     const selectedLcYear = this.isReferenceSelectionKlcCode(selectedNode?.klc_code)
       ? this.getReferenceLcYearSelection(lcDateList)
       : Number(this.state.lcYear);
-    const lccOptionsToUse = this.getLccDateOptionsFromData(
-      selectedLcYear,
-      lccDatesByLcYear,
-      lccDateList,
-    );
+    const lccOptionsToUse = Number.isFinite(Number(selectedLcYear))
+      ? this.getLccDateOptionsFromData(
+          selectedLcYear,
+          lccDatesByLcYear,
+          lccDateList,
+        )
+      : [];
 
     this.removeOptions(selectBoxLccTime);
     selectBoxLccTime.options.add(
@@ -1376,15 +1319,13 @@ class HotspotWidget extends React.Component {
       return null;
     }
 
-    const selectedReferenceLcYear = String(
-      this.getReferenceLcYearSelection(lcDateList),
-    );
+    const selectedReferenceLcYear = this.state.referenceLcYear || 'default';
 
     return (
       <div className="measurement-dropdown-container hotspot-reference-selection">
         <div className="esri-print__form-section-container">
           <label>
-            Select first the reference landcover date you want to visualize
+            Select first the reference land cover date you want to visualize
             <select
               id="select-klc-reference-lc-time"
               className="esri-select"
@@ -1392,6 +1333,21 @@ class HotspotWidget extends React.Component {
               onBlur={() => {}}
               onChange={(e) => {
                 const nextReferenceLcYear = e.target.value;
+                if (nextReferenceLcYear === 'default') {
+                  this.setState(
+                    {
+                      referenceLcYear: null,
+                      lcYear: null,
+                      lccYear: null,
+                    },
+                    () => {
+                      this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
+                      this.updateLccOptionsForSelectedLc();
+                      this.disableButton();
+                    },
+                  );
+                  return;
+                }
                 this.setState(
                   {
                     referenceLcYear: nextReferenceLcYear,
@@ -1406,6 +1362,9 @@ class HotspotWidget extends React.Component {
                 );
               }}
             >
+              <option value="default" disabled>
+                Select a year
+              </option>
               {lcDateList.map((year) => (
                 <option key={year} value={String(year)}>
                   {year}
@@ -1635,9 +1594,7 @@ class HotspotWidget extends React.Component {
       return '';
     }
     return Object.keys(activeLayers)
-      .filter(
-        (key) => key.includes('all_present_lc_') || key.includes('all_lcc_'),
-      )
+      .filter((key) => this.isHotspotLayerKey(key))
       .sort()
       .join('|');
   }
