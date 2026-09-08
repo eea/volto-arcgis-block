@@ -1039,11 +1039,8 @@ class HotspotWidget extends React.Component {
           selectBoxLccTime.options[0].disabled = true;
         }
 
-        const {
-          lccDateList,
-          lcDateList,
-          lccDatesByLcYear,
-        } = this.getDateOptionsForNode(data[i].node);
+        const { lccDateList, lcDateList, lccDatesByLcYear } =
+          this.getDateOptionsForNode(data[i].node);
 
         const isReferenceSelectionArea = this.isReferenceSelectionKlcCode(
           data[i].node.klc_code,
@@ -1252,7 +1249,9 @@ class HotspotWidget extends React.Component {
     const { lccDateList, lcDateList, lccDatesByLcYear } =
       this.getDateOptionsForNode(selectedNode);
 
-    const selectedLcYear = this.isReferenceSelectionKlcCode(selectedNode?.klc_code)
+    const selectedLcYear = this.isReferenceSelectionKlcCode(
+      selectedNode?.klc_code,
+    )
       ? this.getReferenceLcYearSelection(lcDateList)
       : Number(this.state.lcYear);
     const lccOptionsToUse = Number.isFinite(Number(selectedLcYear))
@@ -1310,7 +1309,10 @@ class HotspotWidget extends React.Component {
 
   renderReferenceLandCoverSelection() {
     const selectedNode = this.getSelectedNodeByArea(this.state.selectedArea);
-    if (!selectedNode || !this.isReferenceSelectionKlcCode(selectedNode.klc_code)) {
+    if (
+      !selectedNode ||
+      !this.isReferenceSelectionKlcCode(selectedNode.klc_code)
+    ) {
       return null;
     }
 
@@ -1341,7 +1343,10 @@ class HotspotWidget extends React.Component {
                       lccYear: null,
                     },
                     () => {
-                      this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
+                      this.getKLCNames(
+                        this.dataJSONNames,
+                        this.state.selectedArea,
+                      );
                       this.updateLccOptionsForSelectedLc();
                       this.disableButton();
                     },
@@ -1355,7 +1360,10 @@ class HotspotWidget extends React.Component {
                     lccYear: null,
                   },
                   () => {
-                    this.getKLCNames(this.dataJSONNames, this.state.selectedArea);
+                    this.getKLCNames(
+                      this.dataJSONNames,
+                      this.state.selectedArea,
+                    );
                     this.updateLccOptionsForSelectedLc();
                     this.disableButton();
                   },
