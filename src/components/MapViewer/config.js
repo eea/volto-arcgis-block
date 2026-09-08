@@ -234,8 +234,7 @@ const config = {
       '/products/lclcc-hot-spots/json-files/all_geo_klc.json/@@download/file',
     legendLinkUrl:
       'https://geospatial.jrc.ec.europa.eu/geoserver/hotspots/ows?service=WMS&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=',
-    hotspotWmsEndpoint:
-      'https://geospatial.jrc.ec.europa.eu/geoserver/hsm/wms',
+    hotspotWmsEndpoint: 'https://geospatial.jrc.ec.europa.eu/geoserver/hsm/wms',
     hotspotWmsVersion: '1.1.0',
     hotspotWmsSrs: 'EPSG:3857',
     hotspotWmsLayerNames: {
