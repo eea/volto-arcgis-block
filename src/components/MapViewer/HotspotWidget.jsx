@@ -18,8 +18,10 @@ class HotspotWidget extends React.Component {
       showMapMenu: false,
       activeLayers: {},
       selectedArea: null,
+      referenceLcYear: null,
       lcYear: null,
       lccYear: null,
+      hasMultipleLcDates: false,
       activeLayersArray: [],
     };
     this.menuClass =
@@ -46,14 +48,245 @@ class HotspotWidget extends React.Component {
     this.handleApplyFilter = this.handleApplyFilter.bind(this);
     this.filteredLayersToHotspotData =
       this.filteredLayersToHotspotData.bind(this);
+    this.resetHotspotWidgetFilters = this.resetHotspotWidgetFilters.bind(this);
     this.mapCfg = this.props.mapCfg;
     this.selectedArea = null;
+    this.referenceLcYear = null;
     this.lcYear = null;
     this.lccYear = null;
     this.urls = this.props.urls;
     this.layers = this.props.selectedLayers;
     this.arcgisEventHandles = [];
     this._isMounted = false;
+  }
+
+  parseKeymapInfo(rawKeymapInfo) {
+    if (typeof rawKeymapInfo === 'string') {
+      try {
+        return JSON.parse(rawKeymapInfo) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+    if (rawKeymapInfo && typeof rawKeymapInfo === 'object') {
+      return rawKeymapInfo;
+    }
+    return {};
+  }
+
+  getDateOptionsForNode(node) {
+    const keyMapInfoObj = this.parseKeymapInfo(node?.keymap_info);
+    let lccDateList = [];
+    let lcDateList = [];
+    let lccDatesByLcYear = {};
+
+    if (Array.isArray(keyMapInfoObj.dates)) {
+      keyMapInfoObj.dates.forEach((entry) => {
+        const lccDate = Number(
+          entry && typeof entry === 'object' ? entry?.date : entry,
+        );
+        const lcDate = Number(
+          entry && typeof entry === 'object' ? entry?.lc_date : undefined,
+        );
+        if (Number.isFinite(lccDate)) {
+          lccDateList.push(lccDate);
+        }
+        if (Number.isFinite(lcDate)) {
+          lcDateList.push(lcDate);
+          if (!lccDatesByLcYear[lcDate]) {
+            lccDatesByLcYear[lcDate] = [];
+          }
+          if (Number.isFinite(lccDate)) {
+            lccDatesByLcYear[lcDate].push(lccDate);
+          }
+        }
+      });
+    }
+
+    if (Array.isArray(keyMapInfoObj.multiple_lc_dates)) {
+      lcDateList = lcDateList.concat(
+        keyMapInfoObj.multiple_lc_dates
+          .map((yearEntry) =>
+            Number(
+              yearEntry && typeof yearEntry === 'object'
+                ? yearEntry?.date
+                : yearEntry,
+            ),
+          )
+          .filter((year) => Number.isFinite(year)),
+      );
+    }
+
+    const dynamicYearValues = Object.keys(keyMapInfoObj)
+      .filter((key) => /^year\d+$/.test(key))
+      .map((key) => Number(keyMapInfoObj[key]))
+      .filter((year) => Number.isFinite(year));
+    if (dynamicYearValues.length) {
+      lccDateList = lccDateList.concat(dynamicYearValues);
+    }
+
+    const presentLcYearFromKeymap = Number(keyMapInfoObj.year_present_lc);
+    if (Number.isFinite(presentLcYearFromKeymap)) {
+      lcDateList.push(presentLcYearFromKeymap);
+    }
+
+    if (!lccDateList.length && Number.isFinite(Number(node?.lcc_year))) {
+      lccDateList = [Number(node?.lcc_year)];
+    }
+    if (!lcDateList.length && Number.isFinite(Number(node?.present_lc_year))) {
+      lcDateList = [Number(node?.present_lc_year)];
+    }
+
+    lccDateList = Array.from(new Set(lccDateList)).sort((a, b) => a - b);
+    lcDateList = Array.from(new Set(lcDateList)).sort((a, b) => a - b);
+
+    Object.keys(lccDatesByLcYear).forEach((lcDateKey) => {
+      lccDatesByLcYear[lcDateKey] = Array.from(
+        new Set(lccDatesByLcYear[lcDateKey]),
+      ).sort((a, b) => a - b);
+    });
+
+    return {
+      keyMapInfoObj,
+      lccDateList,
+      lcDateList,
+      lccDatesByLcYear,
+    };
+  }
+
+  getSelectedNodeByArea(selectedArea) {
+    if (!selectedArea || !Array.isArray(this.dataJSONNames)) {
+      return null;
+    }
+
+    return this.dataJSONNames.find(
+      (entry) => entry?.node?.klc_name === selectedArea,
+    )?.node;
+  }
+
+  isReferenceSelectionKlcCode(klcCode) {
+    return klcCode === 'CAF_02' || klcCode === 'CAF_05';
+  }
+
+  getReferenceLcYearSelection(lcDateList) {
+    const selectedReferenceLcYear = Number(this.state.referenceLcYear);
+    if (
+      Number.isFinite(selectedReferenceLcYear) &&
+      lcDateList.includes(selectedReferenceLcYear)
+    ) {
+      return selectedReferenceLcYear;
+    }
+    return null;
+  }
+
+  setPresentLandCoverVisibility(shouldShow) {
+    const presentLandCoverContainer = this.container.current?.querySelector(
+      '.presentLandCoverContainer',
+    );
+    if (presentLandCoverContainer) {
+      presentLandCoverContainer.style.display = shouldShow ? 'block' : 'none';
+    }
+  }
+
+  isHotspotLayerKey(layerKey) {
+    if (typeof layerKey !== 'string') return false;
+    return (
+      layerKey.includes('all_present_lc_') ||
+      layerKey.includes('all_lcc_') ||
+      layerKey.includes('cop_klc') ||
+      layerKey.includes('protected_areas') ||
+      layerKey.endsWith('_filter')
+    );
+  }
+
+  removeLayerFromMap(layer) {
+    if (!layer || !this.props.map) return;
+    try {
+      this.props.map.remove(layer);
+    } catch (e) {}
+    if (layer.visible !== undefined) {
+      layer.visible = false;
+    }
+  }
+
+  clearHotspotLayersFromMap() {
+    const layerRefs = [];
+    if (this.layers && typeof this.layers === 'object') {
+      Object.keys(this.layers).forEach((layerKey) => {
+        if (this.isHotspotLayerKey(layerKey) && this.layers[layerKey]) {
+          layerRefs.push(this.layers[layerKey]);
+        }
+      });
+    }
+
+    const hotspotData = this.props.hotspotData || {};
+    const activeLayers = hotspotData.activeLayers || {};
+    const filteredLayers = hotspotData.filteredLayers || {};
+
+    Object.keys(activeLayers).forEach((layerKey) => {
+      if (this.isHotspotLayerKey(layerKey) && activeLayers[layerKey]) {
+        layerRefs.push(activeLayers[layerKey]);
+      }
+    });
+    Object.keys(filteredLayers).forEach((layerKey) => {
+      if (this.isHotspotLayerKey(layerKey) && filteredLayers[layerKey]) {
+        layerRefs.push(filteredLayers[layerKey]);
+      }
+    });
+
+    Array.from(new Set(layerRefs)).forEach((layer) => {
+      this.removeLayerFromMap(layer);
+    });
+  }
+
+  resetHotspotViewState() {
+    if (this.props.view && this.props.view.popup) {
+      this.props.view.popup.close();
+    }
+    if (this.props.view && this.props.view.graphics) {
+      this.props.view.graphics.removeAll();
+    }
+  }
+
+  resetHotspotWidgetFilters() {
+    const selectBox = document.getElementById('select-klc-area');
+    const selectBoxLcTime = document.getElementById('select-klc-lcTime');
+    const selectBoxLccTime = document.getElementById('select-klc-lccTime');
+
+    if (selectBox) {
+      selectBox.value = 'default';
+    }
+
+    if (selectBoxLcTime) {
+      this.removeOptions(selectBoxLcTime);
+      selectBoxLcTime.options.add(
+        new Option('Select a year', 'default', true, true),
+      );
+      selectBoxLcTime.options[0].disabled = true;
+    }
+
+    if (selectBoxLccTime) {
+      this.removeOptions(selectBoxLccTime);
+      selectBoxLccTime.options.add(
+        new Option('Select a year', 'default', true, true),
+      );
+      selectBoxLccTime.options[0].disabled = true;
+    }
+
+    this.setPresentLandCoverVisibility(false);
+
+    this.selectedArea = null;
+    this.referenceLcYear = null;
+    this.lcYear = null;
+    this.lccYear = null;
+
+    this.setState({
+      selectedArea: null,
+      referenceLcYear: null,
+      lcYear: null,
+      lccYear: null,
+      hasMultipleLcDates: false,
+    });
   }
 
   loader() {
@@ -185,8 +418,7 @@ class HotspotWidget extends React.Component {
   }
 
   buildCqlFilter(klcCode, date) {
-    const baseFilter =
-      "klc_code LIKE '" + klcCode + "' AND in_pa LIKE 'not_defined'";
+    const baseFilter = "klc_code='" + klcCode + "' AND in_pa='not_defined'";
     if (!Number.isFinite(Number(date))) {
       return baseFilter;
     }
@@ -208,38 +440,13 @@ class HotspotWidget extends React.Component {
     };
   }
 
-  resolveLccDateOptions(
-    klcCode,
-    selectedLcYear,
-    lccDatesByLcYear,
-    lccDateList,
-  ) {
-    const klcLcDateMap = {
-      CAF_02: {
-        2016: [2000, 2019],
-        2019: [2024],
-      },
-      CAF_05: {
-        2015: [2000, 2019],
-        2019: [2024],
-      },
-    };
-
-    const mappedByKlc = klcLcDateMap[klcCode] || null;
-    if (mappedByKlc && Number.isFinite(Number(selectedLcYear))) {
-      const mapped = mappedByKlc[Number(selectedLcYear)];
-      if (Array.isArray(mapped) && mapped.length) {
-        return Array.from(new Set(mapped)).sort((a, b) => a - b);
-      }
-    }
-
+  getLccDateOptionsFromData(selectedLcYear, lccDatesByLcYear, lccDateList) {
     const mappedByData = Number.isFinite(Number(selectedLcYear))
       ? lccDatesByLcYear[Number(selectedLcYear)]
       : null;
     if (Array.isArray(mappedByData) && mappedByData.length) {
       return mappedByData;
     }
-
     return lccDateList;
   }
 
@@ -358,6 +565,11 @@ class HotspotWidget extends React.Component {
   }
 
   async handleApplyFilter(typeFilter) {
+    await Promise.all([this.getLayerParameters(), this.getBBoxData()]);
+    this.clearHotspotLayersFromMap();
+    this.resetHotspotViewState();
+    this.layerModelInit();
+
     let typeLegend;
     let title;
     let activeLayers =
@@ -495,7 +707,7 @@ class HotspotWidget extends React.Component {
         } else {
           this.esriLayer_klc.customLayerParameters =
             this.buildWmsCustomLayerParameters(
-              "klc_code LIKE '" + this.dataKlc_code + "'",
+              "klc_code='" + this.dataKlc_code + "'",
             );
         }
         filterLayer = this.esriLayer_klc;
@@ -519,7 +731,7 @@ class HotspotWidget extends React.Component {
         } else {
           this.esriLayer_pa.customLayerParameters =
             this.buildWmsCustomLayerParameters(
-              "klc_code LIKE '" + this.dataKlc_code + "'",
+              "klc_code='" + this.dataKlc_code + "'",
             );
         }
         filterLayer = this.esriLayer_pa;
@@ -537,8 +749,6 @@ class HotspotWidget extends React.Component {
       if (layerId !== undefined) this.layers[layerId].visible = false;
       let layer = this.props.map.findLayerById(layerId);
       if (layer !== undefined) {
-        layer.clear();
-        layer.destroy();
         this.props.map.remove(layer);
       }
     });
@@ -549,8 +759,6 @@ class HotspotWidget extends React.Component {
       if (layerId !== undefined) this.layers[layerId].visible = false;
       let layer = this.props.map.findLayerById(layerId);
       if (layer !== undefined) {
-        layer.clear();
-        layer.destroy();
         this.props.map.remove(layer);
       }
     });
@@ -628,6 +836,7 @@ class HotspotWidget extends React.Component {
 
   openMenu() {
     if (this.state.showMapMenu) {
+      this.resetHotspotWidgetFilters();
       this.props.mapViewer.setActiveWidget();
       this.container.current.querySelector('.right-panel').style.display =
         'none';
@@ -660,7 +869,7 @@ class HotspotWidget extends React.Component {
     const url =
       window.location.href.replace(window.location.pathname.substring(3), '') +
       this.props.urls.all_geo_klc;
-    fetch(url)
+    return fetch(url)
       .then((data) => {
         if (data.status === 200) {
           return data.json();
@@ -680,18 +889,24 @@ class HotspotWidget extends React.Component {
       this.props.hotspotData && this.props.hotspotData['activeLayers']
         ? Object.keys(this.props.hotspotData['activeLayers'])
         : [];
+    const hasActivePresentLcLayer = activeLayers.some(
+      (layer) =>
+        layer.includes('all_present_lc_a_pol') ||
+        layer.includes('all_present_lc_b_pol') ||
+        layer.includes('lc_filter'),
+    );
+    const hasActiveLccLayer = activeLayers.some(
+      (layer) =>
+        layer.includes('all_lcc_a_pol') ||
+        layer.includes('all_lcc_b_pol') ||
+        layer.includes('lcc_filter'),
+    );
 
-    if (
-      this.container.current.querySelector('.presentLandCoverContainer').style
-        .display === 'block'
-    ) {
+    if (hasActivePresentLcLayer) {
       typeFilter.push('lc');
     }
 
-    if (
-      this.container.current.querySelector('.landCoverChangeContainer').style
-        .display === 'block'
-    ) {
+    if (hasActiveLccLayer) {
       typeFilter.push('lcc');
     }
     activeLayers.forEach((layer) => {
@@ -789,22 +1004,16 @@ class HotspotWidget extends React.Component {
     selectBoxLccTime = document.getElementById('select-klc-lccTime');
     selectBoxLcTime = document.getElementById('select-klc-lcTime');
 
+    let hasMultipleLcDatesForSelection = false;
+    let hasSelectedAreaOption = false;
+
     //this.selectedArea = selectedOption;
 
     for (let i = 0; i < data.length; i++) {
       var option = data[i].node.klc_name;
 
       let rawKeymapInfo = data[i].node.keymap_info;
-      let keyMapInfoObj = {};
-      if (typeof rawKeymapInfo === 'string') {
-        try {
-          keyMapInfoObj = JSON.parse(rawKeymapInfo) || {};
-        } catch (e) {
-          keyMapInfoObj = {};
-        }
-      } else if (rawKeymapInfo && typeof rawKeymapInfo === 'object') {
-        keyMapInfoObj = rawKeymapInfo;
-      }
+      let keyMapInfoObj = this.parseKeymapInfo(rawKeymapInfo);
 
       if (keyMapInfoObj.b_classes === true) {
         modularKLCAreas.push(option);
@@ -830,102 +1039,47 @@ class HotspotWidget extends React.Component {
           selectBoxLccTime.options[0].disabled = true;
         }
 
-        let lccDateList = [];
-        let lcDateList = [];
-        let lccDatesByLcYear = {};
+        const { lccDateList, lcDateList, lccDatesByLcYear } =
+          this.getDateOptionsForNode(data[i].node);
 
-        if (Array.isArray(keyMapInfoObj.dates)) {
-          keyMapInfoObj.dates.forEach((entry) => {
-            const lccDate = Number(
-              entry && typeof entry === 'object' ? entry?.date : entry,
-            );
-            const lcDate = Number(
-              entry && typeof entry === 'object' ? entry?.lc_date : undefined,
-            );
-            if (Number.isFinite(lccDate)) {
-              lccDateList.push(lccDate);
-            }
-            if (Number.isFinite(lcDate)) {
-              lcDateList.push(lcDate);
-              if (!lccDatesByLcYear[lcDate]) {
-                lccDatesByLcYear[lcDate] = [];
-              }
-              if (Number.isFinite(lccDate)) {
-                lccDatesByLcYear[lcDate].push(lccDate);
-              }
-            }
-          });
-        }
+        const isReferenceSelectionArea = this.isReferenceSelectionKlcCode(
+          data[i].node.klc_code,
+        );
+        const selectedReferenceLcYear = isReferenceSelectionArea
+          ? this.getReferenceLcYearSelection(lcDateList)
+          : null;
 
-        if (Array.isArray(keyMapInfoObj.multiple_lc_dates)) {
-          lcDateList = lcDateList.concat(
-            keyMapInfoObj.multiple_lc_dates
-              .map((yearEntry) =>
-                Number(
-                  yearEntry && typeof yearEntry === 'object'
-                    ? yearEntry?.date
-                    : yearEntry,
-                ),
-              )
-              .filter((year) => Number.isFinite(year)),
-          );
-        }
+        hasMultipleLcDatesForSelection = lcDateList.length > 1;
+        hasSelectedAreaOption = true;
 
-        const dynamicYearValues = Object.keys(keyMapInfoObj)
-          .filter((key) => /^year\d+$/.test(key))
-          .map((key) => Number(keyMapInfoObj[key]))
-          .filter((year) => Number.isFinite(year));
-        if (dynamicYearValues.length) {
-          lccDateList = lccDateList.concat(dynamicYearValues);
-        }
+        const lcDateOptionsToUse =
+          isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
+            ? [selectedReferenceLcYear]
+            : isReferenceSelectionArea
+            ? []
+            : lcDateList;
 
-        const presentLcYearFromKeymap = Number(keyMapInfoObj.year_present_lc);
-        if (Number.isFinite(presentLcYearFromKeymap)) {
-          lcDateList.push(presentLcYearFromKeymap);
-        }
-
-        if (
-          !lccDateList.length &&
-          Number.isFinite(Number(data[i].node.lcc_year))
-        ) {
-          lccDateList = [Number(data[i].node.lcc_year)];
-        }
-        if (
-          !lcDateList.length &&
-          Number.isFinite(Number(data[i].node.present_lc_year))
-        ) {
-          lcDateList = [Number(data[i].node.present_lc_year)];
-        }
-
-        lccDateList = Array.from(new Set(lccDateList)).sort((a, b) => a - b);
-        lcDateList = Array.from(new Set(lcDateList)).sort((a, b) => a - b);
-
-        Object.keys(lccDatesByLcYear).forEach((lcDateKey) => {
-          lccDatesByLcYear[lcDateKey] = Array.from(
-            new Set(lccDatesByLcYear[lcDateKey]),
-          ).sort((a, b) => a - b);
-        });
-
-        lcDateList.forEach((element) => {
+        lcDateOptionsToUse.forEach((element) => {
           selectBoxLcTime.options.add(new Option(element, element, element));
         });
 
-        if (this.state.lcYear !== null) {
-          const hasLcYearOption = Array.from(selectBoxLcTime.options).some(
-            (option) => option.value === this.state.lcYear,
-          );
-          selectBoxLcTime.value = hasLcYearOption
-            ? this.state.lcYear
-            : 'default';
-        }
-
-        const selectedLcYear = Number(this.state.lcYear);
-        const lccOptionsToUse = this.resolveLccDateOptions(
-          data[i].node.klc_code,
-          selectedLcYear,
-          lccDatesByLcYear,
-          lccDateList,
-        );
+        const selectedLcYear =
+          isReferenceSelectionArea && Number.isFinite(selectedReferenceLcYear)
+            ? selectedReferenceLcYear
+            : Number(selectBoxLcTime.value);
+        const lccOptionsToUse = hasMultipleLcDatesForSelection
+          ? Number.isFinite(selectedLcYear)
+            ? this.getLccDateOptionsFromData(
+                selectedLcYear,
+                lccDatesByLcYear,
+                lccDateList,
+              )
+            : []
+          : this.getLccDateOptionsFromData(
+              selectedLcYear,
+              lccDatesByLcYear,
+              lccDateList,
+            );
 
         lccOptionsToUse.forEach((element) => {
           selectBoxLccTime.options.add(new Option(element, element, element));
@@ -944,12 +1098,14 @@ class HotspotWidget extends React.Component {
       );
       selectBox.options[0].disabled = true;
     }
+    let hasDatasetSpecificKlcOptions = false;
     if (activeLayers.length) {
       for (let a = 0; a < activeLayers.length; a++) {
         if (
           activeLayers[a].includes('all_lcc_b_pol') ||
           activeLayers[a].includes('all_present_lc_b_pol')
         ) {
+          hasDatasetSpecificKlcOptions = true;
           for (let i = 0; i < modularKLCAreas.length; i++) {
             let option = modularKLCAreas[i];
             selectBox.options.add(new Option(option, option, option));
@@ -960,22 +1116,6 @@ class HotspotWidget extends React.Component {
               continue;
             } else {
               selectBox.value = this.state.selectedArea;
-              if (this.state.lcYear !== null) {
-                const hasLcYearOption = Array.from(
-                  selectBoxLcTime.options,
-                ).some((option) => option.value === this.state.lcYear);
-                selectBoxLcTime.value = hasLcYearOption
-                  ? this.state.lcYear
-                  : 'default';
-              }
-              if (this.state.lccYear !== null) {
-                const hasLccYearOption = Array.from(
-                  selectBoxLccTime.options,
-                ).some((option) => option.value === this.state.lccYear);
-                selectBoxLccTime.value = hasLccYearOption
-                  ? this.state.lccYear
-                  : 'default';
-              }
               break; // move break statement inside the if block
             }
           }
@@ -984,6 +1124,7 @@ class HotspotWidget extends React.Component {
           activeLayers[a].includes('all_lcc_a_pol') ||
           activeLayers[a].includes('all_present_lc_a_pol')
         ) {
+          hasDatasetSpecificKlcOptions = true;
           for (let i = 0; i < dichotomousKLCAreas.length; i++) {
             let option = dichotomousKLCAreas[i];
             selectBox.options.add(new Option(option, option, option));
@@ -994,29 +1135,15 @@ class HotspotWidget extends React.Component {
               continue;
             } else {
               selectBox.value = this.state.selectedArea;
-              if (this.state.lcYear !== null) {
-                const hasLcYearOption = Array.from(
-                  selectBoxLcTime.options,
-                ).some((option) => option.value === this.state.lcYear);
-                selectBoxLcTime.value = hasLcYearOption
-                  ? this.state.lcYear
-                  : 'default';
-              }
-              if (this.state.lccYear !== null) {
-                const hasLccYearOption = Array.from(
-                  selectBoxLccTime.options,
-                ).some((option) => option.value === this.state.lccYear);
-                selectBoxLccTime.value = hasLccYearOption
-                  ? this.state.lccYear
-                  : 'default';
-              }
               break;
             }
           }
           break;
         }
       }
-    } else if (selectBox) {
+    }
+
+    if (!hasDatasetSpecificKlcOptions && selectBox) {
       const allKLCAreas = Array.from(
         new Set(modularKLCAreas.concat(dichotomousKLCAreas)),
       ).sort((a, b) => a.localeCompare(b));
@@ -1034,20 +1161,60 @@ class HotspotWidget extends React.Component {
       }
     }
     if (selectBox.value === 'default') {
+      hasMultipleLcDatesForSelection = false;
       if (selectBoxLcTime) {
         this.removeOptions(selectBoxLcTime);
         selectBoxLcTime.options.add(
-          new Option('Select a region first', 'default', true, true),
+          new Option('Select a year', 'default', true, true),
         );
         selectBoxLcTime.options[0].disabled = true;
       }
       if (selectBoxLccTime) {
         this.removeOptions(selectBoxLccTime);
         selectBoxLccTime.options.add(
-          new Option('Select a region first', 'default', true, true),
+          new Option('Select a year', 'default', true, true),
         );
         selectBoxLccTime.options[0].disabled = true;
       }
+
+      if (
+        this.state.selectedArea !== null ||
+        this.state.referenceLcYear !== null ||
+        this.state.lcYear !== null ||
+        this.state.lccYear !== null
+      ) {
+        this.setState({
+          selectedArea: null,
+          referenceLcYear: null,
+          lcYear: null,
+          lccYear: null,
+        });
+      }
+    }
+
+    if (
+      selectBox &&
+      this.state.selectedArea !== null &&
+      Array.from(selectBox.options).some(
+        (option) => option.value === this.state.selectedArea,
+      )
+    ) {
+      selectBox.value = this.state.selectedArea;
+      hasSelectedAreaOption = true;
+    }
+
+    const hasActivePresentLcLayer = activeLayers.some(
+      (layer) =>
+        layer.includes('all_present_lc_a_pol') ||
+        layer.includes('all_present_lc_b_pol') ||
+        layer.includes('lc_filter'),
+    );
+
+    const shouldShowPresentLandCoverDropdown =
+      hasSelectedAreaOption && hasActivePresentLcLayer;
+    this.setPresentLandCoverVisibility(shouldShowPresentLandCoverDropdown);
+    if (this.state.hasMultipleLcDates !== hasMultipleLcDatesForSelection) {
+      this.setState({ hasMultipleLcDates: hasMultipleLcDatesForSelection });
     }
   }
 
@@ -1079,69 +1246,21 @@ class HotspotWidget extends React.Component {
       return;
     }
 
-    let rawKeymapInfo = selectedNode.keymap_info;
-    let keyMapInfoObj = {};
-    if (typeof rawKeymapInfo === 'string') {
-      try {
-        keyMapInfoObj = JSON.parse(rawKeymapInfo) || {};
-      } catch (e) {
-        keyMapInfoObj = {};
-      }
-    } else if (rawKeymapInfo && typeof rawKeymapInfo === 'object') {
-      keyMapInfoObj = rawKeymapInfo;
-    }
+    const { lccDateList, lcDateList, lccDatesByLcYear } =
+      this.getDateOptionsForNode(selectedNode);
 
-    let lccDateList = [];
-    let lccDatesByLcYear = {};
-
-    if (Array.isArray(keyMapInfoObj.dates)) {
-      keyMapInfoObj.dates.forEach((entry) => {
-        const lccDate = Number(
-          entry && typeof entry === 'object' ? entry?.date : entry,
-        );
-        const lcDate = Number(
-          entry && typeof entry === 'object' ? entry?.lc_date : undefined,
-        );
-        if (Number.isFinite(lccDate)) {
-          lccDateList.push(lccDate);
-        }
-        if (Number.isFinite(lcDate)) {
-          if (!lccDatesByLcYear[lcDate]) {
-            lccDatesByLcYear[lcDate] = [];
-          }
-          if (Number.isFinite(lccDate)) {
-            lccDatesByLcYear[lcDate].push(lccDate);
-          }
-        }
-      });
-    }
-
-    const dynamicYearValues = Object.keys(keyMapInfoObj)
-      .filter((key) => /^year\d+$/.test(key))
-      .map((key) => Number(keyMapInfoObj[key]))
-      .filter((year) => Number.isFinite(year));
-    if (dynamicYearValues.length) {
-      lccDateList = lccDateList.concat(dynamicYearValues);
-    }
-
-    if (!lccDateList.length && Number.isFinite(Number(selectedNode.lcc_year))) {
-      lccDateList = [Number(selectedNode.lcc_year)];
-    }
-
-    lccDateList = Array.from(new Set(lccDateList)).sort((a, b) => a - b);
-    Object.keys(lccDatesByLcYear).forEach((lcDateKey) => {
-      lccDatesByLcYear[lcDateKey] = Array.from(
-        new Set(lccDatesByLcYear[lcDateKey]),
-      ).sort((a, b) => a - b);
-    });
-
-    const selectedLcYear = Number(this.state.lcYear);
-    const lccOptionsToUse = this.resolveLccDateOptions(
-      selectedNode.klc_code,
-      selectedLcYear,
-      lccDatesByLcYear,
-      lccDateList,
-    );
+    const selectedLcYear = this.isReferenceSelectionKlcCode(
+      selectedNode?.klc_code,
+    )
+      ? this.getReferenceLcYearSelection(lcDateList)
+      : Number(this.state.lcYear);
+    const lccOptionsToUse = Number.isFinite(Number(selectedLcYear))
+      ? this.getLccDateOptionsFromData(
+          selectedLcYear,
+          lccDatesByLcYear,
+          lccDateList,
+        )
+      : [];
 
     this.removeOptions(selectBoxLccTime);
     selectBoxLccTime.options.add(
@@ -1183,6 +1302,84 @@ class HotspotWidget extends React.Component {
               ></select>
             </label>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  renderReferenceLandCoverSelection() {
+    const selectedNode = this.getSelectedNodeByArea(this.state.selectedArea);
+    if (
+      !selectedNode ||
+      !this.isReferenceSelectionKlcCode(selectedNode.klc_code)
+    ) {
+      return null;
+    }
+
+    const { lcDateList } = this.getDateOptionsForNode(selectedNode);
+    if (!lcDateList.length) {
+      return null;
+    }
+
+    const selectedReferenceLcYear = this.state.referenceLcYear || 'default';
+
+    return (
+      <div className="measurement-dropdown-container hotspot-reference-selection">
+        <div className="esri-print__form-section-container">
+          <label>
+            Select first the reference land cover date you want to visualize
+            <select
+              id="select-klc-reference-lc-time"
+              className="esri-select"
+              value={selectedReferenceLcYear}
+              onBlur={() => {}}
+              onChange={(e) => {
+                const nextReferenceLcYear = e.target.value;
+                if (nextReferenceLcYear === 'default') {
+                  this.setState(
+                    {
+                      referenceLcYear: null,
+                      lcYear: null,
+                      lccYear: null,
+                    },
+                    () => {
+                      this.getKLCNames(
+                        this.dataJSONNames,
+                        this.state.selectedArea,
+                      );
+                      this.updateLccOptionsForSelectedLc();
+                      this.disableButton();
+                    },
+                  );
+                  return;
+                }
+                this.setState(
+                  {
+                    referenceLcYear: nextReferenceLcYear,
+                    lcYear: nextReferenceLcYear,
+                    lccYear: null,
+                  },
+                  () => {
+                    this.getKLCNames(
+                      this.dataJSONNames,
+                      this.state.selectedArea,
+                    );
+                    this.updateLccOptionsForSelectedLc();
+                    this.disableButton();
+                  },
+                );
+              }}
+            >
+              <option value="default" disabled>
+                Select a year
+              </option>
+              {lcDateList.map((year) => (
+                <option key={year} value={String(year)}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
     );
@@ -1270,6 +1467,7 @@ class HotspotWidget extends React.Component {
                         onChange={(e) => {
                           this.setState({
                             selectedArea: e.target.value,
+                            referenceLcYear: null,
                             lcYear: null,
                             lccYear: null,
                           });
@@ -1280,6 +1478,7 @@ class HotspotWidget extends React.Component {
                     </label>
                   </div>
                 </div>
+                {this.renderReferenceLandCoverSelection()}
                 <div>
                   {divs.map((div, i) => (
                     <div key={i} className={div.className}>
@@ -1361,7 +1560,12 @@ class HotspotWidget extends React.Component {
           this.lccYear = null;
           this.selectedArea = null;
           if (this._isMounted) {
-            this.setState({ lcYear: null, lccYear: null, selectedArea: null });
+            this.setState({
+              lcYear: null,
+              lccYear: null,
+              selectedArea: null,
+              referenceLcYear: null,
+            });
           }
           shouldUpdate = true;
         }
@@ -1398,9 +1602,7 @@ class HotspotWidget extends React.Component {
       return '';
     }
     return Object.keys(activeLayers)
-      .filter(
-        (key) => key.includes('all_present_lc_') || key.includes('all_lcc_'),
-      )
+      .filter((key) => this.isHotspotLayerKey(key))
       .sort()
       .join('|');
   }
@@ -1413,17 +1615,16 @@ class HotspotWidget extends React.Component {
       this.props.hotspotData,
     );
 
-    if (
-      prevHotspotLayerSignature !== nextHotspotLayerSignature &&
-      (this.state.selectedArea !== null ||
-        this.state.lcYear !== null ||
-        this.state.lccYear !== null)
-    ) {
-      this.setState({
-        selectedArea: null,
-        lcYear: null,
-        lccYear: null,
-      });
+    if (prevHotspotLayerSignature !== nextHotspotLayerSignature) {
+      this.clearHotspotLayersFromMap();
+      this.resetHotspotViewState();
+      const newHotspotData = {
+        ...(this.props.hotspotData || {}),
+        filteredLayers: {},
+        filteredLayersData: {},
+      };
+      this.props.hotspotDataHandler(newHotspotData);
+      this.resetHotspotWidgetFilters();
       return;
     }
 
@@ -1435,6 +1636,9 @@ class HotspotWidget extends React.Component {
       this.disableButton();
     }
     if (prevState.lcYear !== this.state.lcYear) {
+      this.disableButton();
+    }
+    if (prevState.referenceLcYear !== this.state.referenceLcYear) {
       this.disableButton();
     }
   }
