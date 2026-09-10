@@ -146,6 +146,21 @@ class HotspotWidget extends React.Component {
       ).sort((a, b) => a - b);
     });
 
+    const mappedLcYears = Object.keys(lccDatesByLcYear).map((year) =>
+      Number(year),
+    );
+    if (!mappedLcYears.length && lcDateList.length && lccDateList.length) {
+      const lccYearsWithoutLcYears = lccDateList.filter(
+        (year) => !lcDateList.includes(year),
+      );
+      if (lccYearsWithoutLcYears.length) {
+        lccDateList = lccYearsWithoutLcYears;
+      }
+      if (lcDateList.length === 1) {
+        lccDatesByLcYear[lcDateList[0]] = [...lccDateList];
+      }
+    }
+
     return {
       keyMapInfoObj,
       lccDateList,
