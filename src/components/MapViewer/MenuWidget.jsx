@@ -1204,7 +1204,7 @@ class MenuWidget extends React.Component {
       },
     });
     const tileInfo = {
-      size: [512, 512],
+      size: [256, 256],
       origin: { x: -20037508.342787, y: 20037508.342787 },
       spatialReference: { wkid: 3857 },
       lods: Array.from({ length: 21 }, (_, i) => ({
