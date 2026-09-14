@@ -2405,7 +2405,6 @@ class MenuWidget extends React.Component {
           DatasetTitle,
           ProductId,
         );
-
       } else if (viewService?.toLowerCase().includes('wms')) {
         viewService = viewService?.includes('?')
           ? viewService + '&'
