@@ -4015,7 +4015,7 @@ class MenuWidget extends React.Component {
           }
         }
         if (serviceType === 'WMS' || serviceType === 'WMTS') {
-          const forced = (proxiedUrl || '').trim();
+          const forced = (resolvedServiceUrl || '').trim();
           if (forced) {
             if (typeof resourceLayer.url === 'string') {
               resourceLayer.url = forced;

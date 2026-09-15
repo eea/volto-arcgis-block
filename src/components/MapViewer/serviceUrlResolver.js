@@ -40,7 +40,9 @@ const isInternalHost = (hostname, currentHostname) => {
   if (!hostValue) {
     return false;
   }
-  if (INTERNAL_HOST_PATTERNS.some((hostPattern) => hostPattern.test(hostValue))) {
+  if (
+    INTERNAL_HOST_PATTERNS.some((hostPattern) => hostPattern.test(hostValue))
+  ) {
     return true;
   }
   if (currentHostValue && hostValue === currentHostValue) {
@@ -80,7 +82,8 @@ const resolveUnproxiedUrl = (inputUrl) => {
   if (/^https?:\/\//i.test(normalizedPathData)) {
     return normalizedPathData;
   }
-  const secureProtocol = window?.location?.protocol === 'http:' ? 'http://' : 'https://';
+  const secureProtocol =
+    window?.location?.protocol === 'http:' ? 'http://' : 'https://';
   return secureProtocol + normalizedPathData;
 };
 
