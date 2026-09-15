@@ -2,6 +2,7 @@ import React, { createRef } from 'react';
 import { loadModules } from 'esri-loader';
 // import { FontAwesomeIcon } from '@eeacms/volto-clms-utils/components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { resolveServiceUrl } from './serviceUrlResolver';
 
 var WMSLayer, WMTSLayer, WFSLayer, esriRequest;
 const SHAPEFILE_MAX_SIZE_BYTES = 2097152;
@@ -334,28 +335,6 @@ class UploadWidget extends React.Component {
     this.clearUploadForm(true);
   };
 
-  stripProtocol = (url) => {
-    return (url || '').replace(/^https?:\/\//i, '');
-  };
-
-  getProxyBase = () => {
-    const origin = window?.location?.origin || '';
-    return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
-    // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
-    // return 'https://land.copernicus.eu/ogcproxy/';
-  };
-
-  buildProxiedUrl = (url) => {
-    if (!url) return url;
-    const hasProxy = /\/ogcproxy\//i.test(url);
-    if (hasProxy) {
-      const strippedUrl = this.stripProtocol(url);
-      const proxyPath = strippedUrl.split(/\/ogcproxy\//i)[1] || '';
-      return this.getProxyBase() + proxyPath.replace(/^\/+/, '');
-    }
-    return this.getProxyBase() + this.stripProtocol(url);
-  };
-
   resolveNodeValue = (nodeValue) => {
     if (nodeValue === null || nodeValue === undefined) {
       return null;
@@ -510,8 +489,10 @@ class UploadWidget extends React.Component {
 
   getCapabilities = (url, serviceType) => {
     // Get the coordinates of the click on the view
-    const proxiedUrl = this.buildProxiedUrl(url);
-    return esriRequest(proxiedUrl, {
+    const resolvedServiceUrl = resolveServiceUrl(url, {
+      fromUploadWidget: true,
+    });
+    return esriRequest(resolvedServiceUrl, {
       responseType: 'text',
       query: {
         request: 'GetCapabilities',
@@ -617,15 +598,21 @@ class UploadWidget extends React.Component {
         trimmedServiceUrl,
         selectedServiceType,
       );
-      const proxiedUrl = this.buildProxiedUrl(normalizedUrl);
+      const resolvedServiceUrl = resolveServiceUrl(normalizedUrl, {
+        fromUploadWidget: true,
+      });
       if (selectedServiceType === 'WMS') {
-        this.uploadUrlServiceHandler(proxiedUrl, 'WMS');
+        this.uploadUrlServiceHandler(resolvedServiceUrl, 'WMS');
         this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WMTS') {
-        this.uploadUrlServiceHandler(proxiedUrl, 'WMTS');
+        this.uploadUrlServiceHandler(resolvedServiceUrl, 'WMTS');
         this.setState({ serviceUrl: '' });
       } else if (selectedServiceType === 'WFS') {
-        this.uploadUrlServiceHandler(proxiedUrl, 'WFS', selectedFeatures);
+        this.uploadUrlServiceHandler(
+          resolvedServiceUrl,
+          'WFS',
+          selectedFeatures,
+        );
         this.setState({ wfsFeatures: {}, serviceUrl: '' });
         this.setState({ selectedFeatures: {} });
       } else {

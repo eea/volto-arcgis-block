@@ -7,6 +7,7 @@ import useCartState from '@eeacms/volto-clms-utils/cart/useCartState';
 import { Modal, Popup } from 'semantic-ui-react';
 import AreaWidget from './AreaWidget';
 import TimesliderWidget from './TimesliderWidget';
+import { resolveServiceUrl } from './serviceUrlResolver';
 
 export const USER_SERVICES_KEY = 'user_services_session';
 
@@ -2661,28 +2662,6 @@ class MenuWidget extends React.Component {
     );
   }
 
-  stripProtocol(url) {
-    return (url || '').replace(/^https?:\/\//i, '');
-  }
-
-  getProxyBase = () => {
-    const origin = window?.location?.origin || '';
-    return origin ? `${origin}/ogcproxy/` : '/ogcproxy/';
-    // return 'https://clmsdemo.devel6cph.eea.europa.eu/ogcproxy/';
-    // return 'https://land.copernicus.eu/ogcproxy/';
-  };
-
-  buildProxiedUrl(url) {
-    if (!url) return url;
-    const hasProxy = /\/ogcproxy\//i.test(url);
-    if (hasProxy) {
-      const strippedUrl = this.stripProtocol(url);
-      const proxyPath = strippedUrl.split(/\/ogcproxy\//i)[1] || '';
-      return this.getProxyBase() + proxyPath.replace(/^\/+/, '');
-    }
-    return this.getProxyBase() + this.stripProtocol(url);
-  }
-
   buildCdseLegendUrl(serviceUrl, layerTitle) {
     if (!serviceUrl || !layerTitle) return null;
     const collectionMatch =
@@ -3657,9 +3636,11 @@ class MenuWidget extends React.Component {
 
   async handleNewMapServiceLayer(viewService, serviceType, serviceSelection) {
     let resourceLayers = [];
-    const proxiedUrl = this.buildProxiedUrl(viewService);
+    const resolvedServiceUrl = resolveServiceUrl(viewService, {
+      fromUploadWidget: true,
+    });
     try {
-      const rawUrl = (proxiedUrl || '').trim();
+      const rawUrl = (resolvedServiceUrl || '').trim();
       const baseUrl = rawUrl.split('?')[0];
       const resolveCapabilitiesText = (xmlData) => {
         if (!xmlData) {
@@ -6195,7 +6176,9 @@ class MenuWidget extends React.Component {
 
   getCapabilities = async (url, serviceType, options = {}) => {
     const useProxy = !!options?.useProxy;
-    const targetUrl = useProxy ? this.buildProxiedUrl(url) : url;
+    const targetUrl = useProxy
+      ? resolveServiceUrl(url, { fromUploadWidget: true })
+      : url;
     const evaluateXmlResponse = (responseData) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(responseData, 'text/xml');
