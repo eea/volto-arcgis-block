@@ -5202,13 +5202,6 @@ class MenuWidget extends React.Component {
           ) {
             layerToRemove.clear();
           }
-          if (
-            layerToRemove.type !== 'group' &&
-            layerToRemove.type !== 'wmts' &&
-            typeof layerToRemove.destroy === 'function'
-          ) {
-            layerToRemove.destroy();
-          }
         }
         this.map.remove(layerToRemove);
         if (layerIdentity) {
