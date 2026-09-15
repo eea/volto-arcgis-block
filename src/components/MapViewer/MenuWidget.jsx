@@ -3011,7 +3011,12 @@ class MenuWidget extends React.Component {
     return null;
   }
 
-  async applyWmtsSettingsData(layer, spatialReference, isSceneViewActive) {
+  async applyWmtsSettingsData(
+    layer,
+    spatialReference,
+    isSceneViewActive,
+    useProxy = false,
+  ) {
     if (!layer || layer.type !== 'wmts') {
       return true;
     }
@@ -3023,7 +3028,7 @@ class MenuWidget extends React.Component {
     let layerId = activeLayerData.id;
 
     this.xml = null;
-    await this.getCapabilities(serviceData, 'WMTS');
+    await this.getCapabilities(serviceData, 'WMTS', { useProxy });
     if (!this.xml) {
       return !isSceneViewActive;
     }
@@ -3829,7 +3834,7 @@ class MenuWidget extends React.Component {
 
       if (serviceType === 'WMTS') {
         this.xml = null;
-        await this.getCapabilities(viewService, 'WMTS');
+        await this.getCapabilities(viewService, 'WMTS', { useProxy: true });
         if (isInvalidCapabilitiesData(this.xml)) {
           throw new Error('Unable to load WMTS capabilities');
         }
@@ -3886,7 +3891,7 @@ class MenuWidget extends React.Component {
           }),
         ];
       } else if (isWFS) {
-        await this.getCapabilities(viewService, 'WFS');
+        await this.getCapabilities(viewService, 'WFS', { useProxy: true });
         if (isInvalidCapabilitiesData(this.xml)) {
           throw new Error('Unable to load WFS capabilities');
         }
@@ -3950,7 +3955,7 @@ class MenuWidget extends React.Component {
         );
         resourceLayers = layerResults.filter(Boolean);
       } else {
-        await this.getCapabilities(viewService, 'WMS');
+        await this.getCapabilities(viewService, 'WMS', { useProxy: true });
         if (isInvalidCapabilitiesData(this.xml)) {
           throw new Error('Unable to load WMS capabilities');
         }
@@ -4832,6 +4837,7 @@ class MenuWidget extends React.Component {
         this.layers[elem.id],
         this.view?.spatialReference,
         isSceneViewActive,
+        !!userService,
       );
       if (!canApplyWmtsSettings) {
         elem.checked = false;
@@ -6194,8 +6200,9 @@ class MenuWidget extends React.Component {
     return BBoxes;
   }
 
-  getCapabilities = async (url, serviceType) => {
-    const proxiedUrl = this.buildProxiedUrl(url);
+  getCapabilities = async (url, serviceType, options = {}) => {
+    const useProxy = !!options?.useProxy;
+    const targetUrl = useProxy ? this.buildProxiedUrl(url) : url;
     const evaluateXmlResponse = (responseData) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(responseData, 'text/xml');
@@ -6211,7 +6218,7 @@ class MenuWidget extends React.Component {
 
     const loadCapabilitiesResponse = async (requestData) => {
       try {
-        const response = await esriRequest(proxiedUrl, requestData);
+        const response = await esriRequest(targetUrl, requestData);
         const xmlData = evaluateXmlResponse(response.data);
         if (xmlData) {
           return xmlData;
@@ -6221,8 +6228,7 @@ class MenuWidget extends React.Component {
     };
 
     const hasCapabilitiesEndpoint =
-      typeof proxiedUrl === 'string' &&
-      /wmtscapabilities\.xml/i.test(proxiedUrl);
+      typeof targetUrl === 'string' && /wmtscapabilities\.xml/i.test(targetUrl);
     let xmlData = null;
 
     if (
@@ -6414,10 +6420,12 @@ class MenuWidget extends React.Component {
     } else if (this.url?.toLowerCase().endsWith('mapserver')) {
       BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
     } else if (this.url?.toLowerCase().includes('wms') || serviceLayer) {
-      await this.getCapabilities(this.url, 'wms');
+      await this.getCapabilities(this.url, 'wms', { useProxy: !!serviceLayer });
       BBoxes = this.parseBBOXWMS(this.xml);
     } else if (this.url?.toLowerCase().includes('wmts')) {
-      await this.getCapabilities(this.url, 'wmts');
+      await this.getCapabilities(this.url, 'wmts', {
+        useProxy: !!serviceLayer,
+      });
       BBoxes = this.parseBBOXWMTS(this.xml);
     }
     let myExtent;
@@ -6694,10 +6702,14 @@ class MenuWidget extends React.Component {
       if (this.url?.toLowerCase().endsWith('mapserver')) {
         BBoxes = await this.parseBBOXMAPSERVER(this.layers[elem.id]);
       } else if (this.url?.toLowerCase().includes('wms')) {
-        await this.getCapabilities(this.url, 'wms');
+        await this.getCapabilities(this.url, 'wms', {
+          useProxy: !!serviceLayer,
+        });
         BBoxes = this.parseBBOXWMS(this.xml);
       } else if (this.url?.toLowerCase().includes('wmts')) {
-        await this.getCapabilities(this.url, 'wmts');
+        await this.getCapabilities(this.url, 'wmts', {
+          useProxy: !!serviceLayer,
+        });
         BBoxes = this.parseBBOXWMTS(this.xml);
       }
     }
