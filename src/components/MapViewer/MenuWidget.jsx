@@ -480,38 +480,37 @@ class MenuWidget extends React.Component {
     // add zoomend listener to map to show/hide zoom in message
     this.view.watch('stationary', (isStationary) => {
       let snowAndIceInSessionStorage = sessionStorage.getItem('snowAndIce');
-      let node;
       if (this.view && this.view.center) {
         this.extentCenter = { x: this.view.center.x, y: this.view.center.y };
       }
       if (isStationary) {
         this.extentInitiated = false;
-          if (!this.props.download && snowAndIceInSessionStorage === 'true') {
-            let innerDropdown = document.getElementsByClassName(
-              'map-product-checkbox',
+        if (!this.props.download && snowAndIceInSessionStorage === 'true') {
+          let innerDropdown = document.getElementsByClassName(
+            'map-product-checkbox',
+          );
+          let items = [...innerDropdown];
+          let snowAndIce = null;
+          for (let item of items) {
+            let itemParentContainer = item.closest(
+              '.map-menu-product-dropdown',
             );
-            let items = [...innerDropdown];
-            let snowAndIce = null;
-            for (let item of items) {
-              let itemParentContainer = item.closest(
-                '.map-menu-product-dropdown',
-              );
-              let productId = itemParentContainer.getAttribute('productid');
-              if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
-                snowAndIce = item;
-                break;
-              }
+            let productId = itemParentContainer.getAttribute('productid');
+            if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
+              snowAndIce = item;
+              break;
             }
-            if (
-              snowAndIce === null ||
-              snowAndIce === undefined ||
-              snowAndIce.offsetParent === undefined ||
-              snowAndIce.offsetParent === null ||
-              snowAndIce.offsetParent.nextSibling === undefined ||
-              snowAndIce.offsetParent.nextSibling === null
-            )
-              return;
           }
+          if (
+            snowAndIce === null ||
+            snowAndIce === undefined ||
+            snowAndIce.offsetParent === undefined ||
+            snowAndIce.offsetParent === null ||
+            snowAndIce.offsetParent.nextSibling === undefined ||
+            snowAndIce.offsetParent.nextSibling === null
+          )
+            return;
+        }
         if (!this.visibleLayers) this.visibleLayers = {};
         this.handleRasterVectorLegend();
         this.setState({});
