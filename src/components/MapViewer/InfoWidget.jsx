@@ -577,10 +577,29 @@ class InfoWidget extends React.Component {
   }
 
   identifyWMTS(layer, event) {
-    let layerId = layer.activeLayer.id;
     let url = layer.featureInfoUrl ? layer.featureInfoUrl : layer.url;
     let featureInfoUrl = url.replace('/cdse/', '/cdse/wms/');
     return this.wmsCapabilities(url).then((xml) => {
+      let serviceData = layer.ViewService ? layer.ViewService : url;
+      let isCdseWmts = ['/ogc/', '/cdse/'].some((segment) =>
+        serviceData.toLowerCase().includes(segment),
+      );
+      let layerId;
+      if (isCdseWmts) {
+        let wmtsLayers = Array.from(xml.querySelectorAll('Layer'));
+        let layerTitle = this.getLayerTitle(layer);
+        let selectedLayer = wmtsLayers.find((item) => {
+          let titleNode =
+            item.querySelector('ows\\:Title') || item.querySelector('Title');
+          return titleNode && titleNode.textContent === layerTitle;
+        });
+        layerId = (
+          selectedLayer.querySelector('ows\\:Identifier') ||
+          selectedLayer.querySelector('Identifier')
+        ).textContent;
+      } else {
+        layerId = layer.activeLayer.id;
+      }
       let version = layer.version;
       let format = this.parseFormat(xml, layerId);
       let times = '';
