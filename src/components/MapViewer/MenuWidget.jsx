@@ -486,77 +486,32 @@ class MenuWidget extends React.Component {
       }
       if (isStationary) {
         this.extentInitiated = false;
-        let zoom = this.view.get('zoom');
-        if (this.props.download) {
-          node = document.querySelector('.zoom-in-message-dataset');
-          if (node && node !== null) {
-            node.style.display = zoom > 6 ? 'none' : 'block';
-          }
-        }
-        if (!this.props.download && snowAndIceInSessionStorage === 'true') {
-          node = document.getElementById('snow-and-ice-zoom-message');
-          if (node && node !== null) {
-            node.style.display = zoom > 6 ? 'none' : 'block';
-          }
-          let innerDropdown = document.getElementsByClassName(
-            'map-product-checkbox',
-          );
-          let items = [...innerDropdown];
-          let snowAndIce = null;
-          for (let item of items) {
-            let itemParentContainer = item.closest(
-              '.map-menu-product-dropdown',
+          if (!this.props.download && snowAndIceInSessionStorage === 'true') {
+            let innerDropdown = document.getElementsByClassName(
+              'map-product-checkbox',
             );
-            let productId = itemParentContainer.getAttribute('productid');
-            if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
-              snowAndIce = item;
-              break;
+            let items = [...innerDropdown];
+            let snowAndIce = null;
+            for (let item of items) {
+              let itemParentContainer = item.closest(
+                '.map-menu-product-dropdown',
+              );
+              let productId = itemParentContainer.getAttribute('productid');
+              if (productId === '8474c3b080fa42cc837f1d2338fcf096') {
+                snowAndIce = item;
+                break;
+              }
             }
+            if (
+              snowAndIce === null ||
+              snowAndIce === undefined ||
+              snowAndIce.offsetParent === undefined ||
+              snowAndIce.offsetParent === null ||
+              snowAndIce.offsetParent.nextSibling === undefined ||
+              snowAndIce.offsetParent.nextSibling === null
+            )
+              return;
           }
-          if (
-            snowAndIce === null ||
-            snowAndIce === undefined ||
-            snowAndIce.offsetParent === undefined ||
-            snowAndIce.offsetParent === null ||
-            snowAndIce.offsetParent.nextSibling === undefined ||
-            snowAndIce.offsetParent.nextSibling === null
-          )
-            return;
-          let checks = snowAndIce.offsetParent.nextSibling.children;
-          let checksList = [...checks];
-          if (checksList && checksList !== null) {
-            checksList.forEach((check) => {
-              if (check && check !== null) {
-                if (check.querySelector('[type="checkbox"]').checked) {
-                  let node = [
-                    ...check.getElementsByClassName('zoom-in-message-dataset'),
-                  ][0];
-                  if (node && node !== null) {
-                    node.style.display = zoom > 6 ? 'none' : 'block';
-                  }
-                }
-              }
-            });
-          }
-        }
-        let zoomInMessageContainers = document.getElementsByClassName(
-          'zoom-in-message-container',
-        );
-        let zoomInMessageContainersList = [...zoomInMessageContainers];
-        zoomInMessageContainersList.forEach((container) => {
-          if (container && container !== null) {
-            let nodes = [
-              ...document.getElementsByClassName('zoom-in-message-dataset'),
-            ];
-            nodes.forEach((node) => {
-              if (node && node !== null) {
-                if (node.innerText === 'Zoom in') {
-                  node.style.display = zoom > 6 ? 'none' : 'block';
-                }
-              }
-            });
-          }
-        });
         if (!this.visibleLayers) this.visibleLayers = {};
         this.handleRasterVectorLegend();
         this.setState({});
@@ -6421,35 +6376,7 @@ class MenuWidget extends React.Component {
         ymax: BBoxes['dataset'].ymax,
       });
     }
-    if (
-      this.extentInitiated === false &&
-      (this.layers[elem.id].DatasetId === '65f8eded11d94a1ba5540ceecaddd4e6' ||
-        this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df')
-    ) {
-      let myExtent = new Extent({
-        xmin: -13478905.5678019,
-        ymin: 23797904.386302948,
-        xmax: 20538395.093334593,
-        ymax: 11175665.272476234,
-        spatialReference: 3857,
-      });
-      const targetCenter = myExtent.center;
-      if (this.extentCenter) {
-        const epsilon = 1e-3;
-        const sameStoredCenter =
-          Math.abs(this.extentCenter.x - targetCenter.x) < epsilon &&
-          Math.abs(this.extentCenter.y - targetCenter.y) < epsilon;
-        if (sameStoredCenter) {
-          this.extentInitiated = true;
-          return;
-        }
-      }
-      this.view.goTo({ center: targetCenter, zoom: 3 });
-      this.extentCenter = { x: targetCenter.x, y: targetCenter.y };
-      this.extentInitiated = true;
-    } else {
-      this.view.goTo(myExtent);
-    }
+    this.view.goTo(myExtent);
   }
 
   async fullExtent(elem) {
@@ -6802,42 +6729,7 @@ class MenuWidget extends React.Component {
         xmax: firstLayer.xmax,
         ymax: firstLayer.ymax,
       });
-      if (
-        this.extentInitiated === false &&
-        (this.layers[elem.id].DatasetId ===
-          '65f8eded11d94a1ba5540ceecaddd4e6' ||
-          this.layers[elem.id].DatasetId === '40e056d02eed4c1fb2040cf0f06823df')
-      ) {
-        let myExtent = new Extent({
-          xmin: -13478905.5678019,
-          ymin: 23797904.386302948,
-          xmax: 20538395.093334593,
-          ymax: 11175665.272476234,
-          spatialReference: 3857,
-        });
-        const targetCenter = myExtent.center;
-        if (this.extentCenter) {
-          const epsilon = 1e-3;
-          const sameStoredCenter =
-            Math.abs(this.extentCenter.x - targetCenter.x) < epsilon &&
-            Math.abs(this.extentCenter.y - targetCenter.y) < epsilon;
-          if (sameStoredCenter) {
-            if (this.toggleHotspotWidget.view.zoom !== 3) {
-              this.view.zoom = 3;
-              this.setState({}); // Force re-render
-              return;
-            } else {
-              this.extentInitiated = true;
-              return;
-            }
-          }
-        }
-        this.view.goTo({ center: targetCenter, zoom: 3 });
-        this.extentCenter = { x: targetCenter.x, y: targetCenter.y };
-        this.extentInitiated = true;
-      } else {
-        this.view.goTo(myExtent);
-      }
+      this.view.goTo(myExtent);
     }
     this.url = null;
   }
