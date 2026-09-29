@@ -6,7 +6,13 @@ useDefault = true
 [[rules]]
 id = "secret-literal-assignment"
 description = "Secret-like literal assignment in source, YAML, env and config files"
-regex = '''(?i)([A-Za-z0-9_.-]*(?:password|passwd|pwd|api[_-]?key|apikey|access[_-]?key|secret[_-]?access[_-]?key|private[_-]?key|client[_-]?secret|consumer[_-]?key|consumer[_-]?secret|(?:auth|access|refresh|session|api|bearer|id|jwt|csrf|xsrf|oauth)[_-]?token|translate[_-]?auth|translation[_-]?auth|auth[_-]?password|auth[_-]?key|auth[_-]?credentials|database[_-]?url|connection[_-]?string)[A-Za-z0-9_.-]*)[ \t]*[:=][ \t]*["'']?([^"''[:space:]#{}$.][^"''\n#{}]{2,})["'']?'''
+# Value (group 2) must be either:
+#   - a quoted string literal of 3+ chars (e.g. password: "abc123"), or
+#   - an unquoted value containing at least one digit (e.g. .env style API_KEY=abc123),
+# which avoids flagging bare, unquoted identifiers/keywords such as `null`,
+# `clientSecret` or `CDSE_CLIENT_SECRET` that merely reference a variable or
+# constant defined elsewhere rather than a literal secret.
+regex = '''(?i)([A-Za-z0-9_.-]*(?:password|passwd|pwd|api[_-]?key|apikey|access[_-]?key|secret[_-]?access[_-]?key|private[_-]?key|client[_-]?secret|consumer[_-]?key|consumer[_-]?secret|(?:auth|access|refresh|session|api|bearer|id|jwt|csrf|xsrf|oauth)[_-]?token|translate[_-]?auth|translation[_-]?auth|auth[_-]?password|auth[_-]?key|auth[_-]?credentials|database[_-]?url|connection[_-]?string)[A-Za-z0-9_.-]*)[ \t]*[:=][ \t]*(["''][^"''\n]{3,}["'']|[^"''[:space:]#{}$.,;)][^"''\n#{},;)]*[0-9][^"''\n#{},;)]*)'''
 secretGroup = 2
 keywords = [
   "password",
