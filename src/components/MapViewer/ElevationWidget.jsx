@@ -35,7 +35,7 @@ const WEB_MERCATOR_TILE_INFO = {
   lods: Array.from({ length: 16 }, function (_, i) {
     return {
       level: i,
-      resolution: 26080.00 / Math.pow(2, i),
+      resolution: 26080.0 / Math.pow(2, i),
       scale: 591657527.591555 / Math.pow(2, i),
     };
   }),
@@ -125,8 +125,6 @@ class ElevationWidget extends React.Component {
   }
 
   // Returns a cached OAuth token provider for CDSE client-credentials flow.
-
-
 
   // Logs the structural properties and value range of a BaseElevationLayer tile object.
   diagLogTileStructure(label, tileData, level, row, col) {
@@ -322,7 +320,7 @@ class ElevationWidget extends React.Component {
           image.src = imageUrl;
         });
       }
-        // Decodes Terrarium-like RGB PNG values into a Float32 array.
+      // Decodes Terrarium-like RGB PNG values into a Float32 array.
       function decodeTerrariumPng(pngBlob, width, height) {
         return blobToImage(pngBlob).then(function (image) {
           const canvas = document.createElement('canvas');
@@ -485,23 +483,15 @@ class ElevationWidget extends React.Component {
 
               return response.blob();
             })
-            .then(
-              function (blob) {
-                if (DEBUG && !_diagCdseDone) {
-                  diagSaveBlobAsPng(
-                    blob,
-                    'swi_terrarium_raw_' +
-                      level +
-                      '_' +
-                      row +
-                      '_' +
-                      col +
-                      '.png',
-                  );
-                }
-                return decodeTerrariumPng(blob, width, height);
-              }.bind(this),
-            )
+            .then(function (blob) {
+              if (DEBUG && !_diagCdseDone) {
+                diagSaveBlobAsPng(
+                  blob,
+                  'swi_terrarium_raw_' + level + '_' + row + '_' + col + '.png',
+                );
+              }
+              return decodeTerrariumPng(blob, width, height);
+            })
             .then(
               function (elevationArray) {
                 var exaggeration = this.exaggeration;
@@ -829,7 +819,6 @@ class ElevationWidget extends React.Component {
         opacity: 0.8,
       });
 
-
       const swiElevationLayer = new CopernicusElevationLayer({
         title: 'CDSE SWI - Elevation',
         clientId: CDSE_CLIENT_ID,
@@ -842,8 +831,6 @@ class ElevationWidget extends React.Component {
         exaggeration: 2000,
       });
 
-
-
       //this.map.ground.layers.add(elevationLayer);
       this.map.ground.layers.add(swiElevationLayer);
       this.map.addMany([swiProcessLayer]);
@@ -851,7 +838,6 @@ class ElevationWidget extends React.Component {
     // Adds utility widgets for layer visibility and symbology inspection.
 
     //this.initializeUtilityWidgets();
-
 
     // Initializes runtime layers once the SceneView is ready.
     // this.view.when(function () {
