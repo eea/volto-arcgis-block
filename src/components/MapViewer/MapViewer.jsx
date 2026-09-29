@@ -32,6 +32,7 @@ import BookmarkWidget from './BookmarkWidget';
 import LoadingSpinner from './LoadingSpinner';
 import UploadWidget from './UploadWidget';
 import ErrorReportWidget from './ErrorReportWidget';
+import ElevationWidget from './ElevationWidget';
 import { injectLazyLibs } from '@plone/volto/helpers/Loadable';
 import { getTaxonomy } from '@eeacms/volto-taxonomy/actions';
 import { fetchCatalogApiDates } from '../../actions';
@@ -1906,6 +1907,19 @@ class MapViewer extends React.Component {
       );
   }
 
+  renderElevation() {
+    if (this.view)
+      return (
+        <ElevationWidget
+          key={this.getWidgetRenderKey('elevation')}
+          view={this.view}
+          mapViewer={this}
+          map={this.map}
+          layers={this.state.layers}
+        />
+      );
+  }
+
   renderAnalysis() {
     if (this.view)
       return (
@@ -2102,6 +2116,7 @@ class MapViewer extends React.Component {
               <CheckUserID reference={this} />
               {this.renderUploadService()}
               {this.renderErrorReport()}
+              {this.renderElevation()}
               {this.renderAnalysis()}
               {this.renderTools()}
             </>
